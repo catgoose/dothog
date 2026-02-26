@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"

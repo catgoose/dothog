@@ -5,7 +5,7 @@ package repository
 import (
 	"context"
 
-	"catgoose/go-htmx-template/internals/domain"
+	"catgoose/go-htmx-demo/internals/domain"
 
 	"github.com/jmoiron/sqlx"
 )

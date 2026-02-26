@@ -1,17 +1,17 @@
 package main
 
 import (
-	"catgoose/go-htmx-template/internals/config"
+	"catgoose/go-htmx-demo/internals/config"
 	// setup:feature:database:start
-	"catgoose/go-htmx-template/internals/database"
-	dbrepo "catgoose/go-htmx-template/internals/database/repository"
+	"catgoose/go-htmx-demo/internals/database"
+	dbrepo "catgoose/go-htmx-demo/internals/database/repository"
 	// setup:feature:database:end
-	log "catgoose/go-htmx-template/internals/logger"
-	"catgoose/go-htmx-template/internals/routes"
+	log "catgoose/go-htmx-demo/internals/logger"
+	"catgoose/go-htmx-demo/internals/routes"
 	// setup:feature:avatar:start
-	graphdb "catgoose/go-htmx-template/internals/database"
-	"catgoose/go-htmx-template/internals/domain"
-	"catgoose/go-htmx-template/internals/service/graph"
+	graphdb "catgoose/go-htmx-demo/internals/database"
+	"catgoose/go-htmx-demo/internals/domain"
+	"catgoose/go-htmx-demo/internals/service/graph"
 	// setup:feature:avatar:end
 	"context"
 	"embed"
@@ -42,8 +42,20 @@ func must(fs fs.FS, err error) fs.FS {
 func main() {
 	log.Init()
 	flag.Parse()
-	if err := dio.InitEnvironment(nil); err != nil {
-		log.Fatal("Failed to initialize environment", "error", err)
+	envErr := dio.InitEnvironment(nil)
+	// setup:feature:demo:start
+	if envErr != nil {
+		// No .env file -- apply standalone defaults so the demo binary
+		// can run without any configuration.
+		if os.Getenv("SERVER_LISTEN_PORT") == "" {
+			os.Setenv("SERVER_LISTEN_PORT", "8080")
+		}
+		log.Info("No .env file found, using environment variables and defaults")
+		envErr = nil
+	}
+	// setup:feature:demo:end
+	if envErr != nil {
+		log.Fatal("Failed to initialize environment", "error", envErr)
 	}
 
 	cfg, err := config.GetConfig()

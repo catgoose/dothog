@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
-	corecomponents "catgoose/go-htmx-template/web/components/core"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	corecomponents "catgoose/go-htmx-demo/web/components/core"
 
 	"github.com/a-h/templ"
 )

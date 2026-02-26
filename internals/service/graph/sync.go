@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"catgoose/go-htmx-template/internals/domain"
-	"catgoose/go-htmx-template/internals/logger"
+	"catgoose/go-htmx-demo/internals/domain"
+	"catgoose/go-htmx-demo/internals/logger"
 
 	"github.com/catgoose/dio"
 )

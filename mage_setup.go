@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"catgoose/go-htmx-template/internal/setup"
+	"catgoose/go-htmx-demo/internal/setup"
 
 	"github.com/magefile/mage/sh"
 )
 
-const templateModulePath = "catgoose/go-htmx-template"
+const templateModulePath = "catgoose/go-htmx-demo"
 
 // featureLabels maps feature tags to human-readable gum labels.
 var featureLabels = map[string]string{

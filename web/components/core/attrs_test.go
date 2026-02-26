@@ -3,7 +3,7 @@ package components
 import (
 	"testing"
 
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
 
 	"github.com/stretchr/testify/require"
 )

@@ -2,17 +2,17 @@
 package routes
 
 import (
-	"catgoose/go-htmx-template/internals/config"
+	"catgoose/go-htmx-demo/internals/config"
 	// setup:feature:demo:start
-	"catgoose/go-htmx-template/internals/demo"
-	log "catgoose/go-htmx-template/internals/logger"
+	"catgoose/go-htmx-demo/internals/demo"
+	log "catgoose/go-htmx-demo/internals/logger"
 	// setup:feature:sse:start
-	"catgoose/go-htmx-template/internals/ssebroker"
+	"catgoose/go-htmx-demo/internals/ssebroker"
 	// setup:feature:sse:end
 	// setup:feature:demo:end
-	"catgoose/go-htmx-template/internals/routes/handler"
-	"catgoose/go-htmx-template/internals/routes/middleware"
-	"catgoose/go-htmx-template/web/views"
+	"catgoose/go-htmx-demo/internals/routes/handler"
+	"catgoose/go-htmx-demo/internals/routes/middleware"
+	"catgoose/go-htmx-demo/web/views"
 	"context"
 	"fmt"
 	"io/fs"

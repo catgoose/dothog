@@ -2,16 +2,16 @@
 package handler
 
 import (
-	log "catgoose/go-htmx-template/internals/logger"
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
-	"catgoose/go-htmx-template/internals/routes/middleware"
-	"catgoose/go-htmx-template/web/views"
+	log "catgoose/go-htmx-demo/internals/logger"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/internals/routes/middleware"
+	"catgoose/go-htmx-demo/web/views"
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
 
-	corecomponents "catgoose/go-htmx-template/web/components/core"
+	corecomponents "catgoose/go-htmx-demo/web/components/core"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"

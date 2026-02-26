@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"catgoose/go-htmx-template/internals/routes/params"
+	"catgoose/go-htmx-demo/internals/routes/params"
 
 	"github.com/jmoiron/sqlx"
 )

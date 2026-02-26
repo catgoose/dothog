@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"catgoose/go-htmx-template/internals/logger"
+	"catgoose/go-htmx-demo/internals/logger"
 
 	"github.com/catgoose/dio"
 	_ "github.com/denisenkom/go-mssqldb" // Register SQL Server driver

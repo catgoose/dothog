@@ -6,8 +6,8 @@ import (
 	"context"
 	"time"
 
-	"catgoose/go-htmx-template/internals/domain"
-	"catgoose/go-htmx-template/internals/logger"
+	"catgoose/go-htmx-demo/internals/domain"
+	"catgoose/go-htmx-demo/internals/logger"
 )
 
 // SyncPhotos downloads profile photos for the given users into store.

@@ -1,6 +1,6 @@
-# go-htmx-template
+# go-htmx-demo
 
-Go + HTMX + Templ project template with batteries included.
+Go + HTMX + Templ demo with batteries included.
 
 ## Stack
 

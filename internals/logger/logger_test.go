@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"catgoose/go-htmx-template/internals/shared"
+	"catgoose/go-htmx-demo/internals/shared"
 
 	"github.com/stretchr/testify/assert"
 )

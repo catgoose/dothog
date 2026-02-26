@@ -14,8 +14,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
-	components "catgoose/go-htmx-template/web/components/core"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	components "catgoose/go-htmx-demo/web/components/core"
 )
 
 // GalleryItem is a simple named item for the empty-state demo.

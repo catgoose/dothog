@@ -5,7 +5,7 @@ package routes
 import (
 	"net/http"
 
-	"catgoose/go-htmx-template/internals/service/graph"
+	"catgoose/go-htmx-demo/internals/service/graph"
 
 	"github.com/labstack/echo/v4"
 )

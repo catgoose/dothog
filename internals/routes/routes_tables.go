@@ -4,7 +4,7 @@ package routes
 import (
 	"net/url"
 
-	hx "catgoose/go-htmx-template/internals/routes/htmx"
+	hx "catgoose/go-htmx-demo/internals/routes/htmx"
 
 	"github.com/labstack/echo/v4"
 )

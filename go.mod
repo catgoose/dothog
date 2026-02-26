@@ -1,4 +1,4 @@
-module catgoose/go-htmx-template
+module catgoose/go-htmx-demo
 
 go 1.26.0
 

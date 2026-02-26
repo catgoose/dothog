@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"catgoose/go-htmx-template/internals/routes/handler"
-	"catgoose/go-htmx-template/internals/ssebroker"
-	"catgoose/go-htmx-template/web/views"
+	"catgoose/go-htmx-demo/internals/routes/handler"
+	"catgoose/go-htmx-demo/internals/ssebroker"
+	"catgoose/go-htmx-demo/web/views"
 
 	"github.com/labstack/echo/v4"
 )

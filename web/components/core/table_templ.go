@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/go-htmx-template/internals/routes/hypermedia"
+import "catgoose/go-htmx-demo/internals/routes/hypermedia"
 
 // sortIndicator returns the sort direction indicator character for a column.
 func sortIndicator(col hypermedia.TableCol) string {

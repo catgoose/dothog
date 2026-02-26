@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/go-htmx-template/internals/routes/hypermedia"
+import "catgoose/go-htmx-demo/internals/routes/hypermedia"
 
 // navHxAttrs converts a NavItem's HTMXAttrs map to templ.Attributes with "hx-" prefix.
 func navHxAttrs(item hypermedia.NavItem) templ.Attributes {

@@ -46,6 +46,11 @@ jobs:
           go mod tidy
           go mod edit -go=$(go version | sed -n 's/.*go\([0-9.]*\).*/\1/p')
 
+      - name: Update Go version in README
+        run: |
+          GO_VER=$(sed -n 's/^go \([0-9]*\.[0-9]*\).*/\1/p' go.mod)
+          sed -i "s/- Go [0-9]\+\.[0-9]\++ (latest)/- Go ${GO_VER}+ (latest)/" README.md
+
       - name: Verify build
         run: mage build
 
@@ -55,7 +60,7 @@ jobs:
       - name: Check for changes
         id: check-changes
         run: |
-          git add go.mod go.sum
+          git add go.mod go.sum README.md
           if git diff --staged --quiet; then
             echo "No changes to commit"
             echo "changes_detected=false" >> $GITHUB_OUTPUT

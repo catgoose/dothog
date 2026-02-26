@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"catgoose/go-htmx-template/internals/shared"
+	"catgoose/go-htmx-demo/internals/shared"
 
 	"github.com/catgoose/dio"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -23,7 +23,7 @@ var (
 	once   sync.Once
 )
 
-const appLogFile = "htmx-go-template.log"
+const appLogFile = "go-htmx-demo.log"
 
 // Init initializes the global logger with appropriate configuration
 func Init() {

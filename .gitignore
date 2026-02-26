@@ -46,7 +46,7 @@ localhost.key
 log/
 
 # binary
-go-htmx-template
+go-htmx-demo
 build/
 
 # agents

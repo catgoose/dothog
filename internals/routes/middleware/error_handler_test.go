@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"catgoose/go-htmx-template/internals/logger"
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/internals/logger"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"

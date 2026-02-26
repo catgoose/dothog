@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"catgoose/go-htmx-template/internals/logger"
+	"catgoose/go-htmx-demo/internals/logger"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"

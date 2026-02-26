@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"sync"
 
-	"catgoose/go-htmx-template/internals/logger"
+	"catgoose/go-htmx-demo/internals/logger"
 
 	// setup:feature:auth:start
 	"github.com/catgoose/crooner"

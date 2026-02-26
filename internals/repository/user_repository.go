@@ -7,8 +7,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"catgoose/go-htmx-template/internals/database/repository"
-	"catgoose/go-htmx-template/internals/domain"
+	"catgoose/go-htmx-demo/internals/database/repository"
+	"catgoose/go-htmx-demo/internals/domain"
 
 	"github.com/jmoiron/sqlx"
 )

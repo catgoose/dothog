@@ -1,95 +1,252 @@
-# go-htmx-template
+# go-htmx-demo
 
 <!--toc:start-->
-- [go-htmx-template](#go-htmx-template)
+- [go-htmx-demo](#go-htmx-demo)
+  - [Features](#features)
+  - [Quick Start](#quick-start)
+    - [From Release Binary](#from-release-binary)
+    - [From Source](#from-source)
+  - [Hypermedia Patterns](#hypermedia-patterns)
+    - [HATEOAS Error Recovery](#hateoas-error-recovery)
+    - [CRUD (Inline Editing)](#crud-inline-editing)
+    - [Real-time SSE Dashboard](#real-time-sse-dashboard)
+    - [Tables, Filtering, and Pagination](#tables-filtering-and-pagination)
+    - [State and Interaction Patterns](#state-and-interaction-patterns)
   - [Tech Stack](#tech-stack)
-  - [Getting Started](#getting-started)
+  - [Project Structure](#project-structure)
+  - [Template Setup](#template-setup)
+    - [Interactive Setup (with gum)](#interactive-setup-with-gum)
+    - [Non-interactive Setup](#non-interactive-setup)
+  - [Development](#development)
     - [Prerequisites](#prerequisites)
-    - [Running the Project](#running-the-project)
-    - [Project Structure](#project-structure)
-  - [HTTPS Development Setup](#https-development-setup)
+    - [Running the Dev Server](#running-the-dev-server)
+    - [HTTPS Development Setup](#https-development-setup)
   - [Testing](#testing)
   - [Mage Targets](#mage-targets)
-    - [Example Usage](#example-usage)
 <!--toc:end-->
 
-A template repository for building new Go + HTMX projects with modern tooling and best practices.
+A demonstration of building modern, interactive web applications with Go and HTMX. The app runs as a single binary with all assets embedded -- no external dependencies or configuration required.
+
+## Features
+
+- **HATEOAS Error Recovery** -- Server-driven error responses with embedded retry, fix, and alternative-action controls
+- **Inline CRUD** -- Create, edit, toggle, and delete table rows in place without page reloads
+- **SSE Real-time Dashboard** -- Live system stats, metrics, service health, and event streams via Server-Sent Events with OOB swaps
+- **Interactive Tables** -- Sorting, filtering, debounced search, pagination, and bulk operations on SQLite data
+- **State Patterns** -- Like counters, toggles, auto-load, lazy reveal, live preview, and append-without-replace
+- **Hypermedia Controls Gallery** -- Buttons, modals, dismiss, confirmation dialogs, and form patterns using HTMX + Hyperscript
+
+See [Hypermedia Patterns](#hypermedia-patterns) for details on each.
+
+## Hypermedia Patterns
+
+This demo implements [HATEOAS](https://htmx.org/essays/hateoas/) -- the server drives application state by embedding hypermedia controls directly in responses. The client never hardcodes URLs or action logic; it follows the affordances the server provides.
+
+### HATEOAS Error Recovery
+
+Error responses include embedded recovery controls so the user always has a path forward:
+
+- **Transient failure (500)** -- "Retry Save" button re-issues the request. Server simulates flaky network; retries eventually succeed.
+- **Validation error (422)** -- "Fix & Resubmit" button fetches a pre-filled correction form with the invalid values highlighted.
+- **Conflict (409)** -- Two recovery paths: "Update Existing" (PUT) or "Create as Copy" (POST). The user chooses from the error panel.
+- **Stale data (412)** -- Version mismatch detected. "Load Fresh Data" fetches the current version; "Force Save" overrides with a confirmation dialog.
+- **Cascade constraint (409)** -- Can't delete a category with dependents. "Reassign Items" bulk-moves them first; "Force Delete All" removes everything after confirmation.
+
+Each error panel is built from a `Control` struct that maps to HTMX attributes (`hx-get`, `hx-post`, `hx-target`, `hx-confirm`, etc.), so recovery actions are rendered as standard hypermedia controls.
+
+### CRUD (Inline Editing)
+
+Full create/read/update/delete without page reloads:
+
+- **Create** -- `hx-post` appends a new row to the table via `hx-swap="outerHTML"`
+- **Edit** -- `hx-get` swaps a display row for an inline edit form (same row ID, input fields replace text)
+- **Save** -- `hx-put` with `hx-include="closest tr"` sends the row's form data, server returns the read-only row
+- **Toggle** -- `hx-patch` flips a single field (active/inactive) and returns the updated row
+- **Delete** -- `hx-delete` with `hx-confirm` returns 204 No Content; HTMX removes the row from the DOM
+
+### Real-time SSE Dashboard
+
+Server-Sent Events stream live data to the browser without polling:
+
+- **SSE broker** -- Topic-based pub/sub (`ssebroker.SSEBroker`) with non-blocking publish and subscriber cleanup
+- **Background publishers** -- Goroutines emit system stats (2s), metrics (1s), services (3s), and events (random 0.8-2s)
+- **OOB composite updates** -- A single SSE event carries multiple `hx-swap-oob` elements that update KPI cards, network charts, CPU/memory gauges, and connection pools simultaneously
+- **Throttle control** -- A slider adjusts the `?interval=N` parameter, which closes the old EventSource and opens a new one at the requested rate
+
+```
+event: dashboard-metrics
+data: <div id="kpi-rps" hx-swap-oob="outerHTML">1,250 req/s</div>
+      <div id="cpu-gauge" hx-swap-oob="innerHTML">...</div>
+```
+
+### Tables, Filtering, and Pagination
+
+Interactive data tables backed by SQLite:
+
+- **Sort** -- Column headers toggle ASC/DESC via `hx-get` with sort parameters. Active column shows direction indicator.
+- **Filter** -- Search input with `hx-trigger="input changed delay:400ms"` debounces server queries. Dropdowns and checkboxes filter on `change`.
+- **Paginate** -- Server computes `PageInfo` and generates `PaginationControls` (first/prev/pages/next/last). Each button uses `hx-include="#filter-form"` to preserve filter state across pages.
+- **Bulk actions** -- Checkboxes with `hx-include="input[name=selected]:checked"` send selected IDs to bulk delete/activate/deactivate endpoints.
+
+### State and Interaction Patterns
+
+Additional hypermedia patterns demonstrated:
+
+- **Like counter** -- `hx-post` increments server state, returns button + count as a single fragment swap
+- **Toggle** -- POST flips boolean state, returns updated badge and button label
+- **Auto-load** -- `hx-trigger="load"` fires a GET immediately after an element is inserted into the DOM
+- **Lazy reveal** -- `hx-trigger="intersect once"` uses Intersection Observer to load content when scrolled into view
+- **Live preview** -- `hx-trigger="keyup changed delay:500ms"` debounces textarea input and renders a server-side preview
+- **Append** -- `hx-swap="beforeend"` appends new list items without replacing existing content; form resets via `hx-on::after-request="this.reset()"`
+- **Modal** -- `hx-get` fetches a `<dialog>` fragment, `hx-on::load="this.showModal()"` opens it
+- **Dismiss** -- HyperScript (`_="on click ..."`) handles client-only UI like fade-out and element removal without a server round-trip
+
+## Quick Start
+
+### From Release Binary
+
+Download the latest release for your platform from the [Releases](../../releases) page and run it:
+
+```bash
+# Linux
+chmod +x go-htmx-demo-linux-amd64
+./go-htmx-demo-linux-amd64
+
+# Windows
+go-htmx-demo-windows-amd64.exe
+```
+
+The app starts on `http://localhost:8080` by default. Override the port with:
+
+```bash
+SERVER_LISTEN_PORT=3000 ./go-htmx-demo-linux-amd64
+```
+
+### From Source
+
+```bash
+git clone https://github.com/catgoose/go-htmx-demo.git
+cd go-htmx-demo
+go build -o go-htmx-demo .
+./go-htmx-demo
+```
 
 ## Tech Stack
 
-- [**Go**](https://go.dev/): Backend language
-- [**Echo**](https://echo.labstack.com/): High performance, minimalist Go web framework
-- [**HTMX**](https://htmx.org/): Modern frontend interactivity with minimal JavaScript
-- [**templ**](https://templ.guide/): Type-safe HTML templating for Go
-- [**Air**](https://github.com/air-verse/air): Live reloading for Go applications
-- [**Mage**](https://magefile.org/): Make/rake-like build tool for Go
-- [**Tailwind CSS**](https://tailwindcss.com/): Utility-first CSS framework
-- [**DaisyUI**](https://daisyui.com/): Tailwind CSS component library
-- [**Caddy**](https://caddyserver.com/): Optional reverse proxy with TLS termination for HTTPS development
+- [**Go**](https://go.dev/) -- Backend language
+- [**Echo**](https://echo.labstack.com/) -- High performance, minimalist Go web framework
+- [**HTMX**](https://htmx.org/) -- Frontend interactivity with minimal JavaScript
+- [**templ**](https://templ.guide/) -- Type-safe HTML templating for Go
+- [**Tailwind CSS**](https://tailwindcss.com/) -- Utility-first CSS framework
+- [**DaisyUI**](https://daisyui.com/) -- Tailwind CSS component library
+- [**Hyperscript**](https://hyperscript.org/) -- Lightweight scripting for DOM interactions
+- [**SQLite**](https://www.sqlite.org/) -- Embedded database for demo data
+- [**Air**](https://github.com/air-verse/air) -- Live reloading for Go development
+- [**Mage**](https://magefile.org/) -- Make/rake-like build tool for Go
 
-## Getting Started
+## Project Structure
+
+```
+go-htmx-demo/
+├── main.go                    # Application entrypoint
+├── magefile.go                # Build automation targets
+├── internals/
+│   ├── config/                # Configuration management
+│   ├── logger/                # Structured logging (slog)
+│   ├── routes/                # HTTP routes, handlers, middleware
+│   │   ├── handler/           # Component rendering utilities
+│   │   ├── middleware/        # Request validation, error handling
+│   │   ├── response/         # HTMX OOB response builders
+│   │   ├── hypermedia/       # Navigation, filters, table state
+│   │   └── routes_realtime.go # SSE endpoints and publishers
+│   ├── demo/                  # SQLite demo database
+│   ├── ssebroker/             # Topic-based pub/sub for SSE
+│   └── domain/                # Data models
+├── web/
+│   ├── views/                 # Page-level templ components
+│   ├── components/core/       # Reusable UI components
+│   ├── styles/                # Tailwind CSS input
+│   └── assets/public/         # Static assets (embedded in binary)
+│       ├── js/                # HTMX, Hyperscript, SSE extension
+│       └── css/               # Tailwind, DaisyUI
+└── tests/                     # Test utilities
+```
+
+## Template Setup
+
+This repo doubles as a template for new Go + HTMX projects. Run `mage setup` to customize the module path, ports, and features for your own app.
+
+### Interactive Setup (with gum)
+
+Install [`gum`](https://github.com/charmbracelet/gum) for the interactive wizard:
+
+```bash
+go install github.com/charmbracelet/gum@latest
+go tool mage setup
+```
+
+The wizard walks you through:
+
+1. **Copy to new directory** -- Optionally copy the template to a new location and run `git init`
+2. **App name** -- Human-readable name (e.g. "My App"), used to derive the binary name
+3. **Module path** -- Go module path (e.g. `github.com/you/my-app`)
+4. **Base port** -- 5-digit port number; the app uses `BASE_PORT`, templ proxy uses `BASE_PORT+1`, Caddy uses `BASE_PORT+2`
+5. **Feature selection** -- Multi-select which features to include:
+
+| Feature              | Description                                  | Default    |
+| -------------------- | -------------------------------------------- | ---------- |
+| Auth (Crooner)       | Azure AD authentication via Crooner          | Selected   |
+| Graph API            | Microsoft Graph SDK integration              | Selected   |
+| Avatar Photos        | User photo sync from Azure (requires Graph)  | Selected   |
+| Database (MSSQL)     | SQL Server database with SQLx                | Selected   |
+| SSE                  | Server-Sent Events real-time updates (requires Caddy) | Selected |
+| Caddy (HTTPS)        | Caddy reverse proxy with TLS termination     | Selected   |
+| Demo Content         | SQLite demo tables, hypermedia examples       | Unselected |
+
+Deselected features have their code, routes, imports, and related files stripped from the project. Dependencies are auto-resolved (SSE includes Caddy, Avatar includes Graph).
+
+### Non-interactive Setup
+
+```bash
+go tool mage setup -n "My App" -m "github.com/me/my-app" -p 12345
+go tool mage setup -n "My App" --features sse,demo
+go tool mage setup -n "My App" --features none
+go tool mage setup -n "My App" --features all
+```
+
+| Flag           | Description                                                        |
+| -------------- | ------------------------------------------------------------------ |
+| `-n APP_NAME`  | App name (required)                                                |
+| `-m MODULE`    | Go module path                                                     |
+| `-p PORT`      | 5-digit base port (< 60000)                                       |
+| `--features`   | Comma-separated: `auth,graph,avatar,database,sse,caddy,demo`, `all`, or `none` |
+| `--force`      | Re-run setup on an already customized project                      |
+
+After setup, review `.env.development` and start the dev server with `go tool mage watch`.
+
+## Development
 
 ### Prerequisites
 
-- Go 1.24+
-- (Optional, recommended) [`gum`](https://github.com/charmbracelet/gum) for interactive setup:
+- Go 1.26+ (latest)
+- Node.js 20+ (for Tailwind CSS compilation)
+- (Optional) [`gum`](https://github.com/charmbracelet/gum) for interactive setup
 
-  ```bash
-  go install github.com/charmbracelet/gum@latest
-  ```
-
-### Running the Project
-
-#### One-time template setup
-
-If you are using this repo as a template for a new app:
+### Running the Dev Server
 
 ```bash
-# With gum installed (interactive wizard, preferred)
-go tool mage setup
+# Install npm dependencies (first time)
+npm ci
 
-# Or specify values explicitly (works with or without gum)
-go tool mage setup -n "My App" -m "github.com/me/my-app" -p 5124
-```
-
-With `gum` installed, the setup script will first ask whether to copy the template to a new directory; if you choose yes, you enter the target path, the tree is copied there excluding `.git`, and you can optionally run `git init` in the new directory. Setup then continues in that directory (or in the current directory if you declined). You are prompted for app name, module path, and base port; without `gum` or when passing flags, setup runs in the current directory with no copy prompt.
-
-After setup: review `.env.dev`, run `go tool mage watch`, and if you used the copy-and-git-init flow, add a remote when ready: `git remote add origin <url>`.
-
-#### Start dev server
-
-To start the development server with live reload and built-in TLS support:
-
-```sh
+# Start development with live reload (Tailwind, Templ, Air)
 go tool mage watch
 ```
 
-This will start the server with TLS on port `{{APP_TLS_PORT}}` and reload on code changes. The application automatically uses TLS in development mode.
+The dev server starts with TLS on the configured port. Edit `.env.development` to change settings.
 
-### Project Structure
+### HTTPS Development Setup
 
-- `main.go` — Application entrypoint with context-based lifecycle management
-- `internals/config/` — Configuration management with singleton pattern
-- `internals/logger/` — Structured logging with environment-aware configuration
-- `internals/routes/` — Route and handler definitions
-- `internals/service/` — Business logic services (includes `graph/`: Microsoft Graph SDK for Go client and user cache)
-- `web/views/` — Templ components (HTML views)
-- `web/components/` — Reusable Templ components
-- `web/assets/public/` — Static assets (JS, CSS, images)
-- `tests/` — Test helpers and utilities
-- `cmd/testwatcher/` — Go-based test watcher for development
-
-Optional env vars (e.g. for Crooner auth or Microsoft Graph) are documented in `.env.sample`.
-
-## HTTPS Development Setup
-
-This project supports HTTPS development with built-in TLS support. The Go application runs with TLS in development mode, and Caddy provides additional reverse proxy capabilities if needed.
-
-### Certificate Setup
-
-When the Caddy feature is selected, `go tool mage setup` checks for existing `localhost.crt` and `localhost.key` in the project root. If they exist (e.g. already trusted by your OS), they are used as-is. If missing, setup asks whether to generate new self-signed certificates.
-
-To regenerate certificates manually:
+The dev server uses TLS with self-signed certificates. Generate them with:
 
 ```bash
 openssl req -x509 -newkey rsa:2048 -keyout localhost.key -out localhost.crt \
@@ -97,164 +254,49 @@ openssl req -x509 -newkey rsa:2048 -keyout localhost.key -out localhost.crt \
   -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 ```
 
-To trust the certificate on your system:
+Trust the certificate on your system:
 
-**Linux (Ubuntu/Debian):**
-```bash
-sudo cp localhost.crt /usr/local/share/ca-certificates/
-sudo update-ca-certificates
-```
-
-**macOS:**
-1. Open Keychain Access
-2. Drag `localhost.crt` to Keychain Access → System
-3. Double-click the certificate and set 'Trust' to 'Always Trust'
-
-**Windows:**
-1. Right-click `localhost.crt`
-2. Select 'Install Certificate'
-3. Choose 'Local Machine' and 'Trusted Root Certification Authorities'
-
-### Running with HTTPS
-
-**Option 1: Direct TLS (Recommended)**
-```bash
-go tool mage watch
-```
-This starts the Go application with built-in TLS support on port `{{APP_TLS_PORT}}`.
-
-**Option 2: With Caddy Proxy**
-1. **Start the Go application** (in one terminal):
-   ```bash
-   go tool mage watch
-   ```
-
-2. **Start Caddy with TLS termination** (in another terminal):
-   ```bash
-   go tool mage caddystart
-   ```
-
-3. **Access your application**:
-   - Direct TLS (Echo): https://localhost:`{{APP_TLS_PORT}}`
-   - Caddy proxy: https://localhost:`{{CADDY_TLS_PORT}}`
-   - Templ HTTP proxy (internal): http://localhost:`{{TEMPL_HTTP_PORT}}`
-
-### Troubleshooting
-
-- **Certificate not trusted**: Follow the certificate setup instructions above
-- **Templ proxy issues**: Make sure the certificate is trusted in your system
-- **Port conflicts**: Ensure the chosen `{{APP_TLS_PORT}}`, `{{CADDY_TLS_PORT}}`, and `{{TEMPL_HTTP_PORT}}` are available
+- **Linux**: `sudo cp localhost.crt /usr/local/share/ca-certificates/ && sudo update-ca-certificates`
+- **macOS**: Open Keychain Access, drag cert to System, set Trust to Always Trust
+- **Windows**: Right-click cert, Install Certificate, Local Machine, Trusted Root CAs
 
 ## Testing
 
-This project includes a comprehensive test suite with multiple testing options:
-
-### Running Tests
-
 ```bash
-# Run all tests
-go tool mage test
-
-# Run tests with verbose output
-go tool mage testverbose
-
-# Run tests with coverage
-go tool mage testcoverage
-
-# Generate HTML coverage report
-go tool mage testcoveragehtml
-
-# Run benchmark tests
-go tool mage testbenchmark
-
-# Run tests with race detection
-go tool mage testrace
-
-# Run tests in watch mode (automatically runs on file changes)
-go tool mage testwatch
+go tool mage test              # Run all tests
+go tool mage testverbose       # Verbose output
+go tool mage testcoverage      # Coverage report
+go tool mage testrace          # Race detection
+go tool mage testwatch         # Watch mode
 ```
-
-### Test Coverage
-
-- **Config Package**: 90.9% coverage (singleton pattern, environment variables)
-- **Logger Package**: 76.9% coverage (initialization, log levels, thread safety)
-- **Main Application**: Integration tests for startup, shutdown, and lifecycle
-
-### Test Features
-
-- **Singleton Testing**: Proper reset functions for testing
-- **Environment Variables**: Isolated test environment
-- **Context Management**: Lifecycle and cancellation testing
-- **Thread Safety**: Concurrent access testing
-- **Performance**: Benchmark tests for startup and request handling
 
 ## Mage Targets
 
-This project uses [Mage](https://magefile.org/) for build automation. All commands can be run with `go tool mage <target>`.
+All commands run with `go tool mage <target>`.
 
-| Command             | Category     | Description                                                                  |
-| ------------------- | ------------ | ---------------------------------------------------------------------------- |
-| `watch`             | Development  | Start development mode with live reload (Tailwind, Templ, Air)               |
-| `air`               | Development  | Run Air live reload tool for Go development                                  |
-| `templ`             | Development  | Run Templ in watch mode for template compilation                             |
-| `templwatch`        | Development  | Run Templ in watch mode (alias for `templ`)                                  |
-| `templgenerate`     | Development  | Generate Templ files once                                                    |
-| `build`             | Build        | Clean, update assets, and build the project                                  |
-| `compile`           | Build        | Build the Go project                                                         |
-| `run`               | Build        | Execute the compiled binary                                                  |
-| `copyfiles`         | Build        | Copy necessary files to build directory                                      |
-| `updateassets`      | Assets       | Update all assets (Hyperscript, HTMX, DaisyUI, Tailwind)                     |
-| `tailwind`          | Assets       | Run Tailwind CSS compilation                                                 |
-| `tailwindwatch`     | Assets       | Run Tailwind in watch mode                                                   |
-| `tailwindupload`    | Assets       | Update the Tailwind binary                                                   |
-| `daisyupdate`       | Assets       | Update DaisyUI CSS                                                           |
-| `htmxupdate`        | Assets       | Update HTMX related files                                                    |
-| `hyperscriptupdate` | Assets       | Update Hyperscript file                                                      |
-| `test`              | Testing      | Run all tests                                                                |
-| `testverbose`       | Testing      | Run tests with verbose output                                                |
-| `testcoverage`      | Testing      | Run tests with coverage report                                               |
-| `testcoveragehtml`  | Testing      | Generate HTML coverage report                                                |
-| `testbenchmark`     | Testing      | Run benchmark tests                                                          |
-| `testrace`          | Testing      | Run tests with race detection                                                |
-| `testwatch`         | Testing      | Run tests in watch mode using Go-based watcher                              |
-| `lint`              | Code Quality | Run static analysis and style checks (golangci-lint, golint, fieldalignment) |
-| `fixfieldalignment` | Code Quality | Automatically fix field alignment issues                                     |
-| `lintwatch`         | Code Quality | Run Air with lint configuration for automatic linting on file changes        |
-| `clean`             | Utility      | Remove build and debug files                                                 |
-| `cleanbuild`        | Utility      | Remove the build directory                                                   |
-| `cleandebug`        | Utility      | Remove debug binaries                                                        |
-| `envcheck`          | Utility      | Verify the environment file exists                                           |
-| `preparedirs`       | Utility      | Create necessary directories                                                 |
-| `caddyinstall`      | HTTPS        | Install Caddy for local development                                         |
-| `caddystart`        | HTTPS        | Start Caddy with TLS termination                                            |
-
-### Example Usage
-
-```sh
-# Start development with live reload
-go tool mage watch
-
-# Build the project
-go tool mage build
-
-# Run tests
-go tool mage test
-
-# Run tests in watch mode
-go tool mage testwatch
-
-# Run linting
-go tool mage lint
-
-# Run linting in watch mode
-go tool mage lintwatch
-
-# Update all assets
-go tool mage updateassets
-
-# Clean build artifacts
-go tool mage clean
-
-# Set up HTTPS with Caddy (optional)
-go tool mage caddyinstall
-```
+| Command             | Category     | Description                                                   |
+| ------------------- | ------------ | ------------------------------------------------------------- |
+| `watch`             | Development  | Start dev mode with live reload (Tailwind, Templ, Air)        |
+| `air`               | Development  | Run Air live reload for Go                                    |
+| `templ`             | Development  | Run Templ in watch mode                                       |
+| `templgenerate`     | Development  | Generate Templ files once                                     |
+| `build`             | Build        | Clean, update assets, and build the project                   |
+| `compile`           | Build        | Build the Go binary                                           |
+| `run`               | Build        | Build and execute                                             |
+| `updateassets`      | Assets       | Update all assets (Hyperscript, HTMX, DaisyUI, Tailwind)     |
+| `tailwind`          | Assets       | Run Tailwind CSS compilation                                  |
+| `tailwindwatch`     | Assets       | Run Tailwind in watch mode                                    |
+| `daisyupdate`       | Assets       | Update DaisyUI CSS                                            |
+| `htmxupdate`        | Assets       | Update HTMX files                                             |
+| `test`              | Testing      | Run all tests                                                 |
+| `testverbose`       | Testing      | Tests with verbose output                                     |
+| `testcoverage`      | Testing      | Tests with coverage report                                    |
+| `testcoveragehtml`  | Testing      | Generate HTML coverage report                                 |
+| `testbenchmark`     | Testing      | Run benchmark tests                                           |
+| `testrace`          | Testing      | Tests with race detection                                     |
+| `testwatch`         | Testing      | Tests in watch mode                                           |
+| `lint`              | Code Quality | Run static analysis (golangci-lint, golint, fieldalignment)   |
+| `fixfieldalignment` | Code Quality | Auto-fix field alignment                                      |
+| `clean`             | Utility      | Remove build and debug files                                  |
+| `caddyinstall`      | HTTPS        | Install Caddy for local dev                                   |
+| `caddystart`        | HTTPS        | Start Caddy with TLS termination                              |

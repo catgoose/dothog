@@ -11,8 +11,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
-	components "catgoose/go-htmx-template/web/components/core"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	components "catgoose/go-htmx-demo/web/components/core"
 )
 
 // HypermediaControlsPage is the interactive gallery of every hypermedia control,

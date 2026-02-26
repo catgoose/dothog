@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/go-htmx-template/internals/routes/hypermedia"
+import "catgoose/go-htmx-demo/internals/routes/hypermedia"
 
 // variantClass maps a ControlVariant to the corresponding DaisyUI btn modifier class.
 func variantClass(v hypermedia.ControlVariant) string {

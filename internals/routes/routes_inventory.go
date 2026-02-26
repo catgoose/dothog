@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"catgoose/go-htmx-template/internals/demo"
-	"catgoose/go-htmx-template/internals/routes/handler"
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
-	"catgoose/go-htmx-template/web/views"
+	"catgoose/go-htmx-demo/internals/demo"
+	"catgoose/go-htmx-demo/internals/routes/handler"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/web/views"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"

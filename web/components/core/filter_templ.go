@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/go-htmx-template/internals/routes/hypermedia"
+import "catgoose/go-htmx-demo/internals/routes/hypermedia"
 
 // filterTrigger returns the default hx-trigger string for each FilterKind.
 func filterTrigger(kind hypermedia.FilterKind) string {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"catgoose/go-htmx-template/internals/logger"
+	"catgoose/go-htmx-demo/internals/logger"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Register SQLite driver

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"catgoose/go-htmx-template/internals/domain"
+	"catgoose/go-htmx-demo/internals/domain"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/microsoft/kiota-abstractions-go"

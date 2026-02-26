@@ -1,7 +1,7 @@
-site_name: go-htmx-template
-site_description: Go + HTMX + Templ project template documentation
-repo_url: https://github.com/catgoose/go-htmx-template
-repo_name: catgoose/go-htmx-template
+site_name: go-htmx-demo
+site_description: Go + HTMX + Templ demo documentation
+repo_url: https://github.com/catgoose/go-htmx-demo
+repo_name: catgoose/go-htmx-demo
 
 theme:
   name: material

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"net/http"
 
-	"catgoose/go-htmx-template/internals/logger"
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
-	"catgoose/go-htmx-template/internals/routes/response"
-	corecomponents "catgoose/go-htmx-template/web/components/core"
+	"catgoose/go-htmx-demo/internals/logger"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/internals/routes/response"
+	corecomponents "catgoose/go-htmx-demo/web/components/core"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"

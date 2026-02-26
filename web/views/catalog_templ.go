@@ -14,9 +14,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"catgoose/go-htmx-template/internals/demo"
-	"catgoose/go-htmx-template/internals/routes/hypermedia"
-	components "catgoose/go-htmx-template/web/components/core"
+	"catgoose/go-htmx-demo/internals/demo"
+	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	components "catgoose/go-htmx-demo/web/components/core"
 )
 
 // CatalogPage is the full page content for /tables/catalog.

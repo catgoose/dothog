@@ -9,8 +9,8 @@ import (
 	"os"
 	"testing"
 
-	"catgoose/go-htmx-template/internals/logger"
-	"catgoose/go-htmx-template/internals/routes/middleware"
+	"catgoose/go-htmx-demo/internals/logger"
+	"catgoose/go-htmx-demo/internals/routes/middleware"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
