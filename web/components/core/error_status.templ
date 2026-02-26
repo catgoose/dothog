@@ -1,0 +1,85 @@
+package components
+
+import (
+	"strconv"
+
+	"catgoose/go-htmx-template/internals/routes/hypermedia"
+)
+
+// oobSwapValue builds the hx-swap-oob attribute value for OOB error placement.
+func oobSwapValue(ec hypermedia.ErrorContext) string {
+	swap := ec.OOBSwap
+	if swap == "" {
+		swap = "innerHTML"
+	}
+	if ec.OOBTarget == "" {
+		return swap
+	}
+	return swap + ":" + ec.OOBTarget
+}
+
+// ErrorStatusFromContext is the primary error status component.
+// It renders the full error panel from an ErrorContext, including action controls.
+// When ec.OOBTarget is set the div includes hx-swap-oob so HTMX routes it
+// out-of-band to the specified target.
+templ ErrorStatusFromContext(ec hypermedia.ErrorContext) {
+	if ec.OOBTarget != "" {
+		<div
+			id="error-message-content"
+			class="bg-rose-100 border-b border-b-rose-400 text-rose-800 p-2 shadow-md text-sm"
+			hx-swap-oob={ oobSwapValue(ec) }
+		>
+			@errorStatusBody(ec)
+		</div>
+	} else {
+		<div
+			id="error-message-content"
+			class="bg-rose-100 border-b border-b-rose-400 text-rose-800 p-2 shadow-md text-sm"
+		>
+			@errorStatusBody(ec)
+		</div>
+	}
+}
+
+templ errorStatusBody(ec hypermedia.ErrorContext) {
+	if ec.Closable {
+		<button
+			class="absolute top-0 right-2 text-rose-800 hover:text-rose-600 text-2xl"
+			_="on click tell #error-message-content transition opacity to 0 over 500ms then remove you"
+		>
+			&times;
+		</button>
+	}
+	<p class="mb-1">
+		<strong>Status Code:</strong> { strconv.Itoa(ec.StatusCode) }
+	</p>
+	<p class="mb-1">
+		<strong>Route:</strong> { ec.Route }
+	</p>
+	<p class="mb-1">
+		<strong>Message:</strong> { ec.Message }
+	</p>
+	if ec.RequestID != "" {
+		<p class="mb-1">
+			<strong>Request ID:</strong> <code class="bg-rose-200 px-1 py-0.5 rounded text-xs">{ ec.RequestID }</code>
+		</p>
+	}
+	if ec.Err != nil {
+		<p class="mb-1">
+			<strong>Error:</strong> { ec.Err.Error() }
+		</p>
+	}
+	@ErrorControls(ec.Controls)
+}
+
+// ErrorStatus is the backward-compatible wrapper. All existing call sites are unchanged.
+templ ErrorStatus(statusCode int, message string, err error, route string, requestID string, closable bool) {
+	@ErrorStatusFromContext(hypermedia.ErrorContext{
+		StatusCode: statusCode,
+		Message:    message,
+		Err:        err,
+		Route:      route,
+		RequestID:  requestID,
+		Closable:   closable,
+	})
+}

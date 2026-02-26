@@ -1,0 +1,328 @@
+// setup:feature:demo
+package views
+
+import (
+	"catgoose/go-htmx-template/internals/routes/hypermedia"
+	components "catgoose/go-htmx-template/web/components/core"
+)
+
+// HypermediaControlsPage is the interactive gallery of every hypermedia control,
+// variant, and component. Each section is fully wired to server endpoints.
+templ HypermediaControlsPage() {
+	<div class="p-4 space-y-6 max-w-5xl mx-auto">
+		<div class="flex items-center justify-between mb-4">
+			<h1 class="text-2xl font-bold">Controls Gallery</h1>
+			<a href="/tables/inventory" class="btn btn-sm btn-primary">Live Demo</a>
+		</div>
+		// ─── 1. Button Variants ──────────────────────────────────────────────
+		@controlsSection("1. Button Variants") {
+			<p class="text-sm text-base-content/70 mb-3">Click any button — each <code class="text-xs bg-base-200 px-1 rounded">POST</code>s to the server and the response shows which variant was clicked.</p>
+			@components.Controls([]hypermedia.Control{
+				{Kind: hypermedia.ControlKindHTMX, Label: "Primary", Variant: hypermedia.VariantPrimary,
+					HxRequest: hypermedia.HxPost("/hypermedia/controls/echo?v=primary", "#variant-result"), Swap: hypermedia.SwapInnerHTML},
+				{Kind: hypermedia.ControlKindHTMX, Label: "Secondary", Variant: hypermedia.VariantSecondary,
+					HxRequest: hypermedia.HxPost("/hypermedia/controls/echo?v=secondary", "#variant-result"), Swap: hypermedia.SwapInnerHTML},
+				{Kind: hypermedia.ControlKindHTMX, Label: "Danger", Variant: hypermedia.VariantDanger,
+					HxRequest: hypermedia.HxPost("/hypermedia/controls/echo?v=danger", "#variant-result"), Swap: hypermedia.SwapInnerHTML},
+				{Kind: hypermedia.ControlKindHTMX, Label: "Ghost", Variant: hypermedia.VariantGhost,
+					HxRequest: hypermedia.HxPost("/hypermedia/controls/echo?v=ghost", "#variant-result"), Swap: hypermedia.SwapInnerHTML},
+				{Kind: hypermedia.ControlKindHTMX, Label: "Link", Variant: hypermedia.VariantLink,
+					HxRequest: hypermedia.HxPost("/hypermedia/controls/echo?v=link", "#variant-result"), Swap: hypermedia.SwapInnerHTML},
+			})
+			<div id="variant-result" class="mt-3 text-sm text-base-content/50 italic">Click a button above…</div>
+		}
+		// ─── 2. Control Kinds ────────────────────────────────────────────────
+		@controlsSection("2. Control Kinds") {
+			<p class="text-sm text-base-content/70 mb-3">Each kind uses a different mechanism: HTMX request, HyperScript, or plain navigation.</p>
+			<div class="space-y-3">
+				@components.Controls([]hypermedia.Control{
+					hypermedia.RetryButton("Retry", hypermedia.HxMethodGet, "/hypermedia/controls/retry", "#kind-result"),
+					hypermedia.HTMXAction("HTMX Action", hypermedia.HxPost("/hypermedia/controls/action", "#kind-result")),
+					hypermedia.BackButton("Go Back"),
+					hypermedia.RedirectLink("Link", "/"),
+				})
+				<div id="kind-result" class="text-sm text-base-content/50 italic">Click Retry or HTMX Action…</div>
+				<p class="text-xs font-medium text-base-content/60 mt-1">Dismiss demo:</p>
+				<div id="dismiss-demo">
+					@DismissDemoFragment()
+				</div>
+				<button
+					id="dismiss-reset-btn"
+					class="btn btn-sm btn-outline hidden"
+					hx-get="/hypermedia/controls/dismiss-reset"
+					hx-target="#dismiss-demo"
+					hx-swap="innerHTML"
+				>Reset Dismiss Demo</button>
+			</div>
+		}
+		// ─── 3. Resource Actions ─────────────────────────────────────────────
+		@controlsSection("3. Resource Actions") {
+			<p class="text-sm text-base-content/70 mb-3">
+				<code class="text-xs bg-base-200 px-1 rounded">ResourceActions()</code> factory. Edit swaps to a form, Delete removes with confirmation, Undo restores.
+			</p>
+			<div id="resource-demo">
+				@ResourceViewFragment("Hypermedia Widget", "A server-driven UI component")
+			</div>
+		}
+		// ─── 4. Form Actions ─────────────────────────────────────────────────
+		@controlsSection("4. Form Actions") {
+			<p class="text-sm text-base-content/70 mb-3">
+				<code class="text-xs bg-base-200 px-1 rounded">FormActions()</code> factory. Save submits via the parent form&#39;s <code class="text-xs bg-base-200 px-1 rounded">hx-post</code>. Cancel navigates away.
+			</p>
+			<div id="form-demo">
+				@FormDemoFragment()
+			</div>
+		}
+		// ─── 5. Empty State Action ───────────────────────────────────────────
+		@controlsSection("5. Empty State Action") {
+			<p class="text-sm text-base-content/70 mb-3">
+				<code class="text-xs bg-base-200 px-1 rounded">EmptyStateAction()</code> pattern. Click to create items, Reset clears.
+			</p>
+			<div id="items-demo">
+				@EmptyStateFragment()
+			</div>
+		}
+		// ─── 6. Error Status ─────────────────────────────────────────────────
+		@controlsSection("6. Error Status") {
+			<div class="space-y-4">
+				<p class="text-sm font-medium text-base-content/60">404 Not Found (closable):</p>
+				@components.ErrorStatusFromContext(hypermedia.ErrorContext{
+					StatusCode: 404,
+					Message:    "Page not found",
+					Route:      "/example/missing",
+					RequestID:  "req-abc-123",
+					Closable:   true,
+				})
+				<p class="text-sm font-medium text-base-content/60 mt-4">500 Internal Error:</p>
+				@components.ErrorStatusFromContext(hypermedia.ErrorContext{
+					StatusCode: 500,
+					Message:    "Internal server error",
+					Route:      "/api/data",
+					RequestID:  "req-def-456",
+					Closable:   true,
+				})
+			</div>
+		}
+		// ─── 7. Error Controls ───────────────────────────────────────────────
+		@controlsSection("7. Error Controls") {
+			<div class="space-y-4">
+				<p class="text-sm font-medium text-base-content/60">404 Not Found controls (Back + Go Home):</p>
+				@components.ErrorControls(hypermedia.NotFoundControls("/"))
+				<p class="text-sm font-medium text-base-content/60 mt-2">500 Internal Error controls (Retry + Dismiss):</p>
+				<div id="error-retry-demo">
+					@components.ErrorControls(hypermedia.InternalErrorControls(hypermedia.ErrorControlOpts{
+						RetryURL:    "/hypermedia/controls/retry",
+						RetryTarget: "#error-retry-demo",
+					}))
+				</div>
+			</div>
+		}
+		// ─── 8. Navigation ───────────────────────────────────────────────────
+		@controlsSection("8. Navigation") {
+			<div class="space-y-4">
+				@components.NavBar(hypermedia.SetActiveNavItem([]hypermedia.NavItem{
+					{
+						Label: "Tables",
+						Children: []hypermedia.NavItem{
+							{Label: "Inventory", Href: "/tables/inventory"},
+							{Label: "Catalog", Href: "/tables/catalog"},
+							{Label: "Bulk", Href: "/tables/bulk"},
+						},
+					},
+					{
+						Label: "Hypermedia Controls",
+						Children: []hypermedia.NavItem{
+							{Label: "Controls", Href: "/hypermedia/controls"},
+						},
+					},
+				}, "/hypermedia/controls"))
+				@components.Breadcrumbs(hypermedia.BreadcrumbsFromPath("/tables/inventory", map[int]string{0: "Tables", 1: "Inventory"}))
+			</div>
+		}
+		// ─── 9. Filter Fields ────────────────────────────────────────────────
+		@controlsSection("9. Filter Fields") {
+			<p class="text-sm text-base-content/70 mb-3">Adjust any filter to see results update live. Each field fires <code class="text-xs bg-base-200 px-1 rounded">hx-get</code> with <code class="text-xs bg-base-200 px-1 rounded">hx-include</code> to send all field values.</p>
+			@components.FilterBar(hypermedia.NewFilterBar("/hypermedia/controls/filter", "#filter-results",
+				hypermedia.SearchField("q", "Search\u2026", ""),
+				hypermedia.SelectField("cat", "Category", "",
+					hypermedia.SelectOptions("",
+						"", "All",
+						"Electronics", "Electronics",
+						"Sports", "Sports",
+						"Books", "Books",
+						"Clothing", "Clothing",
+					)),
+				hypermedia.RangeField("price", "Max Price", "500", "0", "500", "10"),
+				hypermedia.CheckboxField("active", "Active only", ""),
+			))
+			<div
+				id="filter-results"
+				hx-get="/hypermedia/controls/filter"
+				hx-trigger="load"
+				class="mt-4 text-sm text-base-content/50"
+			>
+				<span class="loading loading-spinner loading-xs"></span> Loading…
+			</div>
+		}
+		// ─── 10. Live Demo ───────────────────────────────────────────────────
+		@controlsSection("10. Live Demo") {
+			<div role="alert" class="alert alert-info">
+				<span>The live demo shows FilterBar + Table + PaginationBar with a real SQLite backend.</span>
+				<a href="/tables/inventory" class="btn btn-sm btn-primary">Open Inventory</a>
+			</div>
+		}
+		// ─── 11. Row Actions (Edit / Delete) ─────────────────────────────────
+		@controlsSection("11. Row Actions (Edit / Delete)") {
+			<p class="text-sm text-base-content/70 mb-3">
+				<code class="text-xs bg-base-200 px-1 rounded">RowActions()</code> factory. Edit swaps the row to an inline form, Delete removes with <code class="text-xs bg-base-200 px-1 rounded">hx-confirm</code>.
+			</p>
+			<div class="overflow-x-auto">
+				<table class="table table-sm">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Category</th>
+							<th>Price</th>
+							<th>Status</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						@RowViewFragment(GalleryRowItem{ID: 1, Name: "Example Item", Category: "Electronics", Price: "99.99", Active: true})
+					</tbody>
+				</table>
+			</div>
+		}
+		// ─── 12. Row Form Actions (Save / Cancel) ────────────────────────────
+		@controlsSection("12. Row Form Actions (Save / Cancel)") {
+			<p class="text-sm text-base-content/70 mb-3">
+				<code class="text-xs bg-base-200 px-1 rounded">RowFormActions()</code> factory. Save sends <code class="text-xs bg-base-200 px-1 rounded">hx-put</code> with <code class="text-xs bg-base-200 px-1 rounded">hx-include="closest tr"</code>. Cancel restores the view row.
+			</p>
+			<div class="overflow-x-auto">
+				<table class="table table-sm">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Category</th>
+							<th>Price</th>
+							<th>Active</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						@RowEditFragment(GalleryRowItem{ID: 2, Name: "Second Item", Category: "Books", Price: "24.50", Active: true})
+					</tbody>
+				</table>
+			</div>
+		}
+		// ─── 13. HATEOAS Error Recovery ──────────────────────────────────
+		@controlsSection("13. HATEOAS Error Recovery") {
+			<p class="text-sm text-base-content/70 mb-3">
+				Each scenario returns an error panel with <strong>embedded recovery controls</strong> — the server tells the client exactly how to fix each problem. This is the power of HATEOAS: the API response <em>itself</em> contains the next possible actions.
+			</p>
+			<div class="space-y-4">
+				// ── Scenario A: Transient failure (simple retry) ──
+				<div class="card bg-base-200">
+					<div class="card-body p-4">
+						<h3 class="font-semibold text-sm">A. Transient Failure (500)</h3>
+						<p class="text-xs text-base-content/60 mb-2">Odd attempts fail, even attempts succeed. Click Retry inside the error panel to try again.</p>
+						<button
+							class="btn btn-sm btn-error"
+							hx-post="/hypermedia/controls/errors/transient"
+							hx-target="#transient-result"
+							hx-target-error="#transient-result"
+							hx-swap="innerHTML"
+						>Save Record</button>
+						<div id="transient-result" class="mt-2"></div>
+					</div>
+				</div>
+				// ── Scenario B: Validation error (edit & resubmit) ──
+				<div class="card bg-base-200">
+					<div class="card-body p-4">
+						<h3 class="font-semibold text-sm">B. Validation Error (422)</h3>
+						<p class="text-xs text-base-content/60 mb-2">Bad data triggers 422. The error panel includes a pre-filled <em>fix form</em> so you can correct values and resubmit without leaving the page.</p>
+						<form
+							hx-post="/hypermedia/controls/errors/validate"
+							hx-target="#validate-result"
+							hx-target-error="#validate-result"
+							hx-swap="innerHTML"
+							class="flex items-end gap-2"
+						>
+							<div class="form-control">
+								<label class="label label-text text-xs">Name</label>
+								<input name="name" class="input input-sm input-bordered w-28" value="ab"/>
+							</div>
+							<div class="form-control">
+								<label class="label label-text text-xs">Price</label>
+								<input name="price" type="number" step="0.01" class="input input-sm input-bordered w-24" value="-5"/>
+							</div>
+							<button type="submit" class="btn btn-sm btn-error">Submit</button>
+						</form>
+						<div id="validate-result" class="mt-2"></div>
+					</div>
+				</div>
+				// ── Scenario C: Conflict (multiple recovery paths) ──
+				<div class="card bg-base-200">
+					<div class="card-body p-4">
+						<h3 class="font-semibold text-sm">C. Conflict (409)</h3>
+						<p class="text-xs text-base-content/60 mb-2">Name already exists. The error panel offers two paths: <strong>Update Existing</strong> or <strong>Create as Copy</strong>.</p>
+						<button
+							class="btn btn-sm btn-error"
+							hx-post="/hypermedia/controls/errors/conflict"
+							hx-target="#conflict-result"
+							hx-target-error="#conflict-result"
+							hx-swap="innerHTML"
+						>Create "Widget"</button>
+						<div id="conflict-result" class="mt-2"></div>
+					</div>
+				</div>
+				// ── Scenario D: Stale data (refresh + force) ──
+				<div class="card bg-base-200">
+					<div class="card-body p-4">
+						<h3 class="font-semibold text-sm">D. Stale Data (412)</h3>
+						<p class="text-xs text-base-content/60 mb-2">Version mismatch — someone else edited the record. The error panel lets you <strong>Refresh</strong> (get latest) or <strong>Force Save</strong> (overwrite).</p>
+						<form
+							hx-post="/hypermedia/controls/errors/stale"
+							hx-target="#stale-result"
+							hx-target-error="#stale-result"
+							hx-swap="innerHTML"
+							class="flex items-end gap-2"
+						>
+							<div class="form-control">
+								<label class="label label-text text-xs">Name</label>
+								<input name="name" class="input input-sm input-bordered w-40" value="My Widget"/>
+							</div>
+							<input type="hidden" name="version" value="0"/>
+							<button type="submit" class="btn btn-sm btn-error">Save (v0)</button>
+						</form>
+						<div id="stale-result" class="mt-2"></div>
+					</div>
+				</div>
+				// ── Scenario E: Dependency block (reassign or force) ──
+				<div class="card bg-base-200">
+					<div class="card-body p-4">
+						<h3 class="font-semibold text-sm">E. Dependency Block (409)</h3>
+						<p class="text-xs text-base-content/60 mb-2">Can't delete a category with items. The error panel lists dependent items and offers <strong>Reassign &amp; Delete</strong> or <strong>Force Delete</strong>.</p>
+						<button
+							class="btn btn-sm btn-error"
+							hx-delete="/hypermedia/controls/errors/cascade"
+							hx-target="#cascade-result"
+							hx-target-error="#cascade-result"
+							hx-swap="innerHTML"
+						>Delete "Electronics"</button>
+						<div id="cascade-result" class="mt-2"></div>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}
+
+templ controlsSection(title string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body">
+			<h2 class="card-title text-base">{ title }</h2>
+			{ children... }
+		</div>
+	</div>
+}

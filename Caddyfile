@@ -1,0 +1,11 @@
+{
+	auto_https disable_redirects
+}
+
+:{{CADDY_TLS_PORT}} {
+	tls localhost.crt localhost.key
+	reverse_proxy localhost:{{TEMPL_HTTP_PORT}} {
+		header_up Host {host}
+		header_up X-Real-IP {remote}
+	}
+}

@@ -1,0 +1,82 @@
+package components
+
+import "catgoose/go-htmx-template/internals/routes/hypermedia"
+
+// ErrorControls renders a row of hypermedia action controls for an error response.
+templ ErrorControls(controls []hypermedia.Control) {
+	if len(controls) > 0 {
+		<div class="mt-2 flex flex-wrap gap-2">
+			for _, ctrl := range controls {
+				switch ctrl.Kind {
+					case hypermedia.ControlKindRetry:
+						@retryButton(ctrl)
+					case hypermedia.ControlKindLink:
+						@linkControl(ctrl)
+					case hypermedia.ControlKindHTMX:
+						@htmxButton(ctrl)
+					case hypermedia.ControlKindDismiss:
+						@dismissButton(ctrl)
+					case hypermedia.ControlKindBack:
+						@errorBackButton(ctrl)
+				}
+			}
+		</div>
+	}
+}
+
+templ retryButton(ctrl hypermedia.Control) {
+	if ctrl.Variant == hypermedia.VariantPrimary {
+		<button
+			{ hxAttrsFromControl(ctrl)... }
+			class="inline-flex items-center px-3 py-1 text-xs font-medium rounded bg-rose-700 text-white hover:bg-rose-800 focus:outline-none disabled:opacity-50"
+			disabled?={ ctrl.Disabled }
+		>
+			{ ctrl.Label }
+		</button>
+	} else {
+		<button
+			{ hxAttrsFromControl(ctrl)... }
+			class="inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none disabled:opacity-50"
+			disabled?={ ctrl.Disabled }
+		>
+			{ ctrl.Label }
+		</button>
+	}
+}
+
+templ linkControl(ctrl hypermedia.Control) {
+	<a
+		href={ templ.URL(ctrl.Href) }
+		class="inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none"
+	>
+		{ ctrl.Label }
+	</a>
+}
+
+templ htmxButton(ctrl hypermedia.Control) {
+	<button
+		{ hxAttrsFromControl(ctrl)... }
+		class="inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none disabled:opacity-50"
+		disabled?={ ctrl.Disabled }
+	>
+		{ ctrl.Label }
+	</button>
+}
+
+templ dismissButton(ctrl hypermedia.Control) {
+	<button
+		class="inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none"
+		_="on click tell #error-message-content transition opacity to 0 over 300ms then remove me"
+	>
+		{ ctrl.Label }
+	</button>
+}
+
+templ errorBackButton(ctrl hypermedia.Control) {
+	<button
+		class="inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none"
+		_="on click go back"
+	>
+		{ ctrl.Label }
+	</button>
+}

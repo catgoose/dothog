@@ -1,0 +1,99 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+	"strconv"
+
+	"catgoose/go-htmx-template/internals/demo"
+	"catgoose/go-htmx-template/internals/routes/hypermedia"
+	components "catgoose/go-htmx-template/web/components/core"
+)
+
+// CatalogPage is the full page content for /tables/catalog.
+// The FilterBar lives outside the table container so it is never replaced by HTMX swaps.
+templ CatalogPage(bar hypermedia.FilterBar, tableContainer templ.Component) {
+	<div class="p-4 space-y-4">
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl font-bold">📖 Product Catalog</h1>
+		</div>
+		@components.FilterBar(bar)
+		@tableContainer
+	</div>
+}
+
+// CatalogTableContainer is the replaceable fragment targeted by filter/sort/page HTMX requests.
+templ CatalogTableContainer(cols []hypermedia.TableCol, body templ.Component, info hypermedia.PageInfo) {
+	<div id="catalog-table-container">
+		@components.Table(cols, body, info)
+	</div>
+}
+
+// CatalogItemsBody renders the <tbody> rows. Each item row is followed by an empty
+// placeholder row that receives the detail panel on expand.
+templ CatalogItemsBody(items []demo.Item) {
+	<tbody>
+		for _, item := range items {
+			@CatalogItemRow(item)
+			<tr id={ fmt.Sprintf("detail-row-%d", item.ID) }></tr>
+		}
+	</tbody>
+}
+
+// CatalogItemRow renders a single read-only row with a Details expand button.
+templ CatalogItemRow(item demo.Item) {
+	{{ rowID := fmt.Sprintf("item-row-%d", item.ID) }}
+	{{ detailURL := fmt.Sprintf("/tables/catalog/items/%d/details", item.ID) }}
+	{{ detailRowTarget := fmt.Sprintf("#detail-row-%d", item.ID) }}
+	<tr id={ rowID }>
+		<td>{ item.Name }</td>
+		<td>{ item.Category }</td>
+		<td>{ fmt.Sprintf("$%.2f", item.Price) }</td>
+		<td>{ strconv.Itoa(item.Stock) }</td>
+		<td>
+			if item.Active {
+				<span class="badge badge-success">Active</span>
+			} else {
+				<span class="badge badge-ghost">Inactive</span>
+			}
+		</td>
+		<td>
+			@components.Controls([]hypermedia.Control{
+				hypermedia.CatalogRowAction(detailURL, detailRowTarget),
+			})
+		</td>
+	</tr>
+}
+
+// CatalogDetailContent renders the expandable detail panel inserted into the placeholder row.
+// It renders a single <td colspan="6"> to span all columns.
+templ CatalogDetailContent(item demo.Item) {
+	{{ detailRowSelector := fmt.Sprintf("#detail-row-%d", item.ID) }}
+	<td colspan="6" class="bg-base-200 p-4">
+		<div class="flex items-start justify-between">
+			<div class="space-y-2">
+				<h3 class="text-lg font-semibold">{ item.Name }</h3>
+				<div class="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+					<span class="font-medium">Category:</span><span>{ item.Category }</span>
+					<span class="font-medium">Price:</span><span>{ fmt.Sprintf("$%.2f", item.Price) }</span>
+					<span class="font-medium">Stock:</span><span>{ strconv.Itoa(item.Stock) }</span>
+					<span class="font-medium">Status:</span>
+					<span>
+						if item.Active {
+							<span class="badge badge-success">Active</span>
+						} else {
+							<span class="badge badge-ghost">Inactive</span>
+						}
+					</span>
+					<span class="font-medium">Created:</span><span>{ item.CreatedAt }</span>
+				</div>
+			</div>
+			<button
+				class="btn btn-sm btn-ghost"
+				_={ "on click set innerHTML of " + detailRowSelector + " to ''" }
+			>
+				Close ✕
+			</button>
+		</div>
+	</td>
+}

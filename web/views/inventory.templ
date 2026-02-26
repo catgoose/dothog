@@ -1,0 +1,136 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+	"strconv"
+
+	"catgoose/go-htmx-template/internals/demo"
+	"catgoose/go-htmx-template/internals/routes/hypermedia"
+	components "catgoose/go-htmx-template/web/components/core"
+)
+
+// InventoryPage is the full page content for /tables/inventory.
+// The FilterBar lives outside the table container so it is never replaced by HTMX swaps.
+templ InventoryPage(bar hypermedia.FilterBar, tableContainer templ.Component) {
+	<div class="p-4 space-y-4">
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl font-bold">📦 Items Inventory</h1>
+			<div class="flex items-center gap-2">
+				@components.Controls([]hypermedia.Control{
+					{
+						Kind:    hypermedia.ControlKindHTMX,
+						Label:   "+ Add Item",
+						Variant: hypermedia.VariantPrimary,
+						Swap:    hypermedia.SwapOuterHTML,
+						HxRequest: hypermedia.HxGet("/tables/inventory/items/new", "#new-item-row"),
+					},
+				})
+				<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">Hypermedia Controls →</a>
+			</div>
+		</div>
+		@components.FilterBar(bar)
+		@tableContainer
+	</div>
+}
+
+// InventoryTableContainer is the replaceable fragment targeted by filter/sort/page HTMX requests.
+templ InventoryTableContainer(cols []hypermedia.TableCol, body templ.Component, info hypermedia.PageInfo) {
+	<div id="inventory-table-container">
+		@components.Table(cols, body, info)
+	</div>
+}
+
+// InventoryItemsBody renders the <tbody> rows for the inventory table.
+templ InventoryItemsBody(items []demo.Item) {
+	<tbody>
+		<tr id="new-item-row"></tr>
+		for _, item := range items {
+			@InventoryItemRow(item)
+		}
+	</tbody>
+}
+
+// InventoryItemRow renders a single display row for an item.
+templ InventoryItemRow(item demo.Item) {
+	{{ rowID := fmt.Sprintf("item-row-%d", item.ID) }}
+	{{ editURL := fmt.Sprintf("/tables/inventory/items/%d/edit", item.ID) }}
+	{{ deleteURL := fmt.Sprintf("/tables/inventory/items/%d", item.ID) }}
+	{{ rowTarget := "#" + rowID }}
+	<tr id={ rowID }>
+		<td>{ item.Name }</td>
+		<td>{ item.Category }</td>
+		<td>{ fmt.Sprintf("$%.2f", item.Price) }</td>
+		<td>{ strconv.Itoa(item.Stock) }</td>
+		<td>
+			if item.Active {
+				<span class="badge badge-success">Active</span>
+			} else {
+				<span class="badge badge-ghost">Inactive</span>
+			}
+		</td>
+		<td>
+			@components.Controls(hypermedia.TableRowActions(hypermedia.TableRowActionCfg{
+				EditURL:     editURL,
+				DeleteURL:   deleteURL,
+				RowTarget:   rowTarget,
+				TableTarget: "#inventory-table-container",
+				ConfirmMsg:  "Delete this item?",
+			}))
+		</td>
+	</tr>
+}
+
+// NewInventoryPlaceholder renders the empty persistent placeholder row used by the Add Item flow.
+templ NewInventoryPlaceholder() {
+	<tr id="new-item-row"></tr>
+}
+
+// InventoryEditRow renders an inline edit form row.
+// isNew=true renders the new-item form (hx-post); isNew=false renders an edit form (hx-put).
+// saveURL and cancelURL are fully-built by the handler (may include filter query params).
+templ InventoryEditRow(item demo.Item, isNew bool, saveURL, cancelURL string) {
+	{{ var rowID string }}
+	{{ var controls []hypermedia.Control }}
+	if isNew {
+		{{ rowID = "new-item-row" }}
+		{{ controls = hypermedia.NewRowFormActions(hypermedia.RowFormActionCfg{
+			SaveURL:      saveURL,
+			CancelURL:    cancelURL,
+			SaveTarget:   "#inventory-table-container",
+			CancelTarget: "#new-item-row",
+		}) }}
+	} else {
+		{{ rowID = fmt.Sprintf("item-row-%d", item.ID) }}
+		{{ controls = hypermedia.RowFormActions(hypermedia.RowFormActionCfg{
+			SaveURL:      saveURL,
+			CancelURL:    cancelURL,
+			SaveTarget:   "#inventory-table-container",
+			CancelTarget: "#" + rowID,
+		}) }}
+	}
+	<tr id={ rowID }>
+		<td>
+			<input type="text" name="name" class="input input-sm input-bordered w-full" value={ item.Name }/>
+		</td>
+		<td>
+			<select name="category" class="select select-sm select-bordered">
+				for _, cat := range []string{"Electronics", "Clothing", "Food", "Books", "Sports"} {
+					<option value={ cat } selected?={ item.Category == cat }>{ cat }</option>
+				}
+			</select>
+		</td>
+		<td>
+			<input type="number" name="price" step="0.01" class="input input-sm input-bordered w-24" value={ fmt.Sprintf("%.2f", item.Price) }/>
+		</td>
+		<td>
+			<input type="number" name="stock" class="input input-sm input-bordered w-20" value={ strconv.Itoa(item.Stock) }/>
+		</td>
+		<td>
+			<input type="checkbox" name="active" value="true" class="toggle toggle-sm" checked?={ item.Active }/>
+		</td>
+		<td>
+			@components.Controls(controls)
+		</td>
+	</tr>
+}

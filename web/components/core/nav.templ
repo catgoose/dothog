@@ -1,0 +1,82 @@
+package components
+
+import "catgoose/go-htmx-template/internals/routes/hypermedia"
+
+// navHxAttrs converts a NavItem's HTMXAttrs map to templ.Attributes with "hx-" prefix.
+func navHxAttrs(item hypermedia.NavItem) templ.Attributes {
+	attrs := make(templ.Attributes, len(item.HTMXAttrs))
+	for k, v := range item.HTMXAttrs {
+		attrs["hx-"+k] = v
+	}
+	return attrs
+}
+
+// navActiveClass returns "active" class string for DaisyUI menu items.
+func navActiveClass(active bool) string {
+	if active {
+		return "active"
+	}
+	return ""
+}
+
+// NavBar renders a DaisyUI horizontal navbar with optional HTMX enhancement.
+// Active state should be set server-side via SetActiveNavItem or SetActiveNavItemPrefix.
+templ NavBar(items []hypermedia.NavItem) {
+	<nav
+		class="navbar bg-base-200"
+		_="on click from document for d in <details[open]/> in me if not d.contains(event.target) set d.open to false"
+	>
+		<ul class="menu menu-horizontal">
+			for _, item := range items {
+				@navMenuItem(item)
+			}
+		</ul>
+	</nav>
+}
+
+templ navMenuItem(item hypermedia.NavItem) {
+	if len(item.Children) > 0 {
+		<li>
+			<details
+				_="on toggle if my open then for d in <details/> in closest <ul.menu-horizontal/> if d is not me set d.open to false"
+			>
+				<summary class={ navActiveClass(item.Active) }>
+					@heroIcon(item.Icon)
+					{ item.Label }
+				</summary>
+				<ul class="z-10">
+					for _, child := range item.Children {
+						@navMenuItem(child)
+					}
+				</ul>
+			</details>
+		</li>
+	} else {
+		<li>
+			<a
+				href={ templ.URL(item.Href) }
+				class={ navActiveClass(item.Active) }
+				{ navHxAttrs(item)... }
+			>
+				@heroIcon(item.Icon)
+				{ item.Label }
+			</a>
+		</li>
+	}
+}
+
+// Breadcrumbs renders a DaisyUI breadcrumb trail.
+// Non-terminal crumbs render as anchors; the terminal crumb renders as plain text.
+templ Breadcrumbs(crumbs []hypermedia.Breadcrumb) {
+	<div class="breadcrumbs text-sm">
+		<ul>
+			for _, crumb := range crumbs {
+				if crumb.Href != "" {
+					<li><a href={ templ.URL(crumb.Href) }>{ crumb.Label }</a></li>
+				} else {
+					<li>{ crumb.Label }</li>
+				}
+			}
+		</ul>
+	</div>
+}

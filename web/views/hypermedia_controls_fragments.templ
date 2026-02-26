@@ -1,0 +1,434 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+	"strconv"
+
+	"catgoose/go-htmx-template/internals/routes/hypermedia"
+	components "catgoose/go-htmx-template/web/components/core"
+)
+
+// GalleryItem is a simple named item for the empty-state demo.
+type GalleryItem struct {
+	Name string
+	ID   int
+}
+
+// FilterDemoItem represents an item in the filter demo dataset.
+type FilterDemoItem struct {
+	Name     string
+	Category string
+	Price    int
+	Active   bool
+}
+
+// GalleryRowItem represents a table row in the row action demos.
+type GalleryRowItem struct {
+	Name     string
+	Category string
+	Price    string
+	Active   bool
+	ID       int
+}
+
+// variantBadgeClass maps a variant name to a DaisyUI badge modifier class.
+func variantBadgeClass(v string) string {
+	switch v {
+	case "primary":
+		return "badge-primary"
+	case "danger":
+		return "badge-error"
+	case "ghost":
+		return "badge-ghost"
+	case "link":
+		return "badge-info"
+	default:
+		return "badge-secondary"
+	}
+}
+
+// ─── Section 1: Variant Echo ──────────────────────────────────────────────────
+
+templ VariantEchoFragment(variant, timestamp string) {
+	<div class="flex items-center gap-3 p-3 bg-base-200 rounded text-sm">
+		<span class={ "badge", variantBadgeClass(variant) }>{ variant }</span>
+		<span>Server received click at <code class="text-xs bg-base-300 px-1 rounded">{ timestamp }</code></span>
+	</div>
+}
+
+// ─── Section 2: Retry / Action Results ────────────────────────────────────────
+
+templ RetryResultFragment(timestamp string) {
+	<div class="alert alert-success text-sm">
+		<span>Retry succeeded at <code class="text-xs bg-base-200 px-1 rounded">{ timestamp }</code></span>
+	</div>
+}
+
+templ ActionResultFragment(timestamp string) {
+	<div class="alert alert-info text-sm">
+		<span>Action executed at <code class="text-xs bg-base-200 px-1 rounded">{ timestamp }</code></span>
+	</div>
+}
+
+templ DismissDemoFragment() {
+	<div role="alert" class="alert alert-warning text-sm transition-opacity duration-300">
+		<span>This alert can be dismissed</span>
+		<button
+			class="btn btn-sm btn-ghost"
+			_="on click add .opacity-0 to the closest <[role=alert]/> wait 300ms then set #dismiss-demo.innerHTML to '' then remove .hidden from #dismiss-reset-btn"
+		>Dismiss</button>
+	</div>
+}
+
+// ─── Section 3: Resource Actions ──────────────────────────────────────────────
+
+templ ResourceViewFragment(name, desc string) {
+	<div class="flex items-center justify-between p-4 bg-base-200 rounded">
+		<div>
+			<p class="font-semibold">{ name }</p>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+		@components.Controls(hypermedia.ResourceActions(hypermedia.ResourceActionCfg{
+			EditURL:    "/hypermedia/controls/resource/edit",
+			DeleteURL:  "/hypermedia/controls/resource",
+			ConfirmMsg: "Delete this resource?",
+			Target:     "#resource-demo",
+		}))
+	</div>
+}
+
+templ ResourceEditFragment(name, desc string) {
+	<form id="resource-edit-form" class="p-4 bg-base-200 rounded space-y-3">
+		<div class="form-control">
+			<label class="label label-text text-sm">Name</label>
+			<input type="text" name="name" class="input input-sm input-bordered w-full" value={ name }/>
+		</div>
+		<div class="form-control">
+			<label class="label label-text text-sm">Description</label>
+			<input type="text" name="desc" class="input input-sm input-bordered w-full" value={ desc }/>
+		</div>
+		<div class="flex gap-2">
+			<button
+				type="button"
+				class="btn btn-sm btn-primary"
+				hx-put="/hypermedia/controls/resource"
+				hx-target="#resource-demo"
+				hx-include="#resource-edit-form"
+			>Save</button>
+			<button
+				type="button"
+				class="btn btn-sm btn-ghost"
+				hx-get="/hypermedia/controls/resource"
+				hx-target="#resource-demo"
+			>Cancel</button>
+		</div>
+	</form>
+}
+
+templ ResourceDeletedFragment() {
+	<div class="alert alert-error text-sm">
+		<span>Resource deleted!</span>
+		<button
+			class="btn btn-sm btn-ghost"
+			hx-get="/hypermedia/controls/resource"
+			hx-target="#resource-demo"
+		>Undo</button>
+	</div>
+}
+
+// ─── Section 4: Form Actions ─────────────────────────────────────────────────
+
+templ FormDemoFragment() {
+	<form
+		hx-post="/hypermedia/controls/form"
+		hx-target="#form-demo"
+		hx-swap="innerHTML"
+		class="space-y-3"
+	>
+		<div class="grid grid-cols-2 gap-3">
+			<div class="form-control">
+				<label class="label label-text text-sm">Label</label>
+				<input name="label" class="input input-sm input-bordered" value="Widget"/>
+			</div>
+			<div class="form-control">
+				<label class="label label-text text-sm">Value</label>
+				<input name="value" class="input input-sm input-bordered" value="42"/>
+			</div>
+		</div>
+		@components.Controls(hypermedia.FormActions("/hypermedia/controls"))
+	</form>
+}
+
+templ FormSubmitResultFragment(label, value string) {
+	<div class="alert alert-success text-sm">
+		<div>
+			<p class="font-semibold">Saved!</p>
+			<p>{ label } = { value }</p>
+		</div>
+		<button
+			class="btn btn-sm btn-ghost"
+			hx-get="/hypermedia/controls/form/reset"
+			hx-target="#form-demo"
+			hx-swap="innerHTML"
+		>Reset</button>
+	</div>
+}
+
+// ─── Section 5: Empty State / Items ──────────────────────────────────────────
+
+templ EmptyStateFragment() {
+	<div class="text-center py-6 text-base-content/50">
+		<p class="mb-3">No items yet.</p>
+		@components.Controls([]hypermedia.Control{
+			{
+				Kind:      hypermedia.ControlKindHTMX,
+				Label:     "Create Item",
+				Variant:   hypermedia.VariantPrimary,
+				HxRequest: hypermedia.HxPost("/hypermedia/controls/items", "#items-demo"),
+				Swap:      hypermedia.SwapInnerHTML,
+			},
+		})
+	</div>
+}
+
+templ ItemsListFragment(items []GalleryItem) {
+	<div class="space-y-2">
+		<ul class="space-y-1">
+			for _, item := range items {
+				<li class="flex items-center gap-2 p-2 bg-base-200 rounded text-sm">
+					<span class="badge badge-sm badge-primary">{ fmt.Sprintf("#%d", item.ID) }</span>
+					{ item.Name }
+				</li>
+			}
+		</ul>
+		<div class="flex gap-2">
+			<button
+				class="btn btn-sm btn-primary"
+				hx-post="/hypermedia/controls/items"
+				hx-target="#items-demo"
+				hx-swap="innerHTML"
+			>Create Another</button>
+			<button
+				class="btn btn-sm btn-ghost"
+				hx-get="/hypermedia/controls/items/reset"
+				hx-target="#items-demo"
+				hx-swap="innerHTML"
+			>Reset</button>
+		</div>
+	</div>
+}
+
+// ─── Section 9: Filter Results ───────────────────────────────────────────────
+
+templ FilterResultsFragment(items []FilterDemoItem, total int) {
+	<p class="text-sm text-base-content/60 mb-2">
+		Showing { fmt.Sprintf("%d", len(items)) } of { fmt.Sprintf("%d", total) } items
+	</p>
+	if len(items) == 0 {
+		<p class="text-sm text-base-content/40 italic py-4 text-center">No matching items.</p>
+	} else {
+		<div class="overflow-x-auto">
+			<table class="table table-sm table-zebra">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Category</th>
+						<th>Price</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, item := range items {
+						<tr>
+							<td>{ item.Name }</td>
+							<td><span class="badge badge-sm badge-outline">{ item.Category }</span></td>
+							<td>{ fmt.Sprintf("$%d", item.Price) }</td>
+							<td>
+								if item.Active {
+									<span class="badge badge-success badge-sm">Active</span>
+								} else {
+									<span class="badge badge-ghost badge-sm">Inactive</span>
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}
+
+// ─── Sections 11-12: Row Fragments ──────────────────────────────────────────
+
+templ RowViewFragment(item GalleryRowItem) {
+	<tr id={ fmt.Sprintf("cg-row-%d", item.ID) }>
+		<td>{ item.Name }</td>
+		<td>{ item.Category }</td>
+		<td>${ item.Price }</td>
+		<td>
+			if item.Active {
+				<span class="badge badge-success badge-sm">Active</span>
+			} else {
+				<span class="badge badge-ghost badge-sm">Inactive</span>
+			}
+		</td>
+		<td>
+			@components.Controls(hypermedia.RowActions(hypermedia.RowActionCfg{
+				EditURL:    fmt.Sprintf("/hypermedia/controls/rows/%d/edit", item.ID),
+				DeleteURL:  fmt.Sprintf("/hypermedia/controls/rows/%d", item.ID),
+				RowTarget:  fmt.Sprintf("#cg-row-%d", item.ID),
+				ConfirmMsg: "Delete this item?",
+			}))
+		</td>
+	</tr>
+}
+
+templ RowEditFragment(item GalleryRowItem) {
+	<tr id={ fmt.Sprintf("cg-row-%d", item.ID) }>
+		<td><input type="text" name="name" class="input input-sm input-bordered w-full" value={ item.Name }/></td>
+		<td>
+			<select name="category" class="select select-sm select-bordered">
+				<option value="Electronics" selected?={ item.Category == "Electronics" }>Electronics</option>
+				<option value="Clothing" selected?={ item.Category == "Clothing" }>Clothing</option>
+				<option value="Food" selected?={ item.Category == "Food" }>Food</option>
+				<option value="Books" selected?={ item.Category == "Books" }>Books</option>
+				<option value="Sports" selected?={ item.Category == "Sports" }>Sports</option>
+			</select>
+		</td>
+		<td><input type="number" name="price" step="0.01" class="input input-sm input-bordered w-24" value={ item.Price }/></td>
+		<td><input type="checkbox" name="active" value="true" class="toggle toggle-sm" checked?={ item.Active }/></td>
+		<td>
+			@components.Controls(hypermedia.RowFormActions(hypermedia.RowFormActionCfg{
+				SaveURL:      fmt.Sprintf("/hypermedia/controls/rows/%d", item.ID),
+				CancelURL:    fmt.Sprintf("/hypermedia/controls/rows/%d", item.ID),
+				SaveTarget:   fmt.Sprintf("#cg-row-%d", item.ID),
+				CancelTarget: fmt.Sprintf("#cg-row-%d", item.ID),
+			}))
+		</td>
+	</tr>
+}
+
+// ─── Section 13: HATEOAS Error Recovery ─────────────────────────────────────
+
+// GalleryErrorPanel renders a compact error panel with unique ID and embedded controls.
+// Unlike ErrorStatusFromContext, each panel has its own ID so multiple can coexist.
+templ GalleryErrorPanel(panelID string, ec hypermedia.ErrorContext) {
+	<div
+		id={ panelID }
+		class="bg-rose-50 border border-rose-300 text-rose-800 p-4 rounded-lg text-sm space-y-2 transition-opacity duration-300"
+	>
+		<div class="flex justify-between items-start gap-2">
+			<div class="space-y-1 flex-1">
+				<p class="font-semibold">
+					<span class="badge badge-error badge-sm mr-1">{ strconv.Itoa(ec.StatusCode) }</span>
+					{ ec.Message }
+				</p>
+				if ec.Err != nil {
+					<p class="text-xs text-rose-600/80">{ ec.Err.Error() }</p>
+				}
+				if ec.Route != "" {
+					<p class="text-xs text-rose-600/60">Route: { ec.Route }</p>
+				}
+			</div>
+			if ec.Closable {
+				<button
+					class="text-rose-400 hover:text-rose-700 text-lg leading-none"
+					_={ "on click add .opacity-0 to #" + panelID + " wait 300ms then remove #" + panelID }
+				>&times;</button>
+			}
+		</div>
+		@components.ErrorControls(ec.Controls)
+	</div>
+}
+
+// ErrorRecoverySuccess renders a success alert with a "Try Again" reset.
+templ ErrorRecoverySuccess(title, detail, resultID string) {
+	<div class="alert alert-success text-sm">
+		<div>
+			<p class="font-semibold">{ title }</p>
+			if detail != "" {
+				<p class="text-xs">{ detail }</p>
+			}
+		</div>
+		<button
+			class="btn btn-sm btn-ghost"
+			_={ "on click set #" + resultID + ".innerHTML to ''" }
+		>Try Again</button>
+	</div>
+}
+
+// ─── Validation fix form ────────────────────────────────────────────────────
+
+templ ValidationFixForm(name, price string) {
+	<div class="p-4 bg-base-200 rounded-lg space-y-3">
+		<p class="text-sm font-medium">Fix the data and resubmit:</p>
+		<form
+			hx-post="/hypermedia/controls/errors/validate"
+			hx-target="#validate-result"
+			hx-swap="innerHTML"
+			class="space-y-2"
+		>
+			<div class="grid grid-cols-2 gap-3">
+				<div class="form-control">
+					<label class="label label-text text-xs">Name (min 3 chars)</label>
+					<input name="name" class="input input-sm input-bordered" value={ name }/>
+				</div>
+				<div class="form-control">
+					<label class="label label-text text-xs">Price (positive)</label>
+					<input name="price" type="number" step="0.01" class="input input-sm input-bordered" value={ price }/>
+				</div>
+			</div>
+			<button type="submit" class="btn btn-sm btn-primary">Resubmit</button>
+		</form>
+	</div>
+}
+
+// ─── Stale data refresh form ────────────────────────────────────────────────
+
+templ StaleRefreshForm(name string, version int) {
+	<div class="p-4 bg-base-200 rounded-lg space-y-3">
+		<p class="text-sm font-medium">
+			Fresh data loaded (v{ strconv.Itoa(version) }) — edit and save:
+		</p>
+		<form
+			hx-post="/hypermedia/controls/errors/stale"
+			hx-target="#stale-result"
+			hx-swap="innerHTML"
+			class="space-y-2"
+		>
+			<input name="name" class="input input-sm input-bordered w-full" value={ name }/>
+			<input type="hidden" name="version" value={ strconv.Itoa(version) }/>
+			<button type="submit" class="btn btn-sm btn-primary">Save</button>
+		</form>
+	</div>
+}
+
+// ─── Cascade reassign form ──────────────────────────────────────────────────
+
+templ CascadeReassignForm(items []string) {
+	<div class="p-4 bg-base-200 rounded-lg space-y-3">
+		<p class="text-sm font-medium">Reassign these items to a new category before deleting:</p>
+		<ul class="text-sm text-base-content/70 list-disc list-inside">
+			for _, item := range items {
+				<li>{ item }</li>
+			}
+		</ul>
+		<form
+			hx-post="/hypermedia/controls/errors/cascade/reassign"
+			hx-target="#cascade-result"
+			hx-swap="innerHTML"
+			class="flex items-end gap-2"
+		>
+			<div class="form-control">
+				<label class="label label-text text-xs">Move to</label>
+				<select name="new-category" class="select select-sm select-bordered">
+					<option value="General">General</option>
+					<option value="Clearance">Clearance</option>
+					<option value="Archive">Archive</option>
+				</select>
+			</div>
+			<button type="submit" class="btn btn-sm btn-primary">Reassign &amp; Delete</button>
+		</form>
+	</div>
+}

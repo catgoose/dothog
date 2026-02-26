@@ -1,0 +1,108 @@
+package components
+
+import "catgoose/go-htmx-template/internals/routes/hypermedia"
+
+// sortIndicator returns the sort direction indicator character for a column.
+func sortIndicator(col hypermedia.TableCol) string {
+	if !col.Sortable {
+		return ""
+	}
+	switch col.SortDir {
+	case hypermedia.SortAsc:
+		return " ↑"
+	case hypermedia.SortDesc:
+		return " ↓"
+	default:
+		return " ⇅"
+	}
+}
+
+// sortLinkAttrs builds templ.Attributes for a sortable column header link.
+func sortLinkAttrs(col hypermedia.TableCol) templ.Attributes {
+	attrs := templ.Attributes{
+		"hx-get":    col.SortURL,
+		"hx-target": col.Target,
+	}
+	if col.Include != "" {
+		attrs["hx-include"] = col.Include
+	}
+	return attrs
+}
+
+// Table renders an overflow-x-auto wrapper containing a table with header,
+// body slot, and optional pagination bar.
+templ Table(cols []hypermedia.TableCol, body templ.Component, info hypermedia.PageInfo) {
+	<div class="overflow-x-auto">
+		<table class="table table-zebra w-full">
+			@TableHeader(cols)
+			@body
+		</table>
+	</div>
+	if info.TotalPages > 1 {
+		@PaginationBar(info)
+	}
+}
+
+// TableHeader renders <thead> with optional sort links.
+// Sortable columns wrap the label in an <a> with HTMX sort attributes.
+// Sort indicator: "↑" SortAsc, "↓" SortDesc, "⇅" SortNone on sortable cols.
+templ TableHeader(cols []hypermedia.TableCol) {
+	<thead>
+		<tr>
+			for _, col := range cols {
+				<th
+					if col.Width != "" {
+						style={ "width:" + col.Width }
+					}
+				>
+					if col.Sortable {
+						<a
+							href="#"
+							{ sortLinkAttrs(col)... }
+						>
+							{ col.Label }{ sortIndicator(col) }
+						</a>
+					} else {
+						{ col.Label }
+					}
+				</th>
+			}
+		</tr>
+	</thead>
+}
+
+// PaginationBar renders a DaisyUI join-based pagination control.
+// Calls hypermedia.PaginationControls(info) internally.
+templ PaginationBar(info hypermedia.PageInfo) {
+	<div class="flex justify-center mt-4">
+		<div class="join">
+			for _, ctrl := range hypermedia.PaginationControls(info) {
+				@paginationButton(ctrl)
+			}
+		</div>
+	</div>
+}
+
+// paginationButton renders one button in the pagination join.
+// Disabled+VariantPrimary → active (current page, no click)
+// Disabled only           → disabled
+// Normal                  → clickable with HTMX attrs
+templ paginationButton(ctrl hypermedia.Control) {
+	if ctrl.Disabled && ctrl.Variant == hypermedia.VariantPrimary {
+		<button class="join-item btn btn-sm btn-active" aria-current="page">
+			{ ctrl.Label }
+		</button>
+	} else if ctrl.Disabled {
+		<button class="join-item btn btn-sm btn-disabled" disabled>
+			{ ctrl.Label }
+		</button>
+	} else {
+		<button
+			class="join-item btn btn-sm"
+			{ hxAttrsFromControl(ctrl)... }
+		>
+			{ ctrl.Label }
+		</button>
+	}
+}
+

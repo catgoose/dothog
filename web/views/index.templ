@@ -1,0 +1,48 @@
+package views
+
+// Root template
+templ Index(layoutContent templ.Component, menuContent templ.Component) {
+	<!DOCTYPE html>
+	<html lang="en" class="light">
+		@header()
+		<body
+			hx-history="false"
+			hx-boost="true"
+			hx-ext="response-targets"
+			hx-target-error="#error-status"
+		>
+			<div id="error-status"></div>
+			@menuContent
+			<!-- Main Content -->
+			<main class="flex-1 p-4">
+				@Layout(layoutContent)
+			</main>
+		</body>
+	</html>
+}
+
+// Header is the header of the HTML document
+templ header() {
+	<head>
+		<meta name="htmx-config" content='{"globalViewTransitions":true,"refreshOnHistoryMiss":true}'/>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<script src="/public/js/htmx.min.js"></script>
+		<script src="/public/js/htmx.response-targets.js"></script>
+		<script src="/public/js/_hyperscript.min.js"></script>
+		// setup:feature:sse:start
+		<script src="/public/js/htmx.ext.sse.js"></script>
+		// setup:feature:sse:end
+		<link rel="stylesheet" href="/public/css/tailwind.css" type="text/css"/>
+		<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
+		<link rel="icon" href="/public/images/favicon.svg" type="image/x-svg+xml"/>
+		<title>HTMX Go Template</title>
+	</head>
+}
+
+// Layout is the base layout for the application
+templ Layout(content templ.Component) {
+	<div id="base-content">
+		@content
+	</div>
+}

@@ -1,0 +1,96 @@
+package components
+
+import "catgoose/go-htmx-template/internals/routes/hypermedia"
+
+// variantClass maps a ControlVariant to the corresponding DaisyUI btn modifier class.
+func variantClass(v hypermedia.ControlVariant) string {
+	switch v {
+	case hypermedia.VariantPrimary:
+		return "btn-primary"
+	case hypermedia.VariantDanger:
+		return "btn-error"
+	case hypermedia.VariantGhost:
+		return "btn-ghost"
+	case hypermedia.VariantLink:
+		return "btn-link"
+	default:
+		return "btn-secondary"
+	}
+}
+
+// Controls renders a flex row of generic DaisyUI-styled controls.
+// Use outside error contexts (CRUD action bars, form footers, empty states).
+templ Controls(controls []hypermedia.Control) {
+	if len(controls) > 0 {
+		<div class="flex flex-wrap gap-2">
+			for _, ctrl := range controls {
+				@control(ctrl)
+			}
+		</div>
+	}
+}
+
+templ control(ctrl hypermedia.Control) {
+	switch ctrl.Kind {
+		case hypermedia.ControlKindRetry:
+			@genericButton(ctrl)
+		case hypermedia.ControlKindHTMX:
+			@genericButton(ctrl)
+		case hypermedia.ControlKindBack:
+			@backButton(ctrl)
+		case hypermedia.ControlKindLink:
+			@genericLink(ctrl)
+		case hypermedia.ControlKindDismiss:
+			@genericDismiss(ctrl)
+	}
+}
+
+templ genericButton(ctrl hypermedia.Control) {
+	<button
+		{ hxAttrsFromControl(ctrl)... }
+		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
+		disabled?={ ctrl.Disabled }
+	>
+		@heroIcon(string(ctrl.Icon))
+		{ ctrl.Label }
+	</button>
+}
+
+templ backButton(ctrl hypermedia.Control) {
+	<button
+		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
+		disabled?={ ctrl.Disabled }
+		_="on click go back"
+	>
+		@heroIcon(string(ctrl.Icon))
+		{ ctrl.Label }
+	</button>
+}
+
+templ genericLink(ctrl hypermedia.Control) {
+	<a
+		href={ templ.URL(ctrl.Href) }
+		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
+	>
+		@heroIcon(string(ctrl.Icon))
+		{ ctrl.Label }
+	</a>
+}
+
+templ genericDismiss(ctrl hypermedia.Control) {
+	<button
+		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
+		_="on click tell #error-message-content transition opacity to 0 over 300ms then remove me"
+	>
+		@heroIcon(string(ctrl.Icon))
+		{ ctrl.Label }
+	</button>
+}
+
+// heroIcon renders a placeholder span for a heroicons icon by name.
+// Replace with inline SVG when an icon strategy is adopted.
+templ heroIcon(name string) {
+	if name != "" {
+		<span class={ "icon-" + name }></span>
+	}
+}

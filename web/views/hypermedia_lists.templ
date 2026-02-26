@@ -1,0 +1,122 @@
+// setup:feature:demo
+package views
+
+import (
+	"strconv"
+
+	"catgoose/go-htmx-template/internals/routes/hypermedia"
+	components "catgoose/go-htmx-template/web/components/core"
+)
+
+// ListsDemoItem is a dummy row for the pagination demo table.
+type ListsDemoItem struct {
+	ID       int
+	Name     string
+	Category string
+}
+
+// ListsPage is a static showcase of list/pagination/filter/sort patterns.
+templ ListsPage(items []ListsDemoItem, info hypermedia.PageInfo) {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<div class="flex items-center justify-between mb-4">
+			<h1 class="text-2xl font-bold">List Patterns</h1>
+			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Overview</a>
+		</div>
+		<div role="alert" class="alert alert-info text-sm">
+			<span>Demonstrates: <strong>next</strong>, <strong>prev</strong>, <strong>search</strong>, <strong>sort</strong>, <strong>filter</strong> — all driven by HTMX. See <a href="/tables/inventory" class="link link-primary">Tables → Inventory</a> { "for" } a live backend demo.</span>
+		</div>
+		@listsSection("Search") {
+			<p class="text-sm text-base-content/70 mb-3">A search input with <code class="text-xs bg-base-200 px-1 rounded">hx-trigger="input changed delay:400ms"</code> debounces keystrokes and replaces the table fragment.</p>
+			@components.FilterBar(hypermedia.NewFilterBar("/tables/inventory/items", "#inventory-table-container",
+				hypermedia.SearchField("q", "Search items…", ""),
+			))
+		}
+		@listsSection("Filter") {
+			<p class="text-sm text-base-content/70 mb-3">Dropdown + checkbox filters submit via <code class="text-xs bg-base-200 px-1 rounded">hx-get</code> on change, replacing only the table container.</p>
+			@components.FilterBar(hypermedia.NewFilterBar("/tables/inventory/items", "#inventory-table-container",
+				hypermedia.SelectField("category", "Category", "",
+					hypermedia.SelectOptions("",
+						"", "All",
+						"Electronics", "Electronics",
+						"Clothing", "Clothing",
+						"Food", "Food",
+					)),
+				hypermedia.CheckboxField("active", "Active only", ""),
+				hypermedia.RangeField("price", "Max Price", "500", "0", "1000", "10"),
+			))
+		}
+		@listsSection("Sort Columns") {
+			<p class="text-sm text-base-content/70 mb-3">Column headers are links that append <code class="text-xs bg-base-200 px-1 rounded">?sort=col&dir=asc/desc</code> and toggle direction on re-click.</p>
+			<div class="overflow-x-auto">
+				<table class="table table-sm">
+					@components.TableHeader([]hypermedia.TableCol{
+						hypermedia.SortableCol("name", "Name", "name", "asc", "/tables/inventory/items", "#inventory-table-container", "#filter-form"),
+						hypermedia.SortableCol("category", "Category", "name", "asc", "/tables/inventory/items", "#inventory-table-container", "#filter-form"),
+						hypermedia.SortableCol("price", "Price", "", "", "/tables/inventory/items", "#inventory-table-container", "#filter-form"),
+						{Label: "Actions"},
+					})
+					<tbody>
+						<tr><td colspan="4" class="text-center text-base-content/50 text-sm py-4">← live rows from /tables/inventory</td></tr>
+					</tbody>
+				</table>
+			</div>
+		}
+		@listsSection("Pagination (next / prev)") {
+			<p class="text-sm text-base-content/70 mb-3">Numbered page links and previous/next controls replace the table fragment inline. This is a live demo — click the buttons to paginate through 47 dummy items.</p>
+			@ListsDemoTable(items, info)
+		}
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			@listsPatternCard("Search", "GET …?q=term", "FilterBar SearchField — debounced hx-trigger.")
+			@listsPatternCard("Filter", "GET …?category=X&active=1", "FilterBar SelectField / CheckboxField / RangeField.")
+			@listsPatternCard("Sort", "GET …?sort=col&dir=asc", "SortableCol builds toggle links with current dir indicator.")
+			@listsPatternCard("Next / Prev", "GET …?page=N", "PaginationBar renders numbered links with hx-include.")
+		</div>
+	</div>
+}
+
+templ listsSection(title string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h2 class="card-title text-base">{ title }</h2>
+			{ children... }
+		</div>
+	</div>
+}
+
+// ListsDemoTable renders the pagination demo table body + pagination bar.
+// Returned as a fragment for HTMX partial replacement.
+templ ListsDemoTable(items []ListsDemoItem, info hypermedia.PageInfo) {
+	<div id="lists-table-container">
+		<div class="overflow-x-auto">
+			<table class="table table-zebra table-sm w-full">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Name</th>
+						<th>Category</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, item := range items {
+						<tr>
+							<td>{ strconv.Itoa(item.ID) }</td>
+							<td>{ item.Name }</td>
+							<td>{ item.Category }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+		@components.PaginationBar(info)
+	</div>
+}
+
+templ listsPatternCard(title, method, desc string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h3 class="font-semibold text-sm">{ title }</h3>
+			<code class="text-xs text-primary bg-base-200 px-2 py-1 rounded">{ method }</code>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}

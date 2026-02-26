@@ -1,0 +1,411 @@
+// setup:feature:demo
+package views
+
+import (
+	"catgoose/go-htmx-template/internals/ssebroker"
+	"fmt"
+)
+
+// RealtimePage is the full-page layout for /hypermedia/realtime.
+templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services []ServiceStatus) {
+	<link rel="stylesheet" href="/public/css/charts.min.css"/>
+	<style>
+		/* Charts.css transition smoothing */
+		.charts-css.area tbody td { transition: --size 0.6s ease; }
+		.charts-css.bar tbody td { transition: --size 0.8s ease; }
+		/* Custom chart styling */
+		.charts-css { --color: oklch(var(--p)); }
+		.charts-css caption { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.5; padding: 0.5rem 0; }
+		#network-content { overflow: hidden; }
+		#network-chart { height: 200px; max-height: 200px; }
+		#services-chart { height: 200px; max-width: 100%; }
+		#services-chart tbody td { border-radius: 0 4px 4px 0; }
+		/* Gauge styling */
+		.gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+		.gauge-wrap .radial-progress { --thickness: 0.35rem; }
+		/* Connection pool dot grid */
+		.conn-dot { width: 12px; height: 12px; border-radius: 2px; }
+		.conn-dot-active { background: #34d399; }
+		.conn-dot-idle { background: #94a3b8; }
+		.conn-dot-wait { background: #fbbf24; }
+		/* Event feed scrollable */
+		#event-feed { max-height: 260px; overflow-y: auto; scroll-behavior: smooth; }
+	</style>
+	<div id="dashboard-sse" class="p-4 space-y-4 max-w-7xl mx-auto">
+		<div class="flex items-center justify-between mb-2">
+			<h1 class="text-2xl font-bold">Live Operations Dashboard</h1>
+			<div class="flex items-center gap-4">
+				<!-- Update frequency slider -->
+				<div class="flex items-center gap-2">
+					<label for="freq-slider" class="text-xs text-base-content/50 whitespace-nowrap">Update</label>
+					<input
+						id="freq-slider"
+						type="range"
+						name="interval"
+						min="1"
+						max="60"
+						value="5"
+						class="range range-xs range-primary w-24"
+						hx-get="/hypermedia/realtime/sse-connect"
+						hx-trigger="change"
+						hx-target="#sse-connect-wrapper"
+						hx-swap="innerHTML"
+						hx-include="this"
+						_="on input set #freq-display.innerText to my.value + 's'"
+					/>
+					<span id="freq-display" class="text-xs font-mono text-base-content/50 w-8">5s</span>
+				</div>
+				<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Controls</a>
+			</div>
+		</div>
+		<!-- SSE connection (swappable — widget content lives outside, targeted by OOB) -->
+		<div id="sse-connect-wrapper">
+			@SSEConnectBlock(5)
+		</div>
+		<!-- KPI Row -->
+		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+			@kpiCard("kpi-rps", "Requests/s", fmtRPS(snap.RPS), "text-primary")
+			@kpiCard("kpi-errors", "Error Rate", fmtPct(snap.ErrorPct), "text-error")
+			@kpiCard("kpi-latency", "P99 Latency", fmtMs(snap.P99Ms), "text-warning")
+			@kpiCard("kpi-goroutines", "Goroutines", fmt.Sprintf("%d", initial.Goroutines), "text-info")
+		</div>
+		<!-- Row 2: Network Chart + Service Health -->
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+			<div class="lg:col-span-2 card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Network Traffic (15-point window)</h2>
+					@networkChart(snap)
+				</div>
+			</div>
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Service Health</h2>
+					@servicesChart(services)
+				</div>
+			</div>
+		</div>
+		<!-- Row 3: CPU/Mem Gauges + Connection Pool -->
+		<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">CPU & Memory</h2>
+					@cpuMemGauges(snap)
+				</div>
+			</div>
+			<div class="lg:col-span-3 card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Connection Pool</h2>
+					@connPool(snap)
+				</div>
+			</div>
+		</div>
+		<!-- Row 4: System Stats + Event Feed -->
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">System Metrics</h2>
+					@dashboardSystemStats(initial)
+				</div>
+			</div>
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Live Event Feed</h2>
+					<div
+						id="event-feed"
+						class="space-y-1"
+						_="on htmx:oobAfterSwap if #event-feed.children.length > 50 then set kids to #event-feed.children then set i to kids.length - 1 then repeat while i >= 50 remove kids[i] set i to i - 1 end"
+					>
+						<div class="text-xs text-base-content/40 text-center py-4">Waiting for events...</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Polling Demo (collapsed) -->
+		<details class="collapse collapse-arrow bg-base-100 shadow border border-base-300 mt-4">
+			<summary class="collapse-title text-sm font-semibold">Polling Demo</summary>
+			<div class="collapse-content">
+				<p class="text-sm text-base-content/70 mb-3"><code class="text-xs bg-base-200 px-1 rounded">hx-trigger="every 2s"</code> issues a GET every 2 seconds.</p>
+				<div class="flex items-center gap-3">
+					<span class="text-sm">Poll count:</span>
+					<span
+						class="font-bold text-2xl tabular-nums"
+						hx-get="/hypermedia/realtime/poll"
+						hx-trigger="every 2s"
+						hx-target="this"
+						hx-swap="outerHTML"
+					>
+						@PollCountFragment(0)
+					</span>
+				</div>
+			</div>
+		</details>
+		<!-- Pattern explanation cards -->
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+			@realtimePatternCard("SSE Multiplexing", "GET /sse/dashboard (4 topics)", "Single EventSource multiplexes system-stats, metrics, services, and events via hx-swap-oob targeting.")
+			@realtimePatternCard("Charts.css", "Pure CSS data visualization", "HTML tables with CSS custom properties (--size) — no JavaScript charting library needed. Animated via CSS transitions.")
+		</div>
+	</div>
+}
+
+// SSEConnectBlock renders the SSE connection element with hidden swap receivers.
+// Swapping this block closes the old EventSource and opens a new one at the given interval.
+templ SSEConnectBlock(interval int) {
+	<div hx-ext="sse" sse-connect={ fmt.Sprintf("/sse/dashboard?interval=%d", interval) } hx-swap="innerHTML settle:0 transition:false">
+		<div sse-swap="system-stats" style="display:none"></div>
+		<div sse-swap="dashboard-metrics" style="display:none"></div>
+		<div sse-swap="dashboard-services" style="display:none"></div>
+		<div sse-swap="dashboard-events" style="display:none"></div>
+	</div>
+}
+
+// --- KPI Cards ---
+
+templ kpiCard(id, label, value, colorClass string) {
+	<div id={ id } class="bg-base-200 rounded-lg p-4 text-center">
+		<div class="text-xs text-base-content/50 mb-1 uppercase tracking-wider">{ label }</div>
+		<div class={ "font-mono font-bold text-2xl tabular-nums " + colorClass }>{ value }</div>
+	</div>
+}
+
+templ oobKpiCard(id, label, value, colorClass string) {
+	<div id={ id } hx-swap-oob="outerHTML" class="bg-base-200 rounded-lg p-4 text-center">
+		<div class="text-xs text-base-content/50 mb-1 uppercase tracking-wider">{ label }</div>
+		<div class={ "font-mono font-bold text-2xl tabular-nums " + colorClass }>{ value }</div>
+	</div>
+}
+
+// --- Network Traffic Column Chart ---
+
+templ networkChart(snap MetricsSnapshot) {
+	<div id="network-content">
+		<div class="flex gap-4 text-xs text-base-content/60 mb-2">
+			<span>↓ In: <strong class="text-base-content">{ fmtMBps(latestNetworkIn(snap)) }</strong></span>
+			<span>↑ Out: <strong class="text-base-content">{ fmtMBps(latestNetworkOut(snap)) }</strong></span>
+		</div>
+		<table id="network-chart" class="charts-css area">
+			<tbody>
+				for _, s := range networkAreaStyles(snap) {
+					<td style={ s }></td>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ oobNetworkChart(snap MetricsSnapshot) {
+	<div id="network-content" hx-swap-oob="innerHTML">
+		<div class="flex gap-4 text-xs text-base-content/60 mb-2">
+			<span>↓ In: <strong class="text-base-content">{ fmtMBps(latestNetworkIn(snap)) }</strong></span>
+			<span>↑ Out: <strong class="text-base-content">{ fmtMBps(latestNetworkOut(snap)) }</strong></span>
+		</div>
+		<table id="network-chart" class="charts-css area">
+			<tbody>
+				for _, s := range networkAreaStyles(snap) {
+					<td style={ s }></td>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// --- CPU & Memory Gauges ---
+
+templ cpuMemGauges(snap MetricsSnapshot) {
+	<div id="gauges-content" class="flex justify-around items-center py-4">
+		@radialGauge("gauge-cpu", "CPU", snap.CPUPercent)
+		@radialGauge("gauge-mem", "Memory", snap.MemPercent)
+	</div>
+}
+
+templ oobCpuMemGauges(snap MetricsSnapshot) {
+	<div id="gauges-content" hx-swap-oob="innerHTML" class="flex justify-around items-center py-4">
+		@radialGauge("gauge-cpu", "CPU", snap.CPUPercent)
+		@radialGauge("gauge-mem", "Memory", snap.MemPercent)
+	</div>
+}
+
+templ radialGauge(id, label string, pct float64) {
+	<div class="gauge-wrap">
+		<div
+			id={ id }
+			class={ "radial-progress " + gaugeColor(pct) }
+			style={ fmt.Sprintf("--value:%d; --size:5rem;", int(pct)) }
+			role="progressbar"
+		>
+			<span class="text-sm font-bold">{ fmt.Sprintf("%d%%", int(pct)) }</span>
+		</div>
+		<span class="text-xs text-base-content/50">{ label }</span>
+	</div>
+}
+
+// --- Connection Pool Dot Grid ---
+
+templ connPool(snap MetricsSnapshot) {
+	<div id="pool-content">
+		<div class="flex gap-4 text-xs text-base-content/60 mb-3">
+			<span class="flex items-center gap-1"><span class="conn-dot conn-dot-active inline-block"></span> Active: { fmt.Sprintf("%d", snap.ConnActive) }</span>
+			<span class="flex items-center gap-1"><span class="conn-dot conn-dot-idle inline-block"></span> Idle: { fmt.Sprintf("%d", snap.ConnIdle) }</span>
+			<span class="flex items-center gap-1"><span class="conn-dot conn-dot-wait inline-block"></span> Waiting: { fmt.Sprintf("%d", snap.ConnWait) }</span>
+		</div>
+		<div class="flex flex-wrap gap-1">
+			for i := 0; i < snap.ConnActive; i++ {
+				<div class="conn-dot conn-dot-active"></div>
+			}
+			for i := 0; i < snap.ConnIdle; i++ {
+				<div class="conn-dot conn-dot-idle"></div>
+			}
+			for i := 0; i < snap.ConnWait; i++ {
+				<div class="conn-dot conn-dot-wait"></div>
+			}
+		</div>
+	</div>
+}
+
+templ oobConnPool(snap MetricsSnapshot) {
+	<div id="pool-content" hx-swap-oob="innerHTML">
+		<div class="flex gap-4 text-xs text-base-content/60 mb-3">
+			<span class="flex items-center gap-1"><span class="conn-dot conn-dot-active inline-block"></span> Active: { fmt.Sprintf("%d", snap.ConnActive) }</span>
+			<span class="flex items-center gap-1"><span class="conn-dot conn-dot-idle inline-block"></span> Idle: { fmt.Sprintf("%d", snap.ConnIdle) }</span>
+			<span class="flex items-center gap-1"><span class="conn-dot conn-dot-wait inline-block"></span> Waiting: { fmt.Sprintf("%d", snap.ConnWait) }</span>
+		</div>
+		<div class="flex flex-wrap gap-1">
+			for i := 0; i < snap.ConnActive; i++ {
+				<div class="conn-dot conn-dot-active"></div>
+			}
+			for i := 0; i < snap.ConnIdle; i++ {
+				<div class="conn-dot conn-dot-idle"></div>
+			}
+			for i := 0; i < snap.ConnWait; i++ {
+				<div class="conn-dot conn-dot-wait"></div>
+			}
+		</div>
+	</div>
+}
+
+// --- Services Bar Chart ---
+
+templ servicesChart(services []ServiceStatus) {
+	<table id="services-chart" class="charts-css bar show-labels show-data-on-hover data-spacing-4">
+		<tbody>
+			for _, svc := range services {
+				<tr>
+					<th scope="row" class="text-xs">{ svc.Name }</th>
+					<td style={ fmt.Sprintf("--size: %s; --color: %s", fmtSize(svc.Load), serviceBarColor(svc)) }>
+						<span class="tooltip">{ fmtPct(svc.Load * 100) }</span>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+templ oobServicesChart(services []ServiceStatus) {
+	<table id="services-chart" hx-swap-oob="outerHTML" class="charts-css bar show-labels show-data-on-hover data-spacing-4">
+		<tbody>
+			for _, svc := range services {
+				<tr>
+					<th scope="row" class="text-xs">{ svc.Name }</th>
+					<td style={ fmt.Sprintf("--size: %s; --color: %s", fmtSize(svc.Load), serviceBarColor(svc)) }>
+						<span class="tooltip">{ fmtPct(svc.Load * 100) }</span>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+// --- Dashboard System Stats (compact 6-card subset) ---
+
+templ dashboardSystemStats(s ssebroker.SystemStats) {
+	<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+		@statsCard("stat-uptime", "Uptime", s.Uptime)
+		@statsCard("stat-goroutines", "Goroutines", fmt.Sprintf("%d", s.Goroutines))
+		@statsCard("stat-heapalloc", "Heap Alloc", fmt.Sprintf("%.2f MB", s.HeapAllocMB))
+		@statsCard("stat-gccycles", "GC Cycles", fmt.Sprintf("%d", s.GCCycles))
+		@statsCard("stat-numcpu", "CPUs", fmt.Sprintf("%d", s.NumCPU))
+		@statsCard("stat-liveobjects", "Live Objects", fmt.Sprintf("%d", s.LiveObjects))
+	</div>
+}
+
+// --- Event Feed ---
+
+templ oobEventItem(evt DashboardEvent) {
+	<div
+		id="event-feed"
+		hx-swap-oob="afterbegin"
+	>
+		<div class="flex items-center gap-2 px-2 py-1 rounded bg-base-200/50 text-xs">
+			<span class={ "badge badge-xs " + eventBadgeClass(evt.Kind) }>{ eventIcon(evt.Kind) }</span>
+			<span class="text-base-content/50 tabular-nums font-mono">{ evt.Time.Format("15:04:05") }</span>
+			<span class="flex-1">{ evt.Message }</span>
+			<span class="badge badge-ghost badge-xs">{ evt.Kind }</span>
+		</div>
+	</div>
+}
+
+// --- OOB Composites (rendered server-side, sent via SSE) ---
+
+// MetricsOOB emits KPI cards + network chart + gauges + connection pool via OOB swaps.
+templ MetricsOOB(snap MetricsSnapshot) {
+	@oobKpiCard("kpi-rps", "Requests/s", fmtRPS(snap.RPS), "text-primary")
+	@oobKpiCard("kpi-errors", "Error Rate", fmtPct(snap.ErrorPct), "text-error")
+	@oobKpiCard("kpi-latency", "P99 Latency", fmtMs(snap.P99Ms), "text-warning")
+	@oobNetworkChart(snap)
+	@oobCpuMemGauges(snap)
+	@oobConnPool(snap)
+}
+
+// ServicesOOB emits the services bar chart via OOB swap.
+templ ServicesOOB(services []ServiceStatus) {
+	@oobServicesChart(services)
+}
+
+// EventOOB emits a single event item prepended to the feed.
+templ EventOOB(evt DashboardEvent) {
+	@oobEventItem(evt)
+}
+
+// SystemStatsOOB renders all stat cards with hx-swap-oob for SSE per-card updates.
+// Also emits the goroutines KPI card for the dashboard.
+templ SystemStatsOOB(s ssebroker.SystemStats) {
+	for _, e := range statsEntries(s) {
+		@oobStatsCard(e.ID, e.Label, e.Value)
+	}
+	@oobKpiCard("kpi-goroutines", "Goroutines", fmt.Sprintf("%d", s.Goroutines), "text-info")
+}
+
+// PollCountFragment is the polling counter element.
+templ PollCountFragment(n int64) {
+	<span
+		id="poll-counter"
+		class="font-bold text-2xl tabular-nums"
+		hx-get="/hypermedia/realtime/poll"
+		hx-trigger="every 2s"
+		hx-target="this"
+		hx-swap="outerHTML"
+	>{ fmt.Sprintf("%d", n) }</span>
+}
+
+templ statsCard(id, label, value string) {
+	<div id={ id } class="bg-base-200 rounded p-3 text-center">
+		<div class="text-xs text-base-content/50 mb-1">{ label }</div>
+		<div class="font-mono font-semibold text-sm break-all">{ value }</div>
+	</div>
+}
+
+templ oobStatsCard(id, label, value string) {
+	<div id={ id } hx-swap-oob="outerHTML" class="bg-base-200 rounded p-3 text-center">
+		<div class="text-xs text-base-content/50 mb-1">{ label }</div>
+		<div class="font-mono font-semibold text-sm break-all">{ value }</div>
+	</div>
+}
+
+templ realtimePatternCard(title, method, desc string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h3 class="font-semibold text-sm">{ title }</h3>
+			<code class="text-xs text-primary bg-base-200 px-2 py-1 rounded">{ method }</code>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}
