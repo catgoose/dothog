@@ -4,6 +4,7 @@ package config
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"catgoose/go-htmx-demo/internals/logger"
@@ -16,27 +17,18 @@ import (
 
 // AppConfig holds application configuration values
 type AppConfig struct {
-	// setup:feature:auth:start
-	SessionMgr    crooner.SessionManager
-	CroonerConfig *crooner.AuthConfigParams
-	SessionSecret string
-	AppName       string
-	// setup:feature:auth:end
-	ServerPort string
-	// setup:feature:graph:start
+	SessionMgr            crooner.SessionManager
+	CroonerConfig         *crooner.AuthConfigParams
+	SessionSecret         string
+	AppName               string
+	ServerPort            string
+	CSRFPerRequestPaths   []string
+	CSRFExemptPaths       []string
 	AzureRefreshUsersHour int
-	// setup:feature:graph:end
-	// setup:feature:database:start
-	// EnableDatabase controls whether the MSSQL database is initialised on startup.
-	// Set to false (the default) when running the template without a database configured.
-	// Set to true (via ENABLE_DATABASE=true) when a database is available.
-	EnableDatabase bool
-	// InitRepo, when true, runs schema init on startup. This is destructive: it drops and recreates tables and wipes existing data. Set false in production or when preserving data.
-	InitRepo bool
-	// setup:feature:database:end
-	// setup:feature:auth:start
-	CroonerDisabled bool
-	// setup:feature:auth:end
+	CSRFRotatePerRequest  bool
+	EnableDatabase        bool
+	InitRepo              bool
+	CroonerDisabled       bool
 }
 
 // getEnvVar safely retrieves an environment variable and logs errors consistently
@@ -136,6 +128,24 @@ func buildConfig() (*AppConfig, error) {
 	}
 	// setup:feature:auth:end
 
+	// setup:feature:csrf:start
+	csrfRotatePerRequest := false
+	if v, err := dio.Env("CSRF_ROTATE_PER_REQUEST"); err == nil {
+		if parsed, err := strconv.ParseBool(v); err == nil {
+			csrfRotatePerRequest = parsed
+		}
+	}
+	csrfPerRequestPaths := []string{}
+	if v, err := dio.Env("CSRF_PER_REQUEST_PATHS"); err == nil && v != "" {
+		for _, p := range strings.Split(v, ",") {
+			if p = strings.TrimSpace(p); p != "" {
+				csrfPerRequestPaths = append(csrfPerRequestPaths, p)
+			}
+		}
+	}
+	csrfExemptPaths := []string{"/login", "/callback", "/logout"}
+	// setup:feature:csrf:end
+
 	return &AppConfig{
 		ServerPort: port,
 		// setup:feature:graph:start
@@ -150,6 +160,11 @@ func buildConfig() (*AppConfig, error) {
 		SessionSecret:   sessionSecret,
 		AppName:         appName,
 		// setup:feature:auth:end
+		// setup:feature:csrf:start
+		CSRFRotatePerRequest: csrfRotatePerRequest,
+		CSRFPerRequestPaths:  csrfPerRequestPaths,
+		CSRFExemptPaths:      csrfExemptPaths,
+		// setup:feature:csrf:end
 		// setup:feature:database:start
 		InitRepo: false,
 		// setup:feature:database:end

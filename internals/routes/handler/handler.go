@@ -51,7 +51,13 @@ func appNavComponent(path string) templ.Component {
 // RenderBaseLayout wraps the component in a base layout and renders it
 func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 	nav := appNavComponent(c.Request().URL.Path)
-	return RenderComponent(c, views.Index(cmp, nav))
+	var csrfToken string
+	// setup:feature:csrf:start
+	if t, ok := c.Get("csrf_token").(string); ok {
+		csrfToken = t
+	}
+	// setup:feature:csrf:end
+	return RenderComponent(c, views.Index(cmp, nav, csrfToken))
 }
 
 // RenderComponent renders a templ component to the response

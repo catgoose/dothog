@@ -105,4 +105,3 @@ func TestHandleComponent(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), "HTMX Go Template")
 	assert.Contains(t, rec.Body.String(), "<span>content</span>")
 }
-

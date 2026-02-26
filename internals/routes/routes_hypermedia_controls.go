@@ -398,7 +398,7 @@ func (gs *controlsGalleryState) handleErrTransient(c echo.Context) error {
 			Closable:   true,
 			Controls: []hypermedia.Control{
 				hypermedia.RetryButton("Retry Save", hypermedia.HxMethodPost,
-					"/hypermedia/controls/errors/transient", "#" + resultIDTransient).
+					"/hypermedia/controls/errors/transient", "#"+resultIDTransient).
 					WithErrorTarget("#" + resultIDTransient),
 			},
 		}
@@ -437,7 +437,7 @@ func (gs *controlsGalleryState) handleErrValidate(c echo.Context) error {
 					Label:       "Fix & Resubmit",
 					Variant:     hypermedia.VariantPrimary,
 					ErrorTarget: "#" + resultIDValidate,
-					HxRequest:   hypermedia.HxGet(fixURL, "#" + resultIDValidate),
+					HxRequest:   hypermedia.HxGet(fixURL, "#"+resultIDValidate),
 				},
 			},
 		}
@@ -480,7 +480,7 @@ func (gs *controlsGalleryState) handleErrConflict(c echo.Context) error {
 				Label:       "Create as Copy",
 				Variant:     hypermedia.VariantSecondary,
 				ErrorTarget: "#" + resultIDConflict,
-				HxRequest:   hypermedia.HxPost("/hypermedia/controls/errors/conflict/copy", "#" + resultIDConflict),
+				HxRequest:   hypermedia.HxPost("/hypermedia/controls/errors/conflict/copy", "#"+resultIDConflict),
 			},
 		},
 	}
@@ -526,7 +526,7 @@ func (gs *controlsGalleryState) handleErrStale(c echo.Context) error {
 					Label:       "Load Fresh Data",
 					Variant:     hypermedia.VariantPrimary,
 					ErrorTarget: "#" + resultIDStale,
-					HxRequest:   hypermedia.HxGet("/hypermedia/controls/errors/stale/refresh", "#" + resultIDStale),
+					HxRequest:   hypermedia.HxGet("/hypermedia/controls/errors/stale/refresh", "#"+resultIDStale),
 				},
 				{
 					Kind:        hypermedia.ControlKindHTMX,
@@ -602,10 +602,10 @@ func (gs *controlsGalleryState) handleErrCascade(c echo.Context) error {
 				Label:       "Reassign Items",
 				Variant:     hypermedia.VariantPrimary,
 				ErrorTarget: "#" + resultIDCascade,
-				HxRequest:   hypermedia.HxGet("/hypermedia/controls/errors/cascade/reassign", "#" + resultIDCascade),
+				HxRequest:   hypermedia.HxGet("/hypermedia/controls/errors/cascade/reassign", "#"+resultIDCascade),
 			},
 			hypermedia.ConfirmAction("Force Delete All", hypermedia.HxMethodDelete,
-				"/hypermedia/controls/errors/cascade/force", "#" + resultIDCascade,
+				"/hypermedia/controls/errors/cascade/force", "#"+resultIDCascade,
 				fmt.Sprintf("Delete 'Electronics' AND all %d items?", len(cascadeDependents))).
 				WithErrorTarget("#" + resultIDCascade),
 		},

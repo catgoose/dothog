@@ -5,8 +5,8 @@ package routes
 import (
 	"strconv"
 
-	log "catgoose/go-htmx-demo/internals/logger"
 	"catgoose/go-htmx-demo/internals/demo"
+	log "catgoose/go-htmx-demo/internals/logger"
 	"catgoose/go-htmx-demo/internals/routes/handler"
 	"catgoose/go-htmx-demo/internals/routes/hypermedia"
 	"catgoose/go-htmx-demo/web/views"

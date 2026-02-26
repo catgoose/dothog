@@ -1,10 +1,10 @@
 package views
 
 // Root template
-templ Index(layoutContent templ.Component, menuContent templ.Component) {
+templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string) {
 	<!DOCTYPE html>
 	<html lang="en" class="light">
-		@header()
+		@header(csrfToken)
 		<body
 			hx-history="false"
 			hx-boost="true"
@@ -22,8 +22,17 @@ templ Index(layoutContent templ.Component, menuContent templ.Component) {
 }
 
 // Header is the header of the HTML document
-templ header() {
+templ header(csrfToken string) {
 	<head>
+		if csrfToken != "" {
+			<meta name="csrf-token" content={ csrfToken }/>
+			<script>
+				document.addEventListener("htmx:configRequest", function(evt) {
+					var t = document.querySelector("meta[name=\"csrf-token\"]");
+					if (t) evt.detail.headers["X-CSRF-Token"] = t.getAttribute("content");
+				});
+			</script>
+		}
 		<meta name="htmx-config" content='{"globalViewTransitions":true,"refreshOnHistoryMiss":true}'/>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>

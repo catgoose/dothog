@@ -12,7 +12,6 @@ import (
 	// setup:feature:demo:end
 	"catgoose/go-htmx-demo/internals/routes/handler"
 	"catgoose/go-htmx-demo/internals/routes/middleware"
-	"catgoose/go-htmx-demo/web/views"
 	"context"
 	"fmt"
 	"io/fs"
@@ -47,7 +46,7 @@ func NewAppRoutes(ctx context.Context, e *echo.Echo) AppRoutes {
 }
 
 func (ar *appRoutes) InitRoutes() error {
-	ar.e.GET("/", handler.HandleComponent(views.Index(templ.NopComponent, templ.NopComponent)))
+	ar.e.GET("/", handler.HandleComponent(templ.NopComponent))
 
 	// Health check endpoint for Caddy
 	ar.e.GET("/health", func(c echo.Context) error {
@@ -105,6 +104,15 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig) (*echo
 		if err := crooner.NewAuthConfig(ctx, e, cfg.CroonerConfig); err != nil {
 			return nil, fmt.Errorf("crooner auth config: %w", err)
 		}
+		// setup:feature:csrf:start
+		if cfg.SessionMgr != nil {
+			e.Use(middleware.CSRF(cfg.SessionMgr, middleware.CSRFConfig{
+				RotatePerRequest: cfg.CSRFRotatePerRequest,
+				PerRequestPaths:  cfg.CSRFPerRequestPaths,
+				ExemptPaths:      cfg.CSRFExemptPaths,
+			}))
+		}
+		// setup:feature:csrf:end
 	}
 	// setup:feature:auth:end
 

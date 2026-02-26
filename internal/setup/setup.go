@@ -40,12 +40,12 @@ var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureSS
 
 // Options configures the template setup run.
 type Options struct {
-	AppName       string
-	ModulePath    string
-	BasePort      string
-	Features []string
-	Force    bool
-	NoCaddy  bool
+	AppName    string
+	ModulePath string
+	BasePort   string
+	Features   []string
+	Force      bool
+	NoCaddy    bool
 
 	// ConfirmFunc is an optional interactive confirm callback.  When non-nil
 	// it is used to prompt the user (e.g. for certificate generation).  When

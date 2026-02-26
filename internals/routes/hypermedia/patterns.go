@@ -4,10 +4,10 @@ package hypermedia
 // Zero values are safe: missing fields omit the corresponding control.
 type ErrorControlOpts struct {
 	RetryMethod HxMethod // defaults to HxMethodGet if zero
-	RetryURL    string // typically c.Request().URL.String()
-	RetryTarget string // CSS selector for hx-target on retry
-	HomeURL     string // for GoHome control; typically "/"
-	LoginURL    string // for Unauthorized; typically "/login"
+	RetryURL    string   // typically c.Request().URL.String()
+	RetryTarget string   // CSS selector for hx-target on retry
+	HomeURL     string   // for GoHome control; typically "/"
+	LoginURL    string   // for Unauthorized; typically "/login"
 }
 
 func resolveRetryMethod(opts ErrorControlOpts) HxMethod {
@@ -310,10 +310,10 @@ func EmptyStateAction(label, createURL, target string) Control {
 // detailRowTarget is the CSS selector for the placeholder <tr>, e.g. "#detail-row-42".
 func CatalogRowAction(detailURL, detailRowTarget string) Control {
 	return Control{
-		Kind:    ControlKindHTMX,
-		Label:   LabelDetails,
-		Variant: VariantGhost,
-		Swap:    SwapInnerHTML,
+		Kind:      ControlKindHTMX,
+		Label:     LabelDetails,
+		Variant:   VariantGhost,
+		Swap:      SwapInnerHTML,
 		HxRequest: HxGet(detailURL, detailRowTarget),
 	}
 }
