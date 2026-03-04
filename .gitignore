@@ -25,7 +25,7 @@ node_modules/
 go.work
 go.work.sum
 
-# env file (.env.example is tracked for the template)
+# env files (.env.example and .env.sample are tracked)
 .env
 .env.dev
 .env.local
