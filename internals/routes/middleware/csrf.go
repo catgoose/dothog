@@ -3,6 +3,7 @@ package middleware
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
 	"net/http"
 	"strings"
@@ -53,7 +54,7 @@ func CSRF(sm crooner.SessionManager, cfg CSRFConfig) echo.MiddlewareFunc {
 				reqToken = c.Request().FormValue("_csrf")
 			}
 			sessionToken, err := crooner.GetString(sm, c, csrfTokenSessionKey)
-			if err != nil || sessionToken == "" || !equalConstantTime(sessionToken, reqToken) {
+			if err != nil || sessionToken == "" || subtle.ConstantTimeCompare([]byte(sessionToken), []byte(reqToken)) != 1 {
 				return c.NoContent(http.StatusForbidden)
 			}
 			return next(c)
@@ -105,13 +106,3 @@ func generateToken() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func equalConstantTime(a, b string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	var diff byte
-	for i := 0; i < len(a); i++ {
-		diff |= a[i] ^ b[i]
-	}
-	return diff == 0
-}

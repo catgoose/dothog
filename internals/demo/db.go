@@ -273,7 +273,9 @@ func (d *DB) ListItems(ctx context.Context, q, category, active, sortBy, sortDir
 		"SELECT id, name, category, price, stock, active, created_at FROM items %s ORDER BY %s %s LIMIT ? OFFSET ?",
 		where, col, sortDir,
 	)
-	listArgs := append(args, perPage, offset)
+	listArgs := make([]any, len(args), len(args)+2)
+	copy(listArgs, args)
+	listArgs = append(listArgs, perPage, offset)
 
 	dbRows, err := d.db.QueryContext(ctx, query, listArgs...)
 	if err != nil {

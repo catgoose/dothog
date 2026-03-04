@@ -91,58 +91,43 @@ func InitAndSyncUserCache(
 	}
 
 	// Schedule periodic refreshes
-	syncFunc := func() {
+	doSync := func(syncType SyncType) {
+		log.Info("Starting user cache refresh", "type", syncType)
+		users, err := fetchUsersFunc()
+		if err != nil {
+			log.Error("Failed to fetch users during sync", "type", syncType, "error", err)
+			return
+		}
+		if err := userCache.InsertOrUpdateUsers(users); err != nil {
+			log.Error("Failed to sync users during sync", "type", syncType, "error", err)
+			return
+		}
+		log.Info("Successfully completed sync", "type", syncType, "user_count", len(users))
+		if afterSync != nil {
+			afterSync(ctx, users)
+		}
+	}
+
+	nextRefreshTime := func() time.Time {
+		now := time.Now()
+		next := time.Date(now.Year(), now.Month(), now.Day(), refreshHour, 0, 0, 0, now.Location())
+		if !next.After(now) {
+			next = next.Add(24 * time.Hour)
+		}
+		return next
+	}
+
+	go func() {
 		for {
-			now := time.Now()
-			next := time.Date(now.Year(), now.Month(), now.Day(), refreshHour, 0, 0, 0, now.Location())
-			if !next.After(now) {
-				next = next.Add(24 * time.Hour)
-			}
-			d := next.Sub(now)
-			log.Info("Scheduled user cache refresh", "next_refresh", next, "wait_duration", d)
+			next := nextRefreshTime()
+			log.Info("Scheduled user cache refresh", "next_refresh", next, "wait_duration", time.Until(next))
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(d):
-				log.Info("Starting scheduled user cache refresh")
-				users, err := fetchUsersFunc()
-				if err != nil {
-					log.Error("Failed to fetch users during scheduled sync", "error", err)
-					continue
-				}
-				if err := userCache.InsertOrUpdateUsers(users); err != nil {
-					log.Error("Failed to sync users during scheduled sync", "error", err)
-					continue
-				}
-				log.Info("Successfully completed scheduled sync", "user_count", len(users))
-				if afterSync != nil {
-					afterSync(ctx, users)
-				}
-				// Continue with daily refreshes
-				for {
-					select {
-					case <-ctx.Done():
-						return
-					case <-time.After(24 * time.Hour):
-						log.Info("Starting periodic user cache refresh")
-						users, err := fetchUsersFunc()
-						if err != nil {
-							log.Error("Failed to fetch users during periodic sync", "error", err)
-							continue
-						}
-						if err := userCache.InsertOrUpdateUsers(users); err != nil {
-							log.Error("Failed to sync users during periodic sync", "error", err)
-							continue
-						}
-						log.Info("Successfully completed periodic sync", "user_count", len(users))
-						if afterSync != nil {
-							afterSync(ctx, users)
-						}
-					}
-				}
+			case <-time.After(time.Until(next)):
+				doSync(SyncTypeScheduled)
 			}
 		}
-	}
-	go syncFunc()
+	}()
 	return nil
 }

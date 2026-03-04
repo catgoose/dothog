@@ -427,14 +427,12 @@ var eventTemplates = []eventTemplate{
 func (ar *appRoutes) publishEvents(broker *ssebroker.SSEBroker) {
 	for {
 		// Random interval 800ms–2s
-		delay := 800 + rand.IntN(1200)
-		timer := time.NewTimer(time.Duration(delay) * time.Millisecond)
+		delay := time.Duration(800+rand.IntN(1200)) * time.Millisecond
 
 		select {
 		case <-ar.ctx.Done():
-			timer.Stop()
 			return
-		case <-timer.C:
+		case <-time.After(delay):
 			if !broker.HasSubscribers(ssebroker.TopicDashEvents) {
 				continue
 			}

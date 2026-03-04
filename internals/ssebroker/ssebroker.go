@@ -32,8 +32,10 @@ func (b *SSEBroker) Subscribe(topic string) (<-chan string, func()) {
 	b.mu.Unlock()
 	return ch, func() {
 		b.mu.Lock()
-		delete(b.topics[topic], ch)
-		close(ch)
+		if _, ok := b.topics[topic][ch]; ok {
+			delete(b.topics[topic], ch)
+			close(ch)
+		}
 		b.mu.Unlock()
 	}
 }
@@ -62,11 +64,16 @@ func (b *SSEBroker) Publish(topic, msg string) {
 	b.mu.RUnlock()
 
 	for _, ch := range channels {
-		select {
-		case ch <- msg:
-		default:
-			// channel full — skip stale subscriber
-		}
+		// Channel may have been closed by unsub() between the snapshot and now.
+		// Recover from the resulting panic rather than adding complex synchronization.
+		func() {
+			defer func() { recover() }()
+			select {
+			case ch <- msg:
+			default:
+				// channel full — skip stale subscriber
+			}
+		}()
 	}
 }
 
@@ -76,6 +83,7 @@ func (b *SSEBroker) Close() {
 	defer b.mu.Unlock()
 	for topic, subs := range b.topics {
 		for ch := range subs {
+			delete(subs, ch)
 			close(ch)
 		}
 		delete(b.topics, topic)

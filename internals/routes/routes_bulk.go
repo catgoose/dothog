@@ -3,6 +3,7 @@
 package routes
 
 import (
+	"context"
 	"strconv"
 
 	"catgoose/go-htmx-demo/internals/demo"
@@ -46,15 +47,9 @@ func (b *bulkRoutes) handleBulkItems(c echo.Context) error {
 }
 
 func (b *bulkRoutes) handleBulkDeleteItems(c echo.Context) error {
-	_ = c.Request().ParseForm()
-	var failedIDs []int
-	for _, raw := range c.Request().Form["ids"] {
-		if id, err := strconv.Atoi(raw); err == nil && id > 0 {
-			if err := b.db.DeleteItem(c.Request().Context(), id); err != nil {
-				failedIDs = append(failedIDs, id)
-			}
-		}
-	}
+	failedIDs := b.doBulkAction(c, func(ctx context.Context, id int) error {
+		return b.db.DeleteItem(ctx, id)
+	})
 	if len(failedIDs) > 0 {
 		log.WithContext(c.Request().Context()).Warn("Bulk delete: failed items", "ids", failedIDs)
 	}
@@ -68,20 +63,14 @@ func (b *bulkRoutes) handleBulkDeleteItems(c echo.Context) error {
 }
 
 func (b *bulkRoutes) handleBulkActivateItems(c echo.Context) error {
-	_ = c.Request().ParseForm()
-	var failedIDs []int
-	for _, raw := range c.Request().Form["ids"] {
-		if id, err := strconv.Atoi(raw); err == nil && id > 0 {
-			if item, err := b.db.GetItem(c.Request().Context(), id); err == nil {
-				item.Active = true
-				if err := b.db.UpdateItem(c.Request().Context(), item); err != nil {
-					failedIDs = append(failedIDs, id)
-				}
-			} else {
-				failedIDs = append(failedIDs, id)
-			}
+	failedIDs := b.doBulkAction(c, func(ctx context.Context, id int) error {
+		item, err := b.db.GetItem(ctx, id)
+		if err != nil {
+			return err
 		}
-	}
+		item.Active = true
+		return b.db.UpdateItem(ctx, item)
+	})
 	if len(failedIDs) > 0 {
 		log.WithContext(c.Request().Context()).Warn("Bulk activate: failed items", "ids", failedIDs)
 	}
@@ -95,20 +84,14 @@ func (b *bulkRoutes) handleBulkActivateItems(c echo.Context) error {
 }
 
 func (b *bulkRoutes) handleBulkDeactivateItems(c echo.Context) error {
-	_ = c.Request().ParseForm()
-	var failedIDs []int
-	for _, raw := range c.Request().Form["ids"] {
-		if id, err := strconv.Atoi(raw); err == nil && id > 0 {
-			if item, err := b.db.GetItem(c.Request().Context(), id); err == nil {
-				item.Active = false
-				if err := b.db.UpdateItem(c.Request().Context(), item); err != nil {
-					failedIDs = append(failedIDs, id)
-				}
-			} else {
-				failedIDs = append(failedIDs, id)
-			}
+	failedIDs := b.doBulkAction(c, func(ctx context.Context, id int) error {
+		item, err := b.db.GetItem(ctx, id)
+		if err != nil {
+			return err
 		}
-	}
+		item.Active = false
+		return b.db.UpdateItem(ctx, item)
+	})
 	if len(failedIDs) > 0 {
 		log.WithContext(c.Request().Context()).Warn("Bulk deactivate: failed items", "ids", failedIDs)
 	}
@@ -121,59 +104,31 @@ func (b *bulkRoutes) handleBulkDeactivateItems(c echo.Context) error {
 	return handler.RenderComponent(c, container)
 }
 
-func (b *bulkRoutes) buildBulkContent(c echo.Context) (hypermedia.FilterBar, templ.Component, error) {
-	q := c.QueryParam("q")
-	category := c.QueryParam("category")
-	active := c.QueryParam("active")
-	sort := c.QueryParam("sort")
-	dir := c.QueryParam("dir")
-	page, _ := strconv.Atoi(c.QueryParam("page"))
-	if page < 1 {
-		page = 1
+// doBulkAction parses form IDs and runs actionFn for each, returning any failed IDs.
+func (b *bulkRoutes) doBulkAction(c echo.Context, actionFn func(ctx context.Context, id int) error) []int {
+	_ = c.Request().ParseForm()
+	var failedIDs []int
+	ctx := c.Request().Context()
+	for _, raw := range c.Request().Form["ids"] {
+		if id, err := strconv.Atoi(raw); err == nil && id > 0 {
+			if err := actionFn(ctx, id); err != nil {
+				failedIDs = append(failedIDs, id)
+			}
+		}
 	}
-	const perPage = 20
+	return failedIDs
+}
 
-	items, total, err := b.db.ListItems(c.Request().Context(), q, category, active, sort, dir, page, perPage)
+func (b *bulkRoutes) buildBulkContent(c echo.Context) (hypermedia.FilterBar, templ.Component, error) {
+	const perPage = 20
+	tc, err := buildTableContent(c, b.db, parseTableParams(c, perPage),
+		bulkBase+"/items", "#bulk-table-container",
+		hypermedia.TableCol{Label: "Status"},
+	)
 	if err != nil {
 		return hypermedia.FilterBar{}, nil, err
 	}
-
-	bar := hypermedia.NewFilterBar(bulkBase+"/items", "#bulk-table-container",
-		hypermedia.SearchField("q", "Search items\u2026", q),
-		hypermedia.SelectField("category", "Category", category,
-			hypermedia.SelectOptions(category,
-				"", "All",
-				"Electronics", "Electronics",
-				"Clothing", "Clothing",
-				"Food", "Food",
-				"Books", "Books",
-				"Sports", "Sports",
-			)),
-		hypermedia.CheckboxField("active", "Active only", active),
-	)
-
-	sortBase := stripParams(c.Request().URL, "sort", "dir")
-	pageBase := stripParams(c.Request().URL, "page")
-
-	cols := []hypermedia.TableCol{
-		hypermedia.SortableCol("name", "Name", sort, dir, sortBase, "#bulk-table-container", "#filter-form"),
-		hypermedia.SortableCol("category", "Category", sort, dir, sortBase, "#bulk-table-container", "#filter-form"),
-		hypermedia.SortableCol("price", "Price", sort, dir, sortBase, "#bulk-table-container", "#filter-form"),
-		hypermedia.SortableCol("stock", "Stock", sort, dir, sortBase, "#bulk-table-container", "#filter-form"),
-		{Label: "Status"},
-	}
-
-	info := hypermedia.PageInfo{
-		Page:       page,
-		PerPage:    perPage,
-		TotalItems: total,
-		TotalPages: hypermedia.ComputeTotalPages(total, perPage),
-		BaseURL:    pageBase,
-		Target:     "#bulk-table-container",
-		Include:    "#filter-form",
-	}
-
-	body := views.BulkItemsBody(items)
-	container := views.BulkTableContainer(cols, body, info)
-	return bar, container, nil
+	body := views.BulkItemsBody(tc.Items)
+	container := views.BulkTableContainer(tc.Cols, body, tc.Info)
+	return tc.Bar, container, nil
 }

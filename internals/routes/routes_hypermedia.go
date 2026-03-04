@@ -106,9 +106,7 @@ func (s *hypermediaState) handleCRUDCreate(c echo.Context) error {
 	s.items = append(s.items, item)
 	s.nextID++
 	s.mu.Unlock()
-	return handler.RenderComponent(c, views.CRUDItemRow(views.CRUDViewItem{
-		ID: item.ID, Name: item.Name, Status: item.Status, Notes: item.Notes,
-	}))
+	return handler.RenderComponent(c, views.CRUDItemRow(item.toView()))
 }
 
 func (s *hypermediaState) handleCRUDItemRow(c echo.Context) error {
@@ -122,9 +120,7 @@ func (s *hypermediaState) handleCRUDItemRow(c echo.Context) error {
 	if !found {
 		return handler.HandleHypermediaError(c, 404, "Item not found", fmt.Errorf("id=%d", id))
 	}
-	return handler.RenderComponent(c, views.CRUDItemRow(views.CRUDViewItem{
-		ID: item.ID, Name: item.Name, Status: item.Status, Notes: item.Notes,
-	}))
+	return handler.RenderComponent(c, views.CRUDItemRow(item.toView()))
 }
 
 func (s *hypermediaState) handleCRUDEditForm(c echo.Context) error {
@@ -138,9 +134,7 @@ func (s *hypermediaState) handleCRUDEditForm(c echo.Context) error {
 	if !found {
 		return handler.HandleHypermediaError(c, 404, "Item not found", fmt.Errorf("id=%d", id))
 	}
-	return handler.RenderComponent(c, views.CRUDEditRow(views.CRUDViewItem{
-		ID: item.ID, Name: item.Name, Status: item.Status, Notes: item.Notes,
-	}))
+	return handler.RenderComponent(c, views.CRUDEditRow(item.toView()))
 }
 
 func (s *hypermediaState) handleCRUDUpdate(c echo.Context) error {
@@ -149,6 +143,9 @@ func (s *hypermediaState) handleCRUDUpdate(c echo.Context) error {
 		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}
 	name := c.FormValue("name")
+	if name == "" {
+		return handler.HandleHypermediaError(c, 400, "Name is required", fmt.Errorf("empty name for id=%d", id))
+	}
 	notes := c.FormValue("notes")
 	s.mu.Lock()
 	idx := s.findIndex(id)
@@ -160,9 +157,7 @@ func (s *hypermediaState) handleCRUDUpdate(c echo.Context) error {
 	s.items[idx].Notes = notes
 	item := s.items[idx]
 	s.mu.Unlock()
-	return handler.RenderComponent(c, views.CRUDItemRow(views.CRUDViewItem{
-		ID: item.ID, Name: item.Name, Status: item.Status, Notes: item.Notes,
-	}))
+	return handler.RenderComponent(c, views.CRUDItemRow(item.toView()))
 }
 
 func (s *hypermediaState) handleCRUDPatchToggle(c echo.Context) error {
@@ -183,9 +178,7 @@ func (s *hypermediaState) handleCRUDPatchToggle(c echo.Context) error {
 	}
 	item := s.items[idx]
 	s.mu.Unlock()
-	return handler.RenderComponent(c, views.CRUDItemRow(views.CRUDViewItem{
-		ID: item.ID, Name: item.Name, Status: item.Status, Notes: item.Notes,
-	}))
+	return handler.RenderComponent(c, views.CRUDItemRow(item.toView()))
 }
 
 func (s *hypermediaState) handleCRUDDelete(c echo.Context) error {
@@ -355,10 +348,14 @@ func (s *hypermediaState) findIndex(id int) int {
 	return -1
 }
 
+func (ci crudItem) toView() views.CRUDViewItem {
+	return views.CRUDViewItem{ID: ci.ID, Name: ci.Name, Status: ci.Status, Notes: ci.Notes}
+}
+
 func crudItemsToView(items []crudItem) []views.CRUDViewItem {
 	out := make([]views.CRUDViewItem, len(items))
 	for i, it := range items {
-		out[i] = views.CRUDViewItem{ID: it.ID, Name: it.Name, Status: it.Status, Notes: it.Notes}
+		out[i] = it.toView()
 	}
 	return out
 }

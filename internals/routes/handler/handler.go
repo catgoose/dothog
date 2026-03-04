@@ -76,7 +76,7 @@ func HandleError(c echo.Context, statusCode int, message string, err error) erro
 	}
 	requestID := middleware.GetRequestID(c)
 	log.WithContext(c.Request().Context()).Error("Request error", "error", err, "status_code", statusCode, "message", message)
-	c.Response().WriteHeader(statusCode)
+	c.Response().Status = statusCode
 	renderErr := RenderComponent(c, corecomponents.ErrorStatus(statusCode, message, err, c.Request().URL.Path, requestID, true))
 	if renderErr != nil {
 		return c.HTML(http.StatusInternalServerError, fmt.Sprintf(

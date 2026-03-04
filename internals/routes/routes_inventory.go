@@ -84,10 +84,18 @@ func (d *inventoryRoutes) handleCreateItem(c echo.Context) error {
 	return handler.RenderComponent(c, container)
 }
 
-func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
+func parseItemID(c echo.Context) (int, error) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id < 1 {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", fmt.Errorf("id=%q", c.Param("id")))
+		return 0, fmt.Errorf("invalid id %q", c.Param("id"))
+	}
+	return id, nil
+}
+
+func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
+	id, err := parseItemID(c)
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}
 	item, err := d.db.GetItem(c.Request().Context(), id)
 	if err != nil {
@@ -97,9 +105,9 @@ func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
 }
 
 func (d *inventoryRoutes) handleEditItemForm(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil || id < 1 {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", fmt.Errorf("id=%q", c.Param("id")))
+	id, err := parseItemID(c)
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}
 	item, err := d.db.GetItem(c.Request().Context(), id)
 	if err != nil {
@@ -115,9 +123,9 @@ func (d *inventoryRoutes) handleEditItemForm(c echo.Context) error {
 }
 
 func (d *inventoryRoutes) handleUpdateItem(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil || id < 1 {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", fmt.Errorf("id=%q", c.Param("id")))
+	id, err := parseItemID(c)
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}
 	price, _ := strconv.ParseFloat(c.FormValue("price"), 64)
 	stock, _ := strconv.Atoi(c.FormValue("stock"))
@@ -141,9 +149,9 @@ func (d *inventoryRoutes) handleUpdateItem(c echo.Context) error {
 }
 
 func (d *inventoryRoutes) handleDeleteItem(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil || id < 1 {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", fmt.Errorf("id=%q", c.Param("id")))
+	id, err := parseItemID(c)
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}
 	if err := d.db.DeleteItem(c.Request().Context(), id); err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to delete item", err)
@@ -158,59 +166,16 @@ func (d *inventoryRoutes) handleDeleteItem(c echo.Context) error {
 }
 
 func (d *inventoryRoutes) buildInventoryContent(c echo.Context) (hypermedia.FilterBar, templ.Component, error) {
-	q := c.QueryParam("q")
-	category := c.QueryParam("category")
-	active := c.QueryParam("active")
-	sort := c.QueryParam("sort")
-	dir := c.QueryParam("dir")
-	page, _ := strconv.Atoi(c.QueryParam("page"))
-	if page < 1 {
-		page = 1
-	}
 	const perPage = 20
-
-	items, total, err := d.db.ListItems(c.Request().Context(), q, category, active, sort, dir, page, perPage)
+	tc, err := buildTableContent(c, d.db, parseTableParams(c, perPage),
+		inventoryBase+"/items", "#inventory-table-container",
+		hypermedia.TableCol{Label: "Status"},
+		hypermedia.TableCol{Label: "Actions"},
+	)
 	if err != nil {
 		return hypermedia.FilterBar{}, nil, err
 	}
-
-	bar := hypermedia.NewFilterBar(inventoryBase+"/items", "#inventory-table-container",
-		hypermedia.SearchField("q", "Search items\u2026", q),
-		hypermedia.SelectField("category", "Category", category,
-			hypermedia.SelectOptions(category,
-				"", "All",
-				"Electronics", "Electronics",
-				"Clothing", "Clothing",
-				"Food", "Food",
-				"Books", "Books",
-				"Sports", "Sports",
-			)),
-		hypermedia.CheckboxField("active", "Active only", active),
-	)
-
-	sortBase := stripParams(c.Request().URL, "sort", "dir")
-	pageBase := stripParams(c.Request().URL, "page")
-
-	cols := []hypermedia.TableCol{
-		hypermedia.SortableCol("name", "Name", sort, dir, sortBase, "#inventory-table-container", "#filter-form"),
-		hypermedia.SortableCol("category", "Category", sort, dir, sortBase, "#inventory-table-container", "#filter-form"),
-		hypermedia.SortableCol("price", "Price", sort, dir, sortBase, "#inventory-table-container", "#filter-form"),
-		hypermedia.SortableCol("stock", "Stock", sort, dir, sortBase, "#inventory-table-container", "#filter-form"),
-		{Label: "Status"},
-		{Label: "Actions"},
-	}
-
-	info := hypermedia.PageInfo{
-		Page:       page,
-		PerPage:    perPage,
-		TotalItems: total,
-		TotalPages: hypermedia.ComputeTotalPages(total, perPage),
-		BaseURL:    pageBase,
-		Target:     "#inventory-table-container",
-		Include:    "#filter-form",
-	}
-
-	body := views.InventoryItemsBody(items)
-	container := views.InventoryTableContainer(cols, body, info)
-	return bar, container, nil
+	body := views.InventoryItemsBody(tc.Items)
+	container := views.InventoryTableContainer(tc.Cols, body, tc.Info)
+	return tc.Bar, container, nil
 }
