@@ -59,3 +59,6 @@ build/
 # generated docs (rebuilt in CI)
 docs/packages/
 site/
+
+# Screenshot recording intermediates
+docs/screenshots/videos/

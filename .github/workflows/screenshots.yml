@@ -1,0 +1,89 @@
+name: Screenshots
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate templ files
+        run: go tool templ generate
+
+      - name: Build application
+        run: go build -o go-htmx-demo .
+
+      - name: Start application
+        run: |
+          SERVER_LISTEN_PORT=8080 ./go-htmx-demo &
+          echo "APP_PID=$!" >> $GITHUB_ENV
+
+      - name: Capture screenshots and recordings
+        run: node scripts/screenshots.mjs --base-url http://localhost:8080
+
+      - name: Stop application
+        if: always()
+        run: kill $APP_PID 2>/dev/null || true
+
+      - name: Convert recordings to GIFs
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          cd docs/screenshots/videos
+          for f in *.webm; do
+            [ -f "$f" ] || continue
+            name="${f%.webm}"
+            # Two-pass: generate palette for better quality
+            ffmpeg -y -i "$f" \
+              -vf "fps=15,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer" \
+              "../${name}.gif" \
+              -loglevel error
+            echo "Converted ${f} -> ${name}.gif"
+          done
+
+      - name: Clean up video files
+        run: rm -rf docs/screenshots/videos
+
+      - name: Check for changes
+        id: check
+        run: |
+          git add docs/screenshots/
+          if git diff --staged --quiet; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit screenshots
+        if: steps.check.outputs.changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots/
+          git commit -m "docs: update demo screenshots and recordings"
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:${{ github.ref_name }}

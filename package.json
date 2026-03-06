@@ -2,6 +2,7 @@
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.19",
-    "daisyui": "^5.0.0"
+    "daisyui": "^5.0.0",
+    "playwright": "^1.50.0"
   }
 }
