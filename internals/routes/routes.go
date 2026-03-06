@@ -11,14 +11,13 @@ import (
 	// setup:feature:sse:end
 	// setup:feature:demo:end
 	"catgoose/go-htmx-demo/internals/routes/handler"
+	"catgoose/go-htmx-demo/web/views"
 	"catgoose/go-htmx-demo/internals/routes/middleware"
 	"context"
 	"fmt"
 	"io/fs"
 	"net/http"
 	"time"
-
-	"github.com/a-h/templ"
 	// setup:feature:auth:start
 	"github.com/catgoose/crooner"
 	// setup:feature:auth:end
@@ -46,7 +45,7 @@ func NewAppRoutes(ctx context.Context, e *echo.Echo) AppRoutes {
 }
 
 func (ar *appRoutes) InitRoutes() error {
-	ar.e.GET("/", handler.HandleComponent(templ.NopComponent))
+	ar.e.GET("/", handler.HandleComponent(views.HomePage()))
 
 	// Health check endpoint for Caddy
 	ar.e.GET("/health", func(c echo.Context) error {
