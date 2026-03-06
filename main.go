@@ -4,6 +4,7 @@ import (
 	"catgoose/go-htmx-demo/internals/config"
 	// setup:feature:database:start
 	"catgoose/go-htmx-demo/internals/database"
+	"catgoose/go-htmx-demo/internals/database/dialect"
 	dbrepo "catgoose/go-htmx-demo/internals/database/repository"
 	// setup:feature:database:end
 	log "catgoose/go-htmx-demo/internals/logger"
@@ -68,7 +69,7 @@ func main() {
 
 	// setup:feature:database:start
 	if cfg.EnableDatabase {
-		db, err := database.Open(appCtx)
+		db, err := database.Open(appCtx, cfg.DBEngine)
 		if err != nil {
 			log.Fatal("Failed to open database", "error", err)
 		}
@@ -78,7 +79,12 @@ func main() {
 			}
 		}()
 
-		repoManager := dbrepo.NewManager(db)
+		d, err := dialect.New(cfg.DBEngine)
+		if err != nil {
+			log.Fatal("Failed to create dialect", "error", err)
+		}
+
+		repoManager := dbrepo.NewManager(db, d)
 
 		// InitRepo gates schema init. Destructive: drops existing tables and recreates them, wiping data. Only enable when intentionally resetting the database.
 		if cfg.InitRepo {

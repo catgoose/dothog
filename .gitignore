@@ -45,6 +45,9 @@ localhost.key
 # Log files
 log/
 
+# SQLite database
+db/
+
 # binary
 go-htmx-demo
 build/

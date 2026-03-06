@@ -318,10 +318,16 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	assertBuildSucceeds(t, dest)
 	assertDirRemoved(t, filepath.Join(dest, "internals", "ssebroker"))
 	assertDirRemoved(t, filepath.Join(dest, "internals", "service", "graph"))
-	assertDirRemoved(t, filepath.Join(dest, "internals", "database"))
+	assertDirExists(t, filepath.Join(dest, "internals", "database"))          // database is implicit (always kept)
 	assertDirRemoved(t, filepath.Join(dest, "internals", "repository"))
 	assertDirRemoved(t, filepath.Join(dest, "internals", "domain"))
 	assertDirRemoved(t, filepath.Join(dest, "internals", "demo"))
+
+	// MSSQL dialect should be removed when mssql feature not selected
+	_, err = os.Stat(filepath.Join(dest, "internals", "database", "mssql.go"))
+	require.True(t, os.IsNotExist(err), "mssql.go should be removed when mssql not selected")
+	_, err = os.Stat(filepath.Join(dest, "internals", "database", "dialect", "mssql.go"))
+	require.True(t, os.IsNotExist(err), "dialect/mssql.go should be removed when mssql not selected")
 
 	_, err = os.Stat(filepath.Join(dest, "Caddyfile"))
 	require.True(t, os.IsNotExist(err), "Caddyfile should be removed when no features selected")
@@ -350,7 +356,7 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
-	assertDirRemoved(t, filepath.Join(dest, "internals", "database"))
+	assertDirExists(t, filepath.Join(dest, "internals", "database")) // database is implicit
 	assertDirRemoved(t, filepath.Join(dest, "internals", "service", "graph"))
 	assertDirRemoved(t, filepath.Join(dest, "internals", "ssebroker"))
 
@@ -375,13 +381,14 @@ func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
 	err = copyDirExcluding(repoRoot, dest, ".git", "bin", "build", "tmp", "node_modules")
 	require.NoError(t, err)
 
+	// database is implicit — no need to pass it explicitly; MSSQL not selected
 	err = setup.Run(context.Background(), dest, setup.Options{
 		AppName:    "Database Only App",
 		ModulePath: "github.com/test/database-only-app",
 		BasePort:   "20400",
 		NoCaddy:    false,
 		Force:      true,
-		Features:   []string{"database"},
+		Features:   []string{},
 	})
 	require.NoError(t, err)
 
@@ -390,6 +397,50 @@ func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
 	assertDirRemoved(t, filepath.Join(dest, "internals", "ssebroker"))
 	assertDirRemoved(t, filepath.Join(dest, "internals", "service", "graph"))
 	assertDirExists(t, filepath.Join(dest, "internals", "database"))
+	assertDirExists(t, filepath.Join(dest, "internals", "database", "dialect"))
+
+	// SQLite dialect should exist
+	_, err = os.Stat(filepath.Join(dest, "internals", "database", "dialect", "sqlite.go"))
+	require.NoError(t, err, "dialect/sqlite.go should exist (database is implicit)")
+
+	// MSSQL files should be removed
+	_, err = os.Stat(filepath.Join(dest, "internals", "database", "mssql.go"))
+	require.True(t, os.IsNotExist(err), "mssql.go should be removed when mssql not selected")
+	_, err = os.Stat(filepath.Join(dest, "internals", "database", "dialect", "mssql.go"))
+	require.True(t, os.IsNotExist(err), "dialect/mssql.go should be removed when mssql not selected")
+}
+
+func TestSetup_FeaturesMSSQL(t *testing.T) {
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := t.TempDir()
+	err = copyDirExcluding(repoRoot, dest, ".git", "bin", "build", "tmp", "node_modules")
+	require.NoError(t, err)
+
+	// database is implicit; explicitly selecting mssql adds MSSQL support
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "MSSQL App",
+		ModulePath: "github.com/test/mssql-app",
+		BasePort:   "20450",
+		NoCaddy:    false,
+		Force:      true,
+		Features:   []string{"mssql"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+	assertDirExists(t, filepath.Join(dest, "internals", "database"))
+	assertDirExists(t, filepath.Join(dest, "internals", "database", "dialect"))
+
+	// Both dialects should exist
+	_, err = os.Stat(filepath.Join(dest, "internals", "database", "dialect", "sqlite.go"))
+	require.NoError(t, err, "dialect/sqlite.go should exist")
+	_, err = os.Stat(filepath.Join(dest, "internals", "database", "dialect", "mssql.go"))
+	require.NoError(t, err, "dialect/mssql.go should exist when mssql selected")
+	_, err = os.Stat(filepath.Join(dest, "internals", "database", "mssql.go"))
+	require.NoError(t, err, "mssql.go should exist when mssql selected")
 }
 
 func TestSetup_FeaturesSSECaddy(t *testing.T) {
@@ -417,7 +468,7 @@ func TestSetup_FeaturesSSECaddy(t *testing.T) {
 	_, err = os.Stat(filepath.Join(dest, "Caddyfile"))
 	require.NoError(t, err, "Caddyfile should exist when caddy is selected")
 
-	assertDirRemoved(t, filepath.Join(dest, "internals", "database"))
+	assertDirExists(t, filepath.Join(dest, "internals", "database")) // database is implicit
 	assertDirRemoved(t, filepath.Join(dest, "internals", "service", "graph"))
 }
 

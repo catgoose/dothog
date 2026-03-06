@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"catgoose/go-htmx-demo/internals/database/dialect"
 	"catgoose/go-htmx-demo/internals/routes/params"
 
 	"github.com/jmoiron/sqlx"
@@ -89,11 +90,12 @@ func BuildCountQuery(selectQuery string) string {
 	return countQuery
 }
 
-// ExecutePaginatedQuery executes a paginated query and returns the results with metadata
-// This is a generic helper that can be used by repositories
+// ExecutePaginatedQuery executes a paginated query and returns the results with metadata.
+// The dialect determines the pagination clause syntax (MSSQL vs SQLite).
 func ExecutePaginatedQuery[T any](
 	ctx context.Context,
 	db *sqlx.DB,
+	d dialect.Dialect,
 	selectQuery string,
 	pagination params.PaginationParams,
 	args ...any,
@@ -113,7 +115,7 @@ func ExecutePaginatedQuery[T any](
 	}
 
 	// Build paginated query
-	paginationClause := BuildPaginationClause(pagination.Offset, pagination.Limit)
+	paginationClause := BuildPaginationClause(d)
 
 	// Add pagination parameters to args
 	paginatedArgs := append(args, sql.Named("Offset", pagination.Offset), sql.Named("Limit", pagination.Limit))

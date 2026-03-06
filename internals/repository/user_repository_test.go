@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"catgoose/go-htmx-demo/internals/database/dialect"
 	dbrepo "catgoose/go-htmx-demo/internals/database/repository"
 	"catgoose/go-htmx-demo/internals/domain"
 
@@ -26,7 +27,7 @@ func setupMockDB(t *testing.T) (*sqlx.DB, sqlmock.Sqlmock) {
 
 func TestUserRepository_GetByID_Success(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB)
+	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
 	ur := NewUserRepository(repo)
 	ctx := context.Background()
 
@@ -47,7 +48,7 @@ func TestUserRepository_GetByID_Success(t *testing.T) {
 
 func TestUserRepository_GetByID_NotFound(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB)
+	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
 	ur := NewUserRepository(repo)
 	ctx := context.Background()
 
@@ -64,7 +65,7 @@ func TestUserRepository_GetByID_NotFound(t *testing.T) {
 
 func TestUserRepository_GetByAzureID_Success(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB)
+	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
 	ur := NewUserRepository(repo)
 	ctx := context.Background()
 
@@ -84,7 +85,7 @@ func TestUserRepository_GetByAzureID_Success(t *testing.T) {
 
 func TestUserRepository_GetByAzureID_NotFound(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB)
+	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
 	ur := NewUserRepository(repo)
 	ctx := context.Background()
 
@@ -101,7 +102,7 @@ func TestUserRepository_GetByAzureID_NotFound(t *testing.T) {
 
 func TestUserRepository_UpdateLastLogin_Success(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB)
+	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
 	ur := NewUserRepository(repo)
 	ctx := context.Background()
 
@@ -116,7 +117,7 @@ func TestUserRepository_UpdateLastLogin_Success(t *testing.T) {
 
 func TestUserRepository_UpdateLastLogin_NotFound(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB)
+	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
 	ur := NewUserRepository(repo)
 	ctx := context.Background()
 
@@ -132,7 +133,7 @@ func TestUserRepository_UpdateLastLogin_NotFound(t *testing.T) {
 
 func TestUserRepository_Update_Success(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB)
+	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
 	ur := NewUserRepository(repo)
 	ctx := context.Background()
 

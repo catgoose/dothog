@@ -7,6 +7,9 @@ import (
 	"strings"
 	"sync"
 
+	// setup:feature:database:start
+	"catgoose/go-htmx-demo/internals/database/dialect"
+	// setup:feature:database:end
 	"catgoose/go-htmx-demo/internals/logger"
 
 	// setup:feature:auth:start
@@ -26,6 +29,9 @@ type AppConfig struct {
 	ServerPort            string
 	CSRFPerRequestPaths   []string
 	CSRFExemptPaths       []string
+	// setup:feature:database:start
+	DBEngine dialect.Engine
+	// setup:feature:database:end
 	AzureRefreshUsersHour int
 	CSRFRotatePerRequest  bool
 	EnableDatabase        bool
@@ -55,6 +61,17 @@ func buildConfig() (*AppConfig, error) {
 		if parsed, err := strconv.ParseBool(v); err == nil {
 			enableDatabase = parsed
 		}
+	}
+
+	// DB_ENGINE selects the database engine: "sqlite"/"sqlite3" or "sqlserver"/"mssql".
+	// Defaults to "sqlite".
+	dbEngine := dialect.SQLite
+	if v, err := dio.Env("DB_ENGINE"); err == nil && v != "" {
+		parsed, err := dialect.ParseEngine(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid DB_ENGINE: %w", err)
+		}
+		dbEngine = parsed
 	}
 	// setup:feature:database:end
 
@@ -155,6 +172,7 @@ func buildConfig() (*AppConfig, error) {
 		// setup:feature:graph:end
 		// setup:feature:database:start
 		EnableDatabase: enableDatabase,
+		DBEngine:       dbEngine,
 		// setup:feature:database:end
 		// setup:feature:auth:start
 		CroonerDisabled: croonerDisabled,

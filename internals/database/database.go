@@ -6,107 +6,70 @@ package database
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
-	"catgoose/go-htmx-demo/internals/logger"
+	"catgoose/go-htmx-demo/internals/database/dialect"
 
 	"github.com/catgoose/dio"
-	_ "github.com/denisenkom/go-mssqldb" // Register SQL Server driver
 	"github.com/jmoiron/sqlx"
 )
 
-type sqlConnectionConfig struct {
-	driver   string
-	server   string
-	database string
-	user     string
-	password string
+// Open establishes a database connection based on the engine type.
+// For SQLite, it reads DB_PATH from the environment (defaults to "db/app.db").
+// setup:feature:mssql:start
+// For MSSQL, it reads DB_HOST, DB_DATABASE, DB_USER, DB_PASSWORD from the environment.
+// setup:feature:mssql:end
+func Open(ctx context.Context, engine dialect.Engine) (*sqlx.DB, error) {
+	switch engine {
+	case dialect.SQLite:
+		return openSQLiteDB(ctx)
+	// setup:feature:mssql:start
+	case dialect.MSSQL:
+		return openMSSQLDB(ctx)
+	// setup:feature:mssql:end
+	default:
+		return nil, fmt.Errorf("unsupported database engine: %q", engine)
+	}
 }
 
-// getConnectionConfig gets environment variables for sqlConnectionConfig
-func getConnectionConfig() (*sqlConnectionConfig, error) {
-	get := dio.Env
-	driver := "sqlserver"
-	server, err := get("DB_HOST")
-	if err != nil {
-		return nil, logger.LogAndReturnError("Failed to get database server", err)
+func openSQLiteDB(ctx context.Context) (*sqlx.DB, error) {
+	dbPath := "db/app.db"
+	if path, err := dio.Env("DB_PATH"); err == nil && path != "" {
+		dbPath = path
 	}
-	database, err := get("DB_DATABASE")
-	if err != nil {
-		return nil, logger.LogAndReturnError("Failed to get database name", err)
-	}
-	user, err := get("DB_USER")
-	if err != nil {
-		return nil, logger.LogAndReturnError("Failed to get database user", err)
-	}
-	password, err := get("DB_PASSWORD")
-	if err != nil {
-		return nil, logger.LogAndReturnError("Failed to get database password", err)
-	}
-	config := &sqlConnectionConfig{
-		driver:   driver,
-		server:   server,
-		database: database,
-		user:     user,
-		password: password,
-	}
-	return config, nil
-}
 
-// connectionString constructs the connection string based on the config
-func (config *sqlConnectionConfig) connectionString() string {
-	// In development, disable encryption for easier local testing
-	dev := dio.Dev()
-	var encrypt string
-	if dev {
-		encrypt = "&encrypt=disable"
-	} else {
-		encrypt = ""
-	}
-	connection := fmt.Sprintf(
-		"%s://%s:%s@%s?database=%s&secure=0%s&trustServerCertificate=1",
-		config.driver,
-		config.user,
-		config.password,
-		config.server,
-		config.database,
-		encrypt,
-	)
-	return connection
-}
-
-// Open establishes a connection to the database using the config
-func Open(ctx context.Context) (*sqlx.DB, error) {
-	config, err := getConnectionConfig()
-	if err != nil {
-		return nil, logger.LogAndReturnError("Failed to load database configuration", err)
-	}
-	db, err := sqlx.Open(config.driver, config.connectionString())
-	if err != nil {
-		fields := map[string]any{
-			"driver":   config.driver,
-			"server":   config.server,
-			"database": config.database,
+	if dbPath != ":memory:" {
+		if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
+			return nil, fmt.Errorf("failed to create database directory: %w", err)
 		}
-		logger.LogErrorWithFields("Failed to connect to database", err, fields)
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	// Configure connection pool
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(5)
-	db.SetConnMaxLifetime(5 * time.Minute)
-	db.SetConnMaxIdleTime(10 * time.Minute)
+	db, err := sqlx.Open("sqlite3", dbPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open SQLite database: %w", err)
+	}
 
-	// Ping the database with context to ensure connection is established
+	// SQLite has limited concurrency
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+	db.SetConnMaxLifetime(10 * time.Minute)
+	db.SetConnMaxIdleTime(5 * time.Minute)
+
+	// Enable WAL mode for better concurrency
+	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to enable WAL mode: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA busy_timeout=30000"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to set busy timeout: %w", err)
+	}
+
 	if err := db.PingContext(ctx); err != nil {
-		fields := map[string]any{
-			"driver":   config.driver,
-			"server":   config.server,
-			"database": config.database,
-		}
-		logger.LogErrorWithFields("Failed to ping database", err, fields)
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		db.Close()
+		return nil, fmt.Errorf("failed to ping SQLite database: %w", err)
 	}
 
 	return db, nil

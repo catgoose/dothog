@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"time"
 
+	"catgoose/go-htmx-demo/internals/database/dialect"
 	"catgoose/go-htmx-demo/internals/logger"
 
 	"github.com/jmoiron/sqlx"
@@ -17,19 +18,26 @@ import (
 
 // RepoManager manages all repository access to the database.
 type RepoManager struct {
-	db *sqlx.DB
+	db      *sqlx.DB
+	dialect dialect.Dialect
 }
 
 // NewManager creates a new RepoManager instance.
-func NewManager(db *sqlx.DB) *RepoManager {
+func NewManager(db *sqlx.DB, d dialect.Dialect) *RepoManager {
 	return &RepoManager{
-		db: db,
+		db:      db,
+		dialect: d,
 	}
 }
 
 // GetDB returns the database connection
 func (r *RepoManager) GetDB() *sqlx.DB {
 	return r.db
+}
+
+// Dialect returns the dialect for engine-specific SQL fragments.
+func (r *RepoManager) Dialect() dialect.Dialect {
+	return r.dialect
 }
 
 // GetExecer is satisfied by *sqlx.DB and *sqlx.Tx for use in repo methods that accept an optional transaction.
@@ -82,13 +90,7 @@ func (r *RepoManager) InitSchema(ctx context.Context) error {
 }
 
 func (r *RepoManager) dropAllTables(ctx context.Context) error {
-	dropSQL := `
-		IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND type in (N'U'))
-		BEGIN
-			DROP TABLE [dbo].[Users];
-		END
-	`
-	_, err := r.db.ExecContext(ctx, dropSQL)
+	_, err := r.db.ExecContext(ctx, r.dialect.DropTableIfExists("Users"))
 	return err
 }
 
@@ -96,34 +98,59 @@ func (r *RepoManager) createUsersTable(ctx context.Context) error {
 	log := logger.WithContext(ctx)
 	log.Info("Creating Users table")
 
-	createSQL := `
+	d := r.dialect
+	createSQL := fmt.Sprintf(`
 		CREATE TABLE Users (
-			ID INT PRIMARY KEY IDENTITY(1,1),
-			AzureId VARCHAR(255) NOT NULL UNIQUE,
-			GivenName NVARCHAR(255),
-			Surname NVARCHAR(255),
-			DisplayName NVARCHAR(255),
-			UserPrincipalName NVARCHAR(255) NOT NULL,
-			Mail NVARCHAR(255),
-			JobTitle NVARCHAR(255),
-			OfficeLocation NVARCHAR(255),
-			Department NVARCHAR(255),
-			CompanyName NVARCHAR(255),
-			AccountName NVARCHAR(255),
-			LastLoginAt DATETIME,
-			CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
-			UpdatedAt DATETIME NOT NULL DEFAULT GETDATE()
-		);
-		CREATE INDEX idx_users_azureid ON Users(AzureId);
-		CREATE INDEX idx_users_userprincipalname ON Users(UserPrincipalName);
-		CREATE INDEX idx_users_displayname ON Users(DisplayName);
-		CREATE INDEX idx_users_mail ON Users(Mail);
-		CREATE INDEX idx_users_lastloginat ON Users(LastLoginAt);
-	`
-	_, err := r.db.ExecContext(ctx, createSQL)
-	if err != nil {
+			ID %s,
+			AzureId %s NOT NULL UNIQUE,
+			GivenName %s,
+			Surname %s,
+			DisplayName %s,
+			UserPrincipalName %s NOT NULL,
+			Mail %s,
+			JobTitle %s,
+			OfficeLocation %s,
+			Department %s,
+			CompanyName %s,
+			AccountName %s,
+			LastLoginAt %s,
+			CreatedAt %s NOT NULL DEFAULT %s,
+			UpdatedAt %s NOT NULL DEFAULT %s
+		)`,
+		d.AutoIncrement(),
+		d.VarcharType(255),
+		d.StringType(255),
+		d.StringType(255),
+		d.StringType(255),
+		d.StringType(255),
+		d.StringType(255),
+		d.StringType(255),
+		d.StringType(255),
+		d.StringType(255),
+		d.StringType(255),
+		d.StringType(255),
+		d.TimestampType(),
+		d.TimestampType(), d.Now(),
+		d.TimestampType(), d.Now(),
+	)
+
+	if _, err := r.db.ExecContext(ctx, createSQL); err != nil {
 		return err
 	}
+
+	indexes := []struct{ name, cols string }{
+		{"idx_users_azureid", "AzureId"},
+		{"idx_users_userprincipalname", "UserPrincipalName"},
+		{"idx_users_displayname", "DisplayName"},
+		{"idx_users_mail", "Mail"},
+		{"idx_users_lastloginat", "LastLoginAt"},
+	}
+	for _, idx := range indexes {
+		if _, err := r.db.ExecContext(ctx, d.CreateIndexIfNotExists(idx.name, "Users", idx.cols)); err != nil {
+			return err
+		}
+	}
+
 	log.Info("Users table created successfully")
 	return nil
 }

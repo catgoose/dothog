@@ -785,6 +785,66 @@ func TestRemoveOrphanedImportLines(t *testing.T) {
 	})
 }
 
+// ---------------------------------------------------------------------------
+// ImplicitFeatures
+// ---------------------------------------------------------------------------
+
+func TestImplicitFeaturesAlwaysKept(t *testing.T) {
+	// When Features is set but does not include "database",
+	// database should still be kept because it's implicit.
+	content := strings.Join([]string{
+		"before",
+		"// setup:feature:database:start",
+		"database code",
+		"// setup:feature:database:end",
+		"after",
+	}, "\n")
+	// Simulate removeOptionalContent logic: build removeTags with implicit features kept
+	removeTags := make(map[string]bool)
+	keep := make(map[string]bool)
+	// User selected no features
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
+	for _, f := range AllFeatures {
+		if !keep[f] {
+			removeTags[f] = true
+		}
+	}
+	got := stripBlocks(content, removeTags)
+	require.Contains(t, got, "database code", "database blocks should be kept (implicit feature)")
+	require.Contains(t, got, "before")
+	require.Contains(t, got, "after")
+}
+
+func TestMSSQLBlocksStrippedWhenNotSelected(t *testing.T) {
+	content := strings.Join([]string{
+		"before",
+		"// setup:feature:mssql:start",
+		"mssql code",
+		"// setup:feature:mssql:end",
+		"after",
+	}, "\n")
+	got := stripBlocks(content, map[string]bool{"mssql": true})
+	require.Contains(t, got, "before")
+	require.Contains(t, got, "after")
+	require.NotContains(t, got, "mssql code")
+}
+
+func TestMSSQLBlocksKeptWhenSelected(t *testing.T) {
+	content := strings.Join([]string{
+		"before",
+		"// setup:feature:mssql:start",
+		"mssql code",
+		"// setup:feature:mssql:end",
+		"after",
+	}, "\n")
+	got := stripBlocks(content, map[string]bool{})
+	require.Contains(t, got, "before")
+	require.Contains(t, got, "after")
+	require.Contains(t, got, "mssql code")
+}
+
 func TestStripFeatureFileMarker(t *testing.T) {
 	tests := []struct {
 		name  string

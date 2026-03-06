@@ -29,6 +29,7 @@ const (
 	FeatureAuth     = "auth"
 	FeatureGraph    = "graph"
 	FeatureDatabase = "database"
+	FeatureMSSQL    = "mssql"
 	FeatureSSE      = "sse"
 	FeatureCaddy    = "caddy"
 	FeatureAvatar   = "avatar"
@@ -36,7 +37,12 @@ const (
 )
 
 // AllFeatures lists every selectable feature tag.
-var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo}
+// "database" is always included (implied by the base template) and is not user-selectable.
+var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo}
+
+// ImplicitFeatures are always selected and not presented to the user.
+// "database" is implicit because SQLite is the base database engine.
+var ImplicitFeatures = []string{FeatureDatabase}
 
 // Options configures the template setup run.
 type Options struct {
@@ -339,6 +345,10 @@ func removeOptionalContent(dir string, opts Options) error {
 	if opts.Features != nil {
 		keep := make(map[string]bool)
 		for _, f := range opts.Features {
+			keep[f] = true
+		}
+		// Implicit features are always kept
+		for _, f := range ImplicitFeatures {
 			keep[f] = true
 		}
 		for _, f := range AllFeatures {

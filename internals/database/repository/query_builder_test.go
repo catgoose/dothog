@@ -4,12 +4,19 @@ package repository
 import (
 	"testing"
 
+	"catgoose/go-htmx-demo/internals/database/dialect"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildPaginationClause(t *testing.T) {
-	clause := BuildPaginationClause(10, 25)
+func TestBuildPaginationClause_MSSQL(t *testing.T) {
+	clause := BuildPaginationClause(dialect.MSSQLDialect{})
 	assert.Equal(t, "OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY", clause)
+}
+
+func TestBuildPaginationClause_SQLite(t *testing.T) {
+	clause := BuildPaginationClause(dialect.SQLiteDialect{})
+	assert.Equal(t, "LIMIT @Limit OFFSET @Offset", clause)
 }
 
 func TestBuildSearchPattern(t *testing.T) {

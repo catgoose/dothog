@@ -6,13 +6,15 @@ import (
 	"fmt"
 	"strings"
 
+	"catgoose/go-htmx-demo/internals/database/dialect"
 	"catgoose/go-htmx-demo/internals/routes/params"
 )
 
-// BuildPaginationClause builds the MSSQL pagination clause
-// Returns: "OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY"
-func BuildPaginationClause(offset, limit int) string {
-	return "OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY"
+// BuildPaginationClause builds the pagination clause for the given dialect.
+//   - MSSQL:  "OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY"
+//   - SQLite: "LIMIT @Limit OFFSET @Offset"
+func BuildPaginationClause(d dialect.Dialect) string {
+	return d.Pagination()
 }
 
 // BuildSearchPattern builds a search pattern for LIKE queries
