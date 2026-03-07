@@ -57,11 +57,16 @@ jobs:
           for f in *.webm; do
             [ -f "$f" ] || continue
             name="${f%.webm}"
-            # Two-pass: generate palette for better quality
+            # Two-pass: generate palette first, then apply it
             ffmpeg -y -i "$f" \
-              -vf "fps=15,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer" \
+              -vf "fps=15,scale=960:-1:flags=lanczos,palettegen=max_colors=128" \
+              "${name}_palette.png" \
+              -loglevel error
+            ffmpeg -y -i "$f" -i "${name}_palette.png" \
+              -lavfi "fps=15,scale=960:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer" \
               "../${name}.gif" \
               -loglevel error
+            rm -f "${name}_palette.png"
             echo "Converted ${f} -> ${name}.gif"
           done
 
