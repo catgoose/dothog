@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"catgoose/go-htmx-demo/internals/database/dialect"
+	"catgoose/go-htmx-demo/internals/database/schema"
 	"catgoose/go-htmx-demo/internals/logger"
 
 	"github.com/jmoiron/sqlx"
@@ -90,7 +91,7 @@ func (r *RepoManager) InitSchema(ctx context.Context) error {
 }
 
 func (r *RepoManager) dropAllTables(ctx context.Context) error {
-	_, err := r.db.ExecContext(ctx, r.dialect.DropTableIfExists("Users"))
+	_, err := r.db.ExecContext(ctx, schema.UsersTable.DropSQL(r.dialect))
 	return err
 }
 
@@ -98,55 +99,8 @@ func (r *RepoManager) createUsersTable(ctx context.Context) error {
 	log := logger.WithContext(ctx)
 	log.Info("Creating Users table")
 
-	d := r.dialect
-	createSQL := fmt.Sprintf(`
-		CREATE TABLE Users (
-			ID %s,
-			AzureId %s NOT NULL UNIQUE,
-			GivenName %s,
-			Surname %s,
-			DisplayName %s,
-			UserPrincipalName %s NOT NULL,
-			Mail %s,
-			JobTitle %s,
-			OfficeLocation %s,
-			Department %s,
-			CompanyName %s,
-			AccountName %s,
-			LastLoginAt %s,
-			CreatedAt %s NOT NULL DEFAULT %s,
-			UpdatedAt %s NOT NULL DEFAULT %s
-		)`,
-		d.AutoIncrement(),
-		d.VarcharType(255),
-		d.StringType(255),
-		d.StringType(255),
-		d.StringType(255),
-		d.StringType(255),
-		d.StringType(255),
-		d.StringType(255),
-		d.StringType(255),
-		d.StringType(255),
-		d.StringType(255),
-		d.StringType(255),
-		d.TimestampType(),
-		d.TimestampType(), d.Now(),
-		d.TimestampType(), d.Now(),
-	)
-
-	if _, err := r.db.ExecContext(ctx, createSQL); err != nil {
-		return err
-	}
-
-	indexes := []struct{ name, cols string }{
-		{"idx_users_azureid", "AzureId"},
-		{"idx_users_userprincipalname", "UserPrincipalName"},
-		{"idx_users_displayname", "DisplayName"},
-		{"idx_users_mail", "Mail"},
-		{"idx_users_lastloginat", "LastLoginAt"},
-	}
-	for _, idx := range indexes {
-		if _, err := r.db.ExecContext(ctx, d.CreateIndexIfNotExists(idx.name, "Users", idx.cols)); err != nil {
+	for _, stmt := range schema.UsersTable.CreateSQL(r.dialect) {
+		if _, err := r.db.ExecContext(ctx, stmt); err != nil {
 			return err
 		}
 	}

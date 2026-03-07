@@ -46,6 +46,7 @@ func appNavComponent(path string) templ.Component {
 				// setup:feature:sse:end
 			},
 		},
+		{Label: "Admin", Href: "/admin"},
 		// setup:feature:demo:end
 	}, path)
 	return corecomponents.NavBar(items)

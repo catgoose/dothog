@@ -30,3 +30,35 @@ func SetUpdateTimestamp(updatedAt *time.Time) {
 		*updatedAt = GetNow()
 	}
 }
+
+// SetSoftDelete sets DeletedAt to the current time for soft-delete.
+func SetSoftDelete(deletedAt *time.Time) {
+	if deletedAt != nil {
+		*deletedAt = GetNow()
+	}
+}
+
+// SetDeleteAudit sets DeletedAt and DeletedBy for a soft-delete with audit trail.
+func SetDeleteAudit(deletedAt *time.Time, deletedBy *string, user string) {
+	SetSoftDelete(deletedAt)
+	if deletedBy != nil {
+		*deletedBy = user
+	}
+}
+
+// SetCreateAudit sets CreatedBy and UpdatedBy for a new record.
+func SetCreateAudit(createdBy, updatedBy *string, user string) {
+	if createdBy != nil {
+		*createdBy = user
+	}
+	if updatedBy != nil {
+		*updatedBy = user
+	}
+}
+
+// SetUpdateAudit sets UpdatedBy for an updated record.
+func SetUpdateAudit(updatedBy *string, user string) {
+	if updatedBy != nil {
+		*updatedBy = user
+	}
+}

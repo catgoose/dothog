@@ -88,3 +88,8 @@ func (w *WhereBuilder) Args() []any {
 func (w *WhereBuilder) HasConditions() bool {
 	return len(w.clauses) > 0
 }
+
+// NotDeleted adds a "DeletedAt IS NULL" condition for soft-delete filtering.
+func (w *WhereBuilder) NotDeleted() *WhereBuilder {
+	return w.And("DeletedAt IS NULL")
+}

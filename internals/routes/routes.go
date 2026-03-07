@@ -79,6 +79,13 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initInventoryRoutes(db)
 	ar.initCatalogRoutes(db)
 	ar.initBulkRoutes(db)
+
+	adminDB, err := demo.OpenMemoryDB()
+	if err != nil {
+		log.Warn("Admin in-memory DB unavailable; /admin routes disabled", "error", err)
+	} else {
+		ar.initAdminRoutes(adminDB)
+	}
 	// setup:feature:demo:end
 	return nil
 }

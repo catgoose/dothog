@@ -83,3 +83,17 @@ func TestWhereBuilder_Search_NoFields(t *testing.T) {
 	assert.Empty(t, w.String())
 	assert.False(t, w.HasConditions())
 }
+
+func TestWhereBuilder_NotDeleted(t *testing.T) {
+	w := NewWhere().NotDeleted()
+	assert.Equal(t, "WHERE DeletedAt IS NULL", w.String())
+	assert.Empty(t, w.Args())
+}
+
+func TestWhereBuilder_NotDeleted_WithOtherConditions(t *testing.T) {
+	w := NewWhere().
+		And("Active = @Active", sql.Named("Active", true)).
+		NotDeleted()
+	assert.Equal(t, "WHERE Active = @Active AND DeletedAt IS NULL", w.String())
+	assert.Len(t, w.Args(), 1)
+}

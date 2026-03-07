@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"catgoose/go-htmx-demo/internals/database/repository"
+	"catgoose/go-htmx-demo/internals/database/schema"
 	"catgoose/go-htmx-demo/internals/domain"
 
 	"github.com/jmoiron/sqlx"
@@ -48,11 +49,8 @@ func (r *userRepository) CreateOrUpdate(ctx context.Context, user *domain.User, 
 		exec = tx
 	}
 
-	query := `
-		INSERT INTO Users (AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName, LastLoginAt, CreatedAt, UpdatedAt)
-		VALUES (@AzureId, @GivenName, @Surname, @DisplayName, @UserPrincipalName, @Mail, @JobTitle, @OfficeLocation, @Department, @CompanyName, @AccountName, @LastLoginAt, @CreatedAt, @UpdatedAt);
-		SELECT SCOPE_IDENTITY() AS ID;
-	`
+	insertCols := schema.UsersTable.InsertColumns()
+	query := repository.InsertInto(schema.UsersTable.Name, insertCols...) + ";\n\t\tSELECT SCOPE_IDENTITY() AS ID;"
 
 	var id int64
 	err = exec.GetContext(ctx, &id, query,
@@ -124,23 +122,10 @@ func (r *userRepository) Update(ctx context.Context, user *domain.User, tx *sqlx
 		exec = tx
 	}
 
-	query := `
-		UPDATE Users
-		SET AzureId = @AzureId,
-		    GivenName = @GivenName,
-		    Surname = @Surname,
-		    DisplayName = @DisplayName,
-		    UserPrincipalName = @UserPrincipalName,
-		    Mail = @Mail,
-		    JobTitle = @JobTitle,
-		    OfficeLocation = @OfficeLocation,
-		    Department = @Department,
-		    CompanyName = @CompanyName,
-		    AccountName = @AccountName,
-		    LastLoginAt = @LastLoginAt,
-		    UpdatedAt = @UpdatedAt
-		WHERE ID = @ID
-	`
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE ID = @ID",
+		schema.UsersTable.Name,
+		repository.SetClause(schema.UsersTable.UpdateColumns()...),
+	)
 
 	repository.SetUpdateTimestamp(&user.UpdatedAt)
 

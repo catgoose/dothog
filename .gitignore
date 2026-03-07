@@ -45,8 +45,10 @@ localhost.key
 # Log files
 log/
 
-# SQLite database
-db/
+# SQLite database (allow seed.db and gen_seed tool)
+db/*
+!db/seed.db
+!db/gen_seed/
 
 # binary
 go-htmx-demo
