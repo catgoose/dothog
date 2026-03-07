@@ -39,7 +39,7 @@ const recordings = [
       await page.waitForTimeout(800);
 
       // Type in search to trigger filtering
-      const search = page.locator('input[name="search"]').first();
+      const search = page.locator('input[name="q"]').first();
       if (await search.isVisible()) {
         await search.click();
         await page.waitForTimeout(300);
@@ -70,34 +70,25 @@ const recordings = [
     async interact(page) {
       await page.waitForTimeout(800);
 
-      // Click interactive elements - try multiple selectors
-      const btn = page
-        .locator("button")
-        .filter({ hasText: /click|count|like/i })
-        .first();
-      if (await btn.isVisible()) {
-        for (let i = 0; i < 5; i++) {
+      // Click button variants — labels are "Primary", "Secondary", "Danger", etc.
+      for (const label of ["Primary", "Secondary", "Danger"]) {
+        const btn = page.locator("button").filter({ hasText: label }).first();
+        if (await btn.isVisible()) {
           await btn.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(600);
         }
-        await page.waitForTimeout(600);
       }
 
-      // Try toggling something
-      const toggle = page
-        .locator("button")
-        .filter({ hasText: /toggle/i })
-        .first();
-      if (await toggle.isVisible()) {
-        await toggle.click();
-        await page.waitForTimeout(600);
-        await toggle.click();
-        await page.waitForTimeout(600);
+      // Click Retry button
+      const retry = page.locator("button").filter({ hasText: "Retry" }).first();
+      if (await retry.isVisible()) {
+        await retry.click();
+        await page.waitForTimeout(800);
       }
 
-      // Scroll down to show more content
-      await page.evaluate(() => window.scrollBy({ top: 300, behavior: "smooth" }));
-      await page.waitForTimeout(800);
+      // Scroll down to show more content, then back up
+      await page.evaluate(() => window.scrollBy({ top: 400, behavior: "smooth" }));
+      await page.waitForTimeout(1000);
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
       await page.waitForTimeout(800);
     },
