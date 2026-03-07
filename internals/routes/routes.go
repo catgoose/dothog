@@ -59,6 +59,7 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initControlsGalleryRoutes()
 	ar.initComponentsRoutes()
 	ar.initComponents2Routes()
+	ar.initComponents3Routes()
 	// setup:feature:demo:end
 
 	// setup:feature:demo:start

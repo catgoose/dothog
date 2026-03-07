@@ -40,6 +40,7 @@ func appNavComponent(path string) templ.Component {
 				{Label: "State", Href: "/hypermedia/state"},
 				{Label: "Components", Href: "/hypermedia/components"},
 				{Label: "Components 2", Href: "/hypermedia/components2"},
+				{Label: "Components 3", Href: "/hypermedia/components3"},
 				// setup:feature:sse:start
 				{Label: "Real-time", Href: "/hypermedia/realtime"},
 				// setup:feature:sse:end

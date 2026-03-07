@@ -30,6 +30,7 @@ const pages = [
   { path: "/hypermedia/interactions", name: "interactions", title: "Interactions" },
   { path: "/hypermedia/state", name: "state", title: "State Patterns" },
   { path: "/tables/bulk", name: "bulk", title: "Bulk Operations" },
+  { path: "/hypermedia/components3", name: "components3", title: "Components 3" },
 ];
 
 async function waitForApp(url, maxRetries = 30) {

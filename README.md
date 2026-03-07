@@ -54,9 +54,9 @@ A demonstration of building modern, interactive web applications with Go and HTM
 | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | ![Interactions](https://raw.githubusercontent.com/catgoose/screenshots/main/go-htmx-demo/interactions-viewport.png) | ![State](https://raw.githubusercontent.com/catgoose/screenshots/main/go-htmx-demo/state-viewport.png)   |
 
-| Bulk Operations                                                                                            |
-| ----------------------------------------------------------------------------------------------------------- |
-| ![Bulk](https://raw.githubusercontent.com/catgoose/screenshots/main/go-htmx-demo/bulk-viewport.png)         |
+| Bulk Operations                                                                                             | Components 3                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| ![Bulk](https://raw.githubusercontent.com/catgoose/screenshots/main/go-htmx-demo/bulk-viewport.png)         | ![Components 3](https://raw.githubusercontent.com/catgoose/screenshots/main/go-htmx-demo/components3-viewport.png) |
 
 </details>
 
@@ -67,6 +67,9 @@ A demonstration of building modern, interactive web applications with Go and HTM
 - **SSE Real-time Dashboard** -- Live system stats, metrics, service health, and event streams via Server-Sent Events with OOB swaps
 - **Interactive Tables** -- Sorting, filtering, debounced search, pagination, and bulk operations on SQLite data
 - **State Patterns** -- Like counters, toggles, auto-load, lazy reveal, live preview, and append-without-replace
+- **Infinite Scroll** -- Sentinel-driven auto-loading with `hx-trigger="revealed"` for seamless pagination
+- **Optimistic UI** -- Immediate visual feedback via HyperScript with server reconciliation after latency
+- **Undo / Soft Delete** -- Delete with OOB undo toast, auto-dismiss timer, and one-click restore
 - **Hypermedia Controls Gallery** -- Buttons, modals, dismiss, confirmation dialogs, and form patterns using HTMX + Hyperscript
 
 See [Hypermedia Patterns](#hypermedia-patterns) for details on each.
