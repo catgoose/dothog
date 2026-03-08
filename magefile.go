@@ -726,6 +726,33 @@ func TestRace() error {
 	return sh.RunV("go", "test", "-race", "./...")
 }
 
+// TestE2E runs Playwright end-to-end tests
+func TestE2E() error {
+	if err := nodeModulesCheck(); err != nil {
+		return err
+	}
+	fmt.Println("Running Playwright e2e tests...")
+	return sh.RunV("npx", "playwright", "test")
+}
+
+// TestE2EHeaded runs Playwright tests in headed browser mode
+func TestE2EHeaded() error {
+	if err := nodeModulesCheck(); err != nil {
+		return err
+	}
+	fmt.Println("Running Playwright e2e tests (headed)...")
+	return sh.RunV("npx", "playwright", "test", "--headed")
+}
+
+// TestE2EUI opens the Playwright interactive UI
+func TestE2EUI() error {
+	if err := nodeModulesCheck(); err != nil {
+		return err
+	}
+	fmt.Println("Opening Playwright UI...")
+	return sh.RunV("npx", "playwright", "test", "--ui")
+}
+
 // TestWatch runs tests in watch mode using the Go-based watcher
 func TestWatch() error {
 	fmt.Println("Building and starting Go test watcher...")
