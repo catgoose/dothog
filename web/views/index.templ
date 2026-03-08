@@ -1,10 +1,10 @@
 package views
 
 // Root template
-templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string) {
+templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool) {
 	<!DOCTYPE html>
 	<html lang="en" class="light">
-		@header(csrfToken)
+		@header(csrfToken, devMode)
 		<body
 			hx-history="false"
 			hx-boost="true"
@@ -22,7 +22,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 }
 
 // Header is the header of the HTML document
-templ header(csrfToken string) {
+templ header(csrfToken string, devMode bool) {
 	<head>
 		if csrfToken != "" {
 			<meta name="csrf-token" content={ csrfToken }/>
@@ -46,6 +46,33 @@ templ header(csrfToken string) {
 		<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
 		<link rel="icon" href="/public/images/favicon.svg" type="image/x-svg+xml"/>
 		<title>HTMX Go Template</title>
+		if devMode {
+			<script>
+				// htmx & hyperscript debug logging
+				document.addEventListener('DOMContentLoaded', function() {
+					if (typeof htmx !== 'undefined') {
+						htmx.logAll();
+					}
+					if (typeof _hyperscript !== 'undefined' && _hyperscript.config) {
+						_hyperscript.config.defaultTransition = 'all 0.3s ease';
+					}
+				});
+				// Console helpers: hsDebug.logAll() / hsDebug.logSelector('.foo')
+				window.hsDebug = {
+					logSelector: function(sel) {
+						document.querySelectorAll(sel).forEach(function(el) {
+							console.log(el, el.getAttribute('_'));
+						});
+					},
+					logAllHyperscriptElements: function() {
+						this.logSelector('[_]');
+					},
+					logHxElements: function() {
+						this.logSelector('[hx-get],[hx-post],[hx-put],[hx-patch],[hx-delete]');
+					}
+				};
+			</script>
+		}
 	</head>
 }
 

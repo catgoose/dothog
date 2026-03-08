@@ -6,8 +6,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"strconv"
+	"time"
 
 	"catgoose/go-htmx-demo/internals/demo"
 	"catgoose/go-htmx-demo/internals/routes/handler"
@@ -27,6 +29,11 @@ func (ar *appRoutes) initFeedRoutes(actLog *demo.ActivityLog, broker *ssebroker.
 	ar.e.GET("/tables/feed", f.handleFeedPage)
 	ar.e.GET("/tables/feed/more", f.handleFeedMore)
 	ar.e.GET("/sse/activity", f.handleActivitySSE)
+
+	// Seed some initial events so the feed isn't empty on first load.
+	seedFeedEvents(actLog)
+	// Start background publisher for simulated activity.
+	go ar.publishActivityEvents(actLog, broker)
 }
 
 func (f *feedRoutes) handleFeedPage(c echo.Context) error {
@@ -103,4 +110,51 @@ func BroadcastActivity(broker *ssebroker.SSEBroker, e demo.ActivityEvent) {
 	msg := ssebroker.NewSSEMessage("activity-event", buf.String()).String()
 	statsBufPool.Put(buf)
 	broker.Publish(ssebroker.TopicActivityFeed, msg)
+}
+
+// --- Simulated activity ---
+
+type activityTemplate struct {
+	Action   string
+	Resource string
+	Names    []string
+	Details  []string
+}
+
+var activityTemplates = []activityTemplate{
+	{"created", "task", []string{"API Endpoint", "Dashboard Widget", "Login Flow", "Report Builder", "Search Index"}, []string{"added to backlog", "assigned to sprint", "created from template"}},
+	{"updated", "person", []string{"James Smith", "Mary Johnson", "Robert Williams", "Patricia Brown", "John Jones"}, []string{"profile updated", "department changed", "role changed"}},
+	{"moved", "task", []string{"Fix Auth Bug", "Deploy Pipeline", "Code Review", "Database Migration", "UI Redesign"}, []string{"moved to in_progress", "moved to review", "moved to done"}},
+	{"approved", "approval", []string{"Travel Request", "Software License", "Training Budget", "New Hire Equipment", "Conference Attendance"}, []string{"$500.00 approved", "$1200.00 approved", "$3000.00 approved"}},
+	{"rejected", "approval", []string{"Office Renovation", "Team Offsite", "Hardware Upgrade"}, []string{"$15000.00 rejected", "$8000.00 rejected"}},
+	{"updated", "contact", []string{"Alice Reed", "Carol West", "Frank Liu", "Iris Tanaka", "Sam Taylor"}, []string{"contact updated", "email changed", "role changed"}},
+	{"deleted", "item", []string{"Old Inventory Item", "Deprecated Widget", "Test Record"}, []string{"removed from catalog", "marked inactive"}},
+}
+
+func seedFeedEvents(actLog *demo.ActivityLog) {
+	for i := 0; i < 15; i++ {
+		tmpl := activityTemplates[rand.IntN(len(activityTemplates))]
+		name := tmpl.Names[rand.IntN(len(tmpl.Names))]
+		detail := tmpl.Details[rand.IntN(len(tmpl.Details))]
+		actLog.Record(tmpl.Action, tmpl.Resource, rand.IntN(50)+1, name, detail)
+	}
+}
+
+func (ar *appRoutes) publishActivityEvents(actLog *demo.ActivityLog, broker *ssebroker.SSEBroker) {
+	for {
+		delay := time.Duration(2000+rand.IntN(4000)) * time.Millisecond
+		select {
+		case <-ar.ctx.Done():
+			return
+		case <-time.After(delay):
+			if !broker.HasSubscribers(ssebroker.TopicActivityFeed) {
+				continue
+			}
+			tmpl := activityTemplates[rand.IntN(len(activityTemplates))]
+			name := tmpl.Names[rand.IntN(len(tmpl.Names))]
+			detail := tmpl.Details[rand.IntN(len(tmpl.Details))]
+			evt := actLog.Record(tmpl.Action, tmpl.Resource, rand.IntN(50)+1, name, detail)
+			BroadcastActivity(broker, evt)
+		}
+	}
 }

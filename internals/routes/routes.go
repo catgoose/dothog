@@ -79,9 +79,9 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initInventoryRoutes(db)
 	ar.initCatalogRoutes(db)
 	ar.initBulkRoutes(db)
-	ar.initAdminRoutes(db)
 
 	actLog := demo.NewActivityLog(200)
+	ar.initAdminRoutes(db, actLog, broker)
 	ar.initPeopleRoutes(db, broker, actLog)
 	ar.initKanbanRoutes(demo.NewKanbanBoard(), actLog, broker)
 	ar.initApprovalRoutes(demo.NewApprovalQueue(), actLog, broker)

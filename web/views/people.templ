@@ -52,17 +52,15 @@ templ PersonProfilePage(p demo.Person) {
 			<a href="/tables/people" class="btn btn-sm btn-ghost">&larr; Directory</a>
 		</div>
 		<div id="person-profile" hx-ext="sse" sse-connect={ fmt.Sprintf("/sse/people/%d", p.ID) }>
-			<div sse-swap="person-update" hx-swap="innerHTML" hx-target="#person-profile-card" style="display:none"></div>
-			<div id="person-profile-card">
-				@PersonProfileCard(p)
-			</div>
+			<div sse-swap="person-update" hx-swap="outerHTML" hx-target="#person-profile-card" style="display:none"></div>
+			@PersonProfileCard(p)
 		</div>
 	</div>
 }
 
 templ PersonProfileCard(p demo.Person) {
 	{{ editURL := fmt.Sprintf("/tables/people/%d/edit", p.ID) }}
-	<div class="card bg-base-200 shadow-md">
+	<div id="person-profile-card" class="card bg-base-200 shadow-md">
 		<div class="card-body">
 			<div class="flex items-center justify-between">
 				<h2 class="card-title text-2xl">{ p.FullName() }</h2>

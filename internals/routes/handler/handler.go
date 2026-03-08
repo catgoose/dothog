@@ -14,6 +14,7 @@ import (
 	corecomponents "catgoose/go-htmx-demo/web/components/core"
 
 	"github.com/a-h/templ"
+	"github.com/catgoose/dio"
 	"github.com/labstack/echo/v4"
 )
 
@@ -67,7 +68,7 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 		csrfToken = t
 	}
 	// setup:feature:csrf:end
-	return RenderComponent(c, views.Index(cmp, nav, csrfToken))
+	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev()))
 }
 
 // RenderComponent renders a templ component to the response
