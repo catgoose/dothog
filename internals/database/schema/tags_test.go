@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewTagsTable(t *testing.T) {
-	td := NewTagsTable("Tags")
+	td := NewTagsTable("Tags", "Type", "Label")
 
 	cols := td.SelectColumns()
 	assert.Equal(t, []string{"ID", "Type", "Label"}, cols)
@@ -26,12 +26,28 @@ func TestNewTagsTable(t *testing.T) {
 	assert.Contains(t, stmts[0], "CREATE TABLE Tags")
 	assert.Contains(t, stmts[0], "Type TEXT NOT NULL")
 	assert.Contains(t, stmts[0], "Label TEXT NOT NULL")
-	assert.Contains(t, stmts[1], "idx_Tags_type")
-	assert.Contains(t, stmts[2], "idx_Tags_type_label")
+	assert.Contains(t, stmts[1], "idx_tags_type")
+	assert.Contains(t, stmts[2], "idx_tags_type_label")
+}
+
+func TestNewTagsTable_CustomColumns(t *testing.T) {
+	td := NewTagsTable("Lookups", "Category", "Name")
+
+	cols := td.SelectColumns()
+	assert.Equal(t, []string{"ID", "Category", "Name"}, cols)
+
+	d := dialect.SQLiteDialect{}
+	stmts := td.CreateSQL(d)
+	require.Len(t, stmts, 3)
+
+	assert.Contains(t, stmts[0], "Category TEXT NOT NULL")
+	assert.Contains(t, stmts[0], "Name TEXT NOT NULL")
+	assert.Contains(t, stmts[1], "idx_lookups_category")
+	assert.Contains(t, stmts[2], "idx_lookups_category_name")
 }
 
 func TestNewTagsTable_MSSQL(t *testing.T) {
-	td := NewTagsTable("Lookups")
+	td := NewTagsTable("Lookups", "Type", "Label")
 
 	d := dialect.MSSQLDialect{}
 	stmts := td.CreateSQL(d)
@@ -42,7 +58,7 @@ func TestNewTagsTable_MSSQL(t *testing.T) {
 }
 
 func TestNewTagJoinTable(t *testing.T) {
-	td := NewTagJoinTable("ItemTags", "Items", "Tags")
+	td := NewTagJoinTable("ItemTags")
 
 	cols := td.SelectColumns()
 	assert.Equal(t, []string{"OwnerID", "TagID"}, cols)
@@ -59,6 +75,6 @@ func TestNewTagJoinTable(t *testing.T) {
 
 	assert.Contains(t, stmts[0], "OwnerID INTEGER NOT NULL")
 	assert.Contains(t, stmts[0], "TagID INTEGER NOT NULL")
-	assert.Contains(t, stmts[1], "idx_ItemTags_ownerid")
-	assert.Contains(t, stmts[2], "idx_ItemTags_tagid")
+	assert.Contains(t, stmts[1], "idx_itemtags_ownerid")
+	assert.Contains(t, stmts[2], "idx_itemtags_tagid")
 }

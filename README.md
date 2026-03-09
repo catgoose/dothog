@@ -194,11 +194,12 @@ NewTable("Tasks").
 For many-to-many tagging or shared lookup tables:
 
 ```go
-// Lookup table: ID, Type, Label (+ indexes on Type and Type,Label)
-tagsTable := NewTagsTable("Tags")
+// Lookup table: ID + two caller-named columns (+ indexes)
+tagsTable := NewTagsTable("Tags", "Type", "Label")
+lookups   := NewTagsTable("Lookups", "Category", "Name")
 
 // Join table: OwnerID, TagID (+ indexes on each)
-joinTable := NewTagJoinTable("ItemTags", "Items", "Tags")
+joinTable := NewTagJoinTable("ItemTags")
 ```
 
 ### Column Type Functions
