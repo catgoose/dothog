@@ -43,8 +43,8 @@ func (r *RepoManager) Dialect() dialect.Dialect {
 
 // GetExecer is satisfied by *sqlx.DB and *sqlx.Tx for use in repo methods that accept an optional transaction.
 type GetExecer interface {
-	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	GetContext(ctx context.Context, dest any, query string, args ...any) error
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 }
 
 // WithTransaction runs fn inside a transaction. On success the transaction is committed; on error it is rolled back.

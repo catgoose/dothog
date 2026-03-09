@@ -16,9 +16,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "go run main.go --env=test",
+    command: process.env.CI
+      ? "./go-htmx-demo --env=test"
+      : "go run main.go --env=test",
     url: "http://localhost:8080/health",
     reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
+    timeout: 60_000,
   },
 });
