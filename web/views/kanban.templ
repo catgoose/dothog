@@ -99,7 +99,7 @@ templ kanbanMoveButtons(t demo.KanbanTask) {
 		@components.Controls([]hypermedia.Control{
 			{
 				Kind:    hypermedia.ControlKindHTMX,
-				Label:   "&larr; " + kanbanStatusLabels[prevStatus],
+				Label:   "\u2190 " + kanbanStatusLabels[prevStatus],
 				Variant: hypermedia.VariantGhost,
 				Swap:    hypermedia.SwapOuterHTML,
 				HxRequest: hypermedia.HxRequestConfig{
@@ -116,7 +116,7 @@ templ kanbanMoveButtons(t demo.KanbanTask) {
 		@components.Controls([]hypermedia.Control{
 			{
 				Kind:    hypermedia.ControlKindHTMX,
-				Label:   kanbanStatusLabels[nextStatus] + " &rarr;",
+				Label:   kanbanStatusLabels[nextStatus] + " \u2192",
 				Variant: hypermedia.VariantGhost,
 				Swap:    hypermedia.SwapOuterHTML,
 				HxRequest: hypermedia.HxRequestConfig{

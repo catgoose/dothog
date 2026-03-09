@@ -337,7 +337,7 @@ func kanbanMoveButtons(t demo.KanbanTask) templ.Component {
 			templ_7745c5c3_Err = components.Controls([]hypermedia.Control{
 				{
 					Kind:    hypermedia.ControlKindHTMX,
-					Label:   "&larr; " + kanbanStatusLabels[prevStatus],
+					Label:   "\u2190 " + kanbanStatusLabels[prevStatus],
 					Variant: hypermedia.VariantGhost,
 					Swap:    hypermedia.SwapOuterHTML,
 					HxRequest: hypermedia.HxRequestConfig{
@@ -357,7 +357,7 @@ func kanbanMoveButtons(t demo.KanbanTask) templ.Component {
 			templ_7745c5c3_Err = components.Controls([]hypermedia.Control{
 				{
 					Kind:    hypermedia.ControlKindHTMX,
-					Label:   kanbanStatusLabels[nextStatus] + " &rarr;",
+					Label:   kanbanStatusLabels[nextStatus] + " \u2192",
 					Variant: hypermedia.VariantGhost,
 					Swap:    hypermedia.SwapOuterHTML,
 					HxRequest: hypermedia.HxRequestConfig{
