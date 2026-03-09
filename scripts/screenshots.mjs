@@ -22,15 +22,22 @@ mkdirSync(outDir, { recursive: true });
 // Pages to screenshot (path, filename, optional setup)
 const pages = [
   { path: "/", name: "home", title: "Home" },
+  { path: "/dashboard", name: "dashboard", title: "Dashboard" },
   { path: "/hypermedia/controls", name: "controls", title: "Controls Gallery" },
-  { path: "/tables/inventory", name: "inventory", title: "Inventory Table" },
-  { path: "/tables/catalog", name: "catalog", title: "Catalog" },
-  { path: "/hypermedia/realtime", name: "realtime", title: "Realtime Dashboard" },
+  { path: "/demo/inventory", name: "inventory", title: "Inventory Table" },
+  { path: "/demo/catalog", name: "catalog", title: "Catalog" },
+  { path: "/demo/bulk", name: "bulk", title: "Bulk Operations" },
+  { path: "/demo/people", name: "people", title: "People Directory" },
+  { path: "/demo/kanban", name: "kanban", title: "Kanban Board" },
+  { path: "/demo/approvals", name: "approvals", title: "Approvals" },
+  { path: "/demo/feed", name: "feed", title: "Activity Feed" },
+  { path: "/demo/settings", name: "settings", title: "Settings" },
+  { path: "/demo/vendors", name: "vendors", title: "Vendors & Contacts" },
   { path: "/hypermedia/crud", name: "crud", title: "CRUD" },
   { path: "/hypermedia/interactions", name: "interactions", title: "Interactions" },
   { path: "/hypermedia/state", name: "state", title: "State Patterns" },
-  { path: "/tables/bulk", name: "bulk", title: "Bulk Operations" },
   { path: "/hypermedia/components3", name: "components3", title: "Components 3" },
+  { path: "/hypermedia/realtime", name: "realtime", title: "Realtime Dashboard" },
 ];
 
 async function waitForApp(url, maxRetries = 30) {

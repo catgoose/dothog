@@ -102,7 +102,7 @@ func header(csrfToken string, devMode bool) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><script>\n\t\t\t\tdocument.addEventListener(\"htmx:configRequest\", function(evt) {\n\t\t\t\t\tvar t = document.querySelector(\"meta[name=\\\"csrf-token\\\"]\");\n\t\t\t\t\tif (t) evt.detail.headers[\"X-CSRF-Token\"] = t.getAttribute(\"content\");\n\t\t\t\t});\n\t\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><script>\n\t\t\t\t/**\n\t\t\t\t * Attach the CSRF token to every outgoing HTMX request.\n\t\t\t\t * Reads the token from the <meta name=\"csrf-token\"> tag injected\n\t\t\t\t * by the server and sets the X-CSRF-Token header.\n\t\t\t\t * @listens htmx:configRequest\n\t\t\t\t */\n\t\t\t\tdocument.addEventListener(\"htmx:configRequest\", function(evt) {\n\t\t\t\t\t/** @type {HTMLMetaElement|null} */\n\t\t\t\t\tvar t = document.querySelector(\"meta[name=\\\"csrf-token\\\"]\");\n\t\t\t\t\tif (t) evt.detail.headers[\"X-CSRF-Token\"] = t.getAttribute(\"content\");\n\t\t\t\t});\n\t\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -112,7 +112,7 @@ func header(csrfToken string, devMode bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if devMode {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<script>\n\t\t\t\t// htmx & hyperscript debug logging\n\t\t\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\t\t\tif (typeof htmx !== 'undefined') {\n\t\t\t\t\t\thtmx.logAll();\n\t\t\t\t\t}\n\t\t\t\t\tif (typeof _hyperscript !== 'undefined' && _hyperscript.config) {\n\t\t\t\t\t\t_hyperscript.config.defaultTransition = 'all 0.3s ease';\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\t// Console helpers: hsDebug.logAll() / hsDebug.logSelector('.foo')\n\t\t\t\twindow.hsDebug = {\n\t\t\t\t\tlogSelector: function(sel) {\n\t\t\t\t\t\tdocument.querySelectorAll(sel).forEach(function(el) {\n\t\t\t\t\t\t\tconsole.log(el, el.getAttribute('_'));\n\t\t\t\t\t\t});\n\t\t\t\t\t},\n\t\t\t\t\tlogAllHyperscriptElements: function() {\n\t\t\t\t\t\tthis.logSelector('[_]');\n\t\t\t\t\t},\n\t\t\t\t\tlogHxElements: function() {\n\t\t\t\t\t\tthis.logSelector('[hx-get],[hx-post],[hx-put],[hx-patch],[hx-delete]');\n\t\t\t\t\t}\n\t\t\t\t};\n\t\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<script src=\"/public/js/dev-logging.js\"></script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

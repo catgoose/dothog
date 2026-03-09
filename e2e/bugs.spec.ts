@@ -13,7 +13,7 @@ test.describe("Inventory: silent parse failures", () => {
   test("price input is type=number (prevents non-numeric at HTML level)", async ({
     page,
   }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
     const addBtn = page.locator('button:has-text("+ Add Item")');
     await addBtn.click();
     await waitForHtmx(page);
@@ -31,7 +31,7 @@ test.describe("Inventory: silent parse failures", () => {
   }) => {
     // BUG: If the HTML type=number is bypassed (API call), server silently
     // converts invalid price to 0 via strconv.ParseFloat defaulting
-    const resp = await request.post("/tables/inventory/items", {
+    const resp = await request.post("/demo/inventory/items", {
       form: {
         name: "Bug Test Item",
         price: "not-a-number",
@@ -47,7 +47,7 @@ test.describe("Inventory: silent parse failures", () => {
   test("creating item with empty name succeeds (missing validation)", async ({
     page,
   }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
     const addBtn = page.locator('button:has-text("+ Add Item")');
     await addBtn.click();
     await waitForHtmx(page);
@@ -79,20 +79,20 @@ test.describe("Inventory: delete and update edge cases", () => {
 
   test("delete item via API removes it", async ({ request }) => {
     // First get inventory to verify items exist
-    const listResp = await request.get("/tables/inventory/items");
+    const listResp = await request.get("/demo/inventory/items");
     expect(listResp.ok()).toBe(true);
 
     // Delete item 1
-    const resp = await request.delete("/tables/inventory/items/1");
+    const resp = await request.delete("/demo/inventory/items/1");
     expect(resp.ok()).toBe(true);
 
     // Verify item 1 is gone
-    const getResp = await request.get("/tables/inventory/items/1");
+    const getResp = await request.get("/demo/inventory/items/1");
     expect(getResp.status()).toBe(404);
   });
 
   test("editing item preserves values after save", async ({ page }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
 
     // Click edit on first visible item
     const editBtn = page.locator(
@@ -127,7 +127,7 @@ test.describe("Bulk: silent failures on invalid operations", () => {
   });
 
   test("bulk activate changes status badges", async ({ page }) => {
-    await navigateTo(page, "/tables/bulk");
+    await navigateTo(page, "/demo/bulk");
 
     // Select a few rows
     const checkboxes = page.locator('tbody input[type="checkbox"]');
@@ -150,7 +150,7 @@ test.describe("Bulk: silent failures on invalid operations", () => {
   });
 
   test("bulk deactivate changes status badges", async ({ page }) => {
-    await navigateTo(page, "/tables/bulk");
+    await navigateTo(page, "/demo/bulk");
 
     const checkboxes = page.locator('tbody input[type="checkbox"]');
     const count = await checkboxes.count();
@@ -169,7 +169,7 @@ test.describe("Bulk: silent failures on invalid operations", () => {
   });
 
   test("bulk delete removes selected rows", async ({ page }) => {
-    await navigateTo(page, "/tables/bulk");
+    await navigateTo(page, "/demo/bulk");
 
     const rowsBefore = await page.locator("tbody tr").count();
     const checkboxes = page.locator('tbody input[type="checkbox"]');
@@ -187,7 +187,7 @@ test.describe("Bulk: silent failures on invalid operations", () => {
   });
 
   test("bulk action with no selection does nothing", async ({ page }) => {
-    await navigateTo(page, "/tables/bulk");
+    await navigateTo(page, "/demo/bulk");
 
     const rowsBefore = await page.locator("tbody tr").count();
     // Try activate without selecting anything
@@ -210,7 +210,7 @@ test.describe("People: missing field validation", () => {
     page,
   }) => {
     // Navigate to a person detail page
-    await navigateTo(page, "/tables/people");
+    await navigateTo(page, "/demo/people");
     const personRow = page.locator("tbody tr[hx-get]").first();
     if (await personRow.isVisible()) {
       await personRow.click();
@@ -252,7 +252,7 @@ test.describe("Kanban: edge cases", () => {
   });
 
   test("move task through all columns", async ({ page }) => {
-    await navigateTo(page, "/tables/kanban");
+    await navigateTo(page, "/demo/kanban");
 
     // Find first movable card and keep moving it right
     for (let i = 0; i < 4; i++) {
@@ -270,7 +270,7 @@ test.describe("Kanban: edge cases", () => {
   });
 
   test("move task left from first column does nothing", async ({ page }) => {
-    await navigateTo(page, "/tables/kanban");
+    await navigateTo(page, "/demo/kanban");
 
     // Find a card in the Backlog column and try to move left
     const backlogCol = page.locator('#kanban-col-backlog, [id*="backlog"]').first();
@@ -291,7 +291,7 @@ test.describe("Approvals: state transitions", () => {
   });
 
   test("approve then try to approve again (idempotency)", async ({ page }) => {
-    await navigateTo(page, "/tables/approvals");
+    await navigateTo(page, "/demo/approvals");
 
     const approveBtn = page.locator('button:has-text("Approve")').first();
     if (await approveBtn.isVisible()) {
@@ -306,7 +306,7 @@ test.describe("Approvals: state transitions", () => {
   });
 
   test("escalate then resubmit cycle", async ({ page }) => {
-    await navigateTo(page, "/tables/approvals");
+    await navigateTo(page, "/demo/approvals");
 
     const escalateBtn = page.locator('button:has-text("Escalate")').first();
     if (await escalateBtn.isVisible()) {
@@ -715,7 +715,7 @@ test.describe("Settings: field type handling", () => {
   });
 
   test("save settings and verify persistence", async ({ page }) => {
-    await navigateTo(page, "/tables/settings");
+    await navigateTo(page, "/demo/settings");
 
     // Find a toggle and change it
     const toggle = page.locator('input[type="checkbox"]').first();
@@ -729,7 +729,7 @@ test.describe("Settings: field type handling", () => {
         await waitForHtmx(page);
 
         // Reload page and check toggle state persisted
-        await navigateTo(page, "/tables/settings");
+        await navigateTo(page, "/demo/settings");
         const toggleAfter = page.locator('input[type="checkbox"]').first();
         const isAfter = await toggleAfter.isChecked();
         expect(isAfter).not.toBe(wasBefore);
@@ -752,7 +752,7 @@ test.describe("Admin: database reset", () => {
     expect(resetResp.ok()).toBe(true);
 
     // Verify inventory has fresh data (not empty)
-    const invResp = await request.get("/tables/inventory");
+    const invResp = await request.get("/demo/inventory");
     expect(invResp.ok()).toBe(true);
     const body = await invResp.text();
     // Should have seeded items
@@ -784,41 +784,41 @@ test.describe("Admin: database reset", () => {
 
 test.describe("API: invalid ID handling across endpoints", () => {
   test("inventory: non-numeric ID returns 400", async ({ request }) => {
-    const resp = await request.get("/tables/inventory/items/abc");
+    const resp = await request.get("/demo/inventory/items/abc");
     expect(resp.status()).toBe(400);
   });
 
   test("inventory: negative ID returns 400", async ({ request }) => {
-    const resp = await request.get("/tables/inventory/items/-1");
+    const resp = await request.get("/demo/inventory/items/-1");
     expect(resp.status()).toBe(400);
   });
 
   test("inventory: ID 0 returns 400", async ({ request }) => {
-    const resp = await request.get("/tables/inventory/items/0");
+    const resp = await request.get("/demo/inventory/items/0");
     expect(resp.status()).toBe(400);
   });
 
   test("people: non-numeric ID returns 400", async ({ request }) => {
-    const resp = await request.get("/tables/people/abc");
+    const resp = await request.get("/demo/people/abc");
     expect(resp.status()).toBe(400);
   });
 
   test("people: missing person returns 404", async ({ request }) => {
-    const resp = await request.get("/tables/people/99999");
+    const resp = await request.get("/demo/people/99999");
     expect(resp.status()).toBe(404);
   });
 
   test("BUG: kanban move accepts missing status param (should fail)", async ({
     request,
   }) => {
-    const resp = await request.patch("/tables/kanban/tasks/1/move");
+    const resp = await request.patch("/demo/kanban/tasks/1/move");
     // BUG: Missing status query param silently accepted with 200
     // Should return 400 indicating status is required
     expect(resp.status()).toBe(200);
   });
 
   test("settings: non-existent section returns 404", async ({ request }) => {
-    const resp = await request.get("/tables/settings/nonexistent");
+    const resp = await request.get("/demo/settings/nonexistent");
     expect(resp.status()).toBe(404);
   });
 });
@@ -828,16 +828,17 @@ test.describe("Navigation: all pages load without 500 errors", () => {
     "/",
     "/health",
     "/admin",
-    "/tables/inventory",
-    "/tables/catalog",
-    "/tables/bulk",
-    "/tables/people",
-    "/tables/people/list",
-    "/tables/kanban",
-    "/tables/approvals",
-    "/tables/feed",
-    "/tables/settings",
-    "/tables/vendors",
+    "/dashboard",
+    "/demo/inventory",
+    "/demo/catalog",
+    "/demo/bulk",
+    "/demo/people",
+    "/demo/people/list",
+    "/demo/kanban",
+    "/demo/approvals",
+    "/demo/feed",
+    "/demo/settings",
+    "/demo/vendors",
     "/hypermedia/controls",
     "/hypermedia/crud",
     "/hypermedia/lists",

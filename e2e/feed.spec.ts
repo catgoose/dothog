@@ -7,17 +7,17 @@ test.describe("Activity Feed", () => {
   });
 
   test("renders page with title", async ({ page }) => {
-    await navigateTo(page, "/tables/feed");
+    await navigateTo(page, "/demo/feed");
     await expect(page.locator("h1")).toContainText("Activity Feed");
   });
 
   test("feed container is present", async ({ page }) => {
-    await navigateTo(page, "/tables/feed");
+    await navigateTo(page, "/demo/feed");
     await expect(page.locator("#feed-container")).toBeVisible();
   });
 
   test("feed items display", async ({ page }) => {
-    await navigateTo(page, "/tables/feed");
+    await navigateTo(page, "/demo/feed");
     await expect(page.locator("#feed-items")).toBeVisible();
   });
 });

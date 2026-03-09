@@ -7,24 +7,24 @@ test.describe("Approval Queue", () => {
   });
 
   test("renders page with title", async ({ page }) => {
-    await navigateTo(page, "/tables/approvals");
+    await navigateTo(page, "/demo/approvals");
     await expect(page.locator("h1")).toContainText("Approval Queue");
   });
 
   test("approval list is visible", async ({ page }) => {
-    await navigateTo(page, "/tables/approvals");
+    await navigateTo(page, "/demo/approvals");
     await expect(page.locator("#approvals-list")).toBeVisible();
   });
 
   test("approval cards show required fields", async ({ page }) => {
-    await navigateTo(page, "/tables/approvals");
+    await navigateTo(page, "/demo/approvals");
     const cards = page.locator('[id^="approval-"]');
     const count = await cards.count();
     expect(count).toBeGreaterThan(0);
   });
 
   test("approve action works", async ({ page }) => {
-    await navigateTo(page, "/tables/approvals");
+    await navigateTo(page, "/demo/approvals");
     const approveBtn = page
       .locator('button:has-text("Approve")')
       .first();
@@ -37,7 +37,7 @@ test.describe("Approval Queue", () => {
   });
 
   test("reject action works", async ({ page }) => {
-    await navigateTo(page, "/tables/approvals");
+    await navigateTo(page, "/demo/approvals");
     const rejectBtn = page
       .locator('button:has-text("Reject")')
       .first();
@@ -49,7 +49,7 @@ test.describe("Approval Queue", () => {
   });
 
   test("status badges have correct styling", async ({ page }) => {
-    await navigateTo(page, "/tables/approvals");
+    await navigateTo(page, "/demo/approvals");
     const pendingBadges = page.locator(".badge-warning");
     if ((await pendingBadges.count()) > 0) {
       await expect(pendingBadges.first()).toBeVisible();

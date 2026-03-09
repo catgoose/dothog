@@ -21,12 +21,12 @@ type vendorContactRoutes struct {
 
 func (ar *appRoutes) initVendorContactRoutes(db *demo.DB, actLog *demo.ActivityLog, broker *ssebroker.SSEBroker) {
 	v := &vendorContactRoutes{db: db, actLog: actLog, broker: broker}
-	ar.e.GET("/tables/vendors", v.handleVendorsPage)
-	ar.e.GET("/tables/vendors/list", v.handleVendorsList)
-	ar.e.GET("/tables/vendors/:id/contacts", v.handleVendorContacts)
-	ar.e.GET("/tables/vendors/contacts/:id/edit", v.handleContactEdit)
-	ar.e.GET("/tables/vendors/contacts/:id/card", v.handleContactCard)
-	ar.e.PUT("/tables/vendors/contacts/:id", v.handleContactUpdate)
+	ar.e.GET("/demo/vendors", v.handleVendorsPage)
+	ar.e.GET("/demo/vendors/list", v.handleVendorsList)
+	ar.e.GET("/demo/vendors/:id/contacts", v.handleVendorContacts)
+	ar.e.GET("/demo/vendors/contacts/:id/edit", v.handleContactEdit)
+	ar.e.GET("/demo/vendors/contacts/:id/card", v.handleContactCard)
+	ar.e.PUT("/demo/vendors/contacts/:id", v.handleContactUpdate)
 }
 
 func (v *vendorContactRoutes) handleVendorsPage(c echo.Context) error {
@@ -112,7 +112,7 @@ func (v *vendorContactRoutes) handleContactUpdate(c echo.Context) error {
 }
 
 func (v *vendorContactRoutes) buildFilterBar(search, category string) hypermedia.FilterBar {
-	return hypermedia.NewFilterBar("/tables/vendors/list", "#vendor-list",
+	return hypermedia.NewFilterBar("/demo/vendors/list", "#vendor-list",
 		hypermedia.SearchField("q", "Search vendors\u2026", search),
 		hypermedia.SelectField("category", "Category", category,
 			hypermedia.SelectOptions(category, vendorCategoryPairs()...)),

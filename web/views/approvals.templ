@@ -70,7 +70,7 @@ templ ApprovalCard(r demo.ApprovalRequest) {
 func approvalControls(id int, actions []string) []hypermedia.Control {
 	var controls []hypermedia.Control
 	for _, action := range actions {
-		url := fmt.Sprintf("/tables/approvals/%d/%s", id, action)
+		url := fmt.Sprintf("/demo/approvals/%d/%s", id, action)
 		target := fmt.Sprintf("#approval-%d", id)
 		variant := hypermedia.VariantSecondary
 		switch action {

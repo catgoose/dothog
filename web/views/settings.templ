@@ -30,7 +30,7 @@ templ SettingsPage(sections []demo.SettingsSection) {
 			<!-- Sidebar nav -->
 			<nav class="w-56 shrink-0 space-y-1">
 				for i, sec := range sections {
-					{{ loadURL := fmt.Sprintf("/tables/settings/%s", sec.ID) }}
+					{{ loadURL := fmt.Sprintf("/demo/settings/%s", sec.ID) }}
 					<button
 						class={ "settings-tab w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-3 transition-colors",
 							templ.KV("active", i == 0) }
@@ -70,7 +70,7 @@ templ settingsPlaceholder() {
 }
 
 templ SettingsSectionForm(sec demo.SettingsSection) {
-	{{ saveURL := fmt.Sprintf("/tables/settings/%s", sec.ID) }}
+	{{ saveURL := fmt.Sprintf("/demo/settings/%s", sec.ID) }}
 	{{ formID := "settings-form-" + sec.ID }}
 	{{ resultID := "settings-result-" + sec.ID }}
 	<div>

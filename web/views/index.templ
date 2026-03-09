@@ -27,7 +27,14 @@ templ header(csrfToken string, devMode bool) {
 		if csrfToken != "" {
 			<meta name="csrf-token" content={ csrfToken }/>
 			<script>
+				/**
+				 * Attach the CSRF token to every outgoing HTMX request.
+				 * Reads the token from the <meta name="csrf-token"> tag injected
+				 * by the server and sets the X-CSRF-Token header.
+				 * @listens htmx:configRequest
+				 */
 				document.addEventListener("htmx:configRequest", function(evt) {
+					/** @type {HTMLMetaElement|null} */
 					var t = document.querySelector("meta[name=\"csrf-token\"]");
 					if (t) evt.detail.headers["X-CSRF-Token"] = t.getAttribute("content");
 				});
@@ -47,31 +54,7 @@ templ header(csrfToken string, devMode bool) {
 		<link rel="icon" href="/public/images/favicon.svg" type="image/x-svg+xml"/>
 		<title>HTMX Go Template</title>
 		if devMode {
-			<script>
-				// htmx & hyperscript debug logging
-				document.addEventListener('DOMContentLoaded', function() {
-					if (typeof htmx !== 'undefined') {
-						htmx.logAll();
-					}
-					if (typeof _hyperscript !== 'undefined' && _hyperscript.config) {
-						_hyperscript.config.defaultTransition = 'all 0.3s ease';
-					}
-				});
-				// Console helpers: hsDebug.logAll() / hsDebug.logSelector('.foo')
-				window.hsDebug = {
-					logSelector: function(sel) {
-						document.querySelectorAll(sel).forEach(function(el) {
-							console.log(el, el.getAttribute('_'));
-						});
-					},
-					logAllHyperscriptElements: function() {
-						this.logSelector('[_]');
-					},
-					logHxElements: function() {
-						this.logSelector('[hx-get],[hx-post],[hx-put],[hx-patch],[hx-delete]');
-					}
-				};
-			</script>
+			<script src="/public/js/dev-logging.js"></script>
 		}
 	</head>
 }

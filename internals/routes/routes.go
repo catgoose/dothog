@@ -73,7 +73,7 @@ func (ar *appRoutes) InitRoutes() error {
 
 	db, err := demo.Open("demo.db")
 	if err != nil {
-		log.Warn("Demo DB unavailable; /tables/* routes disabled", "error", err)
+		log.Warn("Demo DB unavailable; /demo/* routes disabled", "error", err)
 		return nil
 	}
 	ar.initInventoryRoutes(db)
@@ -81,13 +81,16 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initBulkRoutes(db)
 
 	actLog := demo.NewActivityLog(200)
+	board := demo.NewKanbanBoard()
+	queue := demo.NewApprovalQueue()
 	ar.initAdminRoutes(db, actLog, broker)
 	ar.initPeopleRoutes(db, broker, actLog)
-	ar.initKanbanRoutes(demo.NewKanbanBoard(), actLog, broker)
-	ar.initApprovalRoutes(demo.NewApprovalQueue(), actLog, broker)
+	ar.initKanbanRoutes(board, actLog, broker)
+	ar.initApprovalRoutes(queue, actLog, broker)
 	ar.initFeedRoutes(actLog, broker)
 	ar.initSettingsRoutes(demo.NewSettingsStore())
 	ar.initVendorContactRoutes(db, actLog, broker)
+	ar.initDashboardRoutes(db, board, queue, actLog)
 	// setup:feature:demo:end
 	return nil
 }

@@ -36,7 +36,7 @@ templ PeopleTableBody(people []demo.Person) {
 }
 
 templ PersonRow(p demo.Person) {
-	{{ profileURL := fmt.Sprintf("/tables/people/%d", p.ID) }}
+	{{ profileURL := fmt.Sprintf("/demo/people/%d", p.ID) }}
 	<tr class="hover:bg-base-200/50 cursor-pointer" hx-get={ profileURL } hx-target="body" hx-push-url="true">
 		<td class="font-medium">{ p.FullName() }</td>
 		<td>{ p.Department }</td>
@@ -49,7 +49,7 @@ templ PersonRow(p demo.Person) {
 templ PersonProfilePage(p demo.Person) {
 	<div class="max-w-3xl mx-auto p-4 space-y-6">
 		<div class="flex items-center gap-2 mb-4">
-			<a href="/tables/people" class="btn btn-sm btn-ghost">&larr; Directory</a>
+			<a href="/demo/people" class="btn btn-sm btn-ghost">&larr; Directory</a>
 		</div>
 		<div id="person-profile" hx-ext="sse" sse-connect={ fmt.Sprintf("/sse/people/%d", p.ID) }>
 			<div sse-swap="person-update" hx-swap="outerHTML" hx-target="#person-profile-card" style="display:none"></div>
@@ -59,7 +59,7 @@ templ PersonProfilePage(p demo.Person) {
 }
 
 templ PersonProfileCard(p demo.Person) {
-	{{ editURL := fmt.Sprintf("/tables/people/%d/edit", p.ID) }}
+	{{ editURL := fmt.Sprintf("/demo/people/%d/edit", p.ID) }}
 	<div id="person-profile-card" class="card bg-base-200 shadow-md">
 		<div class="card-body">
 			<div class="flex items-center justify-between">
@@ -107,8 +107,8 @@ templ PersonProfileCard(p demo.Person) {
 }
 
 templ PersonEditForm(p demo.Person) {
-	{{ saveURL := fmt.Sprintf("/tables/people/%d", p.ID) }}
-	{{ cancelURL := fmt.Sprintf("/tables/people/%d/card", p.ID) }}
+	{{ saveURL := fmt.Sprintf("/demo/people/%d", p.ID) }}
+	{{ cancelURL := fmt.Sprintf("/demo/people/%d/card", p.ID) }}
 	<div id="person-profile-card">
 		<div class="card bg-base-200 shadow-md">
 			<div class="card-body">

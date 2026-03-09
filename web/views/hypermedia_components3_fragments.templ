@@ -127,8 +127,8 @@ templ UndoToastFragment(item UndoItemData) {
 	// Toast appended to the fixed toast area via OOB swap
 	<div
 		id={ toastID }
-		hx-swap-oob={ "beforeend:#undo-toast-area" }
-		class="alert alert-warning shadow-lg text-sm flex items-center gap-3"
+		hx-swap-oob="beforeend:#undo-toast-area"
+		class="alert alert-warning shadow-lg text-sm flex items-center gap-3 transition-opacity duration-300"
 		_={ fmt.Sprintf(`on load wait 5s then add .opacity-0 to me then wait 300ms then remove me`) }
 	>
 		<span>Deleted <strong>{ item.Name }</strong></span>

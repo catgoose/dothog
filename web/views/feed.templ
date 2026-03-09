@@ -60,7 +60,7 @@ func feedBadgeClass(action string) string {
 templ FeedLoadMore(beforeID int) {
 	<div
 		id="feed-sentinel"
-		hx-get={ fmt.Sprintf("/tables/feed/more?before=%d", beforeID) }
+		hx-get={ fmt.Sprintf("/demo/feed/more?before=%d", beforeID) }
 		hx-trigger="intersect once"
 		hx-target="this"
 		hx-swap="outerHTML"

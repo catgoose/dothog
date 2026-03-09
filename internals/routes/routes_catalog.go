@@ -15,7 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const catalogBase = "/tables/catalog"
+const catalogBase = "/demo/catalog"
 
 type catalogRoutes struct{ db *demo.DB }
 

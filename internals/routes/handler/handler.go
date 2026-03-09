@@ -23,20 +23,7 @@ func appNavComponent(path string) templ.Component {
 	items := hypermedia.SetActiveNavItemPrefix([]hypermedia.NavItem{
 		{Label: "Home", Href: "/"},
 		// setup:feature:demo:start
-		{
-			Label: "Tables",
-			Children: []hypermedia.NavItem{
-				{Label: "Inventory", Href: "/tables/inventory"},
-				{Label: "Catalog", Href: "/tables/catalog"},
-				{Label: "Bulk", Href: "/tables/bulk"},
-				{Label: "People", Href: "/tables/people"},
-				{Label: "Kanban", Href: "/tables/kanban"},
-				{Label: "Approvals", Href: "/tables/approvals"},
-				{Label: "Feed", Href: "/tables/feed"},
-				{Label: "Settings", Href: "/tables/settings"},
-				{Label: "Vendors", Href: "/tables/vendors"},
-			},
-		},
+		{Label: "Dashboard", Href: "/dashboard"},
 		{
 			Label: "Hypermedia Controls",
 			Children: []hypermedia.NavItem{

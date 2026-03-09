@@ -16,7 +16,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const bulkBase = "/tables/bulk"
+const bulkBase = "/demo/bulk"
 
 type bulkRoutes struct{ db *demo.DB }
 

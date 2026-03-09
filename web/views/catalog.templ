@@ -10,7 +10,7 @@ import (
 	components "catgoose/go-htmx-demo/web/components/core"
 )
 
-// CatalogPage is the full page content for /tables/catalog.
+// CatalogPage is the full page content for /demo/catalog.
 // The FilterBar lives outside the table container so it is never replaced by HTMX swaps.
 templ CatalogPage(bar hypermedia.FilterBar, tableContainer templ.Component) {
 	<div class="p-4 space-y-4">
@@ -43,7 +43,7 @@ templ CatalogItemsBody(items []demo.Item) {
 // CatalogItemRow renders a single read-only row with a Details expand button.
 templ CatalogItemRow(item demo.Item) {
 	{{ rowID := fmt.Sprintf("item-row-%d", item.ID) }}
-	{{ detailURL := fmt.Sprintf("/tables/catalog/items/%d/details", item.ID) }}
+	{{ detailURL := fmt.Sprintf("/demo/catalog/items/%d/details", item.ID) }}
 	{{ detailRowTarget := fmt.Sprintf("#detail-row-%d", item.ID) }}
 	<tr id={ rowID }>
 		<td>{ item.Name }</td>

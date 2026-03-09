@@ -15,7 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const inventoryBase = "/tables/inventory"
+const inventoryBase = "/demo/inventory"
 
 type inventoryRoutes struct{ db *demo.DB }
 

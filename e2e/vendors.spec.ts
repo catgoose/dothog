@@ -7,17 +7,17 @@ test.describe("Vendor Contacts", () => {
   });
 
   test("renders page with title", async ({ page }) => {
-    await navigateTo(page, "/tables/vendors");
+    await navigateTo(page, "/demo/vendors");
     await expect(page.locator("h1")).toContainText("Vendor Contacts");
   });
 
   test("vendor list is visible", async ({ page }) => {
-    await navigateTo(page, "/tables/vendors");
+    await navigateTo(page, "/demo/vendors");
     await expect(page.locator("#vendor-list")).toBeVisible();
   });
 
   test("clicking a vendor shows contacts", async ({ page }) => {
-    await navigateTo(page, "/tables/vendors");
+    await navigateTo(page, "/demo/vendors");
     const vendorLink = page
       .locator("#vendor-list a, #vendor-list button, #vendor-list [hx-get]")
       .first();

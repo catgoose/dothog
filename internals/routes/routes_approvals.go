@@ -21,8 +21,8 @@ type approvalRoutes struct {
 
 func (ar *appRoutes) initApprovalRoutes(queue *demo.ApprovalQueue, actLog *demo.ActivityLog, broker *ssebroker.SSEBroker) {
 	a := &approvalRoutes{queue: queue, actLog: actLog, broker: broker}
-	ar.e.GET("/tables/approvals", a.handleApprovalsPage)
-	ar.e.POST("/tables/approvals/:id/:action", a.handleApprovalAction)
+	ar.e.GET("/demo/approvals", a.handleApprovalsPage)
+	ar.e.POST("/demo/approvals/:id/:action", a.handleApprovalAction)
 }
 
 func (a *approvalRoutes) handleApprovalsPage(c echo.Context) error {

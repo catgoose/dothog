@@ -46,7 +46,7 @@ func bulkSortIndicator(col hypermedia.TableCol) string {
 	}
 }
 
-// BulkPage is the full page for /tables/bulk.
+// BulkPage is the full page for /demo/bulk.
 // The toolbar and FilterBar live outside the table container so they survive swaps.
 func BulkPage(bar hypermedia.FilterBar, tableContainer templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -74,9 +74,9 @@ func BulkPage(bar hypermedia.FilterBar, tableContainer templ.Component) templ.Co
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.Controls(hypermedia.BulkActions(hypermedia.BulkActionCfg{
-			DeleteURL:        "/tables/bulk/items",
-			ActivateURL:      "/tables/bulk/items/activate",
-			DeactivateURL:    "/tables/bulk/items/deactivate",
+			DeleteURL:        "/demo/bulk/items",
+			ActivateURL:      "/demo/bulk/items/activate",
+			DeactivateURL:    "/demo/bulk/items/deactivate",
 			TableTarget:      "#bulk-table-container",
 			CheckboxSelector: ".row-check",
 		})).Render(ctx, templ_7745c5c3_Buffer)

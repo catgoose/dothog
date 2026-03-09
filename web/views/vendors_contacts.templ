@@ -41,7 +41,7 @@ templ VendorList(vendors []demo.Vendor) {
 }
 
 templ VendorListItem(v demo.Vendor) {
-	{{ contactsURL := fmt.Sprintf("/tables/vendors/%d/contacts", v.ID) }}
+	{{ contactsURL := fmt.Sprintf("/demo/vendors/%d/contacts", v.ID) }}
 	<div
 		class="p-3 rounded cursor-pointer hover:bg-base-200 border border-transparent hover:border-base-300 transition-colors"
 		hx-get={ contactsURL }
@@ -77,7 +77,7 @@ templ VendorContactsDetail(vendor demo.Vendor, contacts []demo.Contact) {
 
 templ ContactCard(c demo.Contact) {
 	{{ cardID := fmt.Sprintf("contact-%d", c.ID) }}
-	{{ editURL := fmt.Sprintf("/tables/vendors/contacts/%d/edit", c.ID) }}
+	{{ editURL := fmt.Sprintf("/demo/vendors/contacts/%d/edit", c.ID) }}
 	<div id={ cardID } class="bg-base-100 rounded-lg p-3 border border-base-300">
 		<div class="flex items-center justify-between">
 			<div>
@@ -106,8 +106,8 @@ templ ContactCard(c demo.Contact) {
 
 templ ContactEditForm(c demo.Contact) {
 	{{ cardID := fmt.Sprintf("contact-%d", c.ID) }}
-	{{ saveURL := fmt.Sprintf("/tables/vendors/contacts/%d", c.ID) }}
-	{{ cancelURL := fmt.Sprintf("/tables/vendors/contacts/%d/card", c.ID) }}
+	{{ saveURL := fmt.Sprintf("/demo/vendors/contacts/%d", c.ID) }}
+	{{ cancelURL := fmt.Sprintf("/demo/vendors/contacts/%d/card", c.ID) }}
 	<div id={ cardID } class="bg-base-100 rounded-lg p-3 border border-primary/30">
 		<div class="grid grid-cols-2 gap-2">
 			<div>

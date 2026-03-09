@@ -7,7 +7,7 @@ test.describe("Inventory Page", () => {
   });
 
   test("renders page with title and table", async ({ page }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
     await expect(page.locator("h1")).toContainText("Inventory");
     await expect(page.locator("#inventory-table-container")).toBeVisible();
     // Table should have visible data rows (skip hidden new-item-row placeholder)
@@ -17,7 +17,7 @@ test.describe("Inventory Page", () => {
   });
 
   test("filter by search narrows results", async ({ page }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
     const searchInput = page.locator('input[name="q"]');
     await expect(searchInput).toBeVisible();
     // Type a search term and wait for HTMX update
@@ -29,7 +29,7 @@ test.describe("Inventory Page", () => {
   });
 
   test("filter by category", async ({ page }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
     const categorySelect = page.locator('select[name="cat"]');
     if (await categorySelect.isVisible()) {
       await categorySelect.selectOption({ index: 1 });
@@ -41,7 +41,7 @@ test.describe("Inventory Page", () => {
   });
 
   test("pagination controls work", async ({ page }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
     const nextBtn = page.locator('a:has-text("Next"), button:has-text("Next")');
     if (await nextBtn.isVisible()) {
       await nextBtn.click();
@@ -53,7 +53,7 @@ test.describe("Inventory Page", () => {
   });
 
   test("add new item form appears", async ({ page }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
     const addBtn = page.locator('button:has-text("+ Add Item")');
     await expect(addBtn).toBeVisible();
     await addBtn.click();
@@ -64,7 +64,7 @@ test.describe("Inventory Page", () => {
   });
 
   test("sorting by column header", async ({ page }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
     const nameHeader = page.locator("th >> text=Name");
     if (await nameHeader.isVisible()) {
       const sortLink = nameHeader.locator("a").first();
@@ -79,7 +79,7 @@ test.describe("Inventory Page", () => {
   });
 
   test("link to hypermedia controls exists", async ({ page }) => {
-    await navigateTo(page, "/tables/inventory");
+    await navigateTo(page, "/demo/inventory");
     await expect(
       page.locator('a:has-text("Hypermedia Controls")'),
     ).toBeVisible();

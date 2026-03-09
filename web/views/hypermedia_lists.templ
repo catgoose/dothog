@@ -23,17 +23,17 @@ templ ListsPage(items []ListsDemoItem, info hypermedia.PageInfo) {
 			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Overview</a>
 		</div>
 		<div role="alert" class="alert alert-info text-sm">
-			<span>Demonstrates: <strong>next</strong>, <strong>prev</strong>, <strong>search</strong>, <strong>sort</strong>, <strong>filter</strong> — all driven by HTMX. See <a href="/tables/inventory" class="link link-primary">Tables → Inventory</a> { "for" } a live backend demo.</span>
+			<span>Demonstrates: <strong>next</strong>, <strong>prev</strong>, <strong>search</strong>, <strong>sort</strong>, <strong>filter</strong> — all driven by HTMX. See <a href="/demo/inventory" class="link link-primary">Tables → Inventory</a> { "for" } a live backend demo.</span>
 		</div>
 		@listsSection("Search") {
 			<p class="text-sm text-base-content/70 mb-3">A search input with <code class="text-xs bg-base-200 px-1 rounded">hx-trigger="input changed delay:400ms"</code> debounces keystrokes and replaces the table fragment.</p>
-			@components.FilterBar(hypermedia.NewFilterBar("/tables/inventory/items", "#inventory-table-container",
+			@components.FilterBar(hypermedia.NewFilterBar("/demo/inventory/items", "#inventory-table-container",
 				hypermedia.SearchField("q", "Search items…", ""),
 			))
 		}
 		@listsSection("Filter") {
 			<p class="text-sm text-base-content/70 mb-3">Dropdown + checkbox filters submit via <code class="text-xs bg-base-200 px-1 rounded">hx-get</code> on change, replacing only the table container.</p>
-			@components.FilterBar(hypermedia.NewFilterBar("/tables/inventory/items", "#inventory-table-container",
+			@components.FilterBar(hypermedia.NewFilterBar("/demo/inventory/items", "#inventory-table-container",
 				hypermedia.SelectField("category", "Category", "",
 					hypermedia.SelectOptions("",
 						"", "All",
@@ -50,13 +50,13 @@ templ ListsPage(items []ListsDemoItem, info hypermedia.PageInfo) {
 			<div class="overflow-x-auto">
 				<table class="table table-sm">
 					@components.TableHeader([]hypermedia.TableCol{
-						hypermedia.SortableCol("name", "Name", "name", "asc", "/tables/inventory/items", "#inventory-table-container", "#filter-form"),
-						hypermedia.SortableCol("category", "Category", "name", "asc", "/tables/inventory/items", "#inventory-table-container", "#filter-form"),
-						hypermedia.SortableCol("price", "Price", "", "", "/tables/inventory/items", "#inventory-table-container", "#filter-form"),
+						hypermedia.SortableCol("name", "Name", "name", "asc", "/demo/inventory/items", "#inventory-table-container", "#filter-form"),
+						hypermedia.SortableCol("category", "Category", "name", "asc", "/demo/inventory/items", "#inventory-table-container", "#filter-form"),
+						hypermedia.SortableCol("price", "Price", "", "", "/demo/inventory/items", "#inventory-table-container", "#filter-form"),
 						{Label: "Actions"},
 					})
 					<tbody>
-						<tr><td colspan="4" class="text-center text-base-content/50 text-sm py-4">← live rows from /tables/inventory</td></tr>
+						<tr><td colspan="4" class="text-center text-base-content/50 text-sm py-4">← live rows from /demo/inventory</td></tr>
 					</tbody>
 				</table>
 			</div>

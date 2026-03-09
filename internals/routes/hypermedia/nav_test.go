@@ -35,14 +35,14 @@ func TestSetActiveNavItem_ChildMatchActivatesParent(t *testing.T) {
 	items := []NavItem{
 		{
 			Label: "Tables",
-			Href:  "/tables",
+			Href:  "/demo",
 			Children: []NavItem{
-				{Label: "Inventory", Href: "/tables/inventory"},
-				{Label: "Catalog", Href: "/tables/catalog"},
+				{Label: "Inventory", Href: "/demo/inventory"},
+				{Label: "Catalog", Href: "/demo/catalog"},
 			},
 		},
 	}
-	result := SetActiveNavItem(items, "/tables/inventory")
+	result := SetActiveNavItem(items, "/demo/inventory")
 	require.True(t, result[0].Active, "parent Tables should be active")
 	require.True(t, result[0].Children[0].Active, "child Inventory should be active")
 	require.False(t, result[0].Children[1].Active, "child Catalog should not be active")
@@ -115,13 +115,13 @@ func TestSetActiveNavItemPrefix_ChildPrefixMatchActivatesParent(t *testing.T) {
 	items := []NavItem{
 		{
 			Label: "Tables",
-			Href:  "/tables",
+			Href:  "/demo",
 			Children: []NavItem{
-				{Label: "Inventory", Href: "/tables/inventory"},
+				{Label: "Inventory", Href: "/demo/inventory"},
 			},
 		},
 	}
-	result := SetActiveNavItemPrefix(items, "/tables/inventory/99")
+	result := SetActiveNavItemPrefix(items, "/demo/inventory/99")
 	require.True(t, result[0].Active, "parent Tables should be active via child prefix match")
 	require.True(t, result[0].Children[0].Active, "child Inventory should be active via prefix")
 }

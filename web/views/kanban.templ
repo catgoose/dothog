@@ -95,11 +95,11 @@ templ kanbanMoveButtons(t demo.KanbanTask) {
 	{{ statusIdx := statusIndex(t.Status) }}
 	if statusIdx > 0 {
 		{{ prevStatus := demo.KanbanStatuses[statusIdx-1] }}
-		{{ moveURL := fmt.Sprintf("/tables/kanban/tasks/%d/move", t.ID) }}
+		{{ moveURL := fmt.Sprintf("/demo/kanban/tasks/%d/move", t.ID) }}
 		@components.Controls([]hypermedia.Control{
 			{
 				Kind:    hypermedia.ControlKindHTMX,
-				Label:   "&larr; " + kanbanStatusLabels[prevStatus],
+				Label:   "\u2190 " + kanbanStatusLabels[prevStatus],
 				Variant: hypermedia.VariantGhost,
 				Swap:    hypermedia.SwapOuterHTML,
 				HxRequest: hypermedia.HxRequestConfig{
@@ -112,11 +112,11 @@ templ kanbanMoveButtons(t demo.KanbanTask) {
 	}
 	if statusIdx < len(demo.KanbanStatuses)-1 {
 		{{ nextStatus := demo.KanbanStatuses[statusIdx+1] }}
-		{{ moveURL := fmt.Sprintf("/tables/kanban/tasks/%d/move", t.ID) }}
+		{{ moveURL := fmt.Sprintf("/demo/kanban/tasks/%d/move", t.ID) }}
 		@components.Controls([]hypermedia.Control{
 			{
 				Kind:    hypermedia.ControlKindHTMX,
-				Label:   kanbanStatusLabels[nextStatus] + " &rarr;",
+				Label:   kanbanStatusLabels[nextStatus] + " \u2192",
 				Variant: hypermedia.VariantGhost,
 				Swap:    hypermedia.SwapOuterHTML,
 				HxRequest: hypermedia.HxRequestConfig{

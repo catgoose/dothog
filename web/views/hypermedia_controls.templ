@@ -12,7 +12,7 @@ templ HypermediaControlsPage() {
 	<div class="p-4 space-y-6 max-w-5xl mx-auto">
 		<div class="flex items-center justify-between mb-4">
 			<h1 class="text-2xl font-bold">Controls Gallery</h1>
-			<a href="/tables/inventory" class="btn btn-sm btn-primary">Live Demo</a>
+			<a href="/demo/inventory" class="btn btn-sm btn-primary">Live Demo</a>
 		</div>
 		// ─── 1. Button Variants ──────────────────────────────────────────────
 		@controlsSection("1. Button Variants") {
@@ -124,9 +124,9 @@ templ HypermediaControlsPage() {
 					{
 						Label: "Tables",
 						Children: []hypermedia.NavItem{
-							{Label: "Inventory", Href: "/tables/inventory"},
-							{Label: "Catalog", Href: "/tables/catalog"},
-							{Label: "Bulk", Href: "/tables/bulk"},
+							{Label: "Inventory", Href: "/demo/inventory"},
+							{Label: "Catalog", Href: "/demo/catalog"},
+							{Label: "Bulk", Href: "/demo/bulk"},
 						},
 					},
 					{
@@ -136,7 +136,7 @@ templ HypermediaControlsPage() {
 						},
 					},
 				}, "/hypermedia/controls"))
-				@components.Breadcrumbs(hypermedia.BreadcrumbsFromPath("/tables/inventory", map[int]string{0: "Tables", 1: "Inventory"}))
+				@components.Breadcrumbs(hypermedia.BreadcrumbsFromPath("/demo/inventory", map[int]string{0: "Tables", 1: "Inventory"}))
 			</div>
 		}
 		// ─── 9. Filter Fields ────────────────────────────────────────────────
@@ -168,7 +168,7 @@ templ HypermediaControlsPage() {
 		@controlsSection("10. Live Demo") {
 			<div role="alert" class="alert alert-info">
 				<span>The live demo shows FilterBar + Table + PaginationBar with a real SQLite backend.</span>
-				<a href="/tables/inventory" class="btn btn-sm btn-primary">Open Inventory</a>
+				<a href="/demo/inventory" class="btn btn-sm btn-primary">Open Inventory</a>
 			</div>
 		}
 		// ─── 11. Row Actions (Edit / Delete) ─────────────────────────────────

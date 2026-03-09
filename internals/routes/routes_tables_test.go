@@ -16,7 +16,7 @@ import (
 
 func TestFilterQueryFromHXCurrentURL_HeaderWithQuery(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/tables/inventory", nil)
+	req := httptest.NewRequest(http.MethodGet, "/demo/inventory", nil)
 	req.Header.Set("HX-Current-URL", "https://example.com/tables?search=foo&page=2")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -28,8 +28,8 @@ func TestFilterQueryFromHXCurrentURL_HeaderWithQuery(t *testing.T) {
 
 func TestFilterQueryFromHXCurrentURL_HeaderWithoutQuery(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/tables/inventory", nil)
-	req.Header.Set("HX-Current-URL", "https://example.com/tables")
+	req := httptest.NewRequest(http.MethodGet, "/demo/inventory", nil)
+	req.Header.Set("HX-Current-URL", "https://example.com/demo")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -40,7 +40,7 @@ func TestFilterQueryFromHXCurrentURL_HeaderWithoutQuery(t *testing.T) {
 
 func TestFilterQueryFromHXCurrentURL_HeaderAbsent(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/tables/inventory", nil)
+	req := httptest.NewRequest(http.MethodGet, "/demo/inventory", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -51,7 +51,7 @@ func TestFilterQueryFromHXCurrentURL_HeaderAbsent(t *testing.T) {
 
 func TestFilterQueryFromHXCurrentURL_UnparseableURL(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/tables/inventory", nil)
+	req := httptest.NewRequest(http.MethodGet, "/demo/inventory", nil)
 	req.Header.Set("HX-Current-URL", "://not-a-url")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -67,35 +67,35 @@ func TestFilterQueryFromHXCurrentURL_UnparseableURL(t *testing.T) {
 
 func TestSetTableReplaceURL_HTMXRequestWithQuery(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/tables/inventory?search=foo&page=2", nil)
+	req := httptest.NewRequest(http.MethodGet, "/demo/inventory?search=foo&page=2", nil)
 	req.Header.Set("HX-Request", "true")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	setTableReplaceURL(c, "/tables/inventory")
+	setTableReplaceURL(c, "/demo/inventory")
 
-	require.Equal(t, "/tables/inventory?search=foo&page=2", rec.Header().Get("HX-Replace-Url"))
+	require.Equal(t, "/demo/inventory?search=foo&page=2", rec.Header().Get("HX-Replace-Url"))
 }
 
 func TestSetTableReplaceURL_HTMXRequestWithoutQuery(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/tables/inventory", nil)
+	req := httptest.NewRequest(http.MethodGet, "/demo/inventory", nil)
 	req.Header.Set("HX-Request", "true")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	setTableReplaceURL(c, "/tables/inventory")
+	setTableReplaceURL(c, "/demo/inventory")
 
-	require.Equal(t, "/tables/inventory", rec.Header().Get("HX-Replace-Url"))
+	require.Equal(t, "/demo/inventory", rec.Header().Get("HX-Replace-Url"))
 }
 
 func TestSetTableReplaceURL_NonHTMXRequest(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/tables/inventory?search=foo", nil)
+	req := httptest.NewRequest(http.MethodGet, "/demo/inventory?search=foo", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	setTableReplaceURL(c, "/tables/inventory")
+	setTableReplaceURL(c, "/demo/inventory")
 
 	require.Empty(t, rec.Header().Get("HX-Replace-Url"))
 }
@@ -106,8 +106,8 @@ func TestSetTableReplaceURL_NonHTMXRequest(t *testing.T) {
 
 func TestApplyFilterFromCurrentURL_HasQuery(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodDelete, "/tables/inventory/1", nil)
-	req.Header.Set("HX-Current-URL", "https://example.com/tables/inventory?search=widget&page=3")
+	req := httptest.NewRequest(http.MethodDelete, "/demo/inventory/1", nil)
+	req.Header.Set("HX-Current-URL", "https://example.com/demo/inventory?search=widget&page=3")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -118,7 +118,7 @@ func TestApplyFilterFromCurrentURL_HasQuery(t *testing.T) {
 
 func TestApplyFilterFromCurrentURL_NoHeader(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodDelete, "/tables/inventory/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/demo/inventory/1", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
