@@ -155,23 +155,19 @@ func (d *DB) initVendors() error {
 		{14, "Tina Novak", "tina@silverline.com", "Account Executive"},
 	}
 
-	tx, err := d.db.Begin()
-	if err != nil {
+	if err := seedBulk(d.db,
+		"INSERT INTO vendors (name,category) VALUES (?,?)",
+		len(vendors), func(i int) []any {
+			return []any{vendors[i].name, vendors[i].cat}
+		}); err != nil {
 		return err
 	}
-	for _, v := range vendors {
-		if _, err := tx.Exec("INSERT INTO vendors (name,category) VALUES (?,?)", v.name, v.cat); err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-	}
-	for _, c := range contacts {
-		vid := c.vendorIdx + 1 // 1-indexed IDs
-		phone := fmt.Sprintf("555-%04d", 2000+c.vendorIdx*10)
-		if _, err := tx.Exec("INSERT INTO contacts (vendor_id,name,email,phone,role) VALUES (?,?,?,?,?)", vid, c.name, c.email, phone, c.role); err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-	}
-	return tx.Commit()
+	return seedBulk(d.db,
+		"INSERT INTO contacts (vendor_id,name,email,phone,role) VALUES (?,?,?,?,?)",
+		len(contacts), func(i int) []any {
+			c := contacts[i]
+			vid := c.vendorIdx + 1
+			phone := fmt.Sprintf("555-%04d", 2000+c.vendorIdx*10)
+			return []any{vid, c.name, c.email, phone, c.role}
+		})
 }

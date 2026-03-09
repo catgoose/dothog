@@ -61,20 +61,11 @@ func buildTableContent(c echo.Context, db *demo.DB, p tableParams, itemsURL, tar
 	bar := hypermedia.NewFilterBar(itemsURL, target,
 		hypermedia.SearchField("q", "Search items\u2026", p.Q),
 		hypermedia.SelectField("category", "Category", p.Category,
-			hypermedia.SelectOptions(p.Category,
-				"", "All",
-				"Electronics", "Electronics",
-				"Clothing", "Clothing",
-				"Food", "Food",
-				"Books", "Books",
-				"Sports", "Sports",
-			)),
+			hypermedia.SelectOptions(p.Category, itemCategoryPairs()...)),
 		hypermedia.CheckboxField("active", "Active only", p.Active),
 	)
 
-	sortBase := stripParams(c.Request().URL, "sort", "dir")
-	pageBase := stripParams(c.Request().URL, "page")
-
+	sortBase := buildSortBase(c)
 	cols := []hypermedia.TableCol{
 		hypermedia.SortableCol("name", "Name", p.Sort, p.Dir, sortBase, target, "#filter-form"),
 		hypermedia.SortableCol("category", "Category", p.Sort, p.Dir, sortBase, target, "#filter-form"),
@@ -83,15 +74,7 @@ func buildTableContent(c echo.Context, db *demo.DB, p tableParams, itemsURL, tar
 	}
 	cols = append(cols, extraCols...)
 
-	info := hypermedia.PageInfo{
-		Page:       p.Page,
-		PerPage:    p.PerPage,
-		TotalItems: total,
-		TotalPages: hypermedia.ComputeTotalPages(total, p.PerPage),
-		BaseURL:    pageBase,
-		Target:     target,
-		Include:    "#filter-form",
-	}
+	info := buildPageInfo(c, p.Page, p.PerPage, total, target)
 
 	return tableContent{Items: items, Total: total, Bar: bar, Cols: cols, Info: info}, nil
 }
@@ -130,6 +113,34 @@ func applyFilterFromCurrentURL(c echo.Context) {
 	if rawQuery := filterQueryFromHXCurrentURL(c); rawQuery != "" {
 		c.Request().URL.RawQuery = rawQuery
 	}
+}
+
+// buildPageInfo constructs a PageInfo from common pagination parameters.
+func buildPageInfo(c echo.Context, page, perPage, total int, target string) hypermedia.PageInfo {
+	pageBase := stripParams(c.Request().URL, "page")
+	return hypermedia.PageInfo{
+		Page:       page,
+		PerPage:    perPage,
+		TotalItems: total,
+		TotalPages: hypermedia.ComputeTotalPages(total, perPage),
+		BaseURL:    pageBase,
+		Target:     target,
+		Include:    "#filter-form",
+	}
+}
+
+// buildSortBase returns the current URL with sort/dir params stripped.
+func buildSortBase(c echo.Context) string {
+	return stripParams(c.Request().URL, "sort", "dir")
+}
+
+// itemCategoryPairs returns value/label pairs for the item category filter.
+func itemCategoryPairs() []string {
+	pairs := []string{"", "All"}
+	for _, c := range demo.ItemCategories {
+		pairs = append(pairs, c, c)
+	}
+	return pairs
 }
 
 // stripParams returns a copy of u with the named query params removed.
