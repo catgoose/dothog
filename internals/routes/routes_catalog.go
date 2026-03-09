@@ -3,12 +3,10 @@
 package routes
 
 import (
-	"fmt"
-	"strconv"
-
 	"catgoose/go-htmx-demo/internals/demo"
 	"catgoose/go-htmx-demo/internals/routes/handler"
 	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/internals/routes/params"
 	"catgoose/go-htmx-demo/web/views"
 
 	"github.com/a-h/templ"
@@ -44,9 +42,9 @@ func (cat *catalogRoutes) handleCatalogItems(c echo.Context) error {
 }
 
 func (cat *catalogRoutes) handleCatalogItemDetails(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil || id < 1 {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", fmt.Errorf("id=%q", c.Param("id")))
+	id, err := params.ParseParamID(c, "id")
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}
 	item, err := cat.db.GetItem(c.Request().Context(), id)
 	if err != nil {
@@ -56,59 +54,15 @@ func (cat *catalogRoutes) handleCatalogItemDetails(c echo.Context) error {
 }
 
 func (cat *catalogRoutes) buildCatalogContent(c echo.Context) (hypermedia.FilterBar, templ.Component, error) {
-	q := c.QueryParam("q")
-	category := c.QueryParam("category")
-	active := c.QueryParam("active")
-	sort := c.QueryParam("sort")
-	dir := c.QueryParam("dir")
-	page, _ := strconv.Atoi(c.QueryParam("page"))
-	if page < 1 {
-		page = 1
-	}
 	const perPage = 20
-
-	items, total, err := cat.db.ListItems(c.Request().Context(), q, category, active, sort, dir, page, perPage)
+	tc, err := buildTableContent(c, cat.db, parseTableParams(c, perPage),
+		catalogBase+"/items", "#catalog-table-container",
+		hypermedia.TableCol{Label: "Details"},
+	)
 	if err != nil {
 		return hypermedia.FilterBar{}, nil, err
 	}
-
-	bar := hypermedia.NewFilterBar(catalogBase+"/items", "#catalog-table-container",
-		hypermedia.SearchField("q", "Search items\u2026", q),
-		hypermedia.SelectField("category", "Category", category,
-			hypermedia.SelectOptions(category,
-				"", "All",
-				"Electronics", "Electronics",
-				"Clothing", "Clothing",
-				"Food", "Food",
-				"Books", "Books",
-				"Sports", "Sports",
-			)),
-		hypermedia.CheckboxField("active", "Active only", active),
-	)
-
-	sortBase := stripParams(c.Request().URL, "sort", "dir")
-	pageBase := stripParams(c.Request().URL, "page")
-
-	cols := []hypermedia.TableCol{
-		hypermedia.SortableCol("name", "Name", sort, dir, sortBase, "#catalog-table-container", "#filter-form"),
-		hypermedia.SortableCol("category", "Category", sort, dir, sortBase, "#catalog-table-container", "#filter-form"),
-		hypermedia.SortableCol("price", "Price", sort, dir, sortBase, "#catalog-table-container", "#filter-form"),
-		hypermedia.SortableCol("stock", "Stock", sort, dir, sortBase, "#catalog-table-container", "#filter-form"),
-		{Label: "Status"},
-		{Label: "Details"},
-	}
-
-	info := hypermedia.PageInfo{
-		Page:       page,
-		PerPage:    perPage,
-		TotalItems: total,
-		TotalPages: hypermedia.ComputeTotalPages(total, perPage),
-		BaseURL:    pageBase,
-		Target:     "#catalog-table-container",
-		Include:    "#filter-form",
-	}
-
-	body := views.CatalogItemsBody(items)
-	container := views.CatalogTableContainer(cols, body, info)
-	return bar, container, nil
+	body := views.CatalogItemsBody(tc.Items)
+	container := views.CatalogTableContainer(tc.Cols, body, tc.Info)
+	return tc.Bar, container, nil
 }

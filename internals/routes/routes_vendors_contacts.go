@@ -6,11 +6,12 @@ import (
 	"catgoose/go-htmx-demo/internals/demo"
 	"catgoose/go-htmx-demo/internals/routes/handler"
 	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/internals/routes/params"
 	"catgoose/go-htmx-demo/internals/ssebroker"
 	"catgoose/go-htmx-demo/web/views"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
+
 )
 
 type vendorContactRoutes struct {
@@ -51,7 +52,7 @@ func (v *vendorContactRoutes) handleVendorsList(c echo.Context) error {
 }
 
 func (v *vendorContactRoutes) handleVendorContacts(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid vendor ID", err)
 	}
@@ -67,7 +68,7 @@ func (v *vendorContactRoutes) handleVendorContacts(c echo.Context) error {
 }
 
 func (v *vendorContactRoutes) handleContactEdit(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid contact ID", err)
 	}
@@ -79,7 +80,7 @@ func (v *vendorContactRoutes) handleContactEdit(c echo.Context) error {
 }
 
 func (v *vendorContactRoutes) handleContactCard(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid contact ID", err)
 	}
@@ -91,7 +92,7 @@ func (v *vendorContactRoutes) handleContactCard(c echo.Context) error {
 }
 
 func (v *vendorContactRoutes) handleContactUpdate(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid contact ID", err)
 	}

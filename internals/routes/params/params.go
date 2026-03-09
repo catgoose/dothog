@@ -53,20 +53,18 @@ func CalculateTotalPages(totalCount, limit int) int {
 	return (totalCount + limit - 1) / limit
 }
 
-// ParseRequestID parses and validates a request ID from path parameter or query parameter
-func ParseRequestID(c echo.Context) (int, error) {
-	id := c.Param("id")
-	if id == "" {
-		id = c.QueryParam("id")
+// ParseParamID parses a named path parameter as a positive integer.
+// Returns an error if the parameter is missing, non-numeric, or less than 1.
+func ParseParamID(c echo.Context, name string) (int, error) {
+	raw := c.Param(name)
+	if raw == "" {
+		return 0, fmt.Errorf("%s parameter not found", name)
 	}
-	if id == "" {
-		return 0, fmt.Errorf("id parameter not found")
+	id, err := strconv.Atoi(raw)
+	if err != nil || id < 1 {
+		return 0, fmt.Errorf("invalid %s: %q", name, raw)
 	}
-	parsedID, err := strconv.Atoi(id)
-	if err != nil {
-		return 0, fmt.Errorf("invalid id: %w", err)
-	}
-	return parsedID, nil
+	return id, nil
 }
 
 // FilterParams holds parsed filter and pagination parameters

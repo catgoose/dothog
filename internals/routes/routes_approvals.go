@@ -3,12 +3,13 @@
 package routes
 
 import (
+	"fmt"
+
 	"catgoose/go-htmx-demo/internals/demo"
 	"catgoose/go-htmx-demo/internals/routes/handler"
+	"catgoose/go-htmx-demo/internals/routes/params"
 	"catgoose/go-htmx-demo/internals/ssebroker"
 	"catgoose/go-htmx-demo/web/views"
-	"fmt"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -31,7 +32,7 @@ func (a *approvalRoutes) handleApprovalsPage(c echo.Context) error {
 }
 
 func (a *approvalRoutes) handleApprovalAction(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid request ID", err)
 	}

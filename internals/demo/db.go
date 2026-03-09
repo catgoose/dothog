@@ -26,6 +26,11 @@ type Item struct {
 // DB wraps a sqlite3 connection.
 type DB struct{ db *sql.DB }
 
+// ItemCategories is the list of available item categories for filters.
+var ItemCategories = []string{
+	"Electronics", "Clothing", "Food", "Books", "Sports",
+}
+
 // allowedSort maps query-param sort keys to safe SQL column names.
 var allowedSort = map[string]string{
 	"name":     "name",
@@ -238,25 +243,43 @@ func (d *DB) seed() error {
 		{"Kombucha 6-Pack", "Food", "2024-02-21", 14.95, 24, true},
 	}
 
-	tx, err := d.db.Begin()
+	return seedBulk(d.db,
+		`INSERT INTO items (name, category, price, stock, active, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+		len(rows), func(i int) []any {
+			r := rows[i]
+			return []any{r.name, r.category, r.price, r.stock, BoolToInt(r.active), r.createdAt}
+		})
+}
+
+// BoolToInt converts a bool to an integer (1 or 0) for SQLite storage.
+func BoolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+// IntToBool converts an integer to a bool (non-zero is true).
+func IntToBool(i int) bool {
+	return i != 0
+}
+
+// seedBulk runs a bulk insert inside a transaction.
+// query should contain the INSERT statement with ? placeholders.
+// argsFn is called for each row index and returns the arguments for that row.
+func seedBulk(db *sql.DB, query string, count int, argsFn func(i int) []any) error {
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare(
-		`INSERT INTO items (name, category, price, stock, active, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-	)
+	stmt, err := tx.Prepare(query)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
 	}
 	defer stmt.Close()
-
-	for _, row := range rows {
-		active := 0
-		if row.active {
-			active = 1
-		}
-		if _, err := stmt.Exec(row.name, row.category, row.price, row.stock, active, row.createdAt); err != nil {
+	for i := range count {
+		if _, err := stmt.Exec(argsFn(i)...); err != nil {
 			_ = tx.Rollback()
 			return err
 		}
@@ -264,18 +287,11 @@ func (d *DB) seed() error {
 	return tx.Commit()
 }
 
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
-}
-
 // CreateItem inserts a new item and returns it with the assigned ID.
 func (d *DB) CreateItem(ctx context.Context, item Item) (Item, error) {
 	res, err := d.db.ExecContext(ctx,
 		`INSERT INTO items (name, category, price, stock, active, created_at) VALUES (?, ?, ?, ?, ?, date('now'))`,
-		item.Name, item.Category, item.Price, item.Stock, boolToInt(item.Active))
+		item.Name, item.Category, item.Price, item.Stock, BoolToInt(item.Active))
 	if err != nil {
 		return Item{}, fmt.Errorf("create item: %w", err)
 	}
@@ -297,7 +313,7 @@ func (d *DB) GetItem(ctx context.Context, id int) (Item, error) {
 	if err != nil {
 		return Item{}, fmt.Errorf("get item %d: %w", id, err)
 	}
-	item.Active = activeInt != 0
+	item.Active = IntToBool(activeInt)
 	return item, nil
 }
 
@@ -305,7 +321,7 @@ func (d *DB) GetItem(ctx context.Context, id int) (Item, error) {
 func (d *DB) UpdateItem(ctx context.Context, item Item) error {
 	_, err := d.db.ExecContext(ctx,
 		"UPDATE items SET name=?, category=?, price=?, stock=?, active=? WHERE id=?",
-		item.Name, item.Category, item.Price, item.Stock, boolToInt(item.Active), item.ID)
+		item.Name, item.Category, item.Price, item.Stock, BoolToInt(item.Active), item.ID)
 	if err != nil {
 		return fmt.Errorf("update item %d: %w", item.ID, err)
 	}
@@ -386,7 +402,7 @@ func (d *DB) ListItems(ctx context.Context, q, category, active, sortBy, sortDir
 		if err := dbRows.Scan(&item.ID, &item.Name, &item.Category, &item.Price, &item.Stock, &activeInt, &item.CreatedAt); err != nil {
 			return nil, 0, err
 		}
-		item.Active = activeInt != 0
+		item.Active = IntToBool(activeInt)
 		items = append(items, item)
 	}
 	return items, total, dbRows.Err()

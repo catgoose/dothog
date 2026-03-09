@@ -12,6 +12,7 @@ import (
 	"catgoose/go-htmx-demo/internals/demo"
 	"catgoose/go-htmx-demo/internals/routes/handler"
 	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/internals/routes/params"
 	"catgoose/go-htmx-demo/internals/ssebroker"
 	"catgoose/go-htmx-demo/web/views"
 
@@ -54,7 +55,7 @@ func (p *peopleRoutes) handlePeopleList(c echo.Context) error {
 }
 
 func (p *peopleRoutes) handlePersonProfile(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
 	}
@@ -66,7 +67,7 @@ func (p *peopleRoutes) handlePersonProfile(c echo.Context) error {
 }
 
 func (p *peopleRoutes) handlePersonEdit(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
 	}
@@ -78,7 +79,7 @@ func (p *peopleRoutes) handlePersonEdit(c echo.Context) error {
 }
 
 func (p *peopleRoutes) handlePersonCard(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
 	}
@@ -90,7 +91,7 @@ func (p *peopleRoutes) handlePersonCard(c echo.Context) error {
 }
 
 func (p *peopleRoutes) handlePersonUpdate(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
 	}
@@ -139,7 +140,7 @@ func (p *peopleRoutes) broadcastPersonUpdate(person demo.Person) {
 }
 
 func (p *peopleRoutes) handlePersonSSE(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return err
 	}
@@ -195,7 +196,7 @@ func (p *peopleRoutes) buildPeopleContent(c echo.Context) ([]demo.Person, int, h
 			deptOptions(department)),
 	)
 
-	sortBase := stripParams(c.Request().URL, "sort", "dir")
+	sortBase := buildSortBase(c)
 	cols := []hypermedia.TableCol{
 		hypermedia.SortableCol("name", "Name", sort, dir, sortBase, "#people-table-container", "#filter-form"),
 		hypermedia.SortableCol("department", "Department", sort, dir, sortBase, "#people-table-container", "#filter-form"),
@@ -204,16 +205,7 @@ func (p *peopleRoutes) buildPeopleContent(c echo.Context) ([]demo.Person, int, h
 		{Label: "Email"},
 	}
 
-	pageBase := stripParams(c.Request().URL, "page")
-	info := hypermedia.PageInfo{
-		Page:       page,
-		PerPage:    perPage,
-		TotalItems: total,
-		TotalPages: hypermedia.ComputeTotalPages(total, perPage),
-		BaseURL:    pageBase,
-		Target:     "#people-table-container",
-		Include:    "#filter-form",
-	}
+	info := buildPageInfo(c, page, perPage, total, "#people-table-container")
 
 	return people, total, bar, cols, info, nil
 }

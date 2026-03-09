@@ -59,3 +59,11 @@ type Parent struct {
 type Expiry struct {
 	ExpiresAt sql.NullTime `db:"ExpiresAt" json:"expires_at,omitzero"`
 }
+
+// ToNullString converts a string to sql.NullString. Empty strings are treated as null.
+func ToNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{}
+	}
+	return sql.NullString{String: s, Valid: true}
+}

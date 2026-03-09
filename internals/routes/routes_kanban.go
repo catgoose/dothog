@@ -5,11 +5,11 @@ package routes
 import (
 	"catgoose/go-htmx-demo/internals/demo"
 	"catgoose/go-htmx-demo/internals/routes/handler"
+	"catgoose/go-htmx-demo/internals/routes/params"
 	"catgoose/go-htmx-demo/internals/ssebroker"
 	"catgoose/go-htmx-demo/web/views"
 
 	"github.com/labstack/echo/v4"
-	"strconv"
 )
 
 type kanbanRoutes struct {
@@ -30,7 +30,7 @@ func (k *kanbanRoutes) handleKanbanPage(c echo.Context) error {
 }
 
 func (k *kanbanRoutes) handleMoveTask(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
 	}

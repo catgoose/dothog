@@ -60,7 +60,7 @@ func TestCalculateTotalPages(t *testing.T) {
 	assert.Equal(t, 0, CalculateTotalPages(10, 0))
 }
 
-func TestParseRequestID_FromPath(t *testing.T) {
+func TestParseParamID_Valid(t *testing.T) {
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/users/42", nil)
 	rec := httptest.NewRecorder()
@@ -68,30 +68,53 @@ func TestParseRequestID_FromPath(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("42")
 
-	id, err := ParseRequestID(c)
+	id, err := ParseParamID(c, "id")
 	require.NoError(t, err)
 	assert.Equal(t, 42, id)
 }
 
-func TestParseRequestID_FromQuery(t *testing.T) {
-	c := newContext("/users", "id=99")
-	id, err := ParseRequestID(c)
-	require.NoError(t, err)
-	assert.Equal(t, 99, id)
-}
-
-func TestParseRequestID_NotFound(t *testing.T) {
+func TestParseParamID_NotFound(t *testing.T) {
 	c := newContext("/users", "")
-	_, err := ParseRequestID(c)
+	_, err := ParseParamID(c, "id")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "id parameter not found")
 }
 
-func TestParseRequestID_Invalid(t *testing.T) {
-	c := newContext("/users", "id=abc")
-	_, err := ParseRequestID(c)
+func TestParseParamID_Invalid(t *testing.T) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/users/abc", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("abc")
+
+	_, err := ParseParamID(c, "id")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid id")
+}
+
+func TestParseParamID_Zero(t *testing.T) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/users/0", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("0")
+
+	_, err := ParseParamID(c, "id")
+	require.Error(t, err)
+}
+
+func TestParseParamID_Negative(t *testing.T) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/users/-1", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("-1")
+
+	_, err := ParseParamID(c, "id")
+	require.Error(t, err)
 }
 
 func TestParseSortString(t *testing.T) {

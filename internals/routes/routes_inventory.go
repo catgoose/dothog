@@ -9,6 +9,7 @@ import (
 	"catgoose/go-htmx-demo/internals/demo"
 	"catgoose/go-htmx-demo/internals/routes/handler"
 	"catgoose/go-htmx-demo/internals/routes/hypermedia"
+	"catgoose/go-htmx-demo/internals/routes/params"
 	"catgoose/go-htmx-demo/web/views"
 
 	"github.com/a-h/templ"
@@ -63,16 +64,20 @@ func (d *inventoryRoutes) handleNewItemCancel(c echo.Context) error {
 	return handler.RenderComponent(c, views.NewInventoryPlaceholder())
 }
 
-func (d *inventoryRoutes) handleCreateItem(c echo.Context) error {
+func parseItemFromForm(c echo.Context) demo.Item {
 	price, _ := strconv.ParseFloat(c.FormValue("price"), 64)
 	stock, _ := strconv.Atoi(c.FormValue("stock"))
-	item := demo.Item{
+	return demo.Item{
 		Name:     c.FormValue("name"),
 		Category: c.FormValue("category"),
 		Price:    price,
 		Stock:    stock,
 		Active:   c.FormValue("active") == "true",
 	}
+}
+
+func (d *inventoryRoutes) handleCreateItem(c echo.Context) error {
+	item := parseItemFromForm(c)
 	if _, err := d.db.CreateItem(c.Request().Context(), item); err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to create item", err)
 	}
@@ -84,16 +89,8 @@ func (d *inventoryRoutes) handleCreateItem(c echo.Context) error {
 	return handler.RenderComponent(c, container)
 }
 
-func parseItemID(c echo.Context) (int, error) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil || id < 1 {
-		return 0, fmt.Errorf("invalid id %q", c.Param("id"))
-	}
-	return id, nil
-}
-
 func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
-	id, err := parseItemID(c)
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}
@@ -105,7 +102,7 @@ func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
 }
 
 func (d *inventoryRoutes) handleEditItemForm(c echo.Context) error {
-	id, err := parseItemID(c)
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}
@@ -123,20 +120,12 @@ func (d *inventoryRoutes) handleEditItemForm(c echo.Context) error {
 }
 
 func (d *inventoryRoutes) handleUpdateItem(c echo.Context) error {
-	id, err := parseItemID(c)
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}
-	price, _ := strconv.ParseFloat(c.FormValue("price"), 64)
-	stock, _ := strconv.Atoi(c.FormValue("stock"))
-	item := demo.Item{
-		ID:       id,
-		Name:     c.FormValue("name"),
-		Category: c.FormValue("category"),
-		Price:    price,
-		Stock:    stock,
-		Active:   c.FormValue("active") == "true",
-	}
+	item := parseItemFromForm(c)
+	item.ID = id
 	if err := d.db.UpdateItem(c.Request().Context(), item); err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to update item", err)
 	}
@@ -149,7 +138,7 @@ func (d *inventoryRoutes) handleUpdateItem(c echo.Context) error {
 }
 
 func (d *inventoryRoutes) handleDeleteItem(c echo.Context) error {
-	id, err := parseItemID(c)
+	id, err := params.ParseParamID(c, "id")
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
 	}

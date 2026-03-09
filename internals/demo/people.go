@@ -168,26 +168,14 @@ func (d *DB) seedPeople() error {
 		{"Anthony", "Walker", "Philadelphia", "PA", "Engineering", "Software Engineer"},
 	}
 
-	tx, err := d.db.Begin()
-	if err != nil {
-		return err
-	}
-	stmt, err := tx.Prepare("INSERT INTO people (first_name,last_name,email,phone,city,state,department,job_title,bio,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)")
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	defer stmt.Close()
-
-	for i, p := range data {
-		email := fmt.Sprintf("%s.%s@example.com", strings.ToLower(p.fn), strings.ToLower(p.ln))
-		phone := fmt.Sprintf("555-%04d", 1000+i)
-		bio := fmt.Sprintf("%s in the %s department, based in %s, %s.", p.title, p.dept, p.city, p.st)
-		date := fmt.Sprintf("2024-%02d-%02d", (i%12)+1, (i%28)+1)
-		if _, err := stmt.Exec(p.fn, p.ln, email, phone, p.city, p.st, p.dept, p.title, bio, date); err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-	}
-	return tx.Commit()
+	return seedBulk(d.db,
+		"INSERT INTO people (first_name,last_name,email,phone,city,state,department,job_title,bio,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+		len(data), func(i int) []any {
+			p := data[i]
+			email := fmt.Sprintf("%s.%s@example.com", strings.ToLower(p.fn), strings.ToLower(p.ln))
+			phone := fmt.Sprintf("555-%04d", 1000+i)
+			bio := fmt.Sprintf("%s in the %s department, based in %s, %s.", p.title, p.dept, p.city, p.st)
+			date := fmt.Sprintf("2024-%02d-%02d", (i%12)+1, (i%28)+1)
+			return []any{p.fn, p.ln, email, phone, p.city, p.st, p.dept, p.title, bio, date}
+		})
 }
