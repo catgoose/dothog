@@ -71,6 +71,7 @@ func buildTableContent(c echo.Context, db *demo.DB, p tableParams, itemsURL, tar
 		hypermedia.SortableCol("category", "Category", p.Sort, p.Dir, sortBase, target, "#filter-form"),
 		hypermedia.SortableCol("price", "Price", p.Sort, p.Dir, sortBase, target, "#filter-form"),
 		hypermedia.SortableCol("stock", "Stock", p.Sort, p.Dir, sortBase, target, "#filter-form"),
+		{Label: "Status"},
 	}
 	cols = append(cols, extraCols...)
 
