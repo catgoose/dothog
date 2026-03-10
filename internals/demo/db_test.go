@@ -196,3 +196,38 @@ func TestOpenInvalidPath(t *testing.T) {
 	_, err := Open(filepath.Join(os.DevNull, "impossible", "path.db"))
 	assert.Error(t, err)
 }
+
+func TestBoolToInt(t *testing.T) {
+	assert.Equal(t, 1, BoolToInt(true))
+	assert.Equal(t, 0, BoolToInt(false))
+}
+
+func TestIntToBool(t *testing.T) {
+	assert.True(t, IntToBool(1))
+	assert.True(t, IntToBool(42))
+	assert.False(t, IntToBool(0))
+}
+
+func TestSeedBulk(t *testing.T) {
+	db := openTestDB(t)
+	ctx := context.Background()
+
+	_, err := db.db.Exec("CREATE TABLE test_bulk (id INTEGER PRIMARY KEY, val TEXT)")
+	require.NoError(t, err)
+
+	data := []string{"alpha", "beta", "gamma"}
+	err = seedBulk(db.db, "INSERT INTO test_bulk (val) VALUES (?)", len(data), func(i int) []any {
+		return []any{data[i]}
+	})
+	require.NoError(t, err)
+
+	var count int
+	require.NoError(t, db.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM test_bulk").Scan(&count))
+	assert.Equal(t, 3, count)
+}
+
+func TestItemCategories(t *testing.T) {
+	assert.NotEmpty(t, ItemCategories)
+	assert.Contains(t, ItemCategories, "Electronics")
+	assert.Contains(t, ItemCategories, "Books")
+}

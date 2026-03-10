@@ -116,4 +116,4 @@ jobs:
             --title "Release ${{ steps.version.outputs.version }}" \
             --generate-notes
         env:
-          GH_TOKEN: ${{ secrets.SCREENSHOTS_REPO_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
