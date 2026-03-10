@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-// NewTagsTable creates a lookup-style tags table with ID and two caller-named columns.
-// The groupCol categorizes tags (e.g., "Type", "Category") and the valueCol holds the
+// NewLookupTable creates a lookup-style table with ID and two caller-named columns.
+// The groupCol categorizes entries (e.g., "Type", "Category") and the valueCol holds the
 // display value (e.g., "Label", "Name"). Indexes are created on groupCol and (groupCol, valueCol).
-func NewTagsTable(name, groupCol, valueCol string) *TableDef {
+func NewLookupTable(name, groupCol, valueCol string) *TableDef {
 	lower := strings.ToLower(name)
 	groupLower := strings.ToLower(groupCol)
 	valueLower := strings.ToLower(valueCol)
@@ -24,16 +24,16 @@ func NewTagsTable(name, groupCol, valueCol string) *TableDef {
 		)
 }
 
-// NewTagJoinTable creates a many-to-many join table linking an owner table to a tags table.
-func NewTagJoinTable(name string) *TableDef {
+// NewLookupJoinTable creates a many-to-many join table linking an owner table to a lookup table.
+func NewLookupJoinTable(name string) *TableDef {
 	lower := strings.ToLower(name)
 	return NewTable(name).
 		Columns(
 			Col("OwnerID", TypeInt()).NotNull().Immutable(),
-			Col("TagID", TypeInt()).NotNull().Immutable(),
+			Col("LookupID", TypeInt()).NotNull().Immutable(),
 		).
 		Indexes(
 			Index(fmt.Sprintf("idx_%s_ownerid", lower), "OwnerID"),
-			Index(fmt.Sprintf("idx_%s_tagid", lower), "TagID"),
+			Index(fmt.Sprintf("idx_%s_lookupid", lower), "LookupID"),
 		)
 }

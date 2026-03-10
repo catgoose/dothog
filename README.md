@@ -189,17 +189,17 @@ NewTable("Tasks").
 | `WithSoftDelete()` | DeletedAt | `TIMESTAMP` (nullable) | Yes |
 | `WithAuditTrail()` | CreatedBy, UpdatedBy, DeletedBy | `VARCHAR(255)` | UpdatedBy, DeletedBy only |
 
-### Tags / Lookup Tables
+### Lookup Tables
 
-For many-to-many tagging or shared lookup tables:
+For many-to-many lookups or shared lookup tables:
 
 ```go
 // Lookup table: ID + two caller-named columns (+ indexes)
-tagsTable := NewTagsTable("Tags", "Type", "Label")
-lookups   := NewTagsTable("Lookups", "Category", "Name")
+tagsTable := NewLookupTable("Tags", "Type", "Label")
+lookups   := NewLookupTable("Lookups", "Category", "Name")
 
-// Join table: OwnerID, TagID (+ indexes on each)
-joinTable := NewTagJoinTable("ItemTags")
+// Join table: OwnerID, LookupID (+ indexes on each)
+joinTable := NewLookupJoinTable("ItemTags")
 ```
 
 ### Column Type Functions
