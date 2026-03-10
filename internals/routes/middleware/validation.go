@@ -118,7 +118,7 @@ func FormValidationMiddleware(modelType any) echo.MiddlewareFunc {
 					for k := range errorMap {
 						fields = append(fields, k)
 					}
-					logger.Warn("Validation failed",
+					logger.WithContext(c.Request().Context()).Warn("Validation failed",
 						"route", c.Request().URL.Path,
 						"fields", fields,
 					)
@@ -129,7 +129,7 @@ func FormValidationMiddleware(modelType any) echo.MiddlewareFunc {
 					return c.String(http.StatusOK, "")
 				}
 				// If it's not a validation error, set a generic error header
-				logger.Warn("Non-ValidationErrors validation failure",
+				logger.WithContext(c.Request().Context()).Warn("Non-ValidationErrors validation failure",
 					"route", c.Request().URL.Path,
 					"error", err.Error(),
 				)

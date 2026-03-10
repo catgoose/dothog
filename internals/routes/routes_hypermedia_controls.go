@@ -278,13 +278,13 @@ func (gs *controlsGalleryState) handleFilter(c echo.Context) error {
 func (gs *controlsGalleryState) handleRowView(c echo.Context) error {
 	id, err := parseGalleryRowID(c)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "Invalid ID")
+		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
 	}
 	gs.mu.RLock()
 	row, found := gs.findRow(id)
 	gs.mu.RUnlock()
 	if !found {
-		return c.String(http.StatusNotFound, "Row not found")
+		return handler.HandleHypermediaError(c, 404, "Row not found", fmt.Errorf("row %d not found", id))
 	}
 	return handler.RenderComponent(c, views.RowViewFragment(views.GalleryRowItem{
 		ID: row.ID, Name: row.Name, Category: row.Category, Price: row.Price, Active: row.Active,
@@ -294,13 +294,13 @@ func (gs *controlsGalleryState) handleRowView(c echo.Context) error {
 func (gs *controlsGalleryState) handleRowEdit(c echo.Context) error {
 	id, err := parseGalleryRowID(c)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "Invalid ID")
+		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
 	}
 	gs.mu.RLock()
 	row, found := gs.findRow(id)
 	gs.mu.RUnlock()
 	if !found {
-		return c.String(http.StatusNotFound, "Row not found")
+		return handler.HandleHypermediaError(c, 404, "Row not found", fmt.Errorf("row %d not found", id))
 	}
 	return handler.RenderComponent(c, views.RowEditFragment(views.GalleryRowItem{
 		ID: row.ID, Name: row.Name, Category: row.Category, Price: row.Price, Active: row.Active,
@@ -310,13 +310,13 @@ func (gs *controlsGalleryState) handleRowEdit(c echo.Context) error {
 func (gs *controlsGalleryState) handleRowSave(c echo.Context) error {
 	id, err := parseGalleryRowID(c)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "Invalid ID")
+		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
 	}
 	gs.mu.Lock()
 	idx := gs.findRowIndex(id)
 	if idx < 0 {
 		gs.mu.Unlock()
-		return c.String(http.StatusNotFound, "Row not found")
+		return handler.HandleHypermediaError(c, 404, "Row not found", fmt.Errorf("row %d not found", id))
 	}
 	gs.rowItems[idx].Name = c.FormValue("name")
 	gs.rowItems[idx].Category = c.FormValue("category")
@@ -332,7 +332,7 @@ func (gs *controlsGalleryState) handleRowSave(c echo.Context) error {
 func (gs *controlsGalleryState) handleRowDelete(c echo.Context) error {
 	id, err := parseGalleryRowID(c)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "Invalid ID")
+		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
 	}
 	gs.mu.Lock()
 	idx := gs.findRowIndex(id)

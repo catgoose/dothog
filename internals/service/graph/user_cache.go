@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"database/sql"
+
 	"catgoose/harmony/internals/domain"
 	"catgoose/harmony/internals/logger"
 
@@ -81,7 +83,7 @@ func (c *UserCache) InsertOrUpdateUsers(users []domain.GraphUser) error {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			log.Error("Failed to rollback transaction after commit error", "rollback_error", rollbackErr, "commit_error", err)
-			return fmt.Errorf("failed to rollback transaction: %v", rollbackErr)
+			return fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
 		}
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
@@ -89,8 +91,7 @@ func (c *UserCache) InsertOrUpdateUsers(users []domain.GraphUser) error {
 }
 
 const (
-	searchCondition = "(GivenName LIKE ? OR Surname LIKE ? OR DisplayName LIKE ? OR AccountName LIKE ?)"
-	userSelect      = "SELECT AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName"
+	userSelect = "SELECT AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName"
 )
 
 // SearchUsers finds users who match any of the given search terms
@@ -101,10 +102,11 @@ func (c *UserCache) SearchUsers(terms []string, limit int) ([]domain.GraphUser, 
 	var conditions []string
 	var args []any
 
-	for _, term := range terms {
+	for i, term := range terms {
 		searchPattern := "%" + term + "%"
-		conditions = append(conditions, searchCondition)
-		args = append(args, searchPattern, searchPattern, searchPattern, searchPattern)
+		paramName := fmt.Sprintf("Search%d", i)
+		conditions = append(conditions, fmt.Sprintf("(GivenName LIKE @%s OR Surname LIKE @%s OR DisplayName LIKE @%s OR AccountName LIKE @%s)", paramName, paramName, paramName, paramName))
+		args = append(args, sql.Named(paramName, searchPattern))
 	}
 	whereClause := strings.Join(conditions, " AND ")
 	query := fmt.Sprintf(`
@@ -112,10 +114,10 @@ func (c *UserCache) SearchUsers(terms []string, limit int) ([]domain.GraphUser, 
 		FROM Users
 		WHERE (%s)
 		ORDER BY DisplayName
-		LIMIT ?
+		LIMIT @Limit
 	`, userSelect, whereClause)
 
-	args = append(args, limit)
+	args = append(args, sql.Named("Limit", limit))
 
 	var users []domain.GraphUser
 	err := c.DB.Select(&users, query, args...)
@@ -145,10 +147,10 @@ func (c *UserCache) GetUserByAzureID(azureID string) (*domain.GraphUser, error) 
 	query := `
 		SELECT AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName
 		FROM Users
-		WHERE AzureId = ?
+		WHERE AzureId = @AzureId
 	`
 	var user domain.GraphUser
-	err := c.DB.Get(&user, query, azureID)
+	err := c.DB.Get(&user, query, sql.Named("AzureId", azureID))
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve user by Azure ID: %w", err)
 	}

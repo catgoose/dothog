@@ -3,7 +3,7 @@ package views
 // Root template
 templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool) {
 	<!DOCTYPE html>
-	<html lang="en" class="light">
+	<html lang="en" data-theme="light">
 		@header(csrfToken, devMode)
 		<body
 			hx-history="false"
@@ -11,12 +11,19 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			hx-ext="response-targets"
 			hx-target-error="#error-status"
 		>
+			<script>
+				(function() {
+					var t = localStorage.getItem("theme");
+					if (t) document.documentElement.setAttribute("data-theme", t);
+				})();
+			</script>
 			<div id="error-status"></div>
 			@menuContent
 			<!-- Main Content -->
 			<main class="flex-1 p-4">
 				@Layout(layoutContent)
 			</main>
+			@settingsModal()
 		</body>
 	</html>
 }
@@ -63,5 +70,56 @@ templ header(csrfToken string, devMode bool) {
 templ Layout(content templ.Component) {
 	<div id="base-content">
 		@content
+	</div>
+}
+
+// daisyThemes is the list of available DaisyUI themes for the picker.
+var daisyThemes = []string{
+	"light", "dark", "cupcake", "emerald", "corporate", "synthwave",
+	"retro", "cyberpunk", "valentine", "garden", "forest", "lofi",
+	"pastel", "fantasy", "wireframe", "luxury", "dracula", "cmyk",
+	"autumn", "business", "acid", "lemonade", "night", "coffee",
+	"winter", "dim", "nord", "sunset", "caramellatte", "abyss", "silk",
+}
+
+// settingsModal renders a glass-effect modal with the DaisyUI theme picker.
+templ settingsModal() {
+	<div
+		id="settings-modal"
+		class="hidden fixed inset-0 z-50 flex items-center justify-center bg-base-content/30 backdrop-blur-sm"
+		_="on click if target is me add .hidden to me"
+	>
+		<div class="glass rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+			<div class="flex items-center justify-between mb-4">
+				<h3 class="font-bold text-lg">Settings</h3>
+				<button
+					class="btn btn-ghost btn-sm btn-circle"
+					_="on click add .hidden to #settings-modal"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+				</button>
+			</div>
+			<div class="form-control mb-2">
+				<label class="label">
+					<span class="label-text font-medium">Theme</span>
+				</label>
+				<div class="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
+					for _, theme := range daisyThemes {
+						<button
+							data-theme={ theme }
+							class="btn btn-sm justify-start gap-2 border border-base-content/10"
+							_={ "on click set document.documentElement.dataset.theme to '" + theme + "' then call localStorage.setItem('theme', '" + theme + "') then add .hidden to #settings-modal" }
+						>
+							<span class="flex gap-0.5">
+								<span class="w-2 h-4 rounded-sm bg-primary"></span>
+								<span class="w-2 h-4 rounded-sm bg-secondary"></span>
+								<span class="w-2 h-4 rounded-sm bg-accent"></span>
+							</span>
+							<span class="text-xs capitalize">{ theme }</span>
+						</button>
+					}
+				</div>
+			</div>
+		</div>
 	</div>
 }

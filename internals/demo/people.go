@@ -4,6 +4,7 @@ package demo
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 )
@@ -52,13 +53,12 @@ func (d *DB) ListPeople(ctx context.Context, search, department, sortBy, sortDir
 	var conds []string
 	var args []any
 	if search != "" {
-		conds = append(conds, "(first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)")
-		p := "%" + search + "%"
-		args = append(args, p, p, p)
+		conds = append(conds, "(first_name LIKE @Search OR last_name LIKE @Search OR email LIKE @Search)")
+		args = append(args, sql.Named("Search", "%"+search+"%"))
 	}
 	if department != "" {
-		conds = append(conds, "department = ?")
-		args = append(args, department)
+		conds = append(conds, "department = @Department")
+		args = append(args, sql.Named("Department", department))
 	}
 	where := ""
 	if len(conds) > 0 {
@@ -75,11 +75,11 @@ func (d *DB) ListPeople(ctx context.Context, search, department, sortBy, sortDir
 	}
 	offset := (page - 1) * perPage
 	query := fmt.Sprintf(
-		"SELECT id,first_name,last_name,email,phone,city,state,department,job_title,bio,created_at FROM people %s ORDER BY %s %s LIMIT ? OFFSET ?",
+		"SELECT id,first_name,last_name,email,phone,city,state,department,job_title,bio,created_at FROM people %s ORDER BY %s %s LIMIT @Limit OFFSET @Offset",
 		where, col, sortDir)
 	la := make([]any, len(args), len(args)+2)
 	copy(la, args)
-	la = append(la, perPage, offset)
+	la = append(la, sql.Named("Limit", perPage), sql.Named("Offset", offset))
 
 	rows, err := d.db.QueryContext(ctx, query, la...)
 	if err != nil {
@@ -101,7 +101,7 @@ func (d *DB) ListPeople(ctx context.Context, search, department, sortBy, sortDir
 func (d *DB) GetPerson(ctx context.Context, id int) (Person, error) {
 	var p Person
 	err := d.db.QueryRowContext(ctx,
-		"SELECT id,first_name,last_name,email,phone,city,state,department,job_title,bio,created_at FROM people WHERE id=?", id,
+		"SELECT id,first_name,last_name,email,phone,city,state,department,job_title,bio,created_at FROM people WHERE id = @ID", sql.Named("ID", id),
 	).Scan(&p.ID, &p.FirstName, &p.LastName, &p.Email, &p.Phone, &p.City, &p.State, &p.Department, &p.JobTitle, &p.Bio, &p.CreatedAt)
 	if err != nil {
 		return Person{}, fmt.Errorf("get person %d: %w", id, err)
@@ -110,10 +110,20 @@ func (d *DB) GetPerson(ctx context.Context, id int) (Person, error) {
 }
 
 func (d *DB) UpdatePerson(ctx context.Context, p Person) error {
-	_, err := d.db.ExecContext(ctx,
-		"UPDATE people SET first_name=?,last_name=?,email=?,phone=?,city=?,state=?,department=?,job_title=?,bio=? WHERE id=?",
-		p.FirstName, p.LastName, p.Email, p.Phone, p.City, p.State, p.Department, p.JobTitle, p.Bio, p.ID)
-	return err
+	res, err := d.db.ExecContext(ctx,
+		"UPDATE people SET first_name=@FirstName, last_name=@LastName, email=@Email, phone=@Phone, city=@City, state=@State, department=@Department, job_title=@JobTitle, bio=@Bio WHERE id=@ID",
+		sql.Named("FirstName", p.FirstName), sql.Named("LastName", p.LastName), sql.Named("Email", p.Email), sql.Named("Phone", p.Phone), sql.Named("City", p.City), sql.Named("State", p.State), sql.Named("Department", p.Department), sql.Named("JobTitle", p.JobTitle), sql.Named("Bio", p.Bio), sql.Named("ID", p.ID))
+	if err != nil {
+		return fmt.Errorf("update person %d: %w", p.ID, err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("rows affected: %w", err)
+	}
+	if n == 0 {
+		return fmt.Errorf("update person %d: no rows affected", p.ID)
+	}
+	return nil
 }
 
 func (d *DB) initPeople() error {

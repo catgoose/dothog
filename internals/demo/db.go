@@ -298,8 +298,8 @@ func seedBulk(db *sql.DB, query string, count int, argsFn func(i int) []any) err
 // CreateItem inserts a new item and returns it with the assigned ID.
 func (d *DB) CreateItem(ctx context.Context, item Item) (Item, error) {
 	res, err := d.db.ExecContext(ctx,
-		`INSERT INTO items (name, category, price, stock, active, created_at) VALUES (?, ?, ?, ?, ?, date('now'))`,
-		item.Name, item.Category, item.Price, item.Stock, BoolToInt(item.Active))
+		`INSERT INTO items (name, category, price, stock, active, created_at) VALUES (@Name, @Category, @Price, @Stock, @Active, date('now'))`,
+		sql.Named("Name", item.Name), sql.Named("Category", item.Category), sql.Named("Price", item.Price), sql.Named("Stock", item.Stock), sql.Named("Active", BoolToInt(item.Active)))
 	if err != nil {
 		return Item{}, fmt.Errorf("create item: %w", err)
 	}
@@ -316,7 +316,7 @@ func (d *DB) GetItem(ctx context.Context, id int) (Item, error) {
 	var item Item
 	var activeInt int
 	err := d.db.QueryRowContext(ctx,
-		"SELECT id, name, category, price, stock, active, created_at FROM items WHERE id = ?", id).
+		"SELECT id, name, category, price, stock, active, created_at FROM items WHERE id = @ID", sql.Named("ID", id)).
 		Scan(&item.ID, &item.Name, &item.Category, &item.Price, &item.Stock, &activeInt, &item.CreatedAt)
 	if err != nil {
 		return Item{}, fmt.Errorf("get item %d: %w", id, err)
@@ -327,20 +327,34 @@ func (d *DB) GetItem(ctx context.Context, id int) (Item, error) {
 
 // UpdateItem updates name, category, price, stock, and active for the given item.
 func (d *DB) UpdateItem(ctx context.Context, item Item) error {
-	_, err := d.db.ExecContext(ctx,
-		"UPDATE items SET name=?, category=?, price=?, stock=?, active=? WHERE id=?",
-		item.Name, item.Category, item.Price, item.Stock, BoolToInt(item.Active), item.ID)
+	res, err := d.db.ExecContext(ctx,
+		"UPDATE items SET name=@Name, category=@Category, price=@Price, stock=@Stock, active=@Active WHERE id=@ID",
+		sql.Named("Name", item.Name), sql.Named("Category", item.Category), sql.Named("Price", item.Price), sql.Named("Stock", item.Stock), sql.Named("Active", BoolToInt(item.Active)), sql.Named("ID", item.ID))
 	if err != nil {
 		return fmt.Errorf("update item %d: %w", item.ID, err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("rows affected: %w", err)
+	}
+	if n == 0 {
+		return fmt.Errorf("update item %d: no rows affected", item.ID)
 	}
 	return nil
 }
 
 // DeleteItem deletes an item by ID.
 func (d *DB) DeleteItem(ctx context.Context, id int) error {
-	_, err := d.db.ExecContext(ctx, "DELETE FROM items WHERE id=?", id)
+	res, err := d.db.ExecContext(ctx, "DELETE FROM items WHERE id=@ID", sql.Named("ID", id))
 	if err != nil {
 		return fmt.Errorf("delete item %d: %w", id, err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("rows affected: %w", err)
+	}
+	if n == 0 {
+		return fmt.Errorf("delete item %d: no rows affected", id)
 	}
 	return nil
 }
@@ -361,12 +375,12 @@ func (d *DB) ListItems(ctx context.Context, q, category, active, sortBy, sortDir
 	var args []any
 
 	if q != "" {
-		conditions = append(conditions, "name LIKE ?")
-		args = append(args, "%"+q+"%")
+		conditions = append(conditions, "name LIKE @Search")
+		args = append(args, sql.Named("Search", "%"+q+"%"))
 	}
 	if category != "" {
-		conditions = append(conditions, "category = ?")
-		args = append(args, category)
+		conditions = append(conditions, "category = @Category")
+		args = append(args, sql.Named("Category", category))
 	}
 	if active == "true" {
 		conditions = append(conditions, "active = 1")
@@ -390,12 +404,12 @@ func (d *DB) ListItems(ctx context.Context, q, category, active, sortBy, sortDir
 
 	// col and sortDir are validated against the allowedSort map and "asc"/"desc" check above.
 	query := fmt.Sprintf(
-		"SELECT id, name, category, price, stock, active, created_at FROM items %s ORDER BY %s %s LIMIT ? OFFSET ?",
+		"SELECT id, name, category, price, stock, active, created_at FROM items %s ORDER BY %s %s LIMIT @Limit OFFSET @Offset",
 		where, col, sortDir,
 	)
 	listArgs := make([]any, len(args), len(args)+2)
 	copy(listArgs, args)
-	listArgs = append(listArgs, perPage, offset)
+	listArgs = append(listArgs, sql.Named("Limit", perPage), sql.Named("Offset", offset))
 
 	dbRows, err := d.db.QueryContext(ctx, query, listArgs...)
 	if err != nil {

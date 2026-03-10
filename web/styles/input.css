@@ -5,7 +5,36 @@
 @plugin "daisyui" {
   themes:
     light --default,
-    dark --prefersdark;
+    dark --prefersdark,
+    cupcake,
+    emerald,
+    corporate,
+    synthwave,
+    retro,
+    cyberpunk,
+    valentine,
+    garden,
+    forest,
+    lofi,
+    pastel,
+    fantasy,
+    wireframe,
+    luxury,
+    dracula,
+    cmyk,
+    autumn,
+    business,
+    acid,
+    lemonade,
+    night,
+    coffee,
+    winter,
+    dim,
+    nord,
+    sunset,
+    caramellatte,
+    abyss,
+    silk;
 }
 
 @layer base {

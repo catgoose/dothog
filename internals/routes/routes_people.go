@@ -13,6 +13,7 @@ import (
 	"catgoose/harmony/internals/routes/handler"
 	"catgoose/harmony/internals/routes/hypermedia"
 	"catgoose/harmony/internals/routes/params"
+	"catgoose/harmony/internals/shared"
 	"catgoose/harmony/internals/ssebroker"
 	"catgoose/harmony/web/views"
 
@@ -130,7 +131,7 @@ func (p *peopleRoutes) broadcastPersonUpdate(person demo.Person) {
 	}
 	buf := statsBufPool.Get().(*bytes.Buffer)
 	buf.Reset()
-	if err := views.PersonProfileCardOOB(person).Render(context.Background(), buf); err != nil {
+	if err := views.PersonProfileCardOOB(person).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "broadcast person update"), buf); err != nil {
 		statsBufPool.Put(buf)
 		return
 	}
@@ -142,7 +143,7 @@ func (p *peopleRoutes) broadcastPersonUpdate(person demo.Person) {
 func (p *peopleRoutes) handlePersonSSE(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return err
+		return handler.HandleHypermediaError(c, 400, "Invalid person ID", err)
 	}
 	topic := fmt.Sprintf("%s-%d", ssebroker.TopicPeopleUpdate, id)
 

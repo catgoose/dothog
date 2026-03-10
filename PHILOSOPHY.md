@@ -17,7 +17,7 @@
 
 ## Hypermedia-Driven Architecture
 
-This application is built on the principles of [REST as Roy Fielding defined it](https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm) — not the bastardized "REST API" that the industry settled on, but actual REST: **Representational State Transfer** through hypermedia.
+This application is built on the principles of [REST as Roy Fielding defined it](https://roy.gbiv.com/pubs/dissertation/fielding_dissertation.pdf) — not the bastardized "REST API" that the industry settled on, but actual REST: **Representational State Transfer** through hypermedia. As Fielding himself clarified, [REST APIs must be hypertext-driven](https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven).
 
 The server returns HTML with embedded hypermedia controls that tell the client what actions are available and how to invoke them. The client doesn't need to know anything about the API surface ahead of time. Every transition is discoverable from the current representation. This is HATEOAS (Hypermedia As The Engine Of Application State).
 

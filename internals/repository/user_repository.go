@@ -5,6 +5,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"catgoose/harmony/internals/database/repository"
@@ -30,7 +31,7 @@ func NewUserRepository(repo *repository.RepoManager) UserRepository {
 // CreateOrUpdate creates a new user or updates an existing one based on AzureID
 func (r *userRepository) CreateOrUpdate(ctx context.Context, user *domain.User, tx *sqlx.Tx) error {
 	existing, err := r.getByAzureIDInternal(ctx, user.AzureID, tx)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("failed to check for existing user: %w", err)
 	}
 
@@ -84,7 +85,7 @@ func (r *userRepository) GetByID(ctx context.Context, id int) (*domain.User, err
 	var user domain.User
 	err := r.repo.GetDB().GetContext(ctx, &user, query, sql.Named("ID", id))
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("user not found: %w", err)
 		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
@@ -107,7 +108,7 @@ func (r *userRepository) getByAzureIDInternal(ctx context.Context, azureID strin
 func (r *userRepository) GetByAzureID(ctx context.Context, azureID string) (*domain.User, error) {
 	user, err := r.getByAzureIDInternal(ctx, azureID, nil)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("user not found: %w", err)
 		}
 		return nil, fmt.Errorf("failed to get user by Azure ID: %w", err)

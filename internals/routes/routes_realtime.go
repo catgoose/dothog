@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"catgoose/harmony/internals/routes/handler"
+	"catgoose/harmony/internals/shared"
 	"catgoose/harmony/internals/ssebroker"
 	"catgoose/harmony/web/views"
 
@@ -177,7 +178,7 @@ func (ar *appRoutes) publishSystemStats(broker *ssebroker.SSEBroker) {
 			stats := ssebroker.CollectRuntimeStats(start)
 			buf := statsBufPool.Get().(*bytes.Buffer)
 			buf.Reset()
-			if err := views.SystemStatsOOB(stats).Render(context.Background(), buf); err != nil {
+			if err := views.SystemStatsOOB(stats).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "publish system stats"), buf); err != nil {
 				statsBufPool.Put(buf)
 				continue
 			}
@@ -316,7 +317,7 @@ func (ar *appRoutes) publishMetrics(broker *ssebroker.SSEBroker) {
 
 			buf := statsBufPool.Get().(*bytes.Buffer)
 			buf.Reset()
-			if err := views.MetricsOOB(snap).Render(context.Background(), buf); err != nil {
+			if err := views.MetricsOOB(snap).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "publish metrics"), buf); err != nil {
 				statsBufPool.Put(buf)
 				continue
 			}
@@ -379,7 +380,7 @@ func (ar *appRoutes) publishServices(broker *ssebroker.SSEBroker) {
 
 			buf := statsBufPool.Get().(*bytes.Buffer)
 			buf.Reset()
-			if err := views.ServicesOOB(services).Render(context.Background(), buf); err != nil {
+			if err := views.ServicesOOB(services).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "publish services"), buf); err != nil {
 				statsBufPool.Put(buf)
 				continue
 			}
@@ -446,7 +447,7 @@ func (ar *appRoutes) publishEvents(broker *ssebroker.SSEBroker) {
 
 			buf := statsBufPool.Get().(*bytes.Buffer)
 			buf.Reset()
-			if err := views.EventOOB(evt).Render(context.Background(), buf); err != nil {
+			if err := views.EventOOB(evt).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "publish events"), buf); err != nil {
 				statsBufPool.Put(buf)
 				continue
 			}

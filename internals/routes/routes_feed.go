@@ -13,6 +13,7 @@ import (
 
 	"catgoose/harmony/internals/demo"
 	"catgoose/harmony/internals/routes/handler"
+	"catgoose/harmony/internals/shared"
 	"catgoose/harmony/internals/ssebroker"
 	"catgoose/harmony/web/views"
 
@@ -103,7 +104,7 @@ func BroadcastActivity(broker *ssebroker.SSEBroker, e demo.ActivityEvent) {
 	}
 	buf := statsBufPool.Get().(*bytes.Buffer)
 	buf.Reset()
-	if err := views.FeedItemOOB(e).Render(context.Background(), buf); err != nil {
+	if err := views.FeedItemOOB(e).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "broadcast activity"), buf); err != nil {
 		statsBufPool.Put(buf)
 		return
 	}
