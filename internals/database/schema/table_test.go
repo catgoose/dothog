@@ -412,6 +412,45 @@ func TestTableDef_WithReplacement(t *testing.T) {
 	assert.Contains(t, stmts[0], "ReplacedByID INTEGER")
 }
 
+func TestTableDef_WithSeedRows(t *testing.T) {
+	td := NewConfigTable("Settings", "Key", "Value").
+		WithSeedRows(
+			SeedRow{"Key": "'app.name'", "Value": "'My App'"},
+			SeedRow{"Key": "'app.version'", "Value": "'1.0.0'"},
+		)
+
+	assert.True(t, td.HasSeedData())
+	assert.Len(t, td.SeedRows(), 2)
+
+	stmts := td.SeedSQL()
+	require.Len(t, stmts, 2)
+	assert.Contains(t, stmts[0], "INSERT OR IGNORE INTO Settings")
+	assert.Contains(t, stmts[0], "'app.name'")
+	assert.Contains(t, stmts[0], "'My App'")
+	assert.Contains(t, stmts[1], "'app.version'")
+	assert.Contains(t, stmts[1], "'1.0.0'")
+}
+
+func TestTableDef_WithSeedRows_NullDefaults(t *testing.T) {
+	td := NewLookupTable("Tags", "Type", "Label").
+		WithSeedRows(
+			SeedRow{"Type": "'color'", "Label": "'Red'"},
+			SeedRow{"Type": "'color'"}, // Label not specified -> NULL
+		)
+
+	stmts := td.SeedSQL()
+	require.Len(t, stmts, 2)
+	assert.Contains(t, stmts[0], "'Red'")
+	assert.Contains(t, stmts[1], "NULL")
+}
+
+func TestTableDef_NoSeedData(t *testing.T) {
+	td := NewTable("Test").Columns(AutoIncrCol("ID"))
+
+	assert.False(t, td.HasSeedData())
+	assert.Nil(t, td.SeedSQL())
+}
+
 func TestTableDef_ArchiveWithReplacement(t *testing.T) {
 	td := NewTable("Versioned").
 		Columns(

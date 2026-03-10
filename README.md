@@ -18,6 +18,8 @@
     - [Domain Structs](#domain-structs)
     - [Repository Helpers](#repository-helpers)
     - [Where Builder](#where-builder)
+    - [Select Builder](#select-builder)
+    - [Seed Data](#seed-data)
     - [Schema Lifecycle](#schema-lifecycle)
   - [Quick Start](#quick-start)
     - [From Release Binary](#from-release-binary)
@@ -320,9 +322,47 @@ w := repository.NewWhere().
 	ReplacedBy(99)       // ReplacedByID = @ReplacedByID
 ```
 
+### Select Builder
+
+Fluent query builder that composes SELECT + WHERE + ORDER BY + pagination:
+
+```go
+w := repository.NewWhere().
+	NotDeleted().
+	HasStatus("active")
+
+// Build the full query
+query, args := repository.NewSelect("Tasks", "ID", "Title", "Status").
+	Where(w).
+	OrderBy("CreatedAt DESC").
+	Paginate(25, 0).
+	WithDialect(d).
+	Build()
+
+// Build a matching COUNT query (same WHERE, no ORDER BY/LIMIT)
+countQuery, countArgs := repository.NewSelect("Tasks", "ID", "Title", "Status").
+	Where(w).
+	CountQuery()
+```
+
+### Seed Data
+
+Declare initial rows as part of schema definition. Seed is idempotent (`INSERT OR IGNORE`):
+
+```go
+settings := NewConfigTable("Settings", "Key", "Value").
+	WithSeedRows(
+		schema.SeedRow{"Key": "'app.name'", "Value": "'My App'"},
+		schema.SeedRow{"Key": "'app.theme'", "Value": "'dark'"},
+	)
+
+// Run seed data on startup (safe to run repeatedly)
+repoManager.SeedSchema(ctx)
+```
+
 ### Schema Lifecycle
 
-Three stages for managing schemas at different points in the application lifecycle:
+Four stages for managing schemas at different points in the application lifecycle:
 
 ```go
 repoManager := repository.NewManager(db, dialect, usersTable, tasksTable, ...)
@@ -333,9 +373,12 @@ repoManager.InitSchema(ctx)
 // Production startup: create missing tables/indexes (additive, non-destructive)
 repoManager.EnsureSchema(ctx)
 
+// Production startup: insert seed data (idempotent)
+repoManager.SeedSchema(ctx)
+
 // Production health check: validate all registered tables exist with expected columns
 if err := repoManager.ValidateSchema(ctx); err != nil {
-    log.Fatal("schema validation failed", "error", err)
+	log.Fatal("schema validation failed", "error", err)
 }
 ```
 
@@ -343,6 +386,7 @@ if err := repoManager.ValidateSchema(ctx); err != nil {
 | ---------------- | ------------------- | ----------------------------------------------------------- |
 | `InitSchema`     | Development / tests | Drops and recreates all registered tables                   |
 | `EnsureSchema`   | Production startup  | `CREATE TABLE IF NOT EXISTS` + `CREATE INDEX IF NOT EXISTS` |
+| `SeedSchema`     | Production startup  | `INSERT OR IGNORE` for declared seed rows                   |
 | `ValidateSchema` | Production startup  | Read-only check that tables and columns exist               |
 
 ## Quick Start

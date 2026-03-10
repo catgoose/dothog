@@ -17,12 +17,16 @@ func (uc UniqueConstraint) ddl() string {
 	return fmt.Sprintf("UNIQUE (%s)", strings.Join(uc.columns, ", "))
 }
 
+// SeedRow represents a row of seed data as column name → value pairs.
+type SeedRow map[string]string
+
 // TableDef defines a table schema.
 type TableDef struct {
 	Name              string
 	cols              []ColumnDef
 	indexes           []IndexDef
 	uniqueConstraints []UniqueConstraint
+	seedRows          []SeedRow
 	hasSoftDelete     bool
 	hasVersion        bool
 	hasExpiry         bool
@@ -126,6 +130,51 @@ func (t *TableDef) UniqueColumns(columns ...string) *TableDef {
 func (t *TableDef) Indexes(indexes ...IndexDef) *TableDef {
 	t.indexes = append(t.indexes, indexes...)
 	return t
+}
+
+// WithSeedRows declares initial seed data for the table.
+// Each SeedRow maps column names to literal SQL values (strings should be single-quoted).
+func (t *TableDef) WithSeedRows(rows ...SeedRow) *TableDef {
+	t.seedRows = append(t.seedRows, rows...)
+	return t
+}
+
+// SeedRows returns the declared seed data.
+func (t *TableDef) SeedRows() []SeedRow {
+	return t.seedRows
+}
+
+// HasSeedData reports whether any seed rows have been declared.
+func (t *TableDef) HasSeedData() bool {
+	return len(t.seedRows) > 0
+}
+
+// SeedSQL returns INSERT statements for all seed rows using the table's insert columns.
+// Values are inserted using INSERT OR IGNORE (SQLite) / IF NOT EXISTS style to be idempotent.
+func (t *TableDef) SeedSQL() []string {
+	if len(t.seedRows) == 0 {
+		return nil
+	}
+
+	insertCols := t.InsertColumns()
+	var stmts []string
+	for _, row := range t.seedRows {
+		var vals []string
+		for _, col := range insertCols {
+			if v, ok := row[col]; ok {
+				vals = append(vals, v)
+			} else {
+				vals = append(vals, "NULL")
+			}
+		}
+		stmt := fmt.Sprintf("INSERT OR IGNORE INTO %s (%s) VALUES (%s)",
+			t.Name,
+			strings.Join(insertCols, ", "),
+			strings.Join(vals, ", "),
+		)
+		stmts = append(stmts, stmt)
+	}
+	return stmts
 }
 
 // SelectColumns returns all column names.

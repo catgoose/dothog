@@ -126,6 +126,27 @@ func (r *RepoManager) EnsureSchema(ctx context.Context) error {
 	return nil
 }
 
+// SeedSchema inserts seed data declared on registered tables via WithSeedRows.
+// Uses INSERT OR IGNORE to be idempotent — safe to run on every startup.
+func (r *RepoManager) SeedSchema(ctx context.Context) error {
+	log := logger.WithContext(ctx)
+
+	seeded := 0
+	for _, td := range r.tables {
+		for _, stmt := range td.SeedSQL() {
+			if _, err := r.db.ExecContext(ctx, stmt); err != nil {
+				return fmt.Errorf("failed to seed %s: %w", td.Name, err)
+			}
+			seeded++
+		}
+	}
+
+	if seeded > 0 {
+		log.Info("Seed data applied", "rows", seeded)
+	}
+	return nil
+}
+
 // SchemaError describes a single schema validation failure.
 type SchemaError struct {
 	Table   string
