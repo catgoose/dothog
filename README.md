@@ -37,7 +37,7 @@
   - [Mage Targets](#mage-targets)
   <!--toc:end-->
 
-A demonstration of building modern, interactive web applications with Go and HTMX. The app runs as a single binary with all assets embedded -- no external dependencies or configuration required.
+A demonstration of building modern, interactive web applications with Go and HTMX. Harmony runs as a single binary with all assets embedded -- no external dependencies or configuration required.
 
 See [PHILOSOPHY.md](PHILOSOPHY.md) for the architectural principles driving this project.
 
@@ -94,7 +94,7 @@ See [Hypermedia Patterns](#hypermedia-patterns) for details on each.
 
 ## Hypermedia Patterns
 
-This demo implements [HATEOAS](https://htmx.org/essays/hateoas/) -- the server drives application state by embedding hypermedia controls directly in responses. The client never hardcodes URLs or action logic; it follows the affordances the server provides.
+Harmony implements [HATEOAS](https://htmx.org/essays/hateoas/) -- the server drives application state by embedding hypermedia controls directly in responses. The client never hardcodes URLs or action logic; it follows the affordances the server provides.
 
 ### HATEOAS Error Recovery
 
@@ -424,7 +424,7 @@ chmod +x harmony-linux-amd64
 harmony-windows-amd64.exe
 ```
 
-The app starts on `http://localhost:8080` by default. Override the port with:
+Harmony starts on `http://localhost:8080` by default. Override the port with:
 
 ```bash
 SERVER_LISTEN_PORT=3000 ./harmony-linux-amd64
@@ -482,7 +482,7 @@ harmony/
 
 ## Template Setup
 
-This repo doubles as a template for new Go + HTMX projects. Run `mage setup` to customize the module path, ports, and features for your own app.
+Harmony doubles as a template for new Go + HTMX projects. Run `mage setup` to customize the module path, ports, and features for your own app.
 
 ### Interactive Setup (with gum)
 
@@ -498,7 +498,7 @@ The wizard walks you through:
 1. **Copy to new directory** -- Optionally copy the template to a new location and run `git init`
 2. **App name** -- Human-readable name (e.g. "My App"), used to derive the binary name
 3. **Module path** -- Go module path (e.g. `github.com/you/my-app`)
-4. **Base port** -- 5-digit port number; the app uses `BASE_PORT`, templ proxy uses `BASE_PORT+1`, Caddy uses `BASE_PORT+2`
+4. **Base port** -- 5-digit port number; Harmony uses `BASE_PORT`, templ proxy uses `BASE_PORT+1`, Caddy uses `BASE_PORT+2`
 5. **Feature selection** -- Multi-select which features to include:
 
 | Feature          | Description                                           | Default    |
@@ -550,11 +550,11 @@ npm ci
 go tool mage watch
 ```
 
-The dev server starts with TLS on the configured port. Edit `.env.development` to change settings.
+Harmony starts with TLS on the configured port. Edit `.env.development` to change settings.
 
 ### HTTPS Development Setup
 
-The dev server uses TLS with self-signed certificates. Generate them with:
+Harmony uses TLS with self-signed certificates in development. Generate them with:
 
 ```bash
 openssl req -x509 -newkey rsa:2048 -keyout localhost.key -out localhost.crt \
