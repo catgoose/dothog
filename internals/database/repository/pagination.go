@@ -118,7 +118,9 @@ func ExecutePaginatedQuery[T any](
 	paginationClause := BuildPaginationClause(d)
 
 	// Add pagination parameters to args
-	paginatedArgs := append(args, sql.Named("Offset", pagination.Offset), sql.Named("Limit", pagination.Limit))
+	paginatedArgs := make([]any, len(args), len(args)+2)
+	copy(paginatedArgs, args)
+	paginatedArgs = append(paginatedArgs, sql.Named("Offset", pagination.Offset), sql.Named("Limit", pagination.Limit))
 
 	// Execute select query with pagination
 	var data []T

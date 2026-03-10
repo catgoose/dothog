@@ -27,7 +27,7 @@ func BuildSearchPattern(search string) string {
 }
 
 // BuildSearchCondition builds a search condition for WHERE clauses
-// Returns: "(@Search = ” OR field1 LIKE @SearchPattern OR field2 LIKE @SearchPattern)"
+// Returns: “(field1 LIKE @SearchPattern OR field2 LIKE @SearchPattern)”
 func BuildSearchCondition(search, searchPattern string, fields ...string) string {
 	if len(fields) == 0 {
 		return "1=1" // No fields to search, return always true condition
@@ -42,7 +42,7 @@ func BuildSearchCondition(search, searchPattern string, fields ...string) string
 		conditions = append(conditions, fmt.Sprintf("%s LIKE @SearchPattern", field))
 	}
 
-	return fmt.Sprintf("(@Search = '' OR %s)", strings.Join(conditions, " OR "))
+	return "(" + strings.Join(conditions, " OR ") + ")"
 }
 
 // BuildOrderByClause builds an ORDER BY clause from a sort string

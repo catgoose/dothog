@@ -84,7 +84,10 @@ func (r *repositoryRoutes) handleCreateTask(c echo.Context) error {
 }
 
 func (r *repositoryRoutes) handleTaskRow(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
+	}
 	task, err := r.store.GetTask(c.Request().Context(), id)
 	if err != nil {
 		return handler.HandleHypermediaError(c, 404, "Task not found", err)
@@ -93,7 +96,10 @@ func (r *repositoryRoutes) handleTaskRow(c echo.Context) error {
 }
 
 func (r *repositoryRoutes) handleEditTaskForm(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
+	}
 	task, err := r.store.GetTask(c.Request().Context(), id)
 	if err != nil {
 		return handler.HandleHypermediaError(c, 404, "Task not found", err)
@@ -108,7 +114,10 @@ func (r *repositoryRoutes) handleEditTaskForm(c echo.Context) error {
 }
 
 func (r *repositoryRoutes) handleUpdateTask(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
+	}
 	existing, err := r.store.GetTask(c.Request().Context(), id)
 	if err != nil {
 		return handler.HandleHypermediaError(c, 404, "Task not found", err)
@@ -132,7 +141,10 @@ func (r *repositoryRoutes) handleUpdateTask(c echo.Context) error {
 }
 
 func (r *repositoryRoutes) handleDeleteTask(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
+	}
 	if err := r.store.SoftDeleteTask(c.Request().Context(), id); err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to delete task", err)
 	}
@@ -146,7 +158,10 @@ func (r *repositoryRoutes) handleDeleteTask(c echo.Context) error {
 }
 
 func (r *repositoryRoutes) handleRestoreTask(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
+	}
 	if err := r.store.RestoreTask(c.Request().Context(), id); err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to restore task", err)
 	}
@@ -160,7 +175,10 @@ func (r *repositoryRoutes) handleRestoreTask(c echo.Context) error {
 }
 
 func (r *repositoryRoutes) handleArchiveTask(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
+	}
 	if err := r.store.ArchiveTask(c.Request().Context(), id); err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to archive task", err)
 	}
@@ -174,7 +192,10 @@ func (r *repositoryRoutes) handleArchiveTask(c echo.Context) error {
 }
 
 func (r *repositoryRoutes) handleUnarchiveTask(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
+	}
 	if err := r.store.UnarchiveTask(c.Request().Context(), id); err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to unarchive task", err)
 	}

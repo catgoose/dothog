@@ -42,11 +42,8 @@ func TestNamedArgs(t *testing.T) {
 		"Email": "alice@example.com",
 	})
 	assert.Len(t, args, 2)
-	for _, a := range args {
-		na, ok := a.(sql.NamedArg)
-		assert.True(t, ok)
-		assert.NotEmpty(t, na.Name)
-	}
+	assert.Equal(t, sql.NamedArg{Name: "Email", Value: "alice@example.com"}, args[0])
+	assert.Equal(t, sql.NamedArg{Name: "Name", Value: "Alice"}, args[1])
 }
 
 func TestNamedArgs_Empty(t *testing.T) {

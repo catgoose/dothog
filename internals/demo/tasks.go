@@ -148,10 +148,10 @@ func (s *TaskStore) ListTasks(ctx context.Context, search, status, showArchived,
 // GetTask returns a single task by ID.
 func (s *TaskStore) GetTask(ctx context.Context, id int) (Task, error) {
 	cols := dbrepo.Columns(TasksTable.SelectColumns()...)
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE ID = ?", cols, TasksTable.Name)
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE ID = @ID", cols, TasksTable.Name)
 
 	var t Task
-	err := s.db.QueryRowContext(ctx, query, id).Scan(
+	err := s.db.QueryRowContext(ctx, query, sql.Named("ID", id)).Scan(
 		&t.ID, &t.Title, &t.Description,
 		&t.Status, &t.SortOrder, &t.Version, &t.Notes,
 		&t.ArchivedAt, &t.ReplacedBy,
@@ -190,7 +190,10 @@ func (s *TaskStore) CreateTask(ctx context.Context, t *Task) error {
 	if err != nil {
 		return fmt.Errorf("create task: %w", err)
 	}
-	id, _ := res.LastInsertId()
+	id, err := res.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("create task: last insert id: %w", err)
+	}
 	t.ID = int(id)
 	return nil
 }
@@ -201,7 +204,7 @@ func (s *TaskStore) UpdateTask(ctx context.Context, t *Task) error {
 	dbrepo.IncrementVersion(&t.Version)
 
 	updateCols := TasksTable.UpdateColumns()
-	query := fmt.Sprintf("UPDATE %s SET %s WHERE ID = ? AND Version = ?",
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE ID = @ID AND Version = @PrevVersion",
 		TasksTable.Name,
 		dbrepo.SetClause(updateCols...),
 	)
@@ -217,7 +220,7 @@ func (s *TaskStore) UpdateTask(ctx context.Context, t *Task) error {
 		sql.Named("ReplacedByID", t.ReplacedBy),
 		sql.Named("UpdatedAt", t.UpdatedAt),
 		sql.Named("DeletedAt", t.DeletedAt),
-		t.ID, t.Version-1, // optimistic lock: WHERE Version = previous version
+		sql.Named("ID", t.ID), sql.Named("PrevVersion", t.Version-1),
 	)
 	if err != nil {
 		return fmt.Errorf("update task %d: %w", t.ID, err)
@@ -229,51 +232,53 @@ func (s *TaskStore) UpdateTask(ctx context.Context, t *Task) error {
 	return nil
 }
 
+func (s *TaskStore) execUpdate(ctx context.Context, op string, id int, query string, args ...any) error {
+	res, err := s.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("%s task %d: %w", op, id, err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%s task %d: rows affected: %w", op, id, err)
+	}
+	if n == 0 {
+		return fmt.Errorf("%s task %d: not found", op, id)
+	}
+	return nil
+}
+
 // SoftDeleteTask marks a task as deleted using SetSoftDelete.
 func (s *TaskStore) SoftDeleteTask(ctx context.Context, id int) error {
-	t, err := s.GetTask(ctx, id)
-	if err != nil {
-		return err
-	}
-	deletedAt := t.DeletedAt.Time
-	dbrepo.SetSoftDelete(&deletedAt)
-	_, err = s.db.ExecContext(ctx,
-		fmt.Sprintf("UPDATE %s SET DeletedAt = ?, UpdatedAt = ? WHERE ID = ?", TasksTable.Name),
-		deletedAt, dbrepo.GetNow(), id,
+	now := dbrepo.GetNow()
+	return s.execUpdate(ctx, "soft delete", id,
+		fmt.Sprintf("UPDATE %s SET DeletedAt = @DeletedAt, UpdatedAt = @UpdatedAt WHERE ID = @ID", TasksTable.Name),
+		sql.Named("DeletedAt", now), sql.Named("UpdatedAt", now), sql.Named("ID", id),
 	)
-	return err
 }
 
 // RestoreTask clears the DeletedAt timestamp.
 func (s *TaskStore) RestoreTask(ctx context.Context, id int) error {
-	_, err := s.db.ExecContext(ctx,
-		fmt.Sprintf("UPDATE %s SET DeletedAt = NULL, UpdatedAt = ? WHERE ID = ?", TasksTable.Name),
-		dbrepo.GetNow(), id,
+	return s.execUpdate(ctx, "restore", id,
+		fmt.Sprintf("UPDATE %s SET DeletedAt = NULL, UpdatedAt = @UpdatedAt WHERE ID = @ID", TasksTable.Name),
+		sql.Named("UpdatedAt", dbrepo.GetNow()), sql.Named("ID", id),
 	)
-	return err
 }
 
 // ArchiveTask sets ArchivedAt using the archive helper.
 func (s *TaskStore) ArchiveTask(ctx context.Context, id int) error {
 	now := dbrepo.GetNow()
-	archivedAt := now
-	dbrepo.SetArchive(&archivedAt)
-	_, err := s.db.ExecContext(ctx,
-		fmt.Sprintf("UPDATE %s SET ArchivedAt = ?, UpdatedAt = ? WHERE ID = ?", TasksTable.Name),
-		archivedAt, now, id,
+	return s.execUpdate(ctx, "archive", id,
+		fmt.Sprintf("UPDATE %s SET ArchivedAt = @ArchivedAt, UpdatedAt = @UpdatedAt WHERE ID = @ID", TasksTable.Name),
+		sql.Named("ArchivedAt", now), sql.Named("UpdatedAt", now), sql.Named("ID", id),
 	)
-	return err
 }
 
 // UnarchiveTask clears ArchivedAt using ClearArchive.
 func (s *TaskStore) UnarchiveTask(ctx context.Context, id int) error {
-	var archivedAt time.Time
-	dbrepo.ClearArchive(&archivedAt)
-	_, err := s.db.ExecContext(ctx,
-		fmt.Sprintf("UPDATE %s SET ArchivedAt = NULL, UpdatedAt = ? WHERE ID = ?", TasksTable.Name),
-		dbrepo.GetNow(), id,
+	return s.execUpdate(ctx, "unarchive", id,
+		fmt.Sprintf("UPDATE %s SET ArchivedAt = NULL, UpdatedAt = @UpdatedAt WHERE ID = @ID", TasksTable.Name),
+		sql.Named("UpdatedAt", dbrepo.GetNow()), sql.Named("ID", id),
 	)
-	return err
 }
 
 // initTasks creates the tasks table and seeds it if empty.

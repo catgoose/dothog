@@ -35,10 +35,7 @@ func TestBuildSearchCondition_EmptySearch(t *testing.T) {
 
 func TestBuildSearchCondition_WithFields(t *testing.T) {
 	cond := BuildSearchCondition("foo", "%foo%", "Name", "Email")
-	assert.Contains(t, cond, "Name LIKE @SearchPattern")
-	assert.Contains(t, cond, "Email LIKE @SearchPattern")
-	assert.Contains(t, cond, "@Search = ''")
-	assert.Contains(t, cond, " OR ")
+	assert.Equal(t, "(Name LIKE @SearchPattern OR Email LIKE @SearchPattern)", cond)
 }
 
 func TestBuildOrderByClause_EmptySortStr_WithDefault(t *testing.T) {

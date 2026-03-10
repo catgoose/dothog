@@ -14,6 +14,9 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// ErrUserNotFound is returned when a user cannot be found.
+var ErrUserNotFound = fmt.Errorf("user not found")
+
 // userRepository implements UserRepository
 type userRepository struct {
 	repo *repository.RepoManager
@@ -26,7 +29,7 @@ func NewUserRepository(repo *repository.RepoManager) UserRepository {
 
 // CreateOrUpdate creates a new user or updates an existing one based on AzureID
 func (r *userRepository) CreateOrUpdate(ctx context.Context, user *domain.User, tx *sqlx.Tx) error {
-	existing, err := r.getByAzureIDInternal(ctx, user.AzureID)
+	existing, err := r.getByAzureIDInternal(ctx, user.AzureID, tx)
 	if err != nil && err != sql.ErrNoRows {
 		return fmt.Errorf("failed to check for existing user: %w", err)
 	}
@@ -90,10 +93,10 @@ func (r *userRepository) GetByID(ctx context.Context, id int) (*domain.User, err
 }
 
 // getByAzureIDInternal retrieves a user by their Azure ID (internal method that returns sql.ErrNoRows)
-func (r *userRepository) getByAzureIDInternal(ctx context.Context, azureID string) (*domain.User, error) {
+func (r *userRepository) getByAzureIDInternal(ctx context.Context, azureID string, tx *sqlx.Tx) (*domain.User, error) {
 	query := `SELECT * FROM Users WHERE AzureId = @AzureId`
 	var user domain.User
-	err := r.repo.GetDB().GetContext(ctx, &user, query, sql.Named("AzureId", azureID))
+	err := r.repo.Exec(tx).GetContext(ctx, &user, query, sql.Named("AzureId", azureID))
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +105,7 @@ func (r *userRepository) getByAzureIDInternal(ctx context.Context, azureID strin
 
 // GetByAzureID retrieves a user by their Azure ID
 func (r *userRepository) GetByAzureID(ctx context.Context, azureID string) (*domain.User, error) {
-	user, err := r.getByAzureIDInternal(ctx, azureID)
+	user, err := r.getByAzureIDInternal(ctx, azureID, nil)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("user not found: %w", err)
@@ -150,7 +153,7 @@ func (r *userRepository) Update(ctx context.Context, user *domain.User, tx *sqlx
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("user not found")
+		return ErrUserNotFound
 	}
 
 	return nil
@@ -184,7 +187,7 @@ func (r *userRepository) UpdateLastLogin(ctx context.Context, id int, tx *sqlx.T
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("user not found")
+		return ErrUserNotFound
 	}
 
 	return nil

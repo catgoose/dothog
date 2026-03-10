@@ -5,6 +5,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -49,9 +50,14 @@ func InsertInto(table string, cols ...string) string {
 // NamedArgs converts a map to a slice of sql.NamedArg values suitable for
 // passing to database/sql query methods.
 func NamedArgs(m map[string]any) []any {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 	args := make([]any, 0, len(m))
-	for k, v := range m {
-		args = append(args, sql.Named(k, v))
+	for _, k := range keys {
+		args = append(args, sql.Named(k, m[k]))
 	}
 	return args
 }
