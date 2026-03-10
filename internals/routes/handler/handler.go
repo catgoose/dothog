@@ -98,10 +98,39 @@ func HandleError(c echo.Context, statusCode int, message string, err error) erro
 
 // HandleHypermediaError is a convenience wrapper that builds an HTTPError
 // from handler arguments and returns it for the middleware to render.
-// Equivalent to: return hypermedia.NewHTTPError(middleware.HypermediaError(c, ...))
+// When no controls are supplied, sensible defaults are provided based on the
+// status code so that every error response is a navigable hypermedia state.
 func HandleHypermediaError(c echo.Context, statusCode int, message string, err error, controls ...hypermedia.Control) error {
+	if len(controls) == 0 {
+		controls = defaultControls(statusCode)
+	}
 	ec := middleware.HypermediaError(c, statusCode, message, err, controls...)
 	return hypermedia.NewHTTPError(ec)
+}
+
+// defaultControls returns recovery controls appropriate for the given HTTP status code.
+func defaultControls(statusCode int) []hypermedia.Control {
+	back := hypermedia.BackButton(hypermedia.LabelGoBack)
+	home := hypermedia.GoHomeButton(hypermedia.LabelGoHome, "/", hypermedia.TargetBody)
+	dismiss := hypermedia.DismissButton(hypermedia.LabelDismiss)
+
+	switch {
+	case statusCode == http.StatusBadRequest || statusCode == http.StatusUnprocessableEntity:
+		return []hypermedia.Control{dismiss}
+	case statusCode == http.StatusNotFound:
+		return []hypermedia.Control{back, home}
+	case statusCode == http.StatusUnauthorized:
+		return []hypermedia.Control{
+			hypermedia.RedirectLink(hypermedia.LabelLogIn, "/login"),
+			home,
+		}
+	case statusCode == http.StatusForbidden:
+		return []hypermedia.Control{back, home}
+	case statusCode >= 500:
+		return []hypermedia.Control{dismiss, home}
+	default:
+		return []hypermedia.Control{dismiss}
+	}
 }
 
 // HandleComponent is a handler that renders a templ component

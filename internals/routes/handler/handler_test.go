@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"catgoose/harmony/internals/logger"
+	"catgoose/harmony/internals/routes/hypermedia"
 	"catgoose/harmony/internals/routes/middleware"
 
 	"github.com/a-h/templ"
@@ -89,6 +90,49 @@ func TestHandleError_ContextCanceled_NoOp(t *testing.T) {
 	err := HandleError(c, http.StatusInternalServerError, "ignored", errors.New("test"))
 	require.NoError(t, err)
 	assert.Empty(t, rec.Body.String())
+}
+
+func TestDefaultControls_BadRequest(t *testing.T) {
+	controls := defaultControls(http.StatusBadRequest)
+	require.Len(t, controls, 1)
+	assert.Equal(t, hypermedia.ControlKindDismiss, controls[0].Kind)
+}
+
+func TestDefaultControls_NotFound(t *testing.T) {
+	controls := defaultControls(http.StatusNotFound)
+	require.Len(t, controls, 2)
+	assert.Equal(t, hypermedia.ControlKindBack, controls[0].Kind)
+	assert.Equal(t, hypermedia.ControlKindHTMX, controls[1].Kind)
+}
+
+func TestDefaultControls_Unauthorized(t *testing.T) {
+	controls := defaultControls(http.StatusUnauthorized)
+	require.Len(t, controls, 2)
+	assert.Equal(t, hypermedia.ControlKindLink, controls[0].Kind)
+	assert.Equal(t, "/login", controls[0].Href)
+}
+
+func TestDefaultControls_ServerError(t *testing.T) {
+	controls := defaultControls(http.StatusInternalServerError)
+	require.Len(t, controls, 2)
+	assert.Equal(t, hypermedia.ControlKindDismiss, controls[0].Kind)
+	assert.Equal(t, hypermedia.ControlKindHTMX, controls[1].Kind)
+}
+
+func TestDefaultControls_ExplicitControlsOverride(t *testing.T) {
+	c, _ := newEchoContext(http.MethodGet, "/test", nil)
+	e := echo.New()
+	e.Use(middleware.RequestIDMiddleware())
+	c = e.NewContext(c.Request(), c.Response().Writer.(*httptest.ResponseRecorder))
+
+	custom := hypermedia.RetryButton("Try Again", hypermedia.HxMethodGet, "/retry", "#target")
+	err := HandleHypermediaError(c, 500, "fail", errors.New("test"), custom)
+	require.Error(t, err)
+
+	var hhe *hypermedia.HTTPError
+	require.True(t, errors.As(err, &hhe))
+	require.Len(t, hhe.EC.Controls, 1)
+	assert.Equal(t, "Try Again", hhe.EC.Controls[0].Label)
 }
 
 func TestHandleComponent(t *testing.T) {
