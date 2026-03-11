@@ -8,15 +8,8 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 		<body
 			hx-history="false"
 			hx-boost="true"
+			_="on showAlert call alert(event.detail.value or event.detail)"
 		>
-			<script>
-				if (!window._showAlertBound) {
-					window._showAlertBound = true;
-					document.addEventListener("showAlert", function(evt) {
-						alert(evt.detail.value || evt.detail);
-					});
-				}
-			</script>
 			<div id="error-status" class="sticky top-0 z-40"></div>
 			@menuContent
 			<!-- Main Content -->

@@ -26,11 +26,11 @@ func NewUserCache(db *sqlx.DB) *UserCache {
 }
 
 // InsertOrUpdateUsers inserts or updates users in the SQLite database using PascalCase column names
-func (c *UserCache) InsertOrUpdateUsers(users []domain.GraphUser) error {
-	log := logger.WithContext(context.Background())
+func (c *UserCache) InsertOrUpdateUsers(ctx context.Context, users []domain.GraphUser) error {
+	log := logger.WithContext(ctx)
 
 	// Ensure the Users table exists
-	if err := c.EnsureSchema(); err != nil {
+	if err := c.EnsureSchema(ctx); err != nil {
 		return fmt.Errorf("failed to ensure schema: %w", err)
 	}
 
@@ -168,14 +168,14 @@ func (c *UserCache) UsersTableExists() (bool, error) {
 }
 
 // EnsureSchema ensures that the Users table exists in the database
-func (c *UserCache) EnsureSchema() error {
+func (c *UserCache) EnsureSchema(ctx context.Context) error {
 	exists, err := c.UsersTableExists()
 	if err != nil {
 		return fmt.Errorf("failed to check if Users table exists: %w", err)
 	}
 
 	if !exists {
-		log := logger.WithContext(context.Background())
+		log := logger.WithContext(ctx)
 		log.Info("Users table does not exist, creating it")
 
 		usersTableSchema := `
