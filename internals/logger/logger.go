@@ -17,11 +17,23 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+// HandlerWrapper is a function that wraps a slog.Handler (e.g. to add capturing).
+type HandlerWrapper func(slog.Handler) slog.Handler
+
 var (
-	logger *slog.Logger
-	mu     sync.RWMutex
-	once   sync.Once
+	logger         *slog.Logger
+	mu             sync.RWMutex
+	once           sync.Once
+	handlerWrapper HandlerWrapper
 )
+
+// SetHandlerWrapper registers a function that will wrap the slog.Handler
+// during Init. Must be called before Init (or Get).
+func SetHandlerWrapper(w HandlerWrapper) {
+	mu.Lock()
+	defer mu.Unlock()
+	handlerWrapper = w
+}
 
 const appLogFile = "harmony.log"
 
@@ -60,10 +72,13 @@ func Init() {
 			Level:     logLevel,
 			AddSource: dio.Dev(),
 		}
-		handler := slog.NewJSONHandler(logWriter, opts)
+		var handler slog.Handler = slog.NewJSONHandler(logWriter, opts)
+		if handlerWrapper != nil {
+			handler = handlerWrapper(handler)
+		}
 
 		mu.Lock()
-		logger = slog.New(handler)
+		logger = slog.New(handler).With("runtime_id", shared.RuntimeID)
 		mu.Unlock()
 		slog.SetDefault(logger)
 	})

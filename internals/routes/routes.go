@@ -10,12 +10,19 @@ import (
 	"catgoose/harmony/internals/ssebroker"
 	// setup:feature:sse:end
 	// setup:feature:demo:end
+	"catgoose/harmony/internals/requestlog"
 	"catgoose/harmony/internals/routes/handler"
+	"catgoose/harmony/internals/routes/hypermedia"
+	// setup:feature:session_settings:start
+	"catgoose/harmony/internals/repository"
+	// setup:feature:session_settings:end
+	corecomponents "catgoose/harmony/web/components/core"
 	"catgoose/harmony/web/views"
 	"catgoose/harmony/internals/routes/middleware"
 	"context"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"time"
 	// setup:feature:auth:start
@@ -32,15 +39,24 @@ type AppRoutes interface {
 
 // appRoutes implements AppRoutes
 type appRoutes struct {
-	e   *echo.Echo
-	ctx context.Context
+	e            *echo.Echo
+	ctx          context.Context
+	reqLogStore  *requestlog.Store
+	issueReporter IssueReporter
 }
 
-// NewAppRoutes initializes routes
-func NewAppRoutes(ctx context.Context, e *echo.Echo) AppRoutes {
+// NewAppRoutes initializes routes.
+// reqLogStore may be nil if request log capture is disabled.
+// reporter may be nil; a default no-op reporter is used.
+func NewAppRoutes(ctx context.Context, e *echo.Echo, reqLogStore *requestlog.Store, reporter IssueReporter) AppRoutes {
+	if reporter == nil {
+		reporter = defaultReporter{}
+	}
 	return &appRoutes{
-		e:   e,
-		ctx: ctx,
+		e:             e,
+		ctx:           ctx,
+		reqLogStore:   reqLogStore,
+		issueReporter: reporter,
 	}
 }
 
@@ -55,6 +71,36 @@ func (ar *appRoutes) InitRoutes() error {
 		})
 	})
 
+	// Report issue endpoint — accepts a report, passes log entries to the
+	// configured IssueReporter, and triggers a browser alert.
+	reportHandler := func(c echo.Context) error {
+		requestID := c.Param("requestID")
+		description := c.FormValue("description")
+		var entries []requestlog.Entry
+		if ar.reqLogStore != nil && requestID != "" {
+			entries = ar.reqLogStore.Get(requestID)
+		}
+		if err := ar.issueReporter.Report(requestID, description, entries); err != nil {
+			slog.ErrorContext(c.Request().Context(), "Issue report failed",
+				"reported_request_id", requestID, "error", err)
+			c.Response().Header().Set("HX-Trigger", `{"showAlert":"Failed to submit report. Please try again."}`)
+			c.Response().Header().Set("HX-Reswap", "none")
+			return c.String(http.StatusInternalServerError, "")
+		}
+		c.Response().Header().Set("HX-Trigger", `{"showAlert":"Issue reported. Thank you for your feedback!"}`)
+		c.Response().Header().Set("HX-Reswap", "none")
+		return c.String(http.StatusOK, "")
+	}
+	ar.e.POST("/report-issue", reportHandler)
+	ar.e.POST("/report-issue/:requestID", reportHandler)
+
+	// Fetch the Report Issue modal for a request.
+	ar.e.GET("/report-issue/:requestID", func(c echo.Context) error {
+		requestID := c.Param("requestID")
+		cfg := hypermedia.ReportIssueModal(requestID)
+		return handler.RenderComponent(c, corecomponents.ReportIssueModal(cfg))
+	})
+
 	// setup:feature:demo:start
 	ar.initControlsGalleryRoutes()
 	ar.initComponentsRoutes()
@@ -67,6 +113,7 @@ func (ar *appRoutes) InitRoutes() error {
 	broker := ssebroker.NewSSEBroker()
 	// setup:feature:sse:end
 	ar.initHypermediaRoutes()
+	ar.initErrorsRoutes()
 	// setup:feature:sse:start
 	ar.initRealtimeRoutes(broker)
 	// setup:feature:sse:end
@@ -97,7 +144,11 @@ func (ar *appRoutes) InitRoutes() error {
 }
 
 // InitEcho initializes Echo with global configurations
-func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig) (*echo.Echo, error) {
+func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
+	// setup:feature:session_settings:start
+	settingsRepo repository.SessionSettingsRepository,
+	// setup:feature:session_settings:end
+) (*echo.Echo, error) {
 	e := echo.New()
 
 	e.Use(middleware.RequestIDMiddleware())
@@ -133,7 +184,45 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig) (*echo
 
 	e.Use(middleware.ErrorHandlerMiddleware())
 
+	// setup:feature:session_settings:start
+	if settingsRepo != nil {
+		e.Use(middleware.SessionSettingsMiddleware(settingsRepo))
+		e.POST("/settings/theme", handleTheme(settingsRepo))
+	}
+	// setup:feature:session_settings:end
+
 	e.StaticFS("/public", staticFS)
 
 	return e, nil
 }
+
+// setup:feature:session_settings:start
+
+// handleTheme updates the Theme session setting and redirects back.
+func handleTheme(repo repository.SessionSettingsRepository) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		theme := c.FormValue("theme")
+		valid := false
+		for _, t := range views.DaisyThemes {
+			if t == theme {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			theme = "light"
+		}
+		settings := middleware.GetSessionSettings(c)
+		settings.Theme = theme
+		if repo != nil {
+			_ = repo.Upsert(c.Request().Context(), settings)
+		}
+		referer := c.Request().Header.Get("Referer")
+		if referer == "" {
+			referer = "/"
+		}
+		return c.Redirect(http.StatusSeeOther, referer)
+	}
+}
+
+// setup:feature:session_settings:end

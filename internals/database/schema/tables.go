@@ -1,5 +1,17 @@
 package schema
 
+// setup:feature:session_settings:start
+
+var SessionSettingsTable = NewTable("SessionSettings").
+	Columns(
+		AutoIncrCol("Id"),
+		Col("SessionUUID", TypeVarchar(36)).NotNull().Unique(),
+		Col("Theme", TypeString(50)).NotNull().Default("'light'"),
+	).
+	WithTimestamps()
+
+// setup:feature:session_settings:end
+
 var UsersTable = NewTable("Users").
 	Columns(
 		AutoIncrCol("ID"),

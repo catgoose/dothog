@@ -66,7 +66,7 @@ func InitAndSyncUserCache(
 			return fmt.Errorf("failed to fetch users from Azure: %w", err)
 		}
 		log.Info("Successfully fetched users from Azure", "count", len(users))
-		err = userCache.InsertOrUpdateUsers(users)
+		err = userCache.InsertOrUpdateUsers(ctx, users)
 		if err != nil {
 			return fmt.Errorf("failed to insert users into cache: %w", err)
 		}
@@ -84,7 +84,7 @@ func InitAndSyncUserCache(
 		return fmt.Errorf("failed to fetch users during initial sync: %w", err)
 	}
 
-	if err := userCache.InsertOrUpdateUsers(users); err != nil {
+	if err := userCache.InsertOrUpdateUsers(ctx, users); err != nil {
 		return fmt.Errorf("failed to sync users during initial sync: %w", err)
 	}
 	log.Info("Successfully completed initial sync", "user_count", len(users))
@@ -102,7 +102,7 @@ func InitAndSyncUserCache(
 			syncLog.Error("Failed to fetch users during sync", "type", syncType, "error", err)
 			return
 		}
-		if err := userCache.InsertOrUpdateUsers(users); err != nil {
+		if err := userCache.InsertOrUpdateUsers(syncCtx, users); err != nil {
 			syncLog.Error("Failed to sync users during sync", "type", syncType, "error", err)
 			return
 		}

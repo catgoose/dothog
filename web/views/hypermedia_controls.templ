@@ -230,7 +230,6 @@ templ HypermediaControlsPage() {
 							class="btn btn-sm btn-error"
 							hx-post="/hypermedia/controls/errors/transient"
 							hx-target="#transient-result"
-							hx-target-error="#transient-result"
 							hx-swap="innerHTML"
 						>Save Record</button>
 						<div id="transient-result" class="mt-2"></div>
@@ -244,7 +243,6 @@ templ HypermediaControlsPage() {
 						<form
 							hx-post="/hypermedia/controls/errors/validate"
 							hx-target="#validate-result"
-							hx-target-error="#validate-result"
 							hx-swap="innerHTML"
 							class="flex items-end gap-2"
 						>
@@ -270,7 +268,6 @@ templ HypermediaControlsPage() {
 							class="btn btn-sm btn-error"
 							hx-post="/hypermedia/controls/errors/conflict"
 							hx-target="#conflict-result"
-							hx-target-error="#conflict-result"
 							hx-swap="innerHTML"
 						>Create "Widget"</button>
 						<div id="conflict-result" class="mt-2"></div>
@@ -284,7 +281,6 @@ templ HypermediaControlsPage() {
 						<form
 							hx-post="/hypermedia/controls/errors/stale"
 							hx-target="#stale-result"
-							hx-target-error="#stale-result"
 							hx-swap="innerHTML"
 							class="flex items-end gap-2"
 						>
@@ -307,7 +303,6 @@ templ HypermediaControlsPage() {
 							class="btn btn-sm btn-error"
 							hx-delete="/hypermedia/controls/errors/cascade"
 							hx-target="#cascade-result"
-							hx-target-error="#cascade-result"
 							hx-swap="innerHTML"
 						>Delete "Electronics"</button>
 						<div id="cascade-result" class="mt-2"></div>

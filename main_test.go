@@ -35,11 +35,11 @@ func setupAppEcho(t *testing.T) *echo.Echo {
 	require.NotNil(t, cfg)
 
 	ctx := context.Background()
-	e, err := routes.InitEcho(ctx, staticFS, cfg)
+	e, err := routes.InitEcho(ctx, staticFS, cfg, nil)
 	require.NoError(t, err)
 	require.NotNil(t, e)
 
-	ar := routes.NewAppRoutes(ctx, e)
+	ar := routes.NewAppRoutes(ctx, e, nil, nil)
 	require.NoError(t, ar.InitRoutes())
 	return e
 }
@@ -60,7 +60,7 @@ func TestApplicationStartup(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, cfg)
 
-	e, err := routes.InitEcho(context.Background(), staticFS, cfg)
+	e, err := routes.InitEcho(context.Background(), staticFS, cfg, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, e)
 
@@ -70,7 +70,7 @@ func TestApplicationStartup(t *testing.T) {
 	assert.NotNil(t, appCtx)
 
 	// Test routes setup
-	ar := routes.NewAppRoutes(appCtx, e)
+	ar := routes.NewAppRoutes(appCtx, e, nil, nil)
 	assert.NotNil(t, ar)
 
 	err = ar.InitRoutes()
@@ -150,7 +150,7 @@ func TestWorkflowGETRoot(t *testing.T) {
 	e.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Contains(t, rec.Body.String(), "HTMX Go Template")
+	assert.Contains(t, rec.Body.String(), "Harmony")
 }
 
 func TestWorkflowGETHealth(t *testing.T) {
@@ -237,6 +237,6 @@ func BenchmarkServerStartup(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		cfg, _ := config.GetConfig()
-		_, _ = routes.InitEcho(context.Background(), staticFS, cfg)
+		_, _ = routes.InitEcho(context.Background(), staticFS, cfg, nil)
 	}
 }

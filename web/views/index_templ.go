@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 // Root template
-func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool) templ.Component {
+func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -30,7 +30,20 @@ func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" class=\"light\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" data-theme=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 6, Col: 35}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -38,7 +51,7 @@ func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body hx-history=\"false\" hx-boost=\"true\" hx-ext=\"response-targets\" hx-target-error=\"#error-status\"><div id=\"error-status\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<body hx-history=\"false\" hx-boost=\"true\" _=\"on showAlert call alert(event.detail.value or event.detail)\"><div id=\"error-status\" class=\"sticky top-0 z-40\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -46,7 +59,7 @@ func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<!-- Main Content --><main class=\"flex-1 p-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<!-- Main Content --><main class=\"flex-1 p-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -54,7 +67,15 @@ func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</main><div id=\"report-modal-container\"></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = settingsModal(theme).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -79,45 +100,45 @@ func header(csrfToken string, devMode bool) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var2 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var2 == nil {
-			templ_7745c5c3_Var2 = templ.NopComponent
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<head>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<head>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if csrfToken != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<meta name=\"csrf-token\" content=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<meta name=\"csrf-token\" content=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
+			var templ_7745c5c3_Var4 string
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 28, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 29, Col: 46}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><script>\n\t\t\t\t/**\n\t\t\t\t * Attach the CSRF token to every outgoing HTMX request.\n\t\t\t\t * Reads the token from the <meta name=\"csrf-token\"> tag injected\n\t\t\t\t * by the server and sets the X-CSRF-Token header.\n\t\t\t\t * @listens htmx:configRequest\n\t\t\t\t */\n\t\t\t\tdocument.addEventListener(\"htmx:configRequest\", function(evt) {\n\t\t\t\t\t/** @type {HTMLMetaElement|null} */\n\t\t\t\t\tvar t = document.querySelector(\"meta[name=\\\"csrf-token\\\"]\");\n\t\t\t\t\tif (t) evt.detail.headers[\"X-CSRF-Token\"] = t.getAttribute(\"content\");\n\t\t\t\t});\n\t\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"><script>\n\t\t\t\t/**\n\t\t\t\t * Attach the CSRF token to every outgoing HTMX request.\n\t\t\t\t * Reads the token from the <meta name=\"csrf-token\"> tag injected\n\t\t\t\t * by the server and sets the X-CSRF-Token header.\n\t\t\t\t * @listens htmx:configRequest\n\t\t\t\t */\n\t\t\t\tdocument.addEventListener(\"htmx:configRequest\", function(evt) {\n\t\t\t\t\t/** @type {HTMLMetaElement|null} */\n\t\t\t\t\tvar t = document.querySelector(\"meta[name=\\\"csrf-token\\\"]\");\n\t\t\t\t\tif (t) evt.detail.headers[\"X-CSRF-Token\"] = t.getAttribute(\"content\");\n\t\t\t\t});\n\t\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<meta name=\"htmx-config\" content='{\"globalViewTransitions\":true,\"refreshOnHistoryMiss\":true}'><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><script src=\"/public/js/htmx.min.js\"></script><script src=\"/public/js/htmx.response-targets.js\"></script><script src=\"/public/js/_hyperscript.min.js\"></script><script src=\"/public/js/htmx.ext.sse.js\"></script><link rel=\"stylesheet\" href=\"/public/css/tailwind.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"/public/css/daisyui.css\" type=\"text/css\"><link rel=\"icon\" href=\"/public/images/favicon.svg\" type=\"image/x-svg+xml\"><title>HTMX Go Template</title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<meta name=\"htmx-config\" content='{\"globalViewTransitions\":true,\"refreshOnHistoryMiss\":true,\"responseHandling\":[{\"code\":\".*\",\"swap\":true}]}'><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><script src=\"/public/js/htmx.min.js\"></script><script src=\"/public/js/_hyperscript.min.js\"></script><script src=\"/public/js/htmx.ext.sse.js\"></script><link rel=\"stylesheet\" href=\"/public/css/tailwind.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"/public/css/daisyui.css\" type=\"text/css\"><link rel=\"icon\" href=\"/public/images/favicon.svg\" type=\"image/x-svg+xml\"><title>Harmony</title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if devMode {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<script src=\"/public/js/dev-logging.js\"></script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<script src=\"/public/js/dev-logging.js\"></script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</head>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</head>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -142,12 +163,12 @@ func Layout(content templ.Component) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
+		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var5 == nil {
+			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div id=\"base-content\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"base-content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -155,7 +176,146 @@ func Layout(content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// DaisyThemes is the list of available DaisyUI themes for the picker.
+var DaisyThemes = []string{
+	"light", "dark", "cupcake", "emerald", "corporate", "synthwave",
+	"retro", "cyberpunk", "valentine", "garden", "forest", "lofi",
+	"pastel", "fantasy", "wireframe", "luxury", "dracula", "cmyk",
+	"autumn", "business", "acid", "lemonade", "night", "coffee",
+	"winter", "dim", "nord", "sunset", "caramellatte", "abyss", "silk",
+}
+
+// settingsModal renders a modal with the DaisyUI theme picker.
+func settingsModal(currentTheme string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var6 == nil {
+			templ_7745c5c3_Var6 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<dialog id=\"settings-modal\" class=\"modal\"><div class=\"modal-box bg-base-100 text-base-content w-full max-w-2xl\"><form method=\"dialog\"><button class=\"btn btn-sm btn-circle btn-ghost absolute right-2 top-2\">✕</button></form><h3 class=\"font-bold text-lg mb-4\">Settings</h3><div class=\"form-control mb-2\"><label class=\"label\"><span class=\"label-text font-medium\">Theme</span></label><div class=\"grid grid-cols-4 gap-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, theme := range DaisyThemes {
+			templ_7745c5c3_Err = settingsThemeOption(theme, currentTheme).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div></div></div><form method=\"dialog\" class=\"modal-backdrop\"><button>close</button></form></dialog>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// settingsThemeOption renders a single theme button that updates the DOM and persists to the server.
+func settingsThemeOption(theme string, current string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var7 == nil {
+			templ_7745c5c3_Var7 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		var templ_7745c5c3_Var8 = []any{"btn btn-sm w-full justify-start gap-2 border border-base-content/10",
+			templ.KV("ring-2 ring-primary", theme == current)}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var8...)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<button data-theme=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 106, Col: 20}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var8).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 1, Col: 0}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" _=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var11 string
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs("on click set document.documentElement.dataset.theme to '" + theme + "'" +
+			" then fetch /settings/theme { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'theme=" + theme + "' }" +
+			" then get #settings-modal then call its close()")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 111, Col: 52}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\"><span class=\"flex gap-0.5\"><span class=\"w-2 h-4 rounded-sm bg-primary\"></span> <span class=\"w-2 h-4 rounded-sm bg-secondary\"></span> <span class=\"w-2 h-4 rounded-sm bg-accent\"></span></span> <span class=\"text-xs capitalize\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var12 string
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 118, Col: 42}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</span></button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

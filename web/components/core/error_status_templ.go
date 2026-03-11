@@ -9,10 +9,26 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"catgoose/harmony/internals/routes/hypermedia"
 )
+
+func errorJSON(ec hypermedia.ErrorContext) string {
+	m := map[string]string{
+		"status": strconv.Itoa(ec.StatusCode) + " " + ec.Message,
+		"route":  ec.Route,
+	}
+	if ec.Err != nil {
+		m["error"] = ec.Err.Error()
+	}
+	if ec.RequestID != "" {
+		m["request_id"] = ec.RequestID
+	}
+	b, _ := json.MarshalIndent(m, "", "  ")
+	return string(b)
+}
 
 // oobSwapValue builds the hx-swap-oob attribute value for OOB error placement.
 func oobSwapValue(ec hypermedia.ErrorContext) string {
@@ -52,20 +68,20 @@ func ErrorStatusFromContext(ec hypermedia.ErrorContext) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if ec.OOBTarget != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"error-message-content\" class=\"bg-rose-100 border-b border-b-rose-400 text-rose-800 p-2 shadow-md text-sm\" hx-swap-oob=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"error-message-content\" hx-swap-oob=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(oobSwapValue(ec))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 30, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 45, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><div class=\"bg-error border-b border-error-content/20 text-error-content px-4 py-3 shadow-lg text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -73,12 +89,12 @@ func ErrorStatusFromContext(ec hypermedia.ErrorContext) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"error-message-content\" class=\"bg-rose-100 border-b border-b-rose-400 text-rose-800 p-2 shadow-md text-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"error-message-content\"><div class=\"bg-error border-b border-error-content/20 text-error-content px-4 py-3 shadow-lg text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -86,7 +102,7 @@ func ErrorStatusFromContext(ec hypermedia.ErrorContext) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -116,94 +132,228 @@ func errorStatusBody(ec hypermedia.ErrorContext) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if ec.Closable {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<button class=\"absolute top-0 right-2 text-rose-800 hover:text-rose-600 text-2xl\" _=\"on click tell #error-message-content transition opacity to 0 over 500ms then remove you\">&times;</button>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"mb-1\"><strong>Status Code:</strong> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<p class=\"font-semibold text-sm mb-2\">Something went wrong</p><div class=\"relative w-full bg-error-content/10 border border-error-content/20 rounded px-3 py-1.5\" data-error-json=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(ec.StatusCode))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(errorJSON(ec))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 54, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 64, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p><p class=\"mb-1\"><strong>Route:</strong> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><button class=\"absolute top-1.5 right-1.5 inline-flex items-center p-1 rounded hover:bg-error-content/20 transition-colors\" _=\"on click get the closest <div/> then get its @data-error-json then writeText(it) into navigator.clipboard then remove .hidden from .copy-tooltip in the closest parent <div/> then wait 1.5s then add .hidden to .copy-tooltip in the closest parent <div/>\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z\"></path></svg></button> <span class=\"copy-tooltip hidden absolute top-8 right-1.5 bg-base-content text-base-100 text-xs rounded px-2 py-0.5 whitespace-nowrap shadow\">Copied!</span><dl class=\"grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs pr-6\"><dt class=\"font-semibold\">Status</dt><dd>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(ec.Route)
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(ec.StatusCode))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 57, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 77, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</p><p class=\"mb-1\"><strong>Message:</strong> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(ec.Message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 60, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 77, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</dd><dt class=\"font-semibold\">Route</dt><dd>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if ec.RequestID != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<p class=\"mb-1\"><strong>Request ID:</strong> <code class=\"bg-rose-200 px-1 py-0.5 rounded text-xs\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(ec.RequestID)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 64, Col: 100}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</code></p>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(ec.Route)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 79, Col: 17}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</dd>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
 		}
 		if ec.Err != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<p class=\"mb-1\"><strong>Error:</strong> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<dt class=\"font-semibold\">Error</dt><dd>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(ec.Err.Error())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 69, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 82, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</dd>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = ErrorControls(ec.Controls).Render(ctx, templ_7745c5c3_Buffer)
+		if ec.RequestID != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<dt class=\"font-semibold\">Request ID</dt><dd><code class=\"border border-error-content/15 px-1 py-0.5 rounded font-mono\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var9 string
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(ec.RequestID)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_status.templ`, Line: 86, Col: 97}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</code></dd>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</dl></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if ec.Closable {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"mt-2 flex flex-wrap items-center justify-between gap-2\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = bannerControlButtonsLeft(bannerControls(ec)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = bannerControlButtonsRight(bannerControls(ec)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = ErrorControls(ec.Controls).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		return nil
+	})
+}
+
+// bannerControls returns only Dismiss and Report controls for the global error banner.
+// A Dismiss button is prepended when Closable is true and none already exists.
+func bannerControls(ec hypermedia.ErrorContext) []hypermedia.Control {
+	var out []hypermedia.Control
+	hasDismiss := false
+	for _, ctrl := range ec.Controls {
+		if ctrl.Kind == hypermedia.ControlKindDismiss || ctrl.Kind == hypermedia.ControlKindReport {
+			out = append(out, ctrl)
+			if ctrl.Kind == hypermedia.ControlKindDismiss {
+				hasDismiss = true
+			}
+		}
+	}
+	if ec.Closable && !hasDismiss {
+		close := hypermedia.DismissButton(hypermedia.LabelDismiss)
+		out = append([]hypermedia.Control{close}, out...)
+	}
+	return out
+}
+
+// bannerControlButtonsLeft renders non-dismiss buttons (Report Issue) on the left.
+func bannerControlButtonsLeft(controls []hypermedia.Control) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var10 == nil {
+			templ_7745c5c3_Var10 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"flex flex-wrap gap-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, ctrl := range controls {
+			if ctrl.Kind == hypermedia.ControlKindReport {
+				templ_7745c5c3_Err = reportButton(ctrl).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// bannerControlButtonsRight renders dismiss buttons on the right.
+func bannerControlButtonsRight(controls []hypermedia.Control) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var11 == nil {
+			templ_7745c5c3_Var11 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"flex flex-wrap gap-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, ctrl := range controls {
+			if ctrl.Kind == hypermedia.ControlKindDismiss {
+				templ_7745c5c3_Err = dismissButton(ctrl).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -228,9 +378,9 @@ func ErrorStatus(statusCode int, message string, err error, route string, reques
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var9 == nil {
-			templ_7745c5c3_Var9 = templ.NopComponent
+		templ_7745c5c3_Var12 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var12 == nil {
+			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = ErrorStatusFromContext(hypermedia.ErrorContext{

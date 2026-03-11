@@ -1,29 +1,23 @@
 package views
 
 // Root template
-templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool) {
+templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string) {
 	<!DOCTYPE html>
-	<html lang="en" data-theme="light">
+	<html lang="en" data-theme={ theme }>
 		@header(csrfToken, devMode)
 		<body
 			hx-history="false"
 			hx-boost="true"
-			hx-ext="response-targets"
-			hx-target-error="#error-status"
+			_="on showAlert call alert(event.detail.value or event.detail)"
 		>
-			<script>
-				(function() {
-					var t = localStorage.getItem("theme");
-					if (t) document.documentElement.setAttribute("data-theme", t);
-				})();
-			</script>
-			<div id="error-status"></div>
+			<div id="error-status" class="sticky top-0 z-40"></div>
 			@menuContent
 			<!-- Main Content -->
 			<main class="flex-1 p-4">
 				@Layout(layoutContent)
 			</main>
-			@settingsModal()
+			<div id="report-modal-container"></div>
+			@settingsModal(theme)
 		</body>
 	</html>
 }
@@ -47,11 +41,10 @@ templ header(csrfToken string, devMode bool) {
 				});
 			</script>
 		}
-		<meta name="htmx-config" content='{"globalViewTransitions":true,"refreshOnHistoryMiss":true}'/>
+		<meta name="htmx-config" content='{"globalViewTransitions":true,"refreshOnHistoryMiss":true,"responseHandling":[{"code":".*","swap":true}]}'/>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<script src="/public/js/htmx.min.js"></script>
-		<script src="/public/js/htmx.response-targets.js"></script>
 		<script src="/public/js/_hyperscript.min.js"></script>
 		// setup:feature:sse:start
 		<script src="/public/js/htmx.ext.sse.js"></script>
@@ -59,7 +52,7 @@ templ header(csrfToken string, devMode bool) {
 		<link rel="stylesheet" href="/public/css/tailwind.css" type="text/css"/>
 		<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
 		<link rel="icon" href="/public/images/favicon.svg" type="image/x-svg+xml"/>
-		<title>HTMX Go Template</title>
+		<title>Harmony</title>
 		if devMode {
 			<script src="/public/js/dev-logging.js"></script>
 		}
@@ -73,8 +66,8 @@ templ Layout(content templ.Component) {
 	</div>
 }
 
-// daisyThemes is the list of available DaisyUI themes for the picker.
-var daisyThemes = []string{
+// DaisyThemes is the list of available DaisyUI themes for the picker.
+var DaisyThemes = []string{
 	"light", "dark", "cupcake", "emerald", "corporate", "synthwave",
 	"retro", "cyberpunk", "valentine", "garden", "forest", "lofi",
 	"pastel", "fantasy", "wireframe", "luxury", "dracula", "cmyk",
@@ -82,44 +75,46 @@ var daisyThemes = []string{
 	"winter", "dim", "nord", "sunset", "caramellatte", "abyss", "silk",
 }
 
-// settingsModal renders a glass-effect modal with the DaisyUI theme picker.
-templ settingsModal() {
-	<div
-		id="settings-modal"
-		class="hidden fixed inset-0 z-50 flex items-center justify-center bg-base-content/30 backdrop-blur-sm"
-		_="on click if target is me add .hidden to me"
-	>
-		<div class="glass rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
-			<div class="flex items-center justify-between mb-4">
-				<h3 class="font-bold text-lg">Settings</h3>
-				<button
-					class="btn btn-ghost btn-sm btn-circle"
-					_="on click add .hidden to #settings-modal"
-				>
-					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-				</button>
-			</div>
+// settingsModal renders a modal with the DaisyUI theme picker.
+templ settingsModal(currentTheme string) {
+	<dialog id="settings-modal" class="modal">
+		<div class="modal-box bg-base-100 text-base-content w-full max-w-2xl">
+			<form method="dialog">
+				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+			</form>
+			<h3 class="font-bold text-lg mb-4">Settings</h3>
 			<div class="form-control mb-2">
 				<label class="label">
 					<span class="label-text font-medium">Theme</span>
 				</label>
-				<div class="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
-					for _, theme := range daisyThemes {
-						<button
-							data-theme={ theme }
-							class="btn btn-sm justify-start gap-2 border border-base-content/10"
-							_={ "on click set document.documentElement.dataset.theme to '" + theme + "' then call localStorage.setItem('theme', '" + theme + "') then add .hidden to #settings-modal" }
-						>
-							<span class="flex gap-0.5">
-								<span class="w-2 h-4 rounded-sm bg-primary"></span>
-								<span class="w-2 h-4 rounded-sm bg-secondary"></span>
-								<span class="w-2 h-4 rounded-sm bg-accent"></span>
-							</span>
-							<span class="text-xs capitalize">{ theme }</span>
-						</button>
+				<div class="grid grid-cols-4 gap-2">
+					for _, theme := range DaisyThemes {
+						@settingsThemeOption(theme, currentTheme)
 					}
 				</div>
 			</div>
 		</div>
-	</div>
+		<form method="dialog" class="modal-backdrop">
+			<button>close</button>
+		</form>
+	</dialog>
+}
+
+// settingsThemeOption renders a single theme button that updates the DOM and persists to the server.
+templ settingsThemeOption(theme string, current string) {
+	<button
+		data-theme={ theme }
+		class={ "btn btn-sm w-full justify-start gap-2 border border-base-content/10",
+			templ.KV("ring-2 ring-primary", theme == current) }
+		_={ "on click set document.documentElement.dataset.theme to '" + theme + "'" +
+			" then fetch /settings/theme { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'theme=" + theme + "' }" +
+			" then get #settings-modal then call its close()" }
+	>
+		<span class="flex gap-0.5">
+			<span class="w-2 h-4 rounded-sm bg-primary"></span>
+			<span class="w-2 h-4 rounded-sm bg-secondary"></span>
+			<span class="w-2 h-4 rounded-sm bg-accent"></span>
+		</span>
+		<span class="text-xs capitalize">{ theme }</span>
+	</button>
 }

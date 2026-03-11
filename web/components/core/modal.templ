@@ -1,0 +1,112 @@
+package components
+
+import "catgoose/harmony/internals/routes/hypermedia"
+
+// modalButtonClass returns the CSS class for a modal button based on its variant.
+func modalButtonClass(variant hypermedia.ControlVariant) string {
+	switch variant {
+	case hypermedia.VariantPrimary:
+		return "btn btn-primary btn-sm"
+	case hypermedia.VariantDanger:
+		return "btn btn-error btn-sm"
+	case hypermedia.VariantSecondary:
+		return "btn btn-secondary btn-sm"
+	case hypermedia.VariantGhost:
+		return "btn btn-ghost btn-sm"
+	default:
+		return "btn btn-ghost btn-sm"
+	}
+}
+
+// Modal renders a reusable DaisyUI modal dialog driven by ModalConfig.
+// Opened via HyperScript: `on click call #id.showModal()`
+// Closed via `<form method="dialog">` buttons or ESC key.
+// Child content is rendered inside the modal body between the title and action buttons.
+templ Modal(cfg hypermedia.ModalConfig) {
+	<dialog id={ cfg.ID } class="modal">
+		<div class="modal-box bg-base-100 text-base-content">
+			<form method="dialog">
+				<button class="btn btn-sm btn-circle btn-ghost text-base-content absolute right-2 top-2">✕</button>
+			</form>
+			<h3 class="font-bold text-lg text-base-content mb-4">{ cfg.Title }</h3>
+			<div class="modal-body">
+				{ children... }
+			</div>
+			<div class="modal-action">
+				for _, btn := range cfg.Buttons {
+					if btn.Role == hypermedia.ModalRoleCancel {
+						<form method="dialog">
+							<button class={ modalButtonClass(btn.Variant) }>
+								{ btn.Label }
+							</button>
+						</form>
+					} else if btn.Role == hypermedia.ModalRolePrimary && cfg.HxPost != "" {
+						<button
+							class={ modalButtonClass(btn.Variant) }
+							hx-post={ cfg.HxPost }
+							if cfg.HxTarget != "" {
+								hx-target={ cfg.HxTarget }
+							}
+							if cfg.HxSwap != "" {
+								hx-swap={ string(cfg.HxSwap) }
+							}
+							hx-include={ "#" + cfg.ID + " .modal-body" }
+							_={ "on htmx:afterRequest get #" + cfg.ID + " then call its close()" }
+						>
+							{ btn.Label }
+						</button>
+					} else if btn.Role == hypermedia.ModalRoleSecondary {
+						<button
+							type="reset"
+							class={ modalButtonClass(btn.Variant) }
+						>
+							{ btn.Label }
+						</button>
+					} else {
+						<form method="dialog">
+							<button class={ modalButtonClass(btn.Variant) }>
+								{ btn.Label }
+							</button>
+						</form>
+					}
+				}
+			</div>
+		</div>
+		<form method="dialog" class="modal-backdrop">
+			<button>close</button>
+		</form>
+	</dialog>
+}
+
+// ReportIssueModal renders the Report Issue modal with a textarea for user context.
+// Log data is retrieved from the ring buffer server-side when the report is submitted.
+// When fetched dynamically via HTMX the dialog auto-opens on load.
+templ ReportIssueModal(cfg hypermedia.ModalConfig) {
+	<div _={ "on load call #" + cfg.ID + ".showModal()" }>
+	@Modal(cfg) {
+		<p class="text-sm text-base-content/70 mb-3">This will send error details to our support team for investigation.</p>
+		<div id="report-add-message-toggle">
+			<button
+				type="button"
+				class="btn btn-ghost btn-sm text-base-content/60"
+				_="on click remove #report-add-message-toggle then remove .hidden from #report-message-field then focus() the first <textarea/> in #report-message-field"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+				</svg>
+				Add message
+			</button>
+		</div>
+		<div id="report-message-field" class="hidden">
+			<fieldset class="fieldset">
+				<legend class="fieldset-legend text-base-content/70">Additional details (optional)</legend>
+				<textarea
+					name="description"
+					class="textarea w-full h-24"
+					placeholder="Describe what you were doing when this error occurred..."
+				></textarea>
+			</fieldset>
+		</div>
+	}
+	</div>
+}

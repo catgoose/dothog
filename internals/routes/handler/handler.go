@@ -35,6 +35,7 @@ func appNavComponent(path string) templ.Component {
 				{Label: "Components", Href: "/hypermedia/components"},
 				{Label: "Components 2", Href: "/hypermedia/components2"},
 				{Label: "Components 3", Href: "/hypermedia/components3"},
+			{Label: "Errors", Href: "/hypermedia/errors"},
 				// setup:feature:sse:start
 				{Label: "Real-time", Href: "/hypermedia/realtime"},
 				// setup:feature:sse:end
@@ -56,7 +57,11 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 		csrfToken = t
 	}
 	// setup:feature:csrf:end
-	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev()))
+	theme := "light"
+	// setup:feature:session_settings:start
+	theme = middleware.GetSessionSettings(c).Theme
+	// setup:feature:session_settings:end
+	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme))
 }
 
 // RenderComponent renders a templ component to the response
@@ -79,19 +84,11 @@ func HandleError(c echo.Context, statusCode int, message string, err error) erro
 	renderErr := RenderComponent(c, corecomponents.ErrorStatus(statusCode, message, err, c.Request().URL.Path, requestID, true))
 	if renderErr != nil {
 		return c.HTML(http.StatusInternalServerError, fmt.Sprintf(
-			`
-			<div class="bg-rose-100 border-b border-b-rose-400 text-rose-800 p-2 shadow-md text-sm ">
-				<p class="mb-1">
-					<strong>Message:</strong> Failed to render error view
-				</p>
-				<p class="mb-1">
-					<strong>Render Error:</strong>: %s
-				</p>
-				<p class="mb-1">
-					<strong>Internal Error:</strong>: %s
-				</p>
-			</div>
-	`, renderErr.Error(), err.Error()))
+			`<div class="bg-error text-error-content p-3 shadow-lg text-sm">
+				<p class="mb-1"><strong>Message:</strong> Failed to render error view</p>
+				<p class="mb-1"><strong>Render Error:</strong> %s</p>
+				<p class="mb-1"><strong>Internal Error:</strong> %s</p>
+			</div>`, renderErr.Error(), err.Error()))
 	}
 	return nil
 }
@@ -102,34 +99,38 @@ func HandleError(c echo.Context, statusCode int, message string, err error) erro
 // status code so that every error response is a navigable hypermedia state.
 func HandleHypermediaError(c echo.Context, statusCode int, message string, err error, controls ...hypermedia.Control) error {
 	if len(controls) == 0 {
-		controls = defaultControls(statusCode)
+		requestID := middleware.GetRequestID(c)
+		controls = defaultControls(statusCode, requestID)
 	}
 	ec := middleware.HypermediaError(c, statusCode, message, err, controls...)
 	return hypermedia.NewHTTPError(ec)
 }
 
 // defaultControls returns recovery controls appropriate for the given HTTP status code.
-func defaultControls(statusCode int) []hypermedia.Control {
+// Every error path includes a Report Issue button so users can easily report problems.
+func defaultControls(statusCode int, requestID string) []hypermedia.Control {
 	back := hypermedia.BackButton(hypermedia.LabelGoBack)
 	home := hypermedia.GoHomeButton(hypermedia.LabelGoHome, "/", hypermedia.TargetBody)
 	dismiss := hypermedia.DismissButton(hypermedia.LabelDismiss)
+	report := hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID)
 
 	switch {
 	case statusCode == http.StatusBadRequest || statusCode == http.StatusUnprocessableEntity:
-		return []hypermedia.Control{dismiss}
+		return []hypermedia.Control{dismiss, report}
 	case statusCode == http.StatusNotFound:
-		return []hypermedia.Control{back, home}
+		return []hypermedia.Control{back, home, report}
 	case statusCode == http.StatusUnauthorized:
 		return []hypermedia.Control{
 			hypermedia.RedirectLink(hypermedia.LabelLogIn, "/login"),
 			home,
+			report,
 		}
 	case statusCode == http.StatusForbidden:
-		return []hypermedia.Control{back, home}
+		return []hypermedia.Control{back, home, report}
 	case statusCode >= 500:
-		return []hypermedia.Control{dismiss, home}
+		return []hypermedia.Control{dismiss, home, report}
 	default:
-		return []hypermedia.Control{dismiss}
+		return []hypermedia.Control{dismiss, report}
 	}
 }
 

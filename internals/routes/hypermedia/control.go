@@ -16,6 +16,8 @@ const (
 	ControlKindDismiss ControlKind = "dismiss"
 	// ControlKindBack renders a HyperScript browser history.back() button.
 	ControlKindBack ControlKind = "back"
+	// ControlKindReport renders an HTMX button that posts a report and triggers an alert.
+	ControlKindReport ControlKind = "report"
 )
 
 // ControlVariant determines the visual emphasis of a Control.
@@ -82,8 +84,9 @@ const (
 	LabelGoBack         = "Go Back"
 	LabelGoHome         = "Go Home"
 	LabelRetry          = "Retry"
-	LabelDismiss        = "Dismiss"
+	LabelDismiss        = "Close"
 	LabelLogIn          = "Log In"
+	LabelReportIssue    = "Report Issue"
 )
 
 // Default confirm messages used by pattern factories.
@@ -171,6 +174,7 @@ type Control struct {
 	Swap        SwapMode
 	Disabled    bool
 	ErrorTarget string
+	ModalID     string
 }
 
 // RetryButton creates an HTMX button that re-issues a request using the given method.
@@ -231,6 +235,21 @@ func HTMXAction(label string, req HxRequestConfig) Control {
 		Kind:      ControlKindHTMX,
 		Label:     label,
 		HxRequest: req,
+	}
+}
+
+// ReportIssueButton creates a button that fetches the Report Issue modal via
+// HTMX GET. The server returns the modal fragment with collected log data; the
+// modal auto-opens on load.
+func ReportIssueButton(label, requestID string) Control {
+	url := "/report-issue"
+	if requestID != "" {
+		url += "/" + requestID
+	}
+	return Control{
+		Kind:      ControlKindReport,
+		Label:     label,
+		HxRequest: HxGet(url, "#report-modal-container"),
 	}
 }
 

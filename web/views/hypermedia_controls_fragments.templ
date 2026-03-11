@@ -311,34 +311,23 @@ templ RowEditFragment(item GalleryRowItem) {
 
 // ─── Section 13: HATEOAS Error Recovery ─────────────────────────────────────
 
-// GalleryErrorPanel renders a compact error panel with unique ID and embedded controls.
-// Unlike ErrorStatusFromContext, each panel has its own ID so multiple can coexist.
+// GalleryErrorPanel renders an inline error using DaisyUI alert semantics with
+// hypermedia controls.  Each panel has its own ID so multiple can coexist.
 templ GalleryErrorPanel(panelID string, ec hypermedia.ErrorContext) {
-	<div
-		id={ panelID }
-		class="bg-rose-50 border border-rose-300 text-rose-800 p-4 rounded-lg text-sm space-y-2 transition-opacity duration-300"
-	>
-		<div class="flex justify-between items-start gap-2">
-			<div class="space-y-1 flex-1">
-				<p class="font-semibold">
-					<span class="badge badge-error badge-sm mr-1">{ strconv.Itoa(ec.StatusCode) }</span>
-					{ ec.Message }
-				</p>
-				if ec.Err != nil {
-					<p class="text-xs text-rose-600/80">{ ec.Err.Error() }</p>
-				}
-				if ec.Route != "" {
-					<p class="text-xs text-rose-600/60">Route: { ec.Route }</p>
-				}
-			</div>
-			if ec.Closable {
-				<button
-					class="text-rose-400 hover:text-rose-700 text-lg leading-none"
-					_={ "on click add .opacity-0 to #" + panelID + " wait 300ms then remove #" + panelID }
-				>&times;</button>
+	<div id={ panelID } role="alert" class="alert alert-error text-sm">
+		<div class="space-y-1">
+			<p class="font-semibold">
+				<span class="badge badge-sm">{ strconv.Itoa(ec.StatusCode) }</span>
+				{ ec.Message }
+			</p>
+			if ec.Err != nil {
+				<p class="text-xs opacity-80">{ ec.Err.Error() }</p>
+			}
+			if ec.Route != "" {
+				<p class="text-xs opacity-60">Route: { ec.Route }</p>
 			}
 		</div>
-		@components.ErrorControls(ec.Controls)
+		@components.InlineAlertControls(ec.Controls)
 	</div>
 }
 

@@ -9,7 +9,11 @@ import (
 	"catgoose/harmony/internals/database/schema"
 	// setup:feature:database:end
 	log "catgoose/harmony/internals/logger"
+	"catgoose/harmony/internals/requestlog"
 	"catgoose/harmony/internals/routes"
+	// setup:feature:session_settings:start
+	"catgoose/harmony/internals/repository"
+	// setup:feature:session_settings:end
 	// setup:feature:avatar:start
 	graphdb "catgoose/harmony/internals/database"
 	"catgoose/harmony/internals/domain"
@@ -18,6 +22,7 @@ import (
 	"context"
 	"embed"
 	"flag"
+	"log/slog"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -42,6 +47,10 @@ func must(fs fs.FS, err error) fs.FS {
 }
 
 func main() {
+	reqLogStore := requestlog.NewStore(512)
+	log.SetHandlerWrapper(func(h slog.Handler) slog.Handler {
+		return requestlog.NewHandler(h, reqLogStore)
+	})
 	log.Init()
 	flag.Parse()
 	envErr := dio.InitEnvironment(nil)
@@ -83,7 +92,12 @@ func main() {
 			log.Fatal("Failed to create dialect", "error", err)
 		}
 
-		repoManager := dbrepo.NewManager(db, d, schema.UsersTable)
+		repoManager := dbrepo.NewManager(db, d,
+			// setup:feature:session_settings:start
+			schema.SessionSettingsTable,
+			// setup:feature:session_settings:end
+			schema.UsersTable,
+		)
 
 		// InitRepo gates schema init. Destructive: drops existing tables and recreates them, wiping data. Only enable when intentionally resetting the database.
 		if cfg.InitRepo {
@@ -99,15 +113,41 @@ func main() {
 		if err := repoManager.ValidateSchema(appCtx); err != nil {
 			log.Fatal("Database schema validation failed", "error", err)
 		}
+
 	}
 	// setup:feature:database:end
 
-	e, err := routes.InitEcho(appCtx, staticFS, cfg)
+	// setup:feature:session_settings:start
+	settingsDB, err := database.OpenSQLite(appCtx, "db/session_settings.db")
+	if err != nil {
+		log.Fatal("Failed to open session settings database", "error", err)
+	}
+	defer func() {
+		if closeErr := settingsDB.Close(); closeErr != nil {
+			log.Info("Error closing session settings database", "error", closeErr)
+		}
+	}()
+	settingsDialect, err := dialect.New(dialect.SQLite)
+	if err != nil {
+		log.Fatal("Failed to create session settings dialect", "error", err)
+	}
+	settingsManager := dbrepo.NewManager(settingsDB, settingsDialect, schema.SessionSettingsTable)
+	if err := settingsManager.EnsureSchema(appCtx); err != nil {
+		log.Fatal("Failed to ensure session settings schema", "error", err)
+	}
+	settingsRepo := repository.NewSessionSettingsRepository(settingsManager)
+	// setup:feature:session_settings:end
+
+	e, err := routes.InitEcho(appCtx, staticFS, cfg,
+		// setup:feature:session_settings:start
+		settingsRepo,
+		// setup:feature:session_settings:end
+	)
 	if err != nil {
 		log.Fatal("Failed to initialize Echo", "error", err)
 	}
 
-	ar := routes.NewAppRoutes(appCtx, e)
+	ar := routes.NewAppRoutes(appCtx, e, reqLogStore, nil)
 	if err := ar.InitRoutes(); err != nil {
 		log.Fatal("Failed to setup routes", "error", err)
 	}

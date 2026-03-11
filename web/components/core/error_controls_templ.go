@@ -64,6 +64,11 @@ func ErrorControls(controls []hypermedia.Control) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
+				case hypermedia.ControlKindReport:
+					templ_7745c5c3_Err = reportButton(ctrl).Render(ctx, templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
 				}
 			}
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div>")
@@ -105,7 +110,7 @@ func retryButton(ctrl hypermedia.Control) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded bg-rose-700 text-white hover:bg-rose-800 focus:outline-none disabled:opacity-50\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded bg-error text-error-content hover:bg-error/80 focus:outline-none disabled:opacity-50\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -122,7 +127,7 @@ func retryButton(ctrl hypermedia.Control) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(ctrl.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 34, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 36, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -141,7 +146,7 @@ func retryButton(ctrl hypermedia.Control) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, " class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none disabled:opacity-50\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, " class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-base-content/20 bg-base-100 text-base-content hover:bg-base-200 focus:outline-none disabled:opacity-50\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -158,7 +163,7 @@ func retryButton(ctrl hypermedia.Control) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(ctrl.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 42, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 44, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -201,20 +206,20 @@ func linkControl(ctrl hypermedia.Control) templ.Component {
 		var templ_7745c5c3_Var6 templ.SafeURL
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(ctrl.Href))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 49, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 51, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-base-content/20 bg-base-100 text-base-content hover:bg-base-200 focus:outline-none\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(ctrl.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 52, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 54, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -257,7 +262,7 @@ func htmxButton(ctrl hypermedia.Control) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, " class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none disabled:opacity-50\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, " class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-base-content/20 bg-base-100 text-base-content hover:bg-base-200 focus:outline-none disabled:opacity-50\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -274,7 +279,7 @@ func htmxButton(ctrl hypermedia.Control) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(ctrl.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 62, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 64, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -309,14 +314,14 @@ func dismissButton(ctrl hypermedia.Control) templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<button class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none\" _=\"on click tell #error-message-content transition opacity to 0 over 300ms then remove me\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<button class=\"inline-flex items-center px-3 py-1.5 text-sm font-medium rounded text-error-content/70 hover:text-error-content hover:underline focus:outline-none\" _=\"on click set #error-status.innerHTML to ''\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(ctrl.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 71, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 73, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -351,20 +356,70 @@ func errorBackButton(ctrl hypermedia.Control) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<button class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-rose-700 text-rose-700 hover:bg-rose-50 focus:outline-none\" _=\"on click go back\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<button class=\"inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-base-content/20 bg-base-100 text-base-content hover:bg-base-200 focus:outline-none\" _=\"on click go back\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(ctrl.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 80, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 82, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</button>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func reportButton(ctrl hypermedia.Control) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var14 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var14 == nil {
+			templ_7745c5c3_Var14 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<button")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrsFromControl(ctrl))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, " class=\"inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded border border-error-content/30 bg-error-content/10 text-error-content hover:bg-error-content/20 focus:outline-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z\"></path></svg> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var15 string
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(ctrl.Label)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/error_controls.templ`, Line: 94, Col: 14}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

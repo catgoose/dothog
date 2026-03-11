@@ -1,0 +1,174 @@
+// setup:feature:demo
+package views
+
+// ErrorsPage is the full-page layout for /hypermedia/errors.
+templ ErrorsPage() {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<div class="flex items-center justify-between mb-4">
+			<h1 class="text-2xl font-bold">Error Patterns</h1>
+			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Overview</a>
+		</div>
+		<div role="alert" class="alert alert-info text-sm">
+			<span>Demonstrates: <strong>banner errors</strong>, <strong>inline form errors</strong>, <strong>OOB error swaps</strong>, <strong>RESTful error responses</strong>, <strong>report issue</strong>.</span>
+		</div>
+
+		<!-- Banner Errors -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Banner Errors</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					Click a button to trigger a server error. The error banner swaps OOB into
+					<code class="text-xs bg-base-200 px-1 rounded">#error-status</code> at the top of the page.
+					Includes <strong>Report Issue</strong> and contextual recovery controls.
+				</p>
+				<div class="flex flex-wrap gap-2">
+					<button
+						class="btn btn-sm btn-error btn-outline"
+						hx-get="/hypermedia/errors/trigger/404"
+						hx-target="#errors-banner-result"
+						hx-swap="innerHTML"
+					>Trigger 404</button>
+					<button
+						class="btn btn-sm btn-error btn-outline"
+						hx-get="/hypermedia/errors/trigger/400"
+						hx-target="#errors-banner-result"
+						hx-swap="innerHTML"
+					>Trigger 400</button>
+					<button
+						class="btn btn-sm btn-error btn-outline"
+						hx-get="/hypermedia/errors/trigger/500"
+						hx-target="#errors-banner-result"
+						hx-swap="innerHTML"
+					>Trigger 500</button>
+					<button
+						class="btn btn-sm btn-error btn-outline"
+						hx-get="/hypermedia/errors/trigger/403"
+						hx-target="#errors-banner-result"
+						hx-swap="innerHTML"
+					>Trigger 403</button>
+				</div>
+				<div id="errors-banner-result" class="mt-2"></div>
+			</div>
+		</div>
+
+		<!-- Inline Form Errors -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Inline Form Errors</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					Submit with empty or invalid fields to see inline error rendering.
+					The server returns a 422 with the error swapped into the form's error target.
+				</p>
+				<form
+					hx-post="/hypermedia/errors/form"
+					hx-target="#errors-form-result"
+					hx-swap="innerHTML"
+					class="space-y-3 max-w-sm"
+				>
+					<div class="form-control">
+						<label class="label"><span class="label-text text-sm">Name (required)</span></label>
+						<input type="text" name="name" class="input input-sm input-bordered w-full" placeholder="Leave empty to trigger error"/>
+					</div>
+					<div class="form-control">
+						<label class="label"><span class="label-text text-sm">Email (must contain @)</span></label>
+						<input type="text" name="email" class="input input-sm input-bordered w-full" placeholder="bad-email"/>
+					</div>
+					<button type="submit" class="btn btn-sm btn-primary">Submit</button>
+					<div id="errors-form-result"></div>
+				</form>
+			</div>
+		</div>
+
+		<!-- OOB Error Swap -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">OOB Error Swap</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					The server returns a success component alongside an OOB error swap.
+					The error banner appears in <code class="text-xs bg-base-200 px-1 rounded">#error-status</code>
+					while the primary content updates normally.
+				</p>
+				<button
+					class="btn btn-sm btn-warning btn-outline"
+					hx-get="/hypermedia/errors/oob-warning"
+					hx-target="#errors-oob-result"
+					hx-swap="innerHTML"
+				>Load with Warning</button>
+				<div id="errors-oob-result" class="mt-2"></div>
+			</div>
+		</div>
+
+		<!-- Retry Pattern -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Retry with Recovery</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					Simulates a flaky endpoint. First request fails with a retry button; clicking retry succeeds.
+					Demonstrates server-driven error recovery via hypermedia controls.
+				</p>
+				<button
+					class="btn btn-sm btn-secondary btn-outline"
+					hx-get="/hypermedia/errors/flaky"
+					hx-target="#errors-retry-result"
+					hx-swap="innerHTML"
+				>Call Flaky Endpoint</button>
+				<div id="errors-retry-result" class="mt-2"></div>
+			</div>
+		</div>
+
+		<!-- Pattern Summary -->
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			@errorPatternCard("Banner", "OOB swap to #error-status", "Global error banner with dismiss, back, home, and report issue controls.")
+			@errorPatternCard("Inline", "hx-target on form", "Validation errors rendered inline next to the form that caused them.")
+			@errorPatternCard("OOB", "Component + OOB error", "Primary content swaps normally; error appears out-of-band.")
+			@errorPatternCard("Retry", "Control with hx-get", "Failed response includes a retry button that re-issues the request.")
+			@errorPatternCard("Report", "POST /report-issue", "Report Issue button posts to server; HX-Trigger fires a browser alert.")
+			@errorPatternCard("Copy ID", "navigator.clipboard", "Request ID has a copy-to-clipboard icon for easy bug reporting.")
+		</div>
+	</div>
+}
+
+templ errorPatternCard(title, method, desc string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h3 class="font-semibold text-sm">{ title }</h3>
+			<code class="text-xs text-primary bg-base-200 px-2 py-1 rounded">{ method }</code>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}
+
+// ErrorsFormSuccess renders a success message after valid form submission.
+templ ErrorsFormSuccess(name, email string) {
+	<div class="alert alert-success text-sm mt-2">
+		<span>Submitted successfully: <strong>{ name }</strong> ({ email })</span>
+	</div>
+}
+
+// ErrorsFormError renders inline form validation errors.
+templ ErrorsFormError(errors []string) {
+	<div class="alert alert-error text-sm mt-2">
+		<div>
+			<p class="font-semibold">Validation failed:</p>
+			<ul class="list-disc list-inside text-xs mt-1">
+				for _, e := range errors {
+					<li>{ e }</li>
+				}
+			</ul>
+		</div>
+	</div>
+}
+
+// ErrorsOOBSuccess renders a success component for the OOB demo.
+templ ErrorsOOBSuccess() {
+	<div class="alert alert-success text-sm">
+		<span>Data loaded successfully — but check the error banner above for the warning.</span>
+	</div>
+}
+
+// ErrorsFlakySuccess renders the success result for the flaky endpoint.
+templ ErrorsFlakySuccess() {
+	<div class="alert alert-success text-sm">
+		<span>Request succeeded! The flaky endpoint responded normally this time.</span>
+	</div>
+}

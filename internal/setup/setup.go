@@ -33,12 +33,13 @@ const (
 	FeatureSSE      = "sse"
 	FeatureCaddy    = "caddy"
 	FeatureAvatar   = "avatar"
-	FeatureDemo     = "demo"
+	FeatureDemo             = "demo"
+	FeatureSessionSettings  = "session_settings"
 )
 
 // AllFeatures lists every selectable feature tag.
 // "database" is always included (implied by the base template) and is not user-selectable.
-var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo}
+var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings}
 
 // ImplicitFeatures are always selected and not presented to the user.
 // "database" is implicit because SQLite is the base database engine.

@@ -28,7 +28,8 @@ var featureLabels = map[string]string{
 	setup.FeatureSSE:      "SSE (requires Caddy)",
 	setup.FeatureCaddy:    "Caddy (HTTPS)",
 	setup.FeatureAvatar:   "Avatar Photos (requires Graph)",
-	setup.FeatureDemo:     "Demo Content",
+	setup.FeatureDemo:             "Demo Content",
+	setup.FeatureSessionSettings:  "Session Settings (SQLite)",
 }
 
 // featureLabelOrder is the display order for the gum multi-select.
@@ -40,6 +41,7 @@ var featureLabelOrder = []string{
 	setup.FeatureSSE,
 	setup.FeatureCaddy,
 	setup.FeatureDemo,
+	setup.FeatureSessionSettings,
 }
 
 func init() {

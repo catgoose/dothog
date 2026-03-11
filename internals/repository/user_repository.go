@@ -81,9 +81,12 @@ func (r *userRepository) CreateOrUpdate(ctx context.Context, user *domain.User, 
 
 // GetByID retrieves a user by its ID
 func (r *userRepository) GetByID(ctx context.Context, id int) (*domain.User, error) {
-	query := `SELECT * FROM Users WHERE ID = @ID`
+	cols := repository.Columns(schema.UsersTable.SelectColumns()...)
+	w := repository.NewWhere().And("ID = @ID", sql.Named("ID", id))
+	query, args := repository.NewSelect(schema.UsersTable.Name, cols).Where(w).Build()
+
 	var user domain.User
-	err := r.repo.GetDB().GetContext(ctx, &user, query, sql.Named("ID", id))
+	err := r.repo.GetDB().GetContext(ctx, &user, query, args...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("user not found: %w", err)
@@ -95,9 +98,12 @@ func (r *userRepository) GetByID(ctx context.Context, id int) (*domain.User, err
 
 // getByAzureIDInternal retrieves a user by their Azure ID (internal method that returns sql.ErrNoRows)
 func (r *userRepository) getByAzureIDInternal(ctx context.Context, azureID string, tx *sqlx.Tx) (*domain.User, error) {
-	query := `SELECT * FROM Users WHERE AzureId = @AzureId`
+	cols := repository.Columns(schema.UsersTable.SelectColumns()...)
+	w := repository.NewWhere().And("AzureId = @AzureId", sql.Named("AzureId", azureID))
+	query, args := repository.NewSelect(schema.UsersTable.Name, cols).Where(w).Build()
+
 	var user domain.User
-	err := r.repo.Exec(tx).GetContext(ctx, &user, query, sql.Named("AzureId", azureID))
+	err := r.repo.Exec(tx).GetContext(ctx, &user, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -164,12 +170,10 @@ func (r *userRepository) Update(ctx context.Context, user *domain.User, tx *sqlx
 func (r *userRepository) UpdateLastLogin(ctx context.Context, id int, tx *sqlx.Tx) error {
 	exec := r.repo.Exec(tx)
 
-	query := `
-		UPDATE Users
-		SET LastLoginAt = @LastLoginAt,
-		    UpdatedAt = @UpdatedAt
-		WHERE ID = @ID
-	`
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE ID = @ID",
+		schema.UsersTable.Name,
+		repository.SetClause("LastLoginAt", "UpdatedAt"),
+	)
 
 	now := repository.GetNow()
 	result, err := exec.ExecContext(ctx, query,

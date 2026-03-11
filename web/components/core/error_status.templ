@@ -1,10 +1,26 @@
 package components
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"catgoose/harmony/internals/routes/hypermedia"
 )
+
+func errorJSON(ec hypermedia.ErrorContext) string {
+	m := map[string]string{
+		"status":     strconv.Itoa(ec.StatusCode) + " " + ec.Message,
+		"route":      ec.Route,
+	}
+	if ec.Err != nil {
+		m["error"] = ec.Err.Error()
+	}
+	if ec.RequestID != "" {
+		m["request_id"] = ec.RequestID
+	}
+	b, _ := json.MarshalIndent(m, "", "  ")
+	return string(b)
+}
 
 // oobSwapValue builds the hx-swap-oob attribute value for OOB error placement.
 func oobSwapValue(ec hypermedia.ErrorContext) string {
@@ -26,50 +42,101 @@ templ ErrorStatusFromContext(ec hypermedia.ErrorContext) {
 	if ec.OOBTarget != "" {
 		<div
 			id="error-message-content"
-			class="bg-rose-100 border-b border-b-rose-400 text-rose-800 p-2 shadow-md text-sm"
 			hx-swap-oob={ oobSwapValue(ec) }
 		>
-			@errorStatusBody(ec)
+			<div class="bg-error border-b border-error-content/20 text-error-content px-4 py-3 shadow-lg text-sm">
+				@errorStatusBody(ec)
+			</div>
 		</div>
 	} else {
-		<div
-			id="error-message-content"
-			class="bg-rose-100 border-b border-b-rose-400 text-rose-800 p-2 shadow-md text-sm"
-		>
-			@errorStatusBody(ec)
+		<div id="error-message-content">
+			<div class="bg-error border-b border-error-content/20 text-error-content px-4 py-3 shadow-lg text-sm">
+				@errorStatusBody(ec)
+			</div>
 		</div>
 	}
 }
 
 templ errorStatusBody(ec hypermedia.ErrorContext) {
-	if ec.Closable {
+	<p class="font-semibold text-sm mb-2">Something went wrong</p>
+	<div
+		class="relative w-full bg-error-content/10 border border-error-content/20 rounded px-3 py-1.5"
+		data-error-json={ errorJSON(ec) }
+	>
 		<button
-			class="absolute top-0 right-2 text-rose-800 hover:text-rose-600 text-2xl"
-			_="on click tell #error-message-content transition opacity to 0 over 500ms then remove you"
+			class="absolute top-1.5 right-1.5 inline-flex items-center p-1 rounded hover:bg-error-content/20 transition-colors"
+			_="on click get the closest <div/> then get its @data-error-json then writeText(it) into navigator.clipboard then remove .hidden from .copy-tooltip in the closest parent <div/> then wait 1.5s then add .hidden to .copy-tooltip in the closest parent <div/>"
 		>
-			&times;
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+			</svg>
 		</button>
+		<span class="copy-tooltip hidden absolute top-8 right-1.5 bg-base-content text-base-100 text-xs rounded px-2 py-0.5 whitespace-nowrap shadow">Copied!</span>
+		<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs pr-6">
+			<dt class="font-semibold">Status</dt>
+			<dd>{ strconv.Itoa(ec.StatusCode) } { ec.Message }</dd>
+			<dt class="font-semibold">Route</dt>
+			<dd>{ ec.Route }</dd>
+			if ec.Err != nil {
+				<dt class="font-semibold">Error</dt>
+				<dd>{ ec.Err.Error() }</dd>
+			}
+			if ec.RequestID != "" {
+				<dt class="font-semibold">Request ID</dt>
+				<dd><code class="border border-error-content/15 px-1 py-0.5 rounded font-mono">{ ec.RequestID }</code></dd>
+			}
+		</dl>
+	</div>
+	if ec.Closable {
+		<div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+			@bannerControlButtonsLeft(bannerControls(ec))
+			@bannerControlButtonsRight(bannerControls(ec))
+		</div>
+	} else {
+		@ErrorControls(ec.Controls)
 	}
-	<p class="mb-1">
-		<strong>Status Code:</strong> { strconv.Itoa(ec.StatusCode) }
-	</p>
-	<p class="mb-1">
-		<strong>Route:</strong> { ec.Route }
-	</p>
-	<p class="mb-1">
-		<strong>Message:</strong> { ec.Message }
-	</p>
-	if ec.RequestID != "" {
-		<p class="mb-1">
-			<strong>Request ID:</strong> <code class="bg-rose-200 px-1 py-0.5 rounded text-xs">{ ec.RequestID }</code>
-		</p>
+}
+
+// bannerControls returns only Dismiss and Report controls for the global error banner.
+// A Dismiss button is prepended when Closable is true and none already exists.
+func bannerControls(ec hypermedia.ErrorContext) []hypermedia.Control {
+	var out []hypermedia.Control
+	hasDismiss := false
+	for _, ctrl := range ec.Controls {
+		if ctrl.Kind == hypermedia.ControlKindDismiss || ctrl.Kind == hypermedia.ControlKindReport {
+			out = append(out, ctrl)
+			if ctrl.Kind == hypermedia.ControlKindDismiss {
+				hasDismiss = true
+			}
+		}
 	}
-	if ec.Err != nil {
-		<p class="mb-1">
-			<strong>Error:</strong> { ec.Err.Error() }
-		</p>
+	if ec.Closable && !hasDismiss {
+		close := hypermedia.DismissButton(hypermedia.LabelDismiss)
+		out = append([]hypermedia.Control{close}, out...)
 	}
-	@ErrorControls(ec.Controls)
+	return out
+}
+
+// bannerControlButtonsLeft renders non-dismiss buttons (Report Issue) on the left.
+templ bannerControlButtonsLeft(controls []hypermedia.Control) {
+	<div class="flex flex-wrap gap-2">
+		for _, ctrl := range controls {
+			if ctrl.Kind == hypermedia.ControlKindReport {
+				@reportButton(ctrl)
+			}
+		}
+	</div>
+}
+
+// bannerControlButtonsRight renders dismiss buttons on the right.
+templ bannerControlButtonsRight(controls []hypermedia.Control) {
+	<div class="flex flex-wrap gap-2">
+		for _, ctrl := range controls {
+			if ctrl.Kind == hypermedia.ControlKindDismiss {
+				@dismissButton(ctrl)
+			}
+		}
+	</div>
 }
 
 // ErrorStatus is the backward-compatible wrapper. All existing call sites are unchanged.

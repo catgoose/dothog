@@ -13,6 +13,7 @@ import (
 
 	"catgoose/harmony/internals/routes/handler"
 	"catgoose/harmony/internals/routes/hypermedia"
+	"catgoose/harmony/internals/routes/middleware"
 	"catgoose/harmony/web/views"
 
 	"github.com/labstack/echo/v4"
@@ -391,15 +392,18 @@ func (gs *controlsGalleryState) handleErrTransient(c echo.Context) error {
 	gs.mu.Unlock()
 
 	if attempt%2 == 1 {
+		requestID := middleware.GetRequestID(c)
 		ec := hypermedia.ErrorContext{
 			StatusCode: 500,
 			Message:    fmt.Sprintf("Save failed — transient network error (attempt %d)", attempt),
 			Route:      c.Request().URL.Path,
+			RequestID:  requestID,
 			Closable:   true,
 			Controls: []hypermedia.Control{
 				hypermedia.RetryButton("Retry Save", hypermedia.HxMethodPost,
 					"/hypermedia/controls/errors/transient", "#"+resultIDTransient).
 					WithErrorTarget("#" + resultIDTransient),
+				hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID),
 			},
 		}
 		c.Response().WriteHeader(http.StatusInternalServerError)
@@ -423,6 +427,7 @@ func (gs *controlsGalleryState) handleErrValidate(c echo.Context) error {
 	}
 
 	if len(errs) > 0 {
+		requestID := middleware.GetRequestID(c)
 		fixURL := fmt.Sprintf("/hypermedia/controls/errors/validate/fix?name=%s&price=%s",
 			url.QueryEscape(name), url.QueryEscape(price))
 		ec := hypermedia.ErrorContext{
@@ -430,6 +435,7 @@ func (gs *controlsGalleryState) handleErrValidate(c echo.Context) error {
 			Message:    "Validation failed",
 			Err:        errors.New(strings.Join(errs, "; ")),
 			Route:      c.Request().URL.Path,
+			RequestID:  requestID,
 			Closable:   true,
 			Controls: []hypermedia.Control{
 				{
@@ -439,6 +445,7 @@ func (gs *controlsGalleryState) handleErrValidate(c echo.Context) error {
 					ErrorTarget: "#" + resultIDValidate,
 					HxRequest:   hypermedia.HxGet(fixURL, "#"+resultIDValidate),
 				},
+				hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID),
 			},
 		}
 		c.Response().WriteHeader(http.StatusUnprocessableEntity)
@@ -457,11 +464,13 @@ func (gs *controlsGalleryState) handleErrValidateFix(c echo.Context) error {
 
 // Scenario 3: Conflict — record already exists, offer update or copy.
 func (gs *controlsGalleryState) handleErrConflict(c echo.Context) error {
+	requestID := middleware.GetRequestID(c)
 	ec := hypermedia.ErrorContext{
 		StatusCode: 409,
 		Message:    "'Widget Alpha' already exists (ID: 42)",
 		Err:        errors.New("unique constraint violated on column 'name'"),
 		Route:      c.Request().URL.Path,
+		RequestID:  requestID,
 		Closable:   true,
 		Controls: []hypermedia.Control{
 			{
@@ -482,6 +491,7 @@ func (gs *controlsGalleryState) handleErrConflict(c echo.Context) error {
 				ErrorTarget: "#" + resultIDConflict,
 				HxRequest:   hypermedia.HxPost("/hypermedia/controls/errors/conflict/copy", "#"+resultIDConflict),
 			},
+			hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID),
 		},
 	}
 	c.Response().WriteHeader(http.StatusConflict)
@@ -512,6 +522,7 @@ func (gs *controlsGalleryState) handleErrStale(c echo.Context) error {
 	gs.mu.RUnlock()
 
 	if sv < currentVersion {
+		requestID := middleware.GetRequestID(c)
 		forceURL := fmt.Sprintf("/hypermedia/controls/errors/stale/force?name=%s",
 			url.QueryEscape(name))
 		ec := hypermedia.ErrorContext{
@@ -519,6 +530,7 @@ func (gs *controlsGalleryState) handleErrStale(c echo.Context) error {
 			Message:    fmt.Sprintf("Record modified by another user (your v%d, server v%d)", sv, currentVersion),
 			Err:        errors.New("optimistic lock failed — row version mismatch"),
 			Route:      c.Request().URL.Path,
+			RequestID:  requestID,
 			Closable:   true,
 			Controls: []hypermedia.Control{
 				{
@@ -540,6 +552,7 @@ func (gs *controlsGalleryState) handleErrStale(c echo.Context) error {
 						Target: "#" + resultIDStale,
 					},
 				},
+				hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID),
 			},
 		}
 		c.Response().WriteHeader(http.StatusPreconditionFailed)
@@ -590,11 +603,13 @@ func (gs *controlsGalleryState) handleErrCascade(c echo.Context) error {
 			"Already Deleted", "Category was previously removed. Reload page to reset.", resultIDCascade))
 	}
 
+	requestID := middleware.GetRequestID(c)
 	ec := hypermedia.ErrorContext{
 		StatusCode: 409,
 		Message:    fmt.Sprintf("Cannot delete 'Electronics' — %d items depend on it", len(cascadeDependents)),
 		Err:        errors.New("foreign key constraint: items.category_id → categories.id"),
 		Route:      c.Request().URL.Path,
+		RequestID:  requestID,
 		Closable:   true,
 		Controls: []hypermedia.Control{
 			{
@@ -608,6 +623,7 @@ func (gs *controlsGalleryState) handleErrCascade(c echo.Context) error {
 				"/hypermedia/controls/errors/cascade/force", "#"+resultIDCascade,
 				fmt.Sprintf("Delete 'Electronics' AND all %d items?", len(cascadeDependents))).
 				WithErrorTarget("#" + resultIDCascade),
+			hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID),
 		},
 	}
 	c.Response().WriteHeader(http.StatusConflict)

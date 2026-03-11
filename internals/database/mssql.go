@@ -75,18 +75,16 @@ func (config *sqlConnectionConfig) connectionString() string {
 }
 
 func openMSSQLDB(ctx context.Context) (*sqlx.DB, error) {
+	log := logger.WithContext(ctx)
 	config, err := getConnectionConfig()
 	if err != nil {
-		return nil, logger.LogAndReturnError("Failed to load database configuration", err)
+		log.Error("Failed to load database configuration", "error", err)
+		return nil, fmt.Errorf("failed to load database configuration: %w", err)
 	}
 	db, err := sqlx.Open(config.driver, config.connectionString())
 	if err != nil {
-		fields := map[string]any{
-			"driver":   config.driver,
-			"server":   config.server,
-			"database": config.database,
-		}
-		logger.LogErrorWithFields("Failed to connect to database", err, fields)
+		log.Error("Failed to connect to database", "error", err,
+			"driver", config.driver, "server", config.server, "database", config.database)
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
@@ -97,12 +95,8 @@ func openMSSQLDB(ctx context.Context) (*sqlx.DB, error) {
 	db.SetConnMaxIdleTime(10 * time.Minute)
 
 	if err := db.PingContext(ctx); err != nil {
-		fields := map[string]any{
-			"driver":   config.driver,
-			"server":   config.server,
-			"database": config.database,
-		}
-		logger.LogErrorWithFields("Failed to ping database", err, fields)
+		log.Error("Failed to ping database", "error", err,
+			"driver", config.driver, "server", config.server, "database", config.database)
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 

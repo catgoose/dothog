@@ -26,6 +26,14 @@ type ContextDescriptionKey struct{}
 // ContextDescriptionKeyValue is the exported value used as a key for storing context descriptions in context.Context
 var ContextDescriptionKeyValue = ContextDescriptionKey{}
 
+// RuntimeID is a unique identifier set once at application startup.
+// It allows filtering logs for a specific process lifetime (e.g. jq '.runtime_id == "..."').
+var RuntimeID string
+
+func init() {
+	RuntimeID = GenerateContextID()
+}
+
 // GenerateContextID generates a unique context ID for worker execution tracing
 func GenerateContextID() string {
 	bytes := make([]byte, 16)
