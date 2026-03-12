@@ -5,10 +5,9 @@ test.describe("Home Page", () => {
   test("renders hero section with title and CTAs", async ({ page }) => {
     await navigateTo(page, "/");
     await expect(page.locator("h1")).toContainText("Go + HTMX + Templ");
-    await expect(page.locator('a:has-text("Dashboard")')).toHaveAttribute(
-      "href",
-      "/dashboard",
-    );
+    await expect(
+      page.locator('#base-content a:has-text("Dashboard")'),
+    ).toHaveAttribute("href", "/dashboard");
     await expect(
       page.locator('a:has-text("Controls Gallery")'),
     ).toHaveAttribute("href", "/hypermedia/controls");
