@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"catgoose/dothog/internal/domain"
-	log "catgoose/dothog/internal/logger"
+	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/repository"
 
 	"github.com/google/uuid"
@@ -28,13 +28,13 @@ func SessionSettingsMiddleware(repo repository.SessionSettingsRepository) echo.M
 
 			settings, err := repo.GetByUUID(c.Request().Context(), sessionUUID)
 			if err != nil {
-				log.WithContext(c.Request().Context()).Error("Failed to load session settings", "error", err)
+				logger.WithContext(c.Request().Context()).Error("Failed to load session settings", "error", err)
 				settings = domain.NewDefaultSettings(sessionUUID)
 			}
 			if settings == nil {
 				settings = domain.NewDefaultSettings(sessionUUID)
 				if err := repo.Upsert(c.Request().Context(), settings); err != nil {
-					log.WithContext(c.Request().Context()).Error("Failed to create session settings", "error", err)
+					logger.WithContext(c.Request().Context()).Error("Failed to create session settings", "error", err)
 				}
 			}
 

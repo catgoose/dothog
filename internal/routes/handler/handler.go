@@ -2,7 +2,7 @@
 package handler
 
 import (
-	log "catgoose/dothog/internal/logger"
+	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/internal/routes/middleware"
 	"catgoose/dothog/web/views"
@@ -79,7 +79,7 @@ func HandleError(c echo.Context, statusCode int, message string, err error) erro
 		return nil
 	}
 	requestID := middleware.GetRequestID(c)
-	log.WithContext(c.Request().Context()).Error("Request error", "error", err, "status_code", statusCode, "message", message)
+	logger.WithContext(c.Request().Context()).Error("Request error", "error", err, "status_code", statusCode, "message", message)
 	c.Response().Status = statusCode
 	renderErr := RenderComponent(c, corecomponents.ErrorStatus(statusCode, message, err, c.Request().URL.Path, requestID, true))
 	if renderErr != nil {

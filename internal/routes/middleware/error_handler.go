@@ -23,7 +23,7 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 
 	requestID := GetRequestID(c)
 	log := logger.WithContext(c.Request().Context()).With(
-		"statusCode", statusCode,
+		"status_code", statusCode,
 		"message", message,
 		"route", c.Request().URL.Path,
 		"method", c.Request().Method,
@@ -74,7 +74,7 @@ func handleErrorWithContext(c echo.Context, ec hypermedia.ErrorContext) error {
 	}
 
 	log := logger.WithContext(c.Request().Context()).With(
-		"statusCode", ec.StatusCode,
+		"status_code", ec.StatusCode,
 		"message", ec.Message,
 		"route", c.Request().URL.Path,
 		"method", c.Request().Method,

@@ -3,9 +3,9 @@ package routes
 
 import (
 	"catgoose/dothog/internal/config"
+	"catgoose/dothog/internal/logger"
 	// setup:feature:demo:start
 	"catgoose/dothog/internal/demo"
-	"catgoose/dothog/internal/logger"
 	// setup:feature:sse:start
 	"catgoose/dothog/internal/ssebroker"
 	// setup:feature:sse:end
@@ -22,7 +22,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"log/slog"
 	"net/http"
 	"time"
 	// setup:feature:auth:start
@@ -84,7 +83,7 @@ func (ar *appRoutes) InitRoutes() error {
 			entries = ar.reqLogStore.Get(requestID)
 		}
 		if err := ar.issueReporter.Report(requestID, description, entries); err != nil {
-			slog.ErrorContext(c.Request().Context(), "Issue report failed",
+			logger.WithContext(c.Request().Context()).Error("Issue report failed",
 				"reported_request_id", requestID, "error", err)
 			c.Response().Header().Set("HX-Trigger", `{"showAlert":"Failed to submit report. Please try again."}`)
 			c.Response().Header().Set("HX-Reswap", "none")

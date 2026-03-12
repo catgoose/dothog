@@ -45,14 +45,14 @@ func InitAndSyncUserCache(
 		// This prevents spamming Azure on every dev restart
 		exists, err := userCache.UsersTableExists()
 		if err != nil {
-			log.Info("Users table check failed, will fetch users from Azure", "error", err)
+			log.Warn("Users table check failed, will fetch users from Azure", "error", err)
 		} else if !exists {
 			log.Info("Users table does not exist, fetching users from Azure")
 		} else {
 			// Check if table has data
 			userCount, err := userCache.GetUserCount()
 			if err != nil {
-				log.Info("Failed to get user count, will fetch users from Azure", "error", err)
+				log.Warn("Failed to get user count, will fetch users from Azure", "error", err)
 			} else if userCount == 0 {
 				log.Info("Users table is empty, fetching users from Azure")
 			} else {

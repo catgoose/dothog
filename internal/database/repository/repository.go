@@ -95,7 +95,7 @@ func (r *RepoManager) InitSchema(ctx context.Context) error {
 	for i := len(r.tables) - 1; i >= 0; i-- {
 		stmt := r.tables[i].DropSQL(r.dialect)
 		if _, err := r.db.ExecContext(ctx, stmt); err != nil {
-			log.Info("Failed to drop table (may not exist)", "table", r.tables[i].Name, "error", err)
+			log.Warn("Failed to drop table (may not exist)", "table", r.tables[i].Name, "error", err)
 		}
 	}
 

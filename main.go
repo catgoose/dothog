@@ -8,7 +8,7 @@ import (
 	dbrepo "catgoose/dothog/internal/database/repository"
 	"catgoose/dothog/internal/database/schema"
 	// setup:feature:database:end
-	log "catgoose/dothog/internal/logger"
+	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/requestlog"
 	"catgoose/dothog/internal/routes"
 	// setup:feature:session_settings:start
@@ -48,10 +48,10 @@ func must(fs fs.FS, err error) fs.FS {
 
 func main() {
 	reqLogStore := requestlog.NewStore(512)
-	log.SetHandlerWrapper(func(h slog.Handler) slog.Handler {
+	logger.SetHandlerWrapper(func(h slog.Handler) slog.Handler {
 		return requestlog.NewHandler(h, reqLogStore)
 	})
-	log.Init()
+	logger.Init()
 	flag.Parse()
 	envErr := dio.InitEnvironment(nil)
 	// setup:feature:demo:start
@@ -59,17 +59,17 @@ func main() {
 		// No .env file -- apply standalone defaults so the demo binary
 		// can run without any configuration.
 		os.Setenv("SERVER_LISTEN_PORT", dio.EnvWithDefault("SERVER_LISTEN_PORT", "8080"))
-		log.Info("No .env file found, using environment variables and defaults")
+		logger.Info("No .env file found, using environment variables and defaults")
 		envErr = nil
 	}
 	// setup:feature:demo:end
 	if envErr != nil {
-		log.Fatal("Failed to initialize environment", "error", envErr)
+		logger.Fatal("Failed to initialize environment", "error", envErr)
 	}
 
 	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Fatal("Failed to load configuration", "error", err)
+		logger.Fatal("Failed to load configuration", "error", err)
 	}
 
 	appCtx, cancel := context.WithCancel(context.Background())
@@ -79,17 +79,17 @@ func main() {
 	if cfg.EnableDatabase {
 		db, err := database.Open(appCtx, cfg.DBEngine)
 		if err != nil {
-			log.Fatal("Failed to open database", "error", err)
+			logger.Fatal("Failed to open database", "error", err)
 		}
 		defer func() {
 			if closeErr := db.Close(); closeErr != nil {
-				log.Info("Error closing database connection", "error", closeErr)
+				logger.Info("Error closing database connection", "error", closeErr)
 			}
 		}()
 
 		d, err := dialect.New(cfg.DBEngine)
 		if err != nil {
-			log.Fatal("Failed to create dialect", "error", err)
+			logger.Fatal("Failed to create dialect", "error", err)
 		}
 
 		repoManager := dbrepo.NewManager(db, d,
@@ -102,16 +102,16 @@ func main() {
 		// InitRepo gates schema init. Destructive: drops existing tables and recreates them, wiping data. Only enable when intentionally resetting the database.
 		if cfg.InitRepo {
 			if err := repoManager.InitSchema(appCtx); err != nil {
-				log.Fatal("Failed to initialize database schema", "error", err)
+				logger.Fatal("Failed to initialize database schema", "error", err)
 			}
 		}
 
 		if err := repoManager.EnsureSchema(appCtx); err != nil {
-			log.Fatal("Failed to ensure database schema", "error", err)
+			logger.Fatal("Failed to ensure database schema", "error", err)
 		}
 
 		if err := repoManager.ValidateSchema(appCtx); err != nil {
-			log.Fatal("Database schema validation failed", "error", err)
+			logger.Fatal("Database schema validation failed", "error", err)
 		}
 
 	}
@@ -120,20 +120,20 @@ func main() {
 	// setup:feature:session_settings:start
 	settingsDB, err := database.OpenSQLite(appCtx, "db/session_settings.db")
 	if err != nil {
-		log.Fatal("Failed to open session settings database", "error", err)
+		logger.Fatal("Failed to open session settings database", "error", err)
 	}
 	defer func() {
 		if closeErr := settingsDB.Close(); closeErr != nil {
-			log.Info("Error closing session settings database", "error", closeErr)
+			logger.Info("Error closing session settings database", "error", closeErr)
 		}
 	}()
 	settingsDialect, err := dialect.New(dialect.SQLite)
 	if err != nil {
-		log.Fatal("Failed to create session settings dialect", "error", err)
+		logger.Fatal("Failed to create session settings dialect", "error", err)
 	}
 	settingsManager := dbrepo.NewManager(settingsDB, settingsDialect, schema.SessionSettingsTable)
 	if err := settingsManager.EnsureSchema(appCtx); err != nil {
-		log.Fatal("Failed to ensure session settings schema", "error", err)
+		logger.Fatal("Failed to ensure session settings schema", "error", err)
 	}
 	settingsRepo := repository.NewSessionSettingsRepository(settingsManager)
 	// setup:feature:session_settings:end
@@ -144,18 +144,18 @@ func main() {
 		// setup:feature:session_settings:end
 	)
 	if err != nil {
-		log.Fatal("Failed to initialize Echo", "error", err)
+		logger.Fatal("Failed to initialize Echo", "error", err)
 	}
 
 	ar := routes.NewAppRoutes(appCtx, e, reqLogStore, nil)
 	if err := ar.InitRoutes(); err != nil {
-		log.Fatal("Failed to setup routes", "error", err)
+		logger.Fatal("Failed to setup routes", "error", err)
 	}
 
 	// setup:feature:avatar:start
 	photoStore, err := graph.NewPhotoStore("web/assets/public/images")
 	if err != nil {
-		log.Fatal("Failed to create photo store", "error", err)
+		logger.Fatal("Failed to create photo store", "error", err)
 	}
 	routes.RegisterAvatarRoutes(e, photoStore)
 
@@ -165,40 +165,40 @@ func main() {
 	if tenantID != "" && clientID != "" && clientSecret != "" {
 		graphClient, err := graph.NewGraphClient(tenantID, clientID, clientSecret)
 		if err != nil {
-			log.Fatal("Failed to create Graph client", "error", err)
+			logger.Fatal("Failed to create Graph client", "error", err)
 		}
 		sqliteDB, err := graphdb.OpenSQLiteInMemory()
 		if err != nil {
-			log.Fatal("Failed to open in-memory SQLite for user cache", "error", err)
+			logger.Fatal("Failed to open in-memory SQLite for user cache", "error", err)
 		}
 		defer func() { _ = sqliteDB.Close() }()
 		userCache := graph.NewUserCache(sqliteDB)
 		afterSync := func(ctx context.Context, users []domain.GraphUser) {
 			if err := graph.SyncPhotos(ctx, graphClient, photoStore, users, false); err != nil {
-				log.Error("Photo sync failed", "error", err)
+				logger.Error("Photo sync failed", "error", err)
 			}
 		}
 		if err := graph.InitAndSyncUserCache(appCtx, userCache, cfg.AzureRefreshUsersHour, graphClient.FetchAllEnabledUsers, afterSync); err != nil {
-			log.Fatal("Failed to initialize user cache", "error", err)
+			logger.Fatal("Failed to initialize user cache", "error", err)
 		}
 	} else {
-		log.Info("Azure credentials not configured; skipping user and photo sync")
+		logger.Info("Azure credentials not configured; skipping user and photo sync")
 	}
 	// setup:feature:avatar:end
 
 	go func() {
 		if dio.Dev() {
-			log.Info("Starting Echo server with TLS (development mode)", "port", cfg.ServerPort)
+			logger.Info("Starting Echo server with TLS (development mode)", "port", cfg.ServerPort)
 			if err := e.StartTLS(fmt.Sprintf(":%s", cfg.ServerPort), "localhost.crt", "localhost.key"); err != nil {
 				if err != http.ErrServerClosed {
-					log.Fatal("Failed to start Echo server with TLS", "error", err)
+					logger.Fatal("Failed to start Echo server with TLS", "error", err)
 				}
 			}
 		} else {
-			log.Info("Starting Echo server without TLS (production mode)", "port", cfg.ServerPort)
+			logger.Info("Starting Echo server without TLS (production mode)", "port", cfg.ServerPort)
 			if err := e.Start(fmt.Sprintf(":%s", cfg.ServerPort)); err != nil {
 				if err != http.ErrServerClosed {
-					log.Fatal("Failed to start Echo server", "error", err)
+					logger.Fatal("Failed to start Echo server", "error", err)
 				}
 			}
 		}
@@ -210,7 +210,7 @@ func main() {
 
 	// Wait for shutdown signal
 	<-sigChan
-	log.Info("Shutting down gracefully...")
+	logger.Info("Shutting down gracefully...")
 
 	// Cancel the application context to signal shutdown to all goroutines
 	cancel()
@@ -221,8 +221,8 @@ func main() {
 
 	// Shutdown the Echo server
 	if err := e.Shutdown(shutdownCtx); err != nil {
-		log.Info("Error during server shutdown", "error", err)
+		logger.Info("Error during server shutdown", "error", err)
 	}
 
-	log.Info("Server shutdown complete")
+	logger.Info("Server shutdown complete")
 }

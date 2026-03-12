@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"catgoose/dothog/internal/demo"
-	log "catgoose/dothog/internal/logger"
+	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/web/views"
@@ -51,7 +51,7 @@ func (b *bulkRoutes) handleBulkDeleteItems(c echo.Context) error {
 		return b.db.DeleteItem(ctx, id)
 	})
 	if len(failedIDs) > 0 {
-		log.WithContext(c.Request().Context()).Warn("Bulk delete: failed items", "ids", failedIDs)
+		logger.WithContext(c.Request().Context()).Warn("Bulk delete: failed items", "ids", failedIDs)
 	}
 	applyFilterFromCurrentURL(c)
 	_, container, err := b.buildBulkContent(c)
@@ -72,7 +72,7 @@ func (b *bulkRoutes) handleBulkActivateItems(c echo.Context) error {
 		return b.db.UpdateItem(ctx, item)
 	})
 	if len(failedIDs) > 0 {
-		log.WithContext(c.Request().Context()).Warn("Bulk activate: failed items", "ids", failedIDs)
+		logger.WithContext(c.Request().Context()).Warn("Bulk activate: failed items", "ids", failedIDs)
 	}
 	applyFilterFromCurrentURL(c)
 	_, container, err := b.buildBulkContent(c)
@@ -93,7 +93,7 @@ func (b *bulkRoutes) handleBulkDeactivateItems(c echo.Context) error {
 		return b.db.UpdateItem(ctx, item)
 	})
 	if len(failedIDs) > 0 {
-		log.WithContext(c.Request().Context()).Warn("Bulk deactivate: failed items", "ids", failedIDs)
+		logger.WithContext(c.Request().Context()).Warn("Bulk deactivate: failed items", "ids", failedIDs)
 	}
 	applyFilterFromCurrentURL(c)
 	_, container, err := b.buildBulkContent(c)
