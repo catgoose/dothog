@@ -4,7 +4,7 @@ import { navigateTo } from "./helpers";
 test.describe("Home Page", () => {
   test("renders hero section with title and CTAs", async ({ page }) => {
     await navigateTo(page, "/");
-    await expect(page.locator("h1")).toContainText("Go + HTMX + Templ");
+    await expect(page.locator("h1")).toContainText("Two Architectures, One Goal");
     await expect(page.locator('.hero a:has-text("Dashboard")')).toHaveAttribute(
       "href",
       "/dashboard",
@@ -14,24 +14,24 @@ test.describe("Home Page", () => {
     ).toHaveAttribute("href", "/hypermedia/controls");
   });
 
-  test("renders stack cards", async ({ page }) => {
+  test("renders reach-up pyramid sections", async ({ page }) => {
     await navigateTo(page, "/");
-    await expect(page.locator(".card-title:has-text('Go + Echo')")).toBeVisible();
-    await expect(page.locator(".card-title:has-text('HTMX')")).toBeVisible();
-    await expect(page.locator(".card-title:has-text('Templ')")).toBeVisible();
+    await expect(page.locator("text=The Reach-Up Model")).toBeVisible();
+    await expect(page.locator("h3:has-text('Behavior')")).toBeVisible();
+    await expect(page.locator("h3:has-text('Presentation')")).toBeVisible();
   });
 
-  test("renders feature cards", async ({ page }) => {
+  test("renders domain map cards", async ({ page }) => {
     await navigateTo(page, "/");
-    await expect(page.locator(".card-title:has-text('Composable SQL Fragments')")).toBeVisible();
-    await expect(page.locator(".card-title:has-text('Hypermedia Controls')")).toBeVisible();
-    await expect(page.locator(".card-title:has-text('DaisyUI + Tailwind')")).toBeVisible();
-    await expect(page.locator(".card-title:has-text('Feature Flags at Build Time')")).toBeVisible();
+    await expect(page.locator(".card-title:has-text('Go + SQL')")).toBeVisible();
+    await expect(page.locator(".card-title:has-text('HTTP + HTMX')")).toBeVisible();
+    await expect(page.locator(".card-title:has-text('templ + DaisyUI')")).toBeVisible();
+    await expect(page.locator(".card-title:has-text('Alpine.js')")).toBeVisible();
   });
 
-  test("renders quick start section", async ({ page }) => {
+  test("renders see it in action section", async ({ page }) => {
     await navigateTo(page, "/");
-    await expect(page.locator("text=Quick Start")).toBeVisible();
+    await expect(page.locator("text=See It In Action")).toBeVisible();
   });
 
   test("navbar is present", async ({ page }) => {
