@@ -118,6 +118,9 @@ Each error panel is built from a `Control` struct that maps to HTMX attributes (
 | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | ![400 Bad Request](https://raw.githubusercontent.com/catgoose/screenshots/main/harmony/error-400-bad-request.png) | ![404 Not Found](https://raw.githubusercontent.com/catgoose/screenshots/main/harmony/error-404-not-found.png) |
 
+<details>
+<summary>More error recovery screenshots</summary>
+
 | Transient Error (Retry)                                                                                        | Validation Error (Fix & Resubmit)                                                                                |
 | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | ![Transient](https://raw.githubusercontent.com/catgoose/screenshots/main/harmony/error-recovery-transient.png) | ![Validation](https://raw.githubusercontent.com/catgoose/screenshots/main/harmony/error-recovery-validation.png) |
@@ -151,6 +154,8 @@ The errors page demonstrates all error handling patterns with interactive trigge
 | Flaky Endpoint (Retry)                                                                                     | Report Issue Modal                                                                                           |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | ![Flaky Retry](https://raw.githubusercontent.com/catgoose/screenshots/main/harmony/errors-flaky-retry.png) | ![Report Modal](https://raw.githubusercontent.com/catgoose/screenshots/main/harmony/errors-report-modal.png) |
+
+</details>
 
 ### CRUD (Inline Editing)
 
