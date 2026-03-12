@@ -193,7 +193,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		return err
 	}
 
-	for _, f := range []string{filepath.Join("build", "Caddyfile"), filepath.Join(".air", "server.toml")} {
+	for _, f := range []string{filepath.Join("config", "Caddyfile"), filepath.Join(".air", "server.toml")} {
 		p := filepath.Join(dir, f)
 		data, err := os.ReadFile(p)
 		if err != nil {
@@ -225,7 +225,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	// Legacy --no-caddy flag: remove Caddyfile if requested.
 	// The new Features mechanism handles this too (see removeOptionalContent).
 	if opts.NoCaddy {
-		_ = os.Remove(filepath.Join(dir, "build", "Caddyfile"))
+		_ = os.Remove(filepath.Join(dir, "config", "Caddyfile"))
 	}
 
 	// Compose .env.dev and .env.development from the tracked .env.development.
@@ -368,7 +368,7 @@ func removeOptionalContent(dir string, opts Options) error {
 		_ = os.Remove(filepath.Join(dir, "web", "assets", "public", "js", "htmx.ext.sse.js"))
 	}
 	if removeTags[FeatureCaddy] {
-		_ = os.Remove(filepath.Join(dir, "build", "Caddyfile"))
+		_ = os.Remove(filepath.Join(dir, "config", "Caddyfile"))
 	}
 
 	var toRemove []string

@@ -811,7 +811,7 @@ func CaddyInstall() error {
 // parse.  We resolve them to real port numbers and write the result to
 // tmp/Caddyfile so Caddy always receives a valid config.
 func CaddyStart() error {
-	caddyfile := filepath.Join("build", "Caddyfile")
+	caddyfile := filepath.Join("config", "Caddyfile")
 	if _, err := os.Stat(caddyfile); os.IsNotExist(err) {
 		fmt.Println("Caddyfile not found, skipping Caddy.")
 		return nil

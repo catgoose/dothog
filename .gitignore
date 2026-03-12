@@ -53,8 +53,7 @@ db/*
 
 # binary
 harmony
-build/*
-!build/Caddyfile
+build/
 
 # agents
 .claude/
