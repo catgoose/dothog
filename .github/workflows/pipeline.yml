@@ -325,3 +325,12 @@ jobs:
 
           git remote add harmony https://x-access-token:${{ secrets.HARMONY_CI }}@github.com/catgoose/harmony.git
           git push harmony HEAD:refs/heads/main --force
+
+      - name: Trigger harmony workflows
+        run: |
+          for workflow in ci.yml e2e.yml; do
+            gh api repos/catgoose/harmony/actions/workflows/$workflow/dispatches \
+              -f ref=main
+          done
+        env:
+          GH_TOKEN: ${{ secrets.HARMONY_CI }}
