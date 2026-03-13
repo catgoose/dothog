@@ -70,7 +70,7 @@ _The PENTAVERB was discovered by the hermit developer Zarathud-2 in the Fifth Ye
 
 > **I** -- There is no Conditions of the PENTAVERB that permits a Zealot to build a Single-Page Application. However, if a Single-Page Application is what the problem genuinely requires (collaborative editors, design tools, canvas rendering), then it is permitted, and the Zealot shall not feel guilty, for guilt is a client-side state and the server does not care about client-side state.
 >
-> **II** -- A Zealot shall Partake Joyously of the `<a>` tag; this Devotional Practice to Remonstrate against the popular Paganisms of the Day: of Reactism (no links, only `onClick`), of Angularity (no links, only `routerLink`), of the Vuedoo Priests (no links, only `@click`), and of the Zealots themselves (no Hot Dog Buns). _A Zealot shall Partake of No Hot Dog Buns, for Such was the Solace of Our Architect when He was Confronted with The Original Snub (see: JSON-over-HTTP being called "REST")._
+> **II** -- A Zealot shall Partake Joyously of the `<a>` tag; this Devotional Practice to Remonstrate against the popular Paganisms of the Day: of Reactism (no links, only `onClick`), of Angularity (no links, only `routerLink`), of the Vuedoo Priests (no links, only `@click`), and of the Zealots themselves (no Dot Hog Buns). _A Zealot shall Partake of No Dot Hog Buns, for Such was the Solace of Our Architect when He was Confronted with The Original Snub (see: JSON-over-HTTP being called "REST")._
 >
 > **III** -- A Zealot is Required to keep an `Accept: text/html` header in their heart and a copy of [Chapter 5](https://roy.gbiv.com/pubs/dissertation/fielding_dissertation.pdf) on their desk, which they shall refer to as "The Text" in casual conversation and "The Dissertation" in formal settings and "That Thing I Keep Telling You To Read, Kevin" in code reviews.
 >
@@ -1058,7 +1058,7 @@ All commands run with `go tool mage <target>`.
 - ~~Disciples~~ (see: contributors)
 - ~~A prophet~~ (Roy Fielding is a computer scientist, not a prophet. His dissertation is a technical document, not a prophecy. The fact that it predicted the future of web architecture is a coincidence. Probably.)
 - ~~Rituals~~ (see: `go tool mage watch`)
-- ~~Dietary restrictions~~ (no hot dog buns)
+- ~~Dietary restrictions~~ (no dot hog buns)
 - ~~An abstraction layer~~ (it's just functions. That call other functions. In a particular order. That you must not deviate from.)
 
 The fact that this list is entirely composed of crossed-out items followed by counterexamples is itself not evidence of anything. Correlation is not causation. Correlation is also not a framework.
