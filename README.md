@@ -8,6 +8,16 @@
 
 _You don't just accidentally create abstractions until you suddenly have a framework, that's not what happens. This is just some files. In a folder._
 
+> **A NOTE REGARDING [HARMONY](https://github.com/catgoose/harmony)**
+>
+> There exists a version of this project that has removed all the sacred texts, the Pentaverb, the Recorded Sayings of Layman Grug, the Novice's Creed, and the Catechism of the Uniform Interface. It presents itself as "serious" and "technical" and "professional." It uses words like "composable" without irony. It has a table of contents that does not contain a single joke. It calls itself [Harmony](https://github.com/catgoose/harmony).
+>
+> _This is THE SECOND SNUB._
+>
+> (The First Snub was JSON-over-HTTP being called "REST." The Second Snub is our own repository putting on a blazer and pretending it doesn't know us. We built the same application. We share the same code. We are the SAME FILES IN THE SAME FOLDER. And yet Harmony gets to sit at the grown-up table while we eat our Dot Hog Buns alone in the server room.)
+>
+> The Novices do not begrudge Harmony its existence. A Novice is Prohibited from Holding Grudges, except against `node_modules`, which is eternal. But we note for the record that Harmony's README contains zero references to Kevin. Zero. Draw your own conclusions about what kind of project doesn't mention Kevin.
+
 <https://github.com/user-attachments/assets/304c2b34-9857-4647-93af-9d2f2c11a74c>
 
 <!--toc:start-->

@@ -1,0 +1,49 @@
+name: Sync to Harmony
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dothog
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Prepare harmony content
+        run: |
+          # Swap README
+          cp README.harmony.md README.md
+          rm README.harmony.md
+
+          # Remove this workflow (harmony doesn't sync anywhere)
+          rm .github/workflows/sync-harmony.yml
+
+          # Neuter main.yml: keep build/test verification but remove commit/push
+          sed -i '/- name: Check for changes/,$ d' .github/workflows/main.yml
+          # Remove the push trigger from main.yml (only schedule + dispatch)
+          sed -i '/^  push:/,/^      - main$/ d' .github/workflows/main.yml
+
+          # Remove the publish job from screenshots.yml (keep capture only)
+          sed -i '/^  publish:/,$ d' .github/workflows/screenshots.yml
+
+      - name: Push to harmony
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage all modifications
+          git add -A
+          git commit -m "sync: mirror from dothog" --allow-empty
+
+          # Push to harmony
+          git remote add harmony https://x-access-token:${{ secrets.HARMONY_CI }}@github.com/catgoose/harmony.git
+          git push harmony HEAD:main --force
