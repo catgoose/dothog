@@ -40,21 +40,13 @@ It uses:
 
 This project was bootstrapped from {{TEMPLATE_REF}}. If you are starting from the template:
 
-1. (Optional but recommended) Install [`gum`](https://github.com/charmbracelet/gum) for a nicer interactive wizard:
-
-   ```bash
-   go install github.com/charmbracelet/gum@latest
-   ```
-
-2. Run the setup script once to stamp your app name, module path, and dev ports:
+1. Run the setup wizard to stamp your app name, module path, and dev ports:
 
    ```bash
    go tool mage setup
-   # Or call the script directly:
-   ./_template_setup/setup-template.sh
    ```
 
-   With `gum` installed, you can optionally copy the template to a new directory (no `.git` is copied), run `git init` there, then complete app name, module path, and ports in that directory. With flags (e.g. `go tool mage setup -n "My App" -m "github.com/you/my-app" -p 5124`) or without `gum`, setup runs in the current directory. After setup you can run cleanup (when prompted) to remove the `_template_setup` folder and `mage_setup.go`.
+   The wizard lets you optionally copy the template to a new directory (no `.git` is copied), run `git init` there, then complete app name, module path, and ports in that directory. With flags (e.g. `go tool mage setup -n "My App" -m "github.com/you/my-app" -p 5124`) setup runs non-interactively. After setup you can run cleanup (when prompted) to remove the `_template_setup` folder and `mage_setup.go`.
 
 3. Review `.env.dev` (generated from `.env.sample`) and adjust as needed.
 4. Start development:

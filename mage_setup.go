@@ -15,24 +15,25 @@ import (
 
 	"catgoose/dothog/internal/setup"
 
+	"github.com/charmbracelet/huh"
 	"github.com/magefile/mage/sh"
 )
 
 const templateModulePath = "catgoose/dothog"
 
-// featureLabels maps feature tags to human-readable gum labels.
+// featureLabels maps feature tags to human-readable labels.
 var featureLabels = map[string]string{
-	setup.FeatureAuth:     "Auth (Crooner)",
-	setup.FeatureGraph:    "Graph API",
-	setup.FeatureDatabase: "Database (MSSQL)",
-	setup.FeatureSSE:      "SSE (requires Caddy)",
-	setup.FeatureCaddy:    "Caddy (HTTPS)",
-	setup.FeatureAvatar:   "Avatar Photos (requires Graph)",
-	setup.FeatureDemo:             "Demo Content",
-	setup.FeatureSessionSettings:  "Session Settings (SQLite)",
+	setup.FeatureAuth:            "Auth (Crooner)",
+	setup.FeatureGraph:           "Graph API",
+	setup.FeatureDatabase:        "Database (MSSQL)",
+	setup.FeatureSSE:             "SSE (requires Caddy)",
+	setup.FeatureCaddy:           "Caddy (HTTPS)",
+	setup.FeatureAvatar:          "Avatar Photos (requires Graph)",
+	setup.FeatureDemo:            "Demo Content",
+	setup.FeatureSessionSettings: "Session Settings (SQLite)",
 }
 
-// featureLabelOrder is the display order for the gum multi-select.
+// featureLabelOrder is the display order for the feature multi-select.
 var featureLabelOrder = []string{
 	setup.FeatureAuth,
 	setup.FeatureGraph,
@@ -73,7 +74,7 @@ func Setup() error {
 		if goModulePath() == templateModulePath {
 			return nil
 		}
-		cleanup, err := gumConfirm("Cleanup template files and setup helpers from this repo?")
+		cleanup, err := huhConfirm("Cleanup template files and setup helpers from this repo?")
 		if err != nil {
 			return err
 		}
@@ -86,16 +87,12 @@ func Setup() error {
 		return nil
 	}
 
-	if !hasGum() {
-		return errors.New("APP_NAME is required; run with -n APP_NAME or install gum for the wizard")
-	}
-
-	copyFirst, err := gumConfirm("Copy template to a new directory before setting up?")
+	copyFirst, err := huhConfirm("Copy template to a new directory before setting up?")
 	if err != nil {
 		return err
 	}
 	if copyFirst {
-		target, err := gumInput("Target directory: ", "e.g. ../my-app or /path/to/project", "")
+		target, err := huhInput("Target directory", "e.g. ../my-app or /path/to/project", "")
 		if err != nil {
 			return err
 		}
@@ -118,7 +115,7 @@ func Setup() error {
 		if info, err := os.Stat(absTarget); err == nil && info.IsDir() {
 			entries, _ := os.ReadDir(absTarget)
 			if len(entries) > 0 {
-				ok, _ := gumConfirm("Target directory exists and is not empty. Overwrite?")
+				ok, _ := huhConfirm("Target directory exists and is not empty. Overwrite?")
 				if !ok {
 					fmt.Println("Setup cancelled.")
 					return nil
@@ -144,7 +141,7 @@ func Setup() error {
 		if err := setup.CopyRepoTo(".", absTarget, []string{".git", "bin", "build", "tmp"}); err != nil {
 			return fmt.Errorf("copying template: %w", err)
 		}
-		gitInit, _ := gumConfirm("Run git init in the new directory?")
+		gitInit, _ := huhConfirm("Run git init in the new directory?")
 		if gitInit {
 			cmd := exec.Command("git", "init")
 			cmd.Dir = absTarget
@@ -174,7 +171,7 @@ func Setup() error {
 	if goModulePath() == templateModulePath {
 		return nil
 	}
-	cleanup, err := gumConfirm("Cleanup template files and setup helpers from this repo?")
+	cleanup, err := huhConfirm("Cleanup template files and setup helpers from this repo?")
 	if err != nil {
 		return err
 	}
@@ -188,157 +185,203 @@ func Setup() error {
 }
 
 func runWizard() (*setup.Options, error) {
-	appName, err := gumInput("App name: ", "App name (e.g. My App)", "")
-	if err != nil {
-		return nil, err
-	}
-	appName = strings.TrimSpace(appName)
-	if appName == "" {
-		return nil, errors.New("APP_NAME is required")
-	}
+	var (
+		appName    string
+		modulePath string
+		basePort   string
+		features   []string
+		force      bool
+		confirm    bool
+	)
 
-	binary := binaryNameFromApp(appName)
 	currentModule := goModulePath()
+	defaultPort := fmt.Sprintf("%d", randomBasePort())
 
-	modulePath := currentModule
-	if modulePath == "" {
-		modulePath = fmt.Sprintf("github.com/you/%s", binary)
-	} else if modulePath == templateModulePath {
-		modulePath = fmt.Sprintf("%s-%s", templateModulePath, binary)
-	}
-
-	modulePathInput, err := gumInputWithValue(
-		"Module path: ",
-		"Module path (e.g. github.com/you/my-app)",
-		"",
-	)
-	if err != nil {
-		return nil, err
-	}
-	modulePathInput = strings.TrimSpace(modulePathInput)
-	if modulePathInput != "" {
-		modulePath = modulePathInput
-	}
-
-	defaultPort := randomBasePort()
-	basePortStr := fmt.Sprintf("%d", defaultPort)
-
-	inputBasePort, err := gumInputWithValue(
-		"Base port: ",
-		fmt.Sprintf("5-digit base port < 60000 (blank = %s)", basePortStr),
-		basePortStr,
-	)
-	if err != nil {
-		return nil, err
-	}
-	inputBasePort = strings.TrimSpace(inputBasePort)
-	if inputBasePort != "" {
-		basePortStr = inputBasePort
-	}
-
-	if len(basePortStr) != 5 {
-		return nil, fmt.Errorf("BASE_PORT must be a 5-digit number, got: %s", basePortStr)
-	}
-	var basePortNum int
-	if _, err := fmt.Sscanf(basePortStr, "%d", &basePortNum); err != nil || basePortNum >= 60000 {
-		return nil, fmt.Errorf("BASE_PORT must be < 60000, got: %s", basePortStr)
-	}
-
-	// Feature selection
-	features, err := wizardFeatureSelect()
-	if err != nil {
-		return nil, err
-	}
-	if features == nil {
-		fmt.Println("Setup cancelled.")
-		return nil, nil
-	}
-
-	force := false
-	if currentModule != "" && currentModule != templateModulePath {
-		msg := fmt.Sprintf("Module already customized (go.mod: %s). Run setup again with --force?", currentModule)
-		ok, err := gumConfirm(msg)
-		if err != nil {
-			return nil, err
+	// Build feature options with preselection
+	var featureOptions []huh.Option[string]
+	for _, tag := range featureLabelOrder {
+		label := featureLabels[tag]
+		opt := huh.NewOption(label, tag)
+		// Demo is opt-in: not preselected by default
+		if tag != setup.FeatureDemo {
+			opt = opt.Selected(true)
 		}
-		if !ok {
+		featureOptions = append(featureOptions, opt)
+	}
+
+	needsForce := currentModule != "" && currentModule != templateModulePath
+
+	form := huh.NewForm(
+		// Group 1: Basic app info
+		huh.NewGroup(
+			huh.NewInput().
+				Title("App name").
+				Placeholder("My App").
+				Value(&appName).
+				Validate(func(s string) error {
+					if strings.TrimSpace(s) == "" {
+						return errors.New("app name is required")
+					}
+					return nil
+				}),
+
+			huh.NewInput().
+				Title("Module path").
+				Placeholder("github.com/you/my-app").
+				DescriptionFunc(func() string {
+					name := strings.TrimSpace(appName)
+					if name == "" {
+						return ""
+					}
+					binary := binaryNameFromApp(name)
+					suggested := currentModule
+					if suggested == "" {
+						suggested = fmt.Sprintf("github.com/you/%s", binary)
+					} else if suggested == templateModulePath {
+						suggested = fmt.Sprintf("%s-%s", templateModulePath, binary)
+					}
+					return fmt.Sprintf("Leave blank to use: %s", suggested)
+				}, &appName).
+				Value(&modulePath),
+
+			huh.NewInput().
+				Title("Base port").
+				Placeholder("5-digit port < 60000").
+				Description(fmt.Sprintf("APP_TLS_PORT=BASE, TEMPL_HTTP=BASE+1, CADDY_TLS=BASE+2 (default: %s)", defaultPort)).
+				Value(&basePort),
+		).Title("App Configuration"),
+
+		// Group 2: Feature selection with dynamic descriptions
+		huh.NewGroup(
+			huh.NewMultiSelect[string]().
+				Title("Features").
+				Description("SSE requires Caddy; Avatar requires Graph (auto-included if missing)").
+				Options(featureOptions...).
+				Value(&features),
+		).Title("Feature Selection"),
+
+		// Group 3: Force confirm — only shown when module is already customized
+		huh.NewGroup(
+			huh.NewConfirm().
+				TitleFunc(func() string {
+					return fmt.Sprintf("Module already customized (go.mod: %s). Run setup again with --force?", currentModule)
+				}, &appName).
+				Value(&force),
+		).WithHideFunc(func() bool {
+			return !needsForce
+		}),
+
+		// Group 4: Final confirmation with dynamic summary
+		huh.NewGroup(
+			huh.NewConfirm().
+				TitleFunc(func() string {
+					resolvedModule := resolveModulePath(appName, modulePath, currentModule)
+					resolvedPort := basePort
+					if resolvedPort == "" {
+						resolvedPort = defaultPort
+					}
+					featureDesc := describeFeatures(features)
+					return fmt.Sprintf("Proceed with app %q, module %s, port %s, features: %s?",
+						strings.TrimSpace(appName), resolvedModule, resolvedPort, featureDesc)
+				}, &appName).
+				Value(&confirm),
+		).WithHideFunc(func() bool {
+			return needsForce && !force
+		}),
+	)
+
+	err := form.Run()
+	if err != nil {
+		if errors.Is(err, huh.ErrUserAborted) {
 			fmt.Println("Setup cancelled.")
 			return nil, nil
 		}
-		force = true
+		return nil, err
 	}
 
-	featureDesc := "all"
-	if len(features) == 0 {
-		featureDesc = "none (bare HTMX app)"
-	} else if len(features) < len(setup.AllFeatures) {
-		featureDesc = strings.Join(features, ", ")
+	if needsForce && !force {
+		fmt.Println("Setup cancelled.")
+		return nil, nil
 	}
-
-	ok, err := gumConfirm(fmt.Sprintf("Proceed with app %q, module %s, port %s, features: %s?", appName, modulePath, basePortStr, featureDesc))
-	if err != nil || !ok {
+	if !confirm {
 		fmt.Println("Setup cancelled.")
 		return nil, nil
 	}
 
+	appName = strings.TrimSpace(appName)
+	resolvedModule := resolveModulePath(appName, modulePath, currentModule)
+	resolvedPort := basePort
+	if resolvedPort == "" {
+		resolvedPort = defaultPort
+	}
+
+	if len(resolvedPort) != 5 {
+		return nil, fmt.Errorf("BASE_PORT must be a 5-digit number, got: %s", resolvedPort)
+	}
+	var basePortNum int
+	if _, err := fmt.Sscanf(resolvedPort, "%d", &basePortNum); err != nil || basePortNum >= 60000 {
+		return nil, fmt.Errorf("BASE_PORT must be < 60000, got: %s", resolvedPort)
+	}
+
+	// Enforce feature dependencies
+	features = enforceFeatureDeps(features)
+
 	return &setup.Options{
 		AppName:     appName,
-		ModulePath:  modulePath,
-		BasePort:    basePortStr,
+		ModulePath:  resolvedModule,
+		BasePort:    resolvedPort,
 		Force:       force,
 		Features:    features,
-		ConfirmFunc: gumConfirm,
+		ConfirmFunc: huhConfirm,
 	}, nil
 }
 
-// wizardFeatureSelect presents the interactive feature multi-select.
-// Returns the selected feature tags, or nil if the user cancelled.
-func wizardFeatureSelect() ([]string, error) {
-	// Build ordered label list and label→tag map
-	var labels []string
-	var preselected []string
-	labelToTag := make(map[string]string)
-	for _, tag := range featureLabelOrder {
-		label := featureLabels[tag]
-		labels = append(labels, label)
-		labelToTag[label] = tag
-		// Demo is opt-in: not preselected by default
-		if tag != setup.FeatureDemo {
-			preselected = append(preselected, label)
-		}
+// resolveModulePath determines the final module path from user input and defaults.
+func resolveModulePath(appName, modulePathInput, currentModule string) string {
+	modulePathInput = strings.TrimSpace(modulePathInput)
+	if modulePathInput != "" {
+		return modulePathInput
 	}
+	name := strings.TrimSpace(appName)
+	if name == "" {
+		return currentModule
+	}
+	binary := binaryNameFromApp(name)
+	if currentModule == "" {
+		return fmt.Sprintf("github.com/you/%s", binary)
+	}
+	if currentModule == templateModulePath {
+		return fmt.Sprintf("%s-%s", templateModulePath, binary)
+	}
+	return currentModule
+}
 
-	selected, err := gumChooseMulti("Select features to include (all selected by default):", labels, preselected)
-	if err != nil {
-		return nil, err
+// describeFeatures returns a human-readable summary of selected features.
+func describeFeatures(features []string) string {
+	if len(features) == 0 {
+		return "none (bare HTMX app)"
 	}
-	if selected == nil {
-		return nil, nil // user cancelled
+	if len(features) >= len(setup.AllFeatures) {
+		return "all"
 	}
+	return strings.Join(features, ", ")
+}
 
-	// Map labels back to tags
-	var tags []string
+// enforceFeatureDeps auto-includes required dependencies.
+func enforceFeatureDeps(features []string) []string {
 	tagSet := make(map[string]bool)
-	for _, label := range selected {
-		if tag, ok := labelToTag[label]; ok {
-			tags = append(tags, tag)
-			tagSet[tag] = true
-		}
+	for _, f := range features {
+		tagSet[f] = true
 	}
-
-	// SSE requires Caddy — auto-include if missing
 	if tagSet[setup.FeatureSSE] && !tagSet[setup.FeatureCaddy] {
-		tags = append(tags, setup.FeatureCaddy)
+		features = append(features, setup.FeatureCaddy)
 		fmt.Println("SSE requires Caddy for proxying; Caddy auto-included.")
 	}
-
-	// Avatar requires Graph — auto-include if missing
 	if tagSet[setup.FeatureAvatar] && !tagSet[setup.FeatureGraph] {
-		tags = append(tags, setup.FeatureGraph)
+		features = append(features, setup.FeatureGraph)
 		fmt.Println("Avatar requires Graph API; Graph auto-included.")
 	}
-
-	return tags, nil
+	return features
 }
 
 func hasFeature(features []string, tag string) bool {
@@ -348,29 +391,6 @@ func hasFeature(features []string, tag string) bool {
 		}
 	}
 	return false
-}
-
-func gumChooseMulti(header string, items []string, selected []string) ([]string, error) {
-	args := []string{"choose", "--no-limit", "--header", header}
-	if len(selected) > 0 {
-		args = append(args, "--selected", strings.Join(selected, ","))
-	}
-	args = append(args, items...)
-	out, err := sh.Output("gum", args...)
-	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return nil, nil // user cancelled
-		}
-		return nil, err
-	}
-	var result []string
-	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
-		if line != "" {
-			result = append(result, line)
-		}
-	}
-	return result, nil
 }
 
 func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPrinted bool, err error) {
@@ -441,11 +461,7 @@ func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPri
 			}
 		}
 	}
-	if hasGum() {
-		opts.ConfirmFunc = gumConfirm
-	} else {
-		opts.ConfirmFunc = stdinConfirm
-	}
+	opts.ConfirmFunc = huhConfirm
 	return opts, true, false, nil
 }
 
@@ -478,47 +494,37 @@ func setupScriptArgsFromCLI() []string {
 	return args[idx+1:]
 }
 
-func hasGum() bool {
-	_, err := sh.Exec(nil, nil, nil, "which", "gum")
-	return err == nil
+// huhConfirm prompts the user with a yes/no confirmation using huh.
+func huhConfirm(message string) (bool, error) {
+	var confirmed bool
+	err := huh.NewConfirm().
+		Title(message).
+		Value(&confirmed).
+		Run()
+	if err != nil {
+		if errors.Is(err, huh.ErrUserAborted) {
+			return false, nil
+		}
+		return false, err
+	}
+	return confirmed, nil
 }
 
-func gumInput(prompt, placeholder, value string) (string, error) {
-	args := []string{"input", "--prompt", prompt}
-	if placeholder != "" {
-		args = append(args, "--placeholder", placeholder)
-	}
-	if value != "" {
-		args = append(args, "--value", value)
-	}
-	out, err := sh.Output("gum", args...)
+// huhInput prompts the user for text input using huh.
+func huhInput(title, placeholder, value string) (string, error) {
+	result := value
+	field := huh.NewInput().
+		Title(title).
+		Placeholder(placeholder).
+		Value(&result)
+	err := huh.NewForm(huh.NewGroup(field)).Run()
 	if err != nil {
+		if errors.Is(err, huh.ErrUserAborted) {
+			return "", nil
+		}
 		return "", err
 	}
-	return strings.TrimSpace(out), nil
-}
-
-func gumInputWithValue(prompt, placeholder, value string) (string, error) {
-	return gumInput(prompt, placeholder, value)
-}
-
-func gumConfirm(message string) (bool, error) {
-	err := sh.Run("gum", "confirm", message)
-	if err == nil {
-		return true, nil
-	}
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
-		return false, nil
-	}
-	return false, err
-}
-
-func stdinConfirm(msg string) (bool, error) {
-	fmt.Printf("%s [y/N] ", msg)
-	var answer string
-	fmt.Scanln(&answer)
-	return strings.ToLower(strings.TrimSpace(answer)) == "y", nil
+	return strings.TrimSpace(result), nil
 }
 
 func binaryNameFromApp(name string) string {

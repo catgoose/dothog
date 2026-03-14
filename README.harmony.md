@@ -77,13 +77,7 @@ go build -o harmony .
 
 Harmony is designed to be used as a project template. After cloning:
 
-1. (Optional) Install [`gum`](https://github.com/charmbracelet/gum) for an interactive setup wizard:
-
-   ```bash
-   go install github.com/charmbracelet/gum@latest
-   ```
-
-2. Run the setup script to configure your app name, module path, and dev ports:
+1. Run the setup wizard to configure your app name, module path, and dev ports:
 
    ```bash
    go tool mage setup
@@ -91,7 +85,7 @@ Harmony is designed to be used as a project template. After cloning:
 
    Supports flags for non-interactive use: `go tool mage setup -n "My App" -m "github.com/you/my-app" -p 5124`
 
-3. Review `.env.dev` (generated from `.env.sample`) and adjust as needed.
+2. Review `.env.dev` (generated from `.env.sample`) and adjust as needed.
 
 4. Start development:
 

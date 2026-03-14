@@ -54,7 +54,7 @@ _You don't just accidentally create abstractions until you suddenly have a frame
     - [The Two Triangles, Or Why Your Backend Has a Frontend Problem](#the-two-triangles-or-why-your-backend-has-a-frontend-problem)
   - [Project Structure](#project-structure)
   - [Template Setup](#template-setup)
-    - [Interactive Setup (with gum)](#interactive-setup-with-gum)
+    - [Interactive Setup](#interactive-setup)
     - [Non-interactive Setup](#non-interactive-setup)
   - [Development](#development)
     - [Prerequisites](#prerequisites)
@@ -1085,12 +1085,11 @@ dothog/
 
 Dothog doubles as a template for new Go + HTMX projects. Run `mage setup` to customize the module path, ports, and features. Join us. It's not a framework. We have stickers. (We don't have stickers yet. We're working on it.)
 
-### Interactive Setup (with gum)
+### Interactive Setup
 
-Install [`gum`](https://github.com/charmbracelet/gum) for the interactive wizard:
+Run the setup wizard:
 
 ```bash
-go install github.com/charmbracelet/gum@latest
 go tool mage setup
 ```
 
@@ -1143,7 +1142,6 @@ After setup, review `.env.development` and start the dev server with `go tool ma
 
 - Go 1.26+ (latest)
 - Node.js 20+ (for Tailwind CSS compilation -- yes, we are aware of the irony. A Novice is permitted to use Node.js for build tooling. The PENTAVERB is silent on the matter of CSS preprocessing. We interpret this silence as reluctant consent. Some interpret it as a trap. The PENTAVERB has no comment on the interpretation of its own silences. This is either profound or lazy. We are not sure there is a difference.)
-- (Optional) [`gum`](https://github.com/charmbracelet/gum) for interactive setup
 
 ### Running the Dev Server
 
