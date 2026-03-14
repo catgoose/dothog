@@ -329,6 +329,9 @@ jobs:
           mv .github/workflows/pipeline.harmony.yml .github/workflows/pipeline.yml
           rm -f docs/MANIFESTO.md
 
+          # Scrub binary name references
+          sed -i 's/dothog/harmony/g' .github/workflows/*.yml Dockerfile
+
       - name: Push to harmony
         run: |
           cd harmony
