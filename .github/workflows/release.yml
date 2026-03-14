@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   check:
@@ -79,6 +80,8 @@ jobs:
     needs: [check]
     if: needs.check.outputs.should_release == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -121,24 +124,36 @@ jobs:
           go-version: 'stable'
           cache: true
 
+      - name: Install cross-compilation toolchains
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64 gcc-aarch64-linux-gnu
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: latest
+
       - name: Generate templ files
         run: go tool templ generate
 
       - name: Run tests
         run: go test ./...
 
-      - name: Build Linux amd64
+      - name: Build all platforms
         run: |
-          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
-            go build -ldflags="-w -s" -o dothog-linux-amd64 .
+          build() {
+            local goos=$1 goarch=$2 cc=$3 ext=$4
+            echo "Building ${goos}/${goarch}..."
+            CGO_ENABLED=1 GOOS=$goos GOARCH=$goarch CC="$cc" \
+              go build -ldflags="-w -s" -o "dothog-${goos}-${goarch}${ext}" .
+          }
 
-      - name: Install mingw-w64 for Windows cross-compilation
-        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
-
-      - name: Build Windows amd64
-        run: |
-          CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 \
-            go build -ldflags="-w -s" -o dothog-windows-amd64.exe .
+          build linux   amd64 "zig cc -target x86_64-linux-musl"       ""
+          build linux   arm64 "zig cc -target aarch64-linux-musl"      ""
+          build darwin  amd64 "zig cc -target x86_64-macos-none"       ""
+          build darwin  arm64 "zig cc -target aarch64-macos-none"      ""
+          build windows amd64 "x86_64-w64-mingw32-gcc"                 ".exe"
 
       - name: Create tag
         run: |
@@ -151,8 +166,54 @@ jobs:
         run: |
           gh release create ${{ steps.version.outputs.version }} \
             dothog-linux-amd64 \
+            dothog-linux-arm64 \
+            dothog-darwin-amd64 \
+            dothog-darwin-arm64 \
             dothog-windows-amd64.exe \
             --title "Release ${{ steps.version.outputs.version }}" \
             --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
+
+  docker:
+    needs: [release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.release.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release.outputs.version }}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

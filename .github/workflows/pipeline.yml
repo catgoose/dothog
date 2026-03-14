@@ -325,8 +325,9 @@ jobs:
           cp README.harmony.md README.md
           rm README.harmony.md
 
-          # Remove dothog-only workflows
+          # Remove dothog-only files
           rm .github/workflows/pipeline.yml
+          rm -f docs/MANIFESTO.md
 
       - name: Push to harmony
         run: |
