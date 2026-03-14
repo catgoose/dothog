@@ -75,7 +75,11 @@ Dothog runs as a single binary with all assets embedded -- no external dependenc
 
 See [PHILOSOPHY.md](docs/PHILOSOPHY.md) for the sacred architectural texts, which are also not sacred, except in the sense that they are.
 
+<details>
+<summary><strong>THE PENTAVERB, The Novice's Creed, The Wisdom of the Uniform Interface, The Recorded Sayings of Layman Grug</strong></summary>
+
 ## THE PENTAVERB, Or The Five Commandments of Hypermedia
+
 
 _The PENTAVERB was discovered by the hermit developer Zarathud-2 in the Fifth Year of The Framework Churn. He found them encoded in a `robots.txt` file while refactoring his cave. Their import was lost, for they were written in `application/xhtml+xml`. However, after 10 weeks and 11 hours of intensive scrutiny, he discerned that the message could be read by any standard-compliant user agent._
 
@@ -401,6 +405,8 @@ _When asked what he would do differently if he could start his career over, Grug
 _When Grug felt his mass of mass of mass of mass of mass of mass of mass of mass of mass of mass of end approaching, he told little grug to tell him when the CI pipeline had gone green. little grug went out, came back, and said "big grug, the build has failed." While big grug went to check the logs, little grug sat in his chair and merged to main. big grug, seeing this, said: "little grug's deployment is sharp." He delayed his own deployment for seven sprints, and pushed to prod peacefully._
 
 _His `node_modules` directory was empty._
+
+</details>
 
 ## Demo
 
