@@ -1,0 +1,155 @@
+package components
+
+import "catgoose/dothog/internal/routes/hypermedia"
+
+// filterTrigger returns the default hx-trigger string for each FilterKind.
+func filterTrigger(kind hypermedia.FilterKind) string {
+	switch kind {
+	case hypermedia.FilterKindSearch:
+		return "keyup changed delay:400ms, search"
+	case hypermedia.FilterKindRange:
+		return "change delay:300ms"
+	default:
+		// select, checkbox, date
+		return "change"
+	}
+}
+
+// filterHxAttrs builds templ.Attributes for a field within a bar.
+// Always sets: hx-get=bar.Action, hx-target=bar.Target, hx-include="#"+bar.ID,
+//
+//	hx-trigger=filterTrigger(field.Kind)
+//
+// Merges field.HTMXAttrs overrides (with "hx-" prefix) last so they win.
+func filterHxAttrs(field hypermedia.FilterField, bar hypermedia.FilterBar) templ.Attributes {
+	attrs := templ.Attributes{
+		"hx-get":     bar.Action,
+		"hx-target":  bar.Target,
+		"hx-include": "#" + bar.ID,
+		"hx-trigger": filterTrigger(field.Kind),
+	}
+	for k, v := range field.HTMXAttrs {
+		attrs["hx-"+k] = v
+	}
+	return attrs
+}
+
+// FilterBar renders the <form> container with all filter fields.
+templ FilterBar(bar hypermedia.FilterBar) {
+	<form id={ bar.ID } class="flex flex-wrap gap-4 items-end mb-4">
+		for _, field := range bar.Fields {
+			@filterField(field, bar)
+		}
+	</form>
+}
+
+// filterField dispatches to the correct field renderer by Kind.
+templ filterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
+	switch field.Kind {
+		case hypermedia.FilterKindSearch:
+			@searchFilterField(field, bar)
+		case hypermedia.FilterKindSelect:
+			@selectFilterField(field, bar)
+		case hypermedia.FilterKindRange:
+			@rangeFilterField(field, bar)
+		case hypermedia.FilterKindCheckbox:
+			@checkboxFilterField(field, bar)
+		case hypermedia.FilterKindDate:
+			@dateFilterField(field, bar)
+	}
+}
+
+// searchFilterField renders a DaisyUI text search input with label.
+templ searchFilterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
+	<label class="form-control w-full max-w-xs">
+		if field.Label != "" {
+			<div class="label"><span class="label-text">{ field.Label }</span></div>
+		}
+		<input
+			type="search"
+			autocomplete="off"
+			name={ field.Name }
+			value={ field.Value }
+			placeholder={ field.Placeholder }
+			class="input input-bordered input-sm"
+			{ filterHxAttrs(field, bar)... }
+			disabled?={ field.Disabled }
+		/>
+	</label>
+}
+
+// selectFilterField renders a DaisyUI <select> dropdown with label.
+templ selectFilterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
+	<label class="form-control w-full max-w-xs">
+		if field.Label != "" {
+			<div class="label"><span class="label-text">{ field.Label }</span></div>
+		}
+		<select
+			name={ field.Name }
+			class="select select-bordered select-sm"
+			{ filterHxAttrs(field, bar)... }
+			disabled?={ field.Disabled }
+		>
+			for _, opt := range field.Options {
+				<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
+			}
+		</select>
+	</label>
+}
+
+// rangeFilterField renders a DaisyUI range slider with live value display via HyperScript.
+templ rangeFilterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
+	<label class="form-control w-full max-w-xs">
+		if field.Label != "" {
+			<div class="label"><span class="label-text">{ field.Label }</span></div>
+		}
+		<input
+			type="range"
+			name={ field.Name }
+			min={ field.Min }
+			max={ field.Max }
+			step={ field.Step }
+			value={ field.Value }
+			class="range range-sm"
+			_="on input put my value into next <output/>"
+			{ filterHxAttrs(field, bar)... }
+			disabled?={ field.Disabled }
+		/>
+		<output>{ field.Value }</output>
+	</label>
+}
+
+// checkboxFilterField renders a DaisyUI toggle checkbox.
+templ checkboxFilterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
+	<label class="label cursor-pointer gap-2">
+		if field.Label != "" {
+			<span class="label-text">{ field.Label }</span>
+		}
+		<input
+			type="checkbox"
+			name={ field.Name }
+			value="true"
+			class="toggle toggle-sm"
+			checked?={ field.Value == "true" }
+			{ filterHxAttrs(field, bar)... }
+			disabled?={ field.Disabled }
+		/>
+	</label>
+}
+
+// dateFilterField renders a DaisyUI date input with label.
+templ dateFilterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
+	<label class="form-control w-full max-w-xs">
+		if field.Label != "" {
+			<div class="label"><span class="label-text">{ field.Label }</span></div>
+		}
+		<input
+			type="date"
+			name={ field.Name }
+			value={ field.Value }
+			class="input input-bordered input-sm"
+			{ filterHxAttrs(field, bar)... }
+			disabled?={ field.Disabled }
+		/>
+	</label>
+}

@@ -1,0 +1,55 @@
+site_name: dothog
+site_description: Go + HTMX + Templ demo documentation
+docs_dir: .
+site_dir: ../site
+repo_url: https://github.com/catgoose/dothog
+repo_name: catgoose/dothog
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.details
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Packages:
+      - config: packages/config.md
+      - logger: packages/logger.md
+      - shared: packages/shared.md
+      - routes: packages/routes.md
+      - routes/handler: packages/routes-handler.md
+      - routes/htmx: packages/routes-htmx.md
+      - routes/hypermedia: packages/routes-hypermedia.md
+      - routes/middleware: packages/routes-middleware.md
+      - routes/params: packages/routes-params.md
+      - routes/response: packages/routes-response.md
+      - database: packages/database.md
+      - database/repository: packages/database-repository.md
+      - demo: packages/demo.md
+      - ssebroker: packages/ssebroker.md

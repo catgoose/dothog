@@ -1,0 +1,343 @@
+name: Pipeline
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0' # Weekly dep updates (Sunday midnight UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Stage 1: Update dependencies and commit ────────────────────────────────
+  update-deps:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.result.outputs.sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install mage
+        run: go install github.com/magefile/mage@latest
+
+      - name: Install Tailwind CLI
+        run: mage tailwindUpdate
+
+      - name: Update dependencies
+        run: |
+          go get -u ./...
+          go mod tidy
+          go mod edit -go=$(go version | sed -n 's/.*go\([0-9.]*\).*/\1/p')
+
+      - name: Update Go version in README
+        run: |
+          GO_VER=$(sed -n 's/^go \([0-9]*\.[0-9]*\).*/\1/p' go.mod)
+          sed -i "s/- Go [0-9]\+\.[0-9]\++ (latest)/- Go ${GO_VER}+ (latest)/" README.md
+
+      - name: Update vendored assets
+        run: mage updateAssets
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          git add go.mod go.sum README.md web/assets/public/
+          if git diff --staged --quiet; then
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push
+        if: steps.check-changes.outputs.changes_detected == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update dependencies and vendored assets [skip-ci]" \
+            --author="${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
+          git stash push -u -m "ci: build artifacts"
+          git pull --rebase origin main
+          git push origin main
+
+      - name: Output current SHA
+        id: result
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Notify on failure
+        if: failure() && steps.check-changes.outputs.changes_detected == 'true'
+        run: |
+          echo "Dependency update failed (build broke or rebase conflict)."
+          gh issue create --title "Auto-update workflow failed" \
+            --body "Failed to apply dependency/Go version updates. Please resolve manually."
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  # ── Stage 2: Build and test (parallel) ─────────────────────────────────────
+  go-test:
+    needs: [update-deps]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.update-deps.outputs.sha }}
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+          cache: true
+
+      - name: Generate templ files
+        run: go tool templ generate
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race ./...
+
+  e2e-test:
+    needs: [update-deps]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.update-deps.outputs.sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Build Go binary
+        run: go build -o dothog .
+
+      - name: Run e2e tests
+        run: npx playwright test --config e2e/playwright.config.ts
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v6
+        if: ${{ failure() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+  # ── Stage 3: Post-test (parallel, after both tests pass) ───────────────────
+  docs:
+    needs: [update-deps, go-test, e2e-test]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.update-deps.outputs.sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+          cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Install tools
+        run: |
+          go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@latest
+          pip install mkdocs mkdocs-material
+
+      - name: Generate package docs
+        run: scripts/gen_docs.sh
+
+      - name: Build site
+        run: mkdocs build -f docs/mkdocs.yml
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  screenshots:
+    needs: [update-deps, go-test, e2e-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.update-deps.outputs.sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate templ files
+        run: go tool templ generate
+
+      - name: Build application
+        run: go build -o dothog .
+
+      - name: Start application
+        run: |
+          SERVER_LISTEN_PORT=8080 ./dothog -env production &
+          echo "APP_PID=$!" >> $GITHUB_ENV
+
+      - name: Capture screenshots and recordings
+        run: node scripts/screenshots.mjs --base-url http://localhost:8080
+
+      - name: Stop application
+        if: always()
+        run: kill $APP_PID 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: screenshots
+          path: docs/screenshots/
+
+  publish-screenshots:
+    needs: [screenshots]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: screenshots
+          path: output
+
+      - name: Checkout screenshots repo
+        uses: actions/checkout@v6
+        with:
+          repository: catgoose/screenshots
+          token: ${{ secrets.SCREENSHOTS_REPO_TOKEN }}
+          path: screenshots-repo
+
+      - name: Copy and push screenshots
+        run: |
+          mkdir -p screenshots-repo/dothog
+          cp -r output/* screenshots-repo/dothog/
+          cd screenshots-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dothog
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Update dothog screenshots"
+          git pull --rebase origin main
+          git push
+        env:
+          GH_TOKEN: ${{ secrets.SCREENSHOTS_REPO_TOKEN }}
+
+  sync-harmony:
+    needs: [update-deps, go-test, e2e-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dothog
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.update-deps.outputs.sha }}
+          path: dothog
+
+      - name: Checkout or init harmony
+        run: |
+          if git clone https://x-access-token:${{ secrets.HARMONY_CI }}@github.com/catgoose/harmony.git harmony 2>/dev/null; then
+            cd harmony
+            git rm -rf . > /dev/null 2>&1 || true
+          else
+            mkdir harmony
+            cd harmony
+            git init
+            git remote add origin https://x-access-token:${{ secrets.HARMONY_CI }}@github.com/catgoose/harmony.git
+          fi
+
+      - name: Sync files to harmony
+        run: |
+
+          # Copy dothog files (exclude .git)
+          rsync -a --exclude='.git' dothog/ harmony/
+
+          cd harmony
+
+          # Swap README
+          cp README.harmony.md README.md
+          rm README.harmony.md
+
+          # Remove dothog-only workflows
+          rm .github/workflows/pipeline.yml
+
+      - name: Push to harmony
+        run: |
+          cd harmony
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to sync"
+            exit 0
+          fi
+          git commit -m "sync: mirror from dothog"
+          git push origin main

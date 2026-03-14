@@ -1,0 +1,146 @@
+// setup:feature:demo
+package views
+
+import "fmt"
+
+// StatePage is the full-page layout for /hypermedia/state.
+templ StatePage(likeCount int, toggleOn bool) {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<div class="flex items-center justify-between mb-4">
+			<h1 class="text-2xl font-bold">State Patterns</h1>
+			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Overview</a>
+		</div>
+		<div role="alert" class="alert alert-info text-sm">
+			<span>Demonstrates: <strong>like</strong>, <strong>toggle</strong>, <strong>load</strong>, <strong>reveal</strong>, <strong>show/hide</strong>.</span>
+		</div>
+		<!-- Like -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Like Counter</h2>
+				<p class="text-sm text-base-content/70 mb-3"><code class="text-xs bg-base-200 px-1 rounded">hx-post</code> increments the counter server-side; the returned fragment replaces the entire button+counter unit.</p>
+				@LikeButtonFragment(likeCount)
+			</div>
+		</div>
+		<!-- Toggle -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Toggle State</h2>
+				<p class="text-sm text-base-content/70 mb-3">Flip a boolean on the server. The returned fragment reflects the new state.</p>
+				@ToggleFragment(toggleOn)
+			</div>
+		</div>
+		<!-- Show / Hide (client-only) -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Show / Hide</h2>
+				<p class="text-sm text-base-content/70 mb-3">Pure HyperScript — no server round-trip. <code class="text-xs bg-base-200 px-1 rounded">toggle .hidden</code> on the target element.</p>
+				<button
+					class="btn btn-sm btn-secondary"
+					_="on click toggle .hidden on #reveal-panel"
+				>Toggle Panel</button>
+				<div id="reveal-panel" class="hidden mt-3 p-3 bg-base-200 rounded text-sm">
+					<strong>Revealed!</strong> This panel was toggled client-side by HyperScript with zero server requests.
+				</div>
+			</div>
+		</div>
+		<!-- Load (auto on page load) -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Auto-Load</h2>
+				<p class="text-sm text-base-content/70 mb-3"><code class="text-xs bg-base-200 px-1 rounded">hx-trigger="load"</code> fires immediately after the element is added to the DOM.</p>
+				<div
+					hx-get="/hypermedia/state/panel"
+					hx-trigger="load"
+					hx-swap="outerHTML"
+					class="flex items-center gap-2 text-sm text-base-content/50"
+				>
+					<span class="loading loading-spinner loading-xs"></span>
+					Loading panel…
+				</div>
+			</div>
+		</div>
+		<!-- Reveal on scroll (intersect) -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Lazy Reveal (intersect)</h2>
+				<p class="text-sm text-base-content/70 mb-3"><code class="text-xs bg-base-200 px-1 rounded">hx-trigger="intersect once"</code> fires when the element enters the viewport.</p>
+				<div
+					hx-get="/hypermedia/state/panel"
+					hx-trigger="intersect once"
+					hx-swap="outerHTML"
+					class="flex items-center gap-2 text-sm text-base-content/50"
+				>
+					<span class="loading loading-spinner loading-xs"></span>
+					Waiting for scroll…
+				</div>
+			</div>
+		</div>
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			@statePatternCard("Like", "POST /state/like", "Server increments counter; returns updated button fragment.")
+			@statePatternCard("Toggle", "POST /state/toggle", "Server flips bool; returns updated toggle fragment.")
+			@statePatternCard("Show/Hide", "(client only)", "HyperScript toggle .hidden — no HTTP request.")
+			@statePatternCard("Load", "GET /state/panel on load", "hx-trigger=\"load\" fetches on DOM insertion.")
+			@statePatternCard("Reveal", "GET /state/panel on intersect", "hx-trigger=\"intersect once\" lazy-loads on scroll.")
+		</div>
+	</div>
+}
+
+// LikeButtonFragment renders the like button and counter (id="like-btn").
+templ LikeButtonFragment(count int) {
+	<div id="like-btn" class="flex items-center gap-3">
+		<button
+			class="btn btn-sm btn-primary"
+			hx-post="/hypermedia/state/like"
+			hx-target="#like-btn"
+			hx-swap="outerHTML"
+		>♥ Like</button>
+		<span class="font-bold text-lg">{ fmt.Sprintf("%d", count) }</span>
+		<span class="text-sm text-base-content/60">
+			if count == 1 {
+				like
+			} else {
+				likes
+			}
+		</span>
+	</div>
+}
+
+// ToggleFragment renders the toggle control and label (id="state-toggle").
+templ ToggleFragment(on bool) {
+	<div id="state-toggle" class="flex items-center gap-3">
+		<button
+			class="btn btn-sm btn-secondary"
+			hx-post="/hypermedia/state/toggle"
+			hx-target="#state-toggle"
+			hx-swap="outerHTML"
+		>
+			if on {
+				Turn Off
+			} else {
+				Turn On
+			}
+		</button>
+		if on {
+			<span class="badge badge-success">ON</span>
+		} else {
+			<span class="badge badge-ghost">OFF</span>
+		}
+	</div>
+}
+
+// LazyPanelFragment is the content returned for load/reveal triggers.
+templ LazyPanelFragment() {
+	<div class="p-3 bg-success/10 border border-success/30 rounded text-sm text-success-content">
+		<strong>Panel loaded!</strong> This content was fetched lazily from the server.
+	</div>
+}
+
+templ statePatternCard(title, method, desc string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h3 class="font-semibold text-sm">{ title }</h3>
+			<code class="text-xs text-primary bg-base-200 px-2 py-1 rounded">{ method }</code>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}

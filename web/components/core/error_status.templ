@@ -1,0 +1,245 @@
+package components
+
+import (
+	"encoding/json"
+	"strconv"
+
+	"catgoose/dothog/internal/routes/hypermedia"
+)
+
+func errorJSON(ec hypermedia.ErrorContext) string {
+	m := map[string]string{
+		"status":     strconv.Itoa(ec.StatusCode) + " " + ec.Message,
+		"route":      ec.Route,
+	}
+	if ec.Err != nil {
+		m["error"] = ec.Err.Error()
+	}
+	if ec.RequestID != "" {
+		m["request_id"] = ec.RequestID
+	}
+	b, _ := json.MarshalIndent(m, "", "  ")
+	return string(b)
+}
+
+// oobSwapValue builds the hx-swap-oob attribute value for OOB error placement.
+func oobSwapValue(ec hypermedia.ErrorContext) string {
+	swap := ec.OOBSwap
+	if swap == "" {
+		swap = "innerHTML"
+	}
+	if ec.OOBTarget == "" {
+		return swap
+	}
+	return swap + ":" + ec.OOBTarget
+}
+
+// ErrorStatusFromContext is the primary error status component.
+// It renders the full error panel from an ErrorContext, including action controls.
+// When ec.OOBTarget is set the div includes hx-swap-oob so HTMX routes it
+// out-of-band to the specified target.
+templ ErrorStatusFromContext(ec hypermedia.ErrorContext) {
+	if ec.OOBTarget != "" {
+		<div
+			id="error-message-content"
+			hx-swap-oob={ oobSwapValue(ec) }
+		>
+			<div class="bg-error border-b border-error-content/20 text-error-content px-4 py-3 shadow-lg text-sm">
+				@errorStatusBody(ec)
+			</div>
+		</div>
+	} else {
+		<div id="error-message-content">
+			<div class="bg-error border-b border-error-content/20 text-error-content px-4 py-3 shadow-lg text-sm">
+				@errorStatusBody(ec)
+			</div>
+		</div>
+	}
+}
+
+templ errorStatusBody(ec hypermedia.ErrorContext) {
+	<p class="font-semibold text-sm mb-2">Something went wrong</p>
+	<div
+		class="relative w-full bg-error-content/10 border border-error-content/20 rounded px-3 py-1.5"
+		data-error-json={ errorJSON(ec) }
+	>
+		<button
+			class="absolute top-1.5 right-1.5 inline-flex items-center p-1 rounded hover:bg-error-content/20 transition-colors"
+			_="on click get the closest <div/> then get its @data-error-json then writeText(it) into navigator.clipboard then remove .hidden from .copy-tooltip in the closest parent <div/> then wait 1.5s then add .hidden to .copy-tooltip in the closest parent <div/>"
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+			</svg>
+		</button>
+		<span class="copy-tooltip hidden absolute top-8 right-1.5 bg-base-content text-base-100 text-xs rounded px-2 py-0.5 whitespace-nowrap shadow">Copied!</span>
+		<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs pr-6">
+			<dt class="font-semibold">Status</dt>
+			<dd>{ strconv.Itoa(ec.StatusCode) } { ec.Message }</dd>
+			<dt class="font-semibold">Route</dt>
+			<dd>{ ec.Route }</dd>
+			if ec.Err != nil {
+				<dt class="font-semibold">Error</dt>
+				<dd>{ ec.Err.Error() }</dd>
+			}
+			if ec.RequestID != "" {
+				<dt class="font-semibold">Request ID</dt>
+				<dd><code class="border border-error-content/15 px-1 py-0.5 rounded font-mono">{ ec.RequestID }</code></dd>
+			}
+		</dl>
+	</div>
+	if ec.Closable {
+		<div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+			@bannerControlButtonsLeft(bannerControls(ec))
+			@bannerControlButtonsRight(bannerControls(ec))
+		</div>
+	} else {
+		@ErrorControls(ec.Controls)
+	}
+}
+
+// bannerControls returns only Dismiss and Report controls for the global error banner.
+// A Dismiss button is prepended when Closable is true and none already exists.
+func bannerControls(ec hypermedia.ErrorContext) []hypermedia.Control {
+	var out []hypermedia.Control
+	hasDismiss := false
+	for _, ctrl := range ec.Controls {
+		if ctrl.Kind == hypermedia.ControlKindDismiss || ctrl.Kind == hypermedia.ControlKindReport {
+			out = append(out, ctrl)
+			if ctrl.Kind == hypermedia.ControlKindDismiss {
+				hasDismiss = true
+			}
+		}
+	}
+	if ec.Closable && !hasDismiss {
+		close := hypermedia.DismissButton(hypermedia.LabelDismiss)
+		out = append([]hypermedia.Control{close}, out...)
+	}
+	return out
+}
+
+// bannerControlButtonsLeft renders non-dismiss buttons (Report Issue) on the left.
+templ bannerControlButtonsLeft(controls []hypermedia.Control) {
+	<div class="flex flex-wrap gap-2">
+		for _, ctrl := range controls {
+			if ctrl.Kind == hypermedia.ControlKindReport {
+				@reportButton(ctrl)
+			}
+		}
+	</div>
+}
+
+// bannerControlButtonsRight renders dismiss buttons on the right.
+templ bannerControlButtonsRight(controls []hypermedia.Control) {
+	<div class="flex flex-wrap gap-2">
+		for _, ctrl := range controls {
+			if ctrl.Kind == hypermedia.ControlKindDismiss {
+				@dismissButton(ctrl)
+			}
+		}
+	</div>
+}
+
+// inlineActionControls returns controls that are NOT dismiss or report.
+// These are rendered as standalone buttons above the unified bar (e.g. Retry).
+func inlineActionControls(controls []hypermedia.Control) []hypermedia.Control {
+	var out []hypermedia.Control
+	for _, c := range controls {
+		if c.Kind != hypermedia.ControlKindDismiss && c.Kind != hypermedia.ControlKindReport {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
+// inlineDismissControl returns the first Dismiss control.
+func inlineDismissControl(controls []hypermedia.Control) (hypermedia.Control, bool) {
+	for _, c := range controls {
+		if c.Kind == hypermedia.ControlKindDismiss {
+			return c, true
+		}
+	}
+	return hypermedia.Control{}, false
+}
+
+// inlineReportControl returns the first Report control.
+func inlineReportControl(controls []hypermedia.Control) (hypermedia.Control, bool) {
+	for _, c := range controls {
+		if c.Kind == hypermedia.ControlKindReport {
+			return c, true
+		}
+	}
+	return hypermedia.Control{}, false
+}
+
+// InlineErrorPanel renders an inline error with a stacked layout.
+// Dismiss and Report are rendered as a unified joined button group on the last row.
+// Use this instead of ErrorStatusFromContext when the error replaces content
+// in-place (not the global banner).
+templ InlineErrorPanel(ec hypermedia.ErrorContext) {
+	<div class="alert alert-error rounded-lg text-sm p-3 space-y-2">
+		<div class="space-y-1">
+			<p class="font-semibold">
+				<span class="badge badge-sm badge-outline">{ strconv.Itoa(ec.StatusCode) }</span>
+				{ ec.Message }
+			</p>
+			if ec.Err != nil {
+				<p class="text-xs opacity-80">{ ec.Err.Error() }</p>
+			}
+			if ec.Route != "" {
+				<p class="text-xs opacity-60">Route: { ec.Route }</p>
+			}
+		</div>
+		@inlineErrorActions(ec.Controls)
+	</div>
+}
+
+// inlineErrorActions renders action controls (Retry, etc.) followed by a
+// unified Dismiss | Report joined button group on the last row.
+templ inlineErrorActions(controls []hypermedia.Control) {
+	<div class="flex items-center justify-between gap-2">
+		<div class="flex flex-wrap gap-2">
+			for _, ctrl := range inlineActionControls(controls) {
+				<button
+					{ hxAttrsFromControl(ctrl)... }
+					class="btn btn-sm border-error-content/20 bg-error-content/10 text-error-content hover:bg-error-content/20"
+					disabled?={ ctrl.Disabled }
+				>
+					{ ctrl.Label }
+				</button>
+			}
+		</div>
+		<div class="join">
+			if dismiss, ok := inlineDismissControl(controls); ok {
+				<button
+					class="join-item btn btn-sm border-error-content/20 bg-error-content/10 text-error-content hover:bg-error-content/20"
+					_="on click set the closest parent <div[id]/>'s innerHTML to ''"
+				>
+					{ dismiss.Label }
+				</button>
+			}
+			if report, ok := inlineReportControl(controls); ok {
+				<button
+					{ hxAttrsFromControl(report)... }
+					class="join-item btn btn-sm border-error-content/20 bg-error-content/10 text-error-content hover:bg-error-content/20"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"></path>
+					</svg>
+					{ report.Label }
+				</button>
+			}
+		</div>
+	</div>
+}
+
+// ErrorStatus is the backward-compatible wrapper. All existing call sites are unchanged.
+templ ErrorStatus(statusCode int, message string, err error, route string, requestID string, closable bool) {
+	@ErrorStatusFromContext(hypermedia.ErrorContext{
+		StatusCode: statusCode,
+		Message:    message,
+		Err:        err,
+		Route:      route,
+		RequestID:  requestID,
+		Closable:   closable,
+	})
+}

@@ -1,0 +1,128 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+	"strconv"
+
+	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/routes/hypermedia"
+	components "catgoose/dothog/web/components/core"
+)
+
+// bulkColAttrs builds templ.Attributes for a sortable column header link in the bulk table.
+func bulkColAttrs(col hypermedia.TableCol) templ.Attributes {
+	attrs := templ.Attributes{
+		"hx-get":    col.SortURL,
+		"hx-target": col.Target,
+	}
+	if col.Include != "" {
+		attrs["hx-include"] = col.Include
+	}
+	return attrs
+}
+
+// bulkSortIndicator returns the sort direction indicator for a column.
+func bulkSortIndicator(col hypermedia.TableCol) string {
+	if !col.Sortable {
+		return ""
+	}
+	switch col.SortDir {
+	case hypermedia.SortAsc:
+		return " ↑"
+	case hypermedia.SortDesc:
+		return " ↓"
+	default:
+		return " ⇅"
+	}
+}
+
+// BulkPage is the full page for /demo/bulk.
+// The toolbar and FilterBar live outside the table container so they survive swaps.
+templ BulkPage(bar hypermedia.FilterBar, tableContainer templ.Component) {
+	<div class="p-4 space-y-4">
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl font-bold">☑ Bulk Operations</h1>
+			@components.Controls(hypermedia.BulkActions(hypermedia.BulkActionCfg{
+				DeleteURL:        "/demo/bulk/items",
+				ActivateURL:      "/demo/bulk/items/activate",
+				DeactivateURL:    "/demo/bulk/items/deactivate",
+				TableTarget:      "#bulk-table-container",
+				CheckboxSelector: ".row-check",
+			}))
+		</div>
+		@components.FilterBar(bar)
+		@tableContainer
+	</div>
+}
+
+// BulkTableContainer is the replaceable fragment. It renders a custom table with a
+// leading checkbox column that cannot reuse components.Table (sortLinkAttrs is unexported).
+templ BulkTableContainer(cols []hypermedia.TableCol, body templ.Component, info hypermedia.PageInfo) {
+	<div id="bulk-table-container">
+		<div class="overflow-x-auto">
+			<table class="table table-sm w-full">
+				<thead>
+					<tr>
+						<th class="w-10">
+							<input
+								type="checkbox"
+								class="checkbox checkbox-sm"
+								_="on change for row in .row-check set row.checked to my.checked"
+							/>
+						</th>
+						for _, col := range cols {
+							<th>
+								if col.Sortable {
+									<a href="#" { bulkColAttrs(col)... }>
+										{ col.Label }{ bulkSortIndicator(col) }
+									</a>
+								} else {
+									{ col.Label }
+								}
+							</th>
+						}
+					</tr>
+				</thead>
+				@body
+			</table>
+		</div>
+		if info.TotalPages > 1 {
+			@components.PaginationBar(info)
+		}
+	</div>
+}
+
+// BulkItemsBody renders the <tbody> rows for the bulk table.
+templ BulkItemsBody(items []demo.Item) {
+	<tbody>
+		for _, item := range items {
+			@BulkItemRow(item)
+		}
+	</tbody>
+}
+
+// BulkItemRow renders a single row with a leading checkbox for bulk selection.
+templ BulkItemRow(item demo.Item) {
+	<tr class="cursor-pointer" _="on click if event.target.tagName != 'INPUT' then set cb to the first .row-check in me then set cb.checked to (not cb.checked) end">
+		<td>
+			<input
+				type="checkbox"
+				name="ids"
+				value={ strconv.Itoa(item.ID) }
+				class="row-check checkbox checkbox-sm"
+			/>
+		</td>
+		<td>{ item.Name }</td>
+		<td>{ item.Category }</td>
+		<td>{ fmt.Sprintf("$%.2f", item.Price) }</td>
+		<td>{ strconv.Itoa(item.Stock) }</td>
+		<td>
+			if item.Active {
+				<span class="badge badge-success">Active</span>
+			} else {
+				<span class="badge badge-ghost">Inactive</span>
+			}
+		</td>
+	</tr>
+}

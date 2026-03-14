@@ -1,0 +1,235 @@
+// setup:feature:demo
+package views
+
+import "fmt"
+import "sort"
+
+// Components2PageData holds initial data for the components2 page.
+type Components2PageData struct {
+	Slide         CarouselSlideData
+	TotalSlides   int
+	Categories    []string
+
+	RangeValue    int
+	RangePrice    string
+	Panels        []AccordionPanelData
+	NotifCount    int
+	SelectedTheme string
+}
+
+// Components2Page is the full-page layout for /hypermedia/components2.
+templ Components2Page(data Components2PageData) {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<div class="flex items-center justify-between mb-4">
+			<h1 class="text-2xl font-bold">Component Patterns 2</h1>
+			<a href="/hypermedia/components" class="btn btn-sm btn-ghost">← Components 1</a>
+		</div>
+		<div role="alert" class="alert alert-info text-sm">
+			<span>Demonstrates: <strong>carousel</strong>, <strong>dropdown/typeahead</strong>, <strong>cascading select</strong>, <strong>range slider</strong>, <strong>file upload</strong>, <strong>accordion</strong>, <strong>indicator</strong>, <strong>theme controller</strong>.</span>
+		</div>
+		<!-- 1. Carousel -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Carousel — Slide Navigation</h2>
+				<p class="text-sm text-base-content/70 mb-3">Prev/Next buttons use <code class="text-xs bg-base-200 px-1 rounded">hx-get</code> to fetch slides from the server. Clamped at boundaries so you can't go past the first or last slide.</p>
+				<div id="carousel-panel">
+					@CarouselSlideFragment(CarouselSlideData{
+						Index:       data.Slide.Index,
+						Title:       data.Slide.Title,
+						Desc:        data.Slide.Desc,
+						Color:       data.Slide.Color,
+						TotalSlides: data.TotalSlides,
+					})
+				</div>
+			</div>
+		</div>
+		<!-- 2. Dropdown/Typeahead -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Dropdown — Server-Filtered Typeahead</h2>
+				<p class="text-sm text-base-content/70 mb-3">Type to search programming languages. Uses <code class="text-xs bg-base-200 px-1 rounded">hx-trigger="keyup changed delay:300ms"</code> { "for" } debounced server-side filtering.</p>
+				<input
+					type="text"
+					name="q"
+					placeholder="Search languages…"
+					class="input input-bordered input-sm w-full max-w-xs"
+					autocomplete="off"
+					hx-get="/hypermedia/components2/dropdown/search"
+					hx-trigger="keyup changed delay:300ms, load"
+					hx-target="#dropdown-results"
+				/>
+				<div id="dropdown-results" class="mt-2"></div>
+			</div>
+		</div>
+		<!-- 3. Cascading Select -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Cascading Select — Dependent Dropdowns</h2>
+				<p class="text-sm text-base-content/70 mb-3">Selecting a country populates the city dropdown via <code class="text-xs bg-base-200 px-1 rounded">hx-get</code>. The second select's options are loaded from the server.</p>
+				<div class="flex gap-3 items-end flex-wrap">
+					<div class="form-control">
+						<label class="label"><span class="label-text text-sm">Country</span></label>
+						<select
+							id="country-select"
+							class="select select-bordered select-sm"
+							hx-get="/hypermedia/components2/cascading/placeholder"
+							hx-target="#sub-select"
+							hx-swap="innerHTML"
+							hx-trigger="change"
+							_="on htmx:configRequest(detail) set detail.path to '/hypermedia/components2/cascading/' + my value"
+						>
+							<option disabled selected>Pick a country</option>
+							for _, cat := range sortedCategories(data.Categories) {
+								<option value={ cat }>{ cat }</option>
+							}
+						</select>
+					</div>
+					<div class="form-control">
+						<label class="label"><span class="label-text text-sm">City</span></label>
+						<select id="sub-select" class="select select-bordered select-sm">
+							<option disabled selected>Select country first</option>
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 5. Range Slider -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Range Slider — Debounced Input</h2>
+				<p class="text-sm text-base-content/70 mb-3">Dragging the slider uses <code class="text-xs bg-base-200 px-1 rounded">hx-trigger="input changed delay:300ms"</code> to POST the value. Server computes pricing at $2.50/unit.</p>
+				<div class="flex items-center gap-4">
+					<input
+						type="range"
+						name="range"
+						min="0"
+						max="100"
+						value={ fmt.Sprintf("%d", data.RangeValue) }
+						class="range range-primary range-sm flex-1"
+						hx-post="/hypermedia/components2/range"
+						hx-trigger="input changed delay:300ms"
+						hx-target="#range-result"
+					/>
+					@RangeResultFragment(RangeResultData{Value: data.RangeValue, Price: data.RangePrice})
+				</div>
+			</div>
+		</div>
+		<!-- 6. File Upload -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">File Input — Multipart Upload</h2>
+				<p class="text-sm text-base-content/70 mb-3">Uses <code class="text-xs bg-base-200 px-1 rounded">hx-encoding="multipart/form-data"</code> to upload a file. Server parses metadata only (no storage).</p>
+				<form
+					hx-post="/hypermedia/components2/upload"
+					hx-encoding="multipart/form-data"
+					hx-target="#upload-result"
+					class="flex gap-3 items-end flex-wrap"
+				>
+					<input type="file" name="file" class="file-input file-input-bordered file-input-sm w-full max-w-xs"/>
+					<button type="submit" class="btn btn-sm btn-primary">Upload</button>
+				</form>
+				<div id="upload-result" class="mt-2"></div>
+			</div>
+		</div>
+		<!-- 7. Accordion -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Accordion — Lazy-Loaded Panels</h2>
+				<p class="text-sm text-base-content/70 mb-3">Each panel uses <code class="text-xs bg-base-200 px-1 rounded">hx-trigger="click once"</code> to load content only on first expand. Subsequent toggles use cached content.</p>
+				<div class="space-y-2">
+					for _, panel := range data.Panels {
+						<div class="collapse collapse-arrow bg-base-200">
+							<input type="radio" name="accordion-panels"/>
+							<div
+								class="collapse-title font-medium text-sm"
+								hx-get={ fmt.Sprintf("/hypermedia/components2/accordion/%d", panel.ID) }
+								hx-trigger="click once"
+								hx-target={ fmt.Sprintf("#accordion-body-%d", panel.ID) }
+							>
+								{ panel.Title }
+							</div>
+							<div class="collapse-content">
+								<div id={ fmt.Sprintf("accordion-body-%d", panel.ID) } class="text-sm text-base-content/70">
+									<span class="loading loading-dots loading-xs"></span>
+								</div>
+							</div>
+						</div>
+					}
+				</div>
+			</div>
+		</div>
+		<!-- 8. Indicator -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Indicator — Live Notification Badge</h2>
+				<p class="text-sm text-base-content/70 mb-3">Badge polls every 3 seconds via <code class="text-xs bg-base-200 px-1 rounded">hx-trigger="every 3s"</code>. Count increases randomly. "Mark all read" resets via <code class="text-xs bg-base-200 px-1 rounded">hx-post</code>.</p>
+				<div class="flex items-center gap-4">
+					<div class="indicator">
+						@IndicatorBadgeFragment(data.NotifCount)
+						<button class="btn btn-sm btn-outline">Notifications</button>
+					</div>
+					<button
+						class="btn btn-sm btn-ghost"
+						hx-post="/hypermedia/components2/indicator/reset"
+						hx-target="#indicator-badge"
+						hx-swap="outerHTML"
+					>Mark all read</button>
+				</div>
+			</div>
+		</div>
+		<!-- 9. Theme Controller -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Theme Controller — Server-Persisted Preference</h2>
+				<p class="text-sm text-base-content/70 mb-3">Radio buttons use <code class="text-xs bg-base-200 px-1 rounded">hx-post</code> with <code class="text-xs bg-base-200 px-1 rounded">hx-vals</code> to persist theme selection on the server. Demonstrates preference storage pattern.</p>
+				<div class="flex gap-2 flex-wrap">
+					for _, theme := range []string{"default", "light", "dark", "cupcake", "cyberpunk"} {
+						<input
+							type="radio"
+							name="theme-buttons"
+							class="btn btn-sm theme-controller"
+							aria-label={ theme }
+							value={ theme }
+							checked?={ theme == data.SelectedTheme }
+							hx-post="/hypermedia/components2/theme"
+							hx-vals={ fmt.Sprintf(`{"theme":"%s"}`, theme) }
+							hx-target="#theme-result"
+						/>
+					}
+				</div>
+				<div id="theme-result" class="mt-2 text-sm text-base-content/50">
+					Current theme: { data.SelectedTheme }
+				</div>
+			</div>
+		</div>
+		<!-- Pattern summary cards -->
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			@componentPatternCard2("Carousel", "GET /carousel/:index", "hx-get swaps slide content + prev/next buttons clamped at boundaries.")
+			@componentPatternCard2("Dropdown", "GET /dropdown/search?q=", "Debounced keyup triggers server-side filter of programming languages.")
+			@componentPatternCard2("Cascading", "GET /cascading/:category", "Selecting a country populates city dropdown via hx-get.")
+
+			@componentPatternCard2("Range", "POST /range", "Debounced input posts slider value; server computes pricing.")
+			@componentPatternCard2("Upload", "POST /upload", "Multipart form data; server returns file metadata without storing.")
+			@componentPatternCard2("Accordion", "GET /accordion/:panel", "hx-trigger=\"click once\" lazy-loads panel content on first expand.")
+			@componentPatternCard2("Indicator", "GET /indicator/count", "Badge polls every 3s; count increases randomly, reset via POST.")
+			@componentPatternCard2("Theme", "POST /theme", "Radio buttons persist theme preference on server via hx-vals.")
+		</div>
+	</div>
+}
+
+func sortedCategories(cats []string) []string {
+	sorted := make([]string, len(cats))
+	copy(sorted, cats)
+	sort.Strings(sorted)
+	return sorted
+}
+
+templ componentPatternCard2(title, method, desc string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h3 class="font-semibold text-sm">{ title }</h3>
+			<code class="text-xs text-primary bg-base-200 px-2 py-1 rounded">{ method }</code>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}

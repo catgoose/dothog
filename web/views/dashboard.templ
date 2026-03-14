@@ -1,0 +1,268 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+
+	"catgoose/dothog/internal/demo"
+)
+
+// DashboardStats holds aggregate data for the dashboard.
+type DashboardStats struct {
+	ItemTotal        int
+	ItemActive       int
+	PeopleTotal      int
+	VendorCount      int
+	TaskTotal        int
+	KanbanByStatus   map[string]int
+	ApprovalTotal    int
+	ApprovalByStatus map[string]int
+	PendingAmount    float64
+	RecentEvents     []demo.ActivityEvent
+}
+
+templ DashboardPage(s DashboardStats) {
+	<div class="max-w-7xl mx-auto p-4 space-y-6">
+		<div class="flex items-center justify-between">
+			<div>
+				<h1 class="text-3xl font-bold">Dashboard</h1>
+				<p class="text-base-content/60 text-sm mt-1">Live overview of all demo applications</p>
+			</div>
+		</div>
+		<!-- Top stat row -->
+		<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+			@statBadge("Items", fmt.Sprintf("%d", s.ItemTotal), fmt.Sprintf("%d active", s.ItemActive), "primary")
+			@statBadge("People", fmt.Sprintf("%d", s.PeopleTotal), "in directory", "secondary")
+			@statBadge("Tasks", fmt.Sprintf("%d", s.TaskTotal), fmt.Sprintf("%d in progress", s.KanbanByStatus["in_progress"]), "accent")
+			@statBadge("Approvals", fmt.Sprintf("%d", s.ApprovalByStatus["pending"]), fmt.Sprintf("$%.0f pending", s.PendingAmount), "warning")
+		</div>
+		<!-- Main cards grid -->
+		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+			<!-- Inventory -->
+			@dashCard("Inventory", "/demo/inventory", "Filterable, sortable item table with inline editing and CRUD operations.") {
+				<div class="flex gap-6 text-sm">
+					<div>
+						<span class="text-2xl font-bold text-primary">{ fmt.Sprintf("%d", s.ItemTotal) }</span>
+						<span class="text-base-content/60 ml-1">items</span>
+					</div>
+					<div>
+						<span class="text-2xl font-bold text-success">{ fmt.Sprintf("%d", s.ItemActive) }</span>
+						<span class="text-base-content/60 ml-1">active</span>
+					</div>
+				</div>
+				<div class="flex gap-2 mt-3">
+					<a href="/demo/inventory" class="btn btn-primary btn-sm">Inventory</a>
+					<a href="/demo/catalog" class="btn btn-ghost btn-sm">Catalog</a>
+					<a href="/demo/bulk" class="btn btn-ghost btn-sm">Bulk Ops</a>
+				</div>
+			}
+			<!-- Kanban -->
+			@dashCard("Kanban Board", "/demo/kanban", "Drag-free task board with status columns and priority tracking.") {
+				<div class="flex flex-wrap gap-2 text-xs">
+					for _, status := range kanbanStatusOrder() {
+						{{ count := s.KanbanByStatus[status] }}
+						<span class={ "badge", kanbanBadgeClass(status) }>
+							{ kanbanLabel(status) }: { fmt.Sprintf("%d", count) }
+						</span>
+					}
+				</div>
+				<div class="mt-3">
+					<a href="/demo/kanban" class="btn btn-accent btn-sm">View Board</a>
+				</div>
+			}
+			<!-- Approvals -->
+			@dashCard("Approvals", "/demo/approvals", "HATEOAS state machine for request workflows: approve, reject, escalate.") {
+				<div class="flex flex-wrap gap-2 text-xs">
+					for _, status := range approvalStatusOrder() {
+						{{ count := s.ApprovalByStatus[status] }}
+						<span class={ "badge", approvalBadgeClass(status) }>
+							{ approvalLabel(status) }: { fmt.Sprintf("%d", count) }
+						</span>
+					}
+				</div>
+				if s.PendingAmount > 0 {
+					<p class="text-sm text-base-content/60 mt-2">
+						<span class="font-semibold text-warning">{ fmt.Sprintf("$%.2f", s.PendingAmount) }</span> pending review
+					</p>
+				}
+				<div class="mt-3">
+					<a href="/demo/approvals" class="btn btn-warning btn-sm">View Queue</a>
+				</div>
+			}
+			<!-- People -->
+			@dashCard("People Directory", "/demo/people", "Searchable directory with profile detail pages and live SSE updates.") {
+				<div>
+					<span class="text-2xl font-bold text-secondary">{ fmt.Sprintf("%d", s.PeopleTotal) }</span>
+					<span class="text-base-content/60 text-sm ml-1">people</span>
+				</div>
+				<div class="mt-3">
+					<a href="/demo/people" class="btn btn-secondary btn-sm">View Directory</a>
+				</div>
+			}
+			<!-- Vendors -->
+			@dashCard("Vendors & Contacts", "/demo/vendors", "Master-detail split view with vendor list and inline contact editing.") {
+				<div>
+					<span class="text-2xl font-bold text-info">{ fmt.Sprintf("%d", s.VendorCount) }</span>
+					<span class="text-base-content/60 text-sm ml-1">vendors</span>
+				</div>
+				<div class="mt-3">
+					<a href="/demo/vendors" class="btn btn-info btn-sm">View Vendors</a>
+				</div>
+			}
+			<!-- Settings -->
+			@dashCard("Settings", "/demo/settings", "Tabbed settings panels with toggles, selects, and lazy-loaded content.") {
+				<div class="flex gap-2 flex-wrap text-xs">
+					<span class="badge badge-outline">General</span>
+					<span class="badge badge-outline">Notifications</span>
+					<span class="badge badge-outline">Security</span>
+					<span class="badge badge-outline">Appearance</span>
+				</div>
+				<div class="mt-3">
+					<a href="/demo/settings" class="btn btn-neutral btn-sm">View Settings</a>
+				</div>
+			}
+		</div>
+		<!-- Activity feed -->
+		if len(s.RecentEvents) > 0 {
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body">
+					<div class="flex items-center justify-between">
+						<h2 class="card-title text-lg">Recent Activity</h2>
+						<a href="/demo/feed" class="btn btn-ghost btn-sm">View Full Feed</a>
+					</div>
+					<div class="divide-y divide-base-200">
+						for _, e := range s.RecentEvents {
+							<div class="flex items-center gap-3 py-2 text-sm">
+								<span class={ "badge badge-sm", activityBadgeClass(e.Action) }>{ e.Action }</span>
+								<span class="font-medium">{ e.Name }</span>
+								<span class="text-base-content/50 flex-1 truncate">{ e.Detail }</span>
+								<span class="text-base-content/40 text-xs whitespace-nowrap">{ e.Timestamp.Format("15:04:05") }</span>
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+		}
+		<!-- Hypermedia controls link -->
+		<div class="card bg-base-200 border border-base-300">
+			<div class="card-body flex-row items-center justify-between">
+				<div>
+					<h3 class="font-semibold">Hypermedia Controls Gallery</h3>
+					<p class="text-sm text-base-content/60">Explore the building blocks: buttons, filters, tables, pagination, error recovery, and more.</p>
+				</div>
+				<a href="/hypermedia/controls" class="btn btn-secondary btn-sm">Browse Controls</a>
+			</div>
+		</div>
+	</div>
+}
+
+templ statBadge(label, value, sub, color string) {
+	<div class={ "stat bg-base-100 shadow border border-base-300 rounded-box p-4" }>
+		<div class="stat-title text-xs">{ label }</div>
+		<div class={ "stat-value text-2xl", "text-" + color }>{ value }</div>
+		<div class="stat-desc text-xs">{ sub }</div>
+	</div>
+}
+
+templ dashCard(title, href, description string) {
+	<div class="card bg-base-100 shadow border border-base-300 hover:shadow-md transition-shadow">
+		<div class="card-body p-5">
+			<h2 class="card-title text-base">
+				<a href={ templ.SafeURL(href) } class="hover:underline">{ title }</a>
+			</h2>
+			<p class="text-sm text-base-content/60">{ description }</p>
+			<div class="mt-2">
+				{ children... }
+			</div>
+		</div>
+	</div>
+}
+
+func kanbanStatusOrder() []string {
+	return []string{"backlog", "todo", "in_progress", "review", "done"}
+}
+
+func kanbanLabel(s string) string {
+	switch s {
+	case "backlog":
+		return "Backlog"
+	case "todo":
+		return "To Do"
+	case "in_progress":
+		return "In Progress"
+	case "review":
+		return "Review"
+	case "done":
+		return "Done"
+	}
+	return s
+}
+
+func kanbanBadgeClass(s string) string {
+	switch s {
+	case "done":
+		return "badge-success"
+	case "in_progress":
+		return "badge-info"
+	case "review":
+		return "badge-warning"
+	case "todo":
+		return "badge-primary"
+	default:
+		return "badge-ghost"
+	}
+}
+
+func approvalStatusOrder() []string {
+	return []string{"pending", "approved", "rejected", "escalated"}
+}
+
+func approvalLabel(s string) string {
+	switch s {
+	case "pending":
+		return "Pending"
+	case "approved":
+		return "Approved"
+	case "rejected":
+		return "Rejected"
+	case "escalated":
+		return "Escalated"
+	}
+	return s
+}
+
+func approvalBadgeClass(s string) string {
+	switch s {
+	case "pending":
+		return "badge-warning"
+	case "approved":
+		return "badge-success"
+	case "rejected":
+		return "badge-error"
+	case "escalated":
+		return "badge-info"
+	default:
+		return "badge-ghost"
+	}
+}
+
+func activityBadgeClass(action string) string {
+	switch action {
+	case "created":
+		return "badge-success"
+	case "updated":
+		return "badge-info"
+	case "deleted":
+		return "badge-error"
+	case "moved":
+		return "badge-warning"
+	case "approved":
+		return "badge-success"
+	case "rejected":
+		return "badge-error"
+	case "escalated":
+		return "badge-info"
+	default:
+		return "badge-ghost"
+	}
+}

@@ -1,0 +1,188 @@
+// setup:feature:demo
+package views
+
+// InteractionsPage is the full-page layout for /hypermedia/interactions.
+templ InteractionsPage(comments []string) {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<div class="flex items-center justify-between mb-4">
+			<h1 class="text-2xl font-bold">Interaction Patterns</h1>
+			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Overview</a>
+		</div>
+		<div role="alert" class="alert alert-info text-sm">
+			<span>Demonstrates: <strong>submit</strong>, <strong>cancel</strong>, <strong>modal-open</strong>, <strong>modal-close</strong>, <strong>preview</strong>, <strong>comment</strong>.</span>
+		</div>
+		<!-- Submit + Cancel -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Submit / Cancel</h2>
+				<p class="text-sm text-base-content/70 mb-3">The form posts to the server via <code class="text-xs bg-base-200 px-1 rounded">hx-post</code>. Cancel resets the form using HyperScript.</p>
+				<div id="interaction-form-result">
+					<form
+						id="interaction-form"
+						hx-post="/hypermedia/interactions/submit"
+						hx-target="#interaction-form-result"
+						hx-swap="outerHTML"
+						class="space-y-3"
+					>
+						<div class="form-control">
+							<label class="label label-text text-sm" for="contact-name">Name</label>
+							<input id="contact-name" type="text" name="contact-name" placeholder="Your name" class="input input-sm input-bordered w-full max-w-sm"/>
+						</div>
+						<div class="form-control">
+							<label class="label label-text text-sm" for="contact-email">Email</label>
+							<input id="contact-email" type="email" name="contact-email" placeholder="you@example.com" class="input input-sm input-bordered w-full max-w-sm"/>
+						</div>
+						<div class="form-control">
+							<label class="label label-text text-sm" for="contact-message">Message</label>
+							<textarea id="contact-message" name="contact-message" rows="3" placeholder="Say something…" class="textarea textarea-bordered textarea-sm w-full max-w-sm"></textarea>
+						</div>
+						<div class="flex gap-2">
+							<button type="submit" class="btn btn-sm btn-primary">Submit</button>
+							<button
+								type="button"
+								class="btn btn-sm btn-ghost"
+								_="on click
+									set #contact-name.value to ''
+									set #contact-email.value to ''
+									set #contact-message.value to ''"
+							>Cancel</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- Modal open / close -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Modal Open / Close</h2>
+				<p class="text-sm text-base-content/70 mb-3">Button fetches the modal fragment via <code class="text-xs bg-base-200 px-1 rounded">hx-get</code> and injects it into <code class="text-xs bg-base-200 px-1 rounded">#modal-container</code>, then opens the DaisyUI dialog. Close button calls <code class="text-xs bg-base-200 px-1 rounded">dialog.close()</code> via HyperScript.</p>
+				<div>
+					<button
+						class="btn btn-sm btn-secondary"
+						hx-get="/hypermedia/interactions/modal"
+						hx-target="#modal-container"
+						hx-swap="innerHTML transition:false"
+						>Open Modal</button>
+				</div>
+				<div id="modal-container"></div>
+			</div>
+		</div>
+		<!-- Live Preview -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Live Preview</h2>
+				<p class="text-sm text-base-content/70 mb-3">Textarea posts to the server on every keystroke (debounced 500 ms). The server returns rendered preview HTML.</p>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<div>
+						<label class="label label-text text-sm" for="preview-text">Write something</label>
+						<textarea
+							id="preview-text"
+							name="preview-text"
+							rows="5"
+							placeholder="Type markdown-like text…"
+							class="textarea textarea-bordered textarea-sm w-full"
+							hx-post="/hypermedia/interactions/preview"
+							hx-target="#preview-output"
+							hx-swap="innerHTML"
+							hx-trigger="keyup changed delay:500ms"
+						></textarea>
+					</div>
+					<div>
+						<p class="label-text text-sm mb-1">Preview</p>
+						<div id="preview-output" class="border border-base-300 rounded p-3 min-h-[7rem] text-sm bg-base-200 text-base-content/70 italic">Preview appears here…</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Comments -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Append Comment</h2>
+				<p class="text-sm text-base-content/70 mb-3">Form posts a comment; server returns only the new <code class="text-xs bg-base-200 px-1 rounded">&lt;li&gt;</code> appended via <code class="text-xs bg-base-200 px-1 rounded">hx-swap="beforeend"</code>.</p>
+				<form
+					hx-post="/hypermedia/interactions/comment"
+					hx-target="#comment-list"
+					hx-swap="beforeend"
+					hx-on::after-request="this.reset()"
+					class="flex gap-2 mb-3"
+				>
+					<input type="text" name="comment-text" placeholder="Add a comment…" class="input input-sm input-bordered flex-1"/>
+					<button type="submit" class="btn btn-sm btn-primary">Post</button>
+				</form>
+				<ul id="comment-list" class="space-y-1">
+					for _, c := range comments {
+						@InteractionsCommentItem(c)
+					}
+				</ul>
+			</div>
+		</div>
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			@interactionPatternCard("Submit", "POST /interactions/submit", "hx-post on form, server returns success fragment replacing the form.")
+			@interactionPatternCard("Cancel", "(client only)", "HyperScript resets input fields — zero server round-trips.")
+			@interactionPatternCard("Modal Open/Close", "GET /interactions/modal", "Fetch dialog HTML, inject, call showModal(). Close via dialog.close().")
+			@interactionPatternCard("Preview", "POST /interactions/preview", "hx-trigger=\"keyup delay:500ms\" debounces; server renders preview.")
+			@interactionPatternCard("Comment", "POST /interactions/comment", "hx-swap=\"beforeend\" appends only the new comment item.")
+		</div>
+	</div>
+}
+
+// InteractionsModalFragment is the DaisyUI dialog returned by GET /interactions/modal.
+templ InteractionsModalFragment() {
+	<dialog id="demo-modal" class="modal" hx-on::load="this.showModal()">
+		<div class="modal-box">
+			<h3 class="font-bold text-lg">Modal Dialog</h3>
+			<p class="py-4 text-sm text-base-content/70">This fragment was fetched on demand by HTMX and inserted into <code class="text-xs bg-base-200 px-1 rounded">#modal-container</code>.</p>
+			<div class="modal-action">
+				<button class="btn btn-sm" _="on click call #demo-modal.close()">Close</button>
+			</div>
+		</div>
+		<form method="dialog" class="modal-backdrop">
+			<button>close</button>
+		</form>
+	</dialog>
+}
+
+// InteractionsSubmitResult is returned after a successful form submit.
+templ InteractionsSubmitResult(name, email, msg string) {
+	<div id="interaction-form-result" class="alert alert-success text-sm">
+		<div>
+			<p class="font-semibold">Message received!</p>
+			<p>Name: { name }</p>
+			<p>Email: { email }</p>
+			<p>Message: { msg }</p>
+		</div>
+		<button
+			class="btn btn-xs btn-ghost"
+			hx-get="/hypermedia/interactions"
+			hx-target="#base-content"
+			hx-push-url="true"
+		>Reset</button>
+	</div>
+}
+
+// InteractionsPreviewFragment returns rendered preview HTML.
+templ InteractionsPreviewFragment(text string) {
+	if text == "" {
+		<span class="italic text-base-content/40">Preview appears here…</span>
+	} else {
+		<p>{ text }</p>
+	}
+}
+
+// InteractionsCommentItem renders a single comment list item.
+templ InteractionsCommentItem(comment string) {
+	<li class="flex items-start gap-2 text-sm py-1 border-b border-base-200 last:border-0">
+		<span class="text-base-content/40">→</span>
+		<span>{ comment }</span>
+	</li>
+}
+
+templ interactionPatternCard(title, method, desc string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h3 class="font-semibold text-sm">{ title }</h3>
+			<code class="text-xs text-primary bg-base-200 px-2 py-1 rounded">{ method }</code>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}

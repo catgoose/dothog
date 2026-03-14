@@ -1,0 +1,87 @@
+name: Update Go Dependencies and Go Version
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install mage
+        run: go install github.com/magefile/mage@latest
+
+      - name: Install Tailwind CLI
+        run: mage tailwindUpdate
+
+      - name: Update dependencies
+        run: |
+          go get -u ./...
+          go mod tidy
+          go mod edit -go=$(go version | sed -n 's/.*go\([0-9.]*\).*/\1/p')
+
+      - name: Update Go version in README
+        run: |
+          GO_VER=$(sed -n 's/^go \([0-9]*\.[0-9]*\).*/\1/p' go.mod)
+          sed -i "s/- Go [0-9]\+\.[0-9]\++ (latest)/- Go ${GO_VER}+ (latest)/" README.md
+
+      - name: Update vendored assets
+        run: mage updateAssets
+
+      - name: Verify build
+        run: mage build
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          git add go.mod go.sum README.md web/assets/public/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes
+        if: steps.check-changes.outputs.changes_detected == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update dependencies and vendored assets" \
+            --author="${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
+
+      - name: Stash build artifacts
+        if: steps.check-changes.outputs.changes_detected == 'true'
+        run: 'git stash push -u -m "ci: build artifacts"'
+
+      - name: Pull remote changes
+        if: steps.check-changes.outputs.changes_detected == 'true'
+        run: git pull --rebase origin main
+
+      - name: Push changes
+        if: steps.check-changes.outputs.changes_detected == 'true'
+        run: git push origin main

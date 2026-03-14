@@ -1,0 +1,137 @@
+// setup:feature:demo
+package views
+
+import "fmt"
+
+// CarouselSlideData is a view model for a carousel slide.
+type CarouselSlideData struct {
+	Index       int
+	Title       string
+	Desc        string
+	Color       string
+	TotalSlides int
+}
+
+// RangeResultData is a view model for the range slider result.
+type RangeResultData struct {
+	Value int
+	Price string
+}
+
+// UploadResultData is a view model for the file upload result.
+type UploadResultData struct {
+	Name string
+	Size string
+	Type string
+}
+
+// AccordionPanelData is a view model for an accordion panel.
+type AccordionPanelData struct {
+	ID      int
+	Title   string
+	Content string
+}
+
+// CarouselSlideFragment renders a single carousel slide with prev/next navigation.
+templ CarouselSlideFragment(data CarouselSlideData) {
+	<div id="carousel-panel" class="carousel carousel-center w-full">
+		<div class={ "carousel-item w-full flex flex-col items-center justify-center rounded-lg p-8 min-h-[12rem]", data.Color }>
+			<h3 class="text-xl font-bold mb-2">{ data.Title }</h3>
+			<p class="text-sm opacity-80">{ data.Desc }</p>
+			<p class="text-xs opacity-60 mt-2">
+				{ fmt.Sprintf("Slide %d of %d", data.Index+1, data.TotalSlides) }
+			</p>
+		</div>
+		<div class="flex justify-between w-full mt-3">
+			if data.Index > 0 {
+				<button
+					class="btn btn-sm btn-ghost"
+					hx-get={ fmt.Sprintf("/hypermedia/components2/carousel/%d", data.Index-1) }
+					hx-target="#carousel-panel"
+					hx-swap="outerHTML"
+				>← Prev</button>
+			} else {
+				<button class="btn btn-sm btn-ghost btn-disabled" disabled>← Prev</button>
+			}
+			if data.Index < data.TotalSlides-1 {
+				<button
+					class="btn btn-sm btn-ghost"
+					hx-get={ fmt.Sprintf("/hypermedia/components2/carousel/%d", data.Index+1) }
+					hx-target="#carousel-panel"
+					hx-swap="outerHTML"
+				>Next →</button>
+			} else {
+				<button class="btn btn-sm btn-ghost btn-disabled" disabled>Next →</button>
+			}
+		</div>
+	</div>
+}
+
+// DropdownResultsFragment renders filtered search results.
+templ DropdownResultsFragment(items []string) {
+	<div id="dropdown-results">
+		if len(items) == 0 {
+			<p class="text-sm text-base-content/50 p-2">No results found.</p>
+		} else {
+			<ul class="menu menu-sm bg-base-200 rounded-box w-full max-w-xs">
+				for _, item := range items {
+					<li><a>{ item }</a></li>
+				}
+			</ul>
+		}
+	</div>
+}
+
+// CascadingOptionsFragment renders option elements for the sub-select.
+templ CascadingOptionsFragment(subItems []string) {
+	<option disabled selected>Pick a city</option>
+	for _, item := range subItems {
+		<option value={ item }>{ item }</option>
+	}
+}
+
+// RangeResultFragment renders the computed result for the range slider.
+templ RangeResultFragment(data RangeResultData) {
+	<div id="range-result" class="text-sm font-mono whitespace-nowrap">
+		<span class="font-semibold">{ fmt.Sprintf("%d", data.Value) }</span> units =
+		<span class="text-primary font-semibold">{ data.Price }</span>
+	</div>
+}
+
+// UploadResultFragment renders file metadata after upload.
+templ UploadResultFragment(data UploadResultData) {
+	<div id="upload-result" class="alert alert-success text-sm">
+		<div>
+			<p><strong>File:</strong> { data.Name }</p>
+			<p><strong>Size:</strong> { data.Size }</p>
+			<p><strong>Type:</strong> { data.Type }</p>
+		</div>
+	</div>
+}
+
+// AccordionContentFragment renders the lazy-loaded body of an accordion panel.
+templ AccordionContentFragment(data AccordionPanelData) {
+	<div id={ fmt.Sprintf("accordion-body-%d", data.ID) } class="text-sm text-base-content/70">
+		{ data.Content }
+	</div>
+}
+
+// IndicatorBadgeFragment renders the notification count badge.
+templ IndicatorBadgeFragment(count int) {
+	<span
+		id="indicator-badge"
+		class="indicator-item badge badge-primary"
+		hx-get="/hypermedia/components2/indicator/count"
+		hx-trigger="every 3s"
+		hx-swap="outerHTML"
+	>
+		{ fmt.Sprintf("%d", count) }
+	</span>
+}
+
+// ThemeConfirmFragment renders a confirmation message for theme selection.
+templ ThemeConfirmFragment(theme string) {
+	<div id="theme-result" class="alert alert-info alert-sm text-sm mt-2">
+		<span>Theme set to <strong>{ theme }</strong> (server-persisted).</span>
+	</div>
+}

@@ -1,0 +1,158 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["Pipeline"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.decide.outputs.should_release }}
+      bump_type: ${{ steps.decide.outputs.bump_type }}
+    steps:
+      - name: Decide whether to release
+        id: decide
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "bump_type=${{ github.event.inputs.bump }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Only release if pipeline succeeded
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "Pipeline did not succeed, skipping"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Skip bot commits (dep updates)
+          AUTHOR="${{ github.event.workflow_run.head_commit.author.name }}"
+          if [ "$AUTHOR" = "github-actions[bot]" ]; then
+            echo "Bot commit, skipping"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Only release if a PR was merged for this SHA
+          SHA=${{ github.event.workflow_run.head_sha }}
+          PR=$(gh api repos/${{ github.repository }}/commits/$SHA/pulls --jq '.[0] | select(.merged_at != null) | .number')
+          if [ -z "$PR" ]; then
+            echo "No merged PR found for $SHA, skipping"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Found merged PR #$PR"
+          echo "should_release=true" >> $GITHUB_OUTPUT
+
+          # Determine bump from PR labels
+          LABELS=$(gh api repos/${{ github.repository }}/pulls/$PR --jq '.labels[].name' | tr '\n' ',')
+          if echo "$LABELS" | grep -qi 'major'; then
+            echo "bump_type=major" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -qi 'minor'; then
+            echo "bump_type=minor" >> $GITHUB_OUTPUT
+          else
+            echo "bump_type=patch" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  release:
+    needs: [check]
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine next version
+        id: version
+        run: |
+          LATEST=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$LATEST" ]; then
+            LATEST="v0.0.0"
+          fi
+
+          VERSION=${LATEST#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          case "${{ needs.check.outputs.bump_type }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous: $LATEST -> Next: $NEW_VERSION (bump: ${{ needs.check.outputs.bump_type }})"
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Generate templ files
+        run: go tool templ generate
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build Linux amd64
+        run: |
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+            go build -ldflags="-w -s" -o dothog-linux-amd64 .
+
+      - name: Install mingw-w64 for Windows cross-compilation
+        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
+
+      - name: Build Windows amd64
+        run: |
+          CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 \
+            go build -ldflags="-w -s" -o dothog-windows-amd64.exe .
+
+      - name: Create tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a ${{ steps.version.outputs.version }} -m "Release ${{ steps.version.outputs.version }}"
+          git push origin ${{ steps.version.outputs.version }}
+
+      - name: Create GitHub Release
+        run: |
+          gh release create ${{ steps.version.outputs.version }} \
+            dothog-linux-amd64 \
+            dothog-windows-amd64.exe \
+            --title "Release ${{ steps.version.outputs.version }}" \
+            --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

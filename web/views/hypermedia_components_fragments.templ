@@ -1,0 +1,271 @@
+// setup:feature:demo
+package views
+
+import "fmt"
+
+// ChatMessage is a view model for a chat message.
+type ChatMessage struct {
+	ID     int
+	Author string
+	Text   string
+	Time   string
+}
+
+// TimelineEvent is a view model for a timeline event.
+type TimelineEvent struct {
+	ID    int
+	Title string
+	Desc  string
+	Time  string
+	Kind  string
+}
+
+// StepFragment renders the steps indicator and step content.
+templ StepFragment(step int) {
+	<div id="wizard-panel">
+		<ul class="steps steps-horizontal w-full mb-6">
+			<li class={ "step", templ.KV("step-primary", step >= 1) }>Details</li>
+			<li class={ "step", templ.KV("step-primary", step >= 2) }>Preferences</li>
+			<li class={ "step", templ.KV("step-primary", step >= 3) }>Review</li>
+			<li class={ "step", templ.KV("step-primary", step >= 4) }>Confirm</li>
+		</ul>
+		<div class="p-4 bg-base-200 rounded min-h-[6rem]">
+			switch step {
+				case 1:
+					<h3 class="font-semibold mb-2">Step 1: Details</h3>
+					<p class="text-sm text-base-content/70">Enter your basic information. Name, email, and preferences.</p>
+				case 2:
+					<h3 class="font-semibold mb-2">Step 2: Preferences</h3>
+					<p class="text-sm text-base-content/70">Choose your notification settings and theme preferences.</p>
+				case 3:
+					<h3 class="font-semibold mb-2">Step 3: Review</h3>
+					<p class="text-sm text-base-content/70">Review all your selections before confirming.</p>
+				case 4:
+					<h3 class="font-semibold mb-2">Step 4: Confirm</h3>
+					<p class="text-sm text-base-content/70">All done! Your setup is complete.</p>
+			}
+		</div>
+		<div class="flex justify-between mt-4">
+			if step > 1 {
+				<button
+					class="btn btn-sm btn-ghost"
+					hx-get={ fmt.Sprintf("/hypermedia/components/steps/%d", step-1) }
+					hx-target="#wizard-panel"
+					hx-swap="outerHTML"
+				>← Previous</button>
+			} else {
+				<span></span>
+			}
+			if step < 4 {
+				<button
+					class="btn btn-sm btn-primary"
+					hx-get={ fmt.Sprintf("/hypermedia/components/steps/%d", step+1) }
+					hx-target="#wizard-panel"
+					hx-swap="outerHTML"
+				>Next →</button>
+			} else {
+				<span class="badge badge-success">Complete!</span>
+			}
+		</div>
+	</div>
+}
+
+// TabContentFragment renders the content for a tab panel.
+templ TabContentFragment(tab string) {
+	<div id="tab-panel" class="p-4 bg-base-200 rounded min-h-[6rem]">
+		switch tab {
+			case "overview":
+				<h3 class="font-semibold mb-2">Overview</h3>
+				<p class="text-sm text-base-content/70">This is the overview panel. It provides a high-level summary of all features and capabilities available in this demo.</p>
+			case "details":
+				<h3 class="font-semibold mb-2">Details</h3>
+				<p class="text-sm text-base-content/70">The details panel shows in-depth technical information. Each tab is loaded lazily from the server only when clicked.</p>
+				<div class="mt-2 flex gap-2">
+					<span class="badge badge-sm badge-primary">htmx</span>
+					<span class="badge badge-sm badge-secondary">DaisyUI</span>
+					<span class="badge badge-sm badge-accent">templ</span>
+				</div>
+			case "settings":
+				<h3 class="font-semibold mb-2">Settings</h3>
+				<p class="text-sm text-base-content/70">Configure preferences here. This content was fetched on demand — no page reload necessary.</p>
+				<div class="form-control mt-2">
+					<label class="label cursor-pointer justify-start gap-3">
+						<input type="checkbox" class="toggle toggle-sm toggle-primary" checked?={ true }/>
+						<span class="label-text text-sm">Enable notifications</span>
+					</label>
+				</div>
+		}
+	</div>
+}
+
+// ToastResultFragment renders the primary action result plus an OOB toast notification.
+templ ToastResultFragment(msg string) {
+	<div id="toast-result" class="alert alert-success alert-sm text-sm">
+		<span>{ msg }</span>
+	</div>
+	<div id="toast-notification" hx-swap-oob="afterbegin:#toast-container">
+		<div class="alert alert-success shadow-lg" _="on load wait 3s then transition my opacity to 0 then remove me">
+			<span>{ msg }</span>
+		</div>
+	</div>
+}
+
+// ChatMessageFragment renders a single chat bubble.
+templ ChatMessageFragment(msg ChatMessage) {
+	if msg.Author == "user" {
+		<div class="chat chat-end">
+			<div class="chat-header text-xs text-base-content/50">You <time class="text-xs opacity-50">{ msg.Time }</time></div>
+			<div class="chat-bubble chat-bubble-primary">{ msg.Text }</div>
+		</div>
+	} else {
+		<div class="chat chat-start">
+			<div class="chat-header text-xs text-base-content/50">Bot <time class="text-xs opacity-50">{ msg.Time }</time></div>
+			<div class="chat-bubble">{ msg.Text }</div>
+		</div>
+	}
+}
+
+// ChatMessagesFragment renders multiple chat messages (used for user + bot reply pair).
+templ ChatMessagesFragment(msgs []ChatMessage) {
+	for _, msg := range msgs {
+		@ChatMessageFragment(msg)
+	}
+}
+
+// SwapLikeFragment renders the heart toggle button.
+templ SwapLikeFragment(liked bool) {
+	<button
+		id="swap-like"
+		class={ "btn btn-sm", templ.KV("btn-error", liked), templ.KV("btn-ghost", !liked) }
+		hx-post="/hypermedia/components/swap/like"
+		hx-target="#swap-like"
+		hx-swap="outerHTML"
+	>
+		if liked {
+			♥ Liked
+		} else {
+			♡ Like
+		}
+	</button>
+}
+
+// SwapBookmarkFragment renders the bookmark toggle button.
+templ SwapBookmarkFragment(bookmarked bool) {
+	<button
+		id="swap-bookmark"
+		class={ "btn btn-sm", templ.KV("btn-warning", bookmarked), templ.KV("btn-ghost", !bookmarked) }
+		hx-post="/hypermedia/components/swap/bookmark"
+		hx-target="#swap-bookmark"
+		hx-swap="outerHTML"
+	>
+		if bookmarked {
+			★ Bookmarked
+		} else {
+			☆ Bookmark
+		}
+	</button>
+}
+
+// SkeletonContentFragment renders the real content that replaces skeleton placeholders.
+templ SkeletonContentFragment() {
+	<div id="skeleton-target" class="space-y-3">
+		<div class="flex items-center gap-3">
+			<div class="avatar placeholder">
+				<div class="bg-primary text-primary-content rounded-full w-12">
+					<span class="text-lg">JD</span>
+				</div>
+			</div>
+			<div>
+				<p class="font-semibold">Jane Doe</p>
+				<p class="text-sm text-base-content/60">Senior Developer</p>
+			</div>
+		</div>
+		<p class="text-sm text-base-content/70">This content was loaded from the server after a 1.5 second delay, replacing the skeleton placeholders. In production, this pattern is useful for content that takes time to fetch from a database or external API.</p>
+		<div class="flex gap-2">
+			<span class="badge badge-primary badge-sm">Go</span>
+			<span class="badge badge-secondary badge-sm">HTMX</span>
+			<span class="badge badge-accent badge-sm">templ</span>
+		</div>
+	</div>
+}
+
+// TimelineBatchFragment renders a batch of timeline items and optionally a new sentinel for infinite scroll.
+templ TimelineBatchFragment(events []TimelineEvent, nextAfter int, hasMore bool) {
+	for _, evt := range events {
+		<li>
+			<hr/>
+			<div class="timeline-middle">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+					<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"></path>
+				</svg>
+			</div>
+			<div class="timeline-end timeline-box">
+				<time class="text-xs font-mono">{ evt.Time }</time>
+				<div class="font-semibold text-sm">{ evt.Title }</div>
+				<div class="text-xs text-base-content/60">{ evt.Desc }</div>
+			</div>
+			<hr/>
+		</li>
+	}
+	if hasMore {
+		<li
+			id="timeline-sentinel"
+			hx-get={ fmt.Sprintf("/hypermedia/components/timeline?after=%d", nextAfter) }
+			hx-trigger="intersect once"
+			hx-target="#timeline-sentinel"
+			hx-swap="outerHTML"
+		>
+			<hr/>
+			<div class="timeline-middle">
+				<span class="loading loading-spinner loading-xs"></span>
+			</div>
+			<div class="timeline-end timeline-box text-xs text-base-content/50">
+				Loading more…
+			</div>
+		</li>
+	}
+}
+
+// DrawerContentFragment renders the content loaded into the drawer side panel.
+templ DrawerContentFragment() {
+	<div class="p-4 space-y-4">
+		<h3 class="font-bold text-lg">Drawer Menu</h3>
+		<p class="text-sm text-base-content/70">This content was loaded on demand when the drawer was opened.</p>
+		<ul class="menu bg-base-200 rounded-box w-full">
+			<li><a>Dashboard</a></li>
+			<li><a>Profile</a></li>
+			<li><a>Settings</a></li>
+			<li><a>Help &amp; Support</a></li>
+		</ul>
+		<div class="alert alert-info alert-sm text-sm">
+			<span>Drawer content is fetched via <code class="text-xs">hx-get</code> each time it opens.</span>
+		</div>
+	</div>
+}
+
+// RatingFragment renders the star rating input with a label.
+templ RatingFragment(rating int) {
+	<div id="rating-demo" class="flex items-center gap-4">
+		<div class="rating rating-lg">
+			for i := 1; i <= 5; i++ {
+				<input
+					type="radio"
+					name="rating"
+					class="mask mask-star-2 bg-warning"
+					checked?={ i == rating }
+					hx-post="/hypermedia/components/rating"
+					hx-target="#rating-demo"
+					hx-swap="outerHTML"
+					hx-vals={ fmt.Sprintf(`{"rating": "%d"}`, i) }
+				/>
+			}
+		</div>
+		<span class="text-sm text-base-content/70">
+			if rating == 0 {
+				No rating yet
+			} else {
+				{ fmt.Sprintf("%d of 5 stars", rating) }
+			}
+		</span>
+	</div>
+}

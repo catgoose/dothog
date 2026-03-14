@@ -1,0 +1,93 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+
+	"catgoose/dothog/internal/demo"
+)
+
+templ AdminPage(info demo.SchemaInfo) {
+	<div class="max-w-3xl mx-auto p-4 space-y-6">
+		<h1 class="text-2xl font-bold">Admin</h1>
+		<div id="db-status">
+			@adminDBCard(info)
+		</div>
+	</div>
+}
+
+templ AdminDBStatus(info demo.SchemaInfo, message string, isError bool) {
+	<div id="db-status">
+		@adminDBCard(info)
+		if message != "" {
+			if isError {
+				<div class="alert alert-error text-sm mt-4">{ message }</div>
+			} else {
+				<div class="alert alert-success text-sm mt-4">{ message }</div>
+			}
+		}
+	</div>
+}
+
+templ adminDBCard(info demo.SchemaInfo) {
+	<div class="card bg-base-200 shadow-md">
+		<div class="card-body">
+			<div class="flex items-center justify-between">
+				<h2 class="card-title text-lg">Database</h2>
+				<span class="badge badge-neutral badge-sm">SQLite :memory:</span>
+			</div>
+			<p class="text-sm text-base-content/60">
+				In-memory SQLite database used by demo table routes.
+				Re-initializing drops all data and re-seeds from scratch.
+			</p>
+			<!-- Stats row -->
+			<div class="flex gap-6 mt-2">
+				<div>
+					<div class="text-xs text-base-content/50">Tables</div>
+					<div class="text-xl font-semibold">{ fmt.Sprintf("%d", len(info.Tables)) }</div>
+				</div>
+				<div>
+					<div class="text-xs text-base-content/50">Indexes</div>
+					<div class="text-xl font-semibold">{ fmt.Sprintf("%d", info.Indexes) }</div>
+				</div>
+			</div>
+			<!-- Table list -->
+			if len(info.Tables) > 0 {
+				<div class="overflow-x-auto mt-3">
+					<table class="table table-xs">
+						<thead>
+							<tr>
+								<th>Table</th>
+								<th>Columns</th>
+								<th>Rows</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, t := range info.Tables {
+								<tr>
+									<td class="font-mono text-sm">{ t.Name }</td>
+									<td>{ fmt.Sprintf("%d", t.ColumnCount) }</td>
+									<td>{ fmt.Sprintf("%d", t.RowCount) }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			} else {
+				<div class="text-sm text-base-content/40 italic mt-2">No tables</div>
+			}
+			<!-- Actions -->
+			<div class="card-actions mt-3">
+				<button
+					class="btn btn-primary btn-sm"
+					hx-post="/admin/db/reinit"
+					hx-target="#db-status"
+					hx-swap="outerHTML"
+					hx-confirm="Re-initialize the database? All changes will be lost."
+				>
+					Re-init Database
+				</button>
+			</div>
+		</div>
+	</div>
+}

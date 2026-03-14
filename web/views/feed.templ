@@ -1,0 +1,84 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+
+	"catgoose/dothog/internal/demo"
+)
+
+var feedActionIcons = map[string]string{
+	"created":  "badge-success",
+	"updated":  "badge-info",
+	"deleted":  "badge-error",
+	"moved":    "badge-warning",
+	"approved": "badge-success",
+	"rejected": "badge-error",
+}
+
+templ FeedPage(events []demo.ActivityEvent, lastID int) {
+	<div class="max-w-2xl mx-auto p-4 space-y-4">
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl font-bold">Activity Feed</h1>
+			<div class="text-sm text-base-content/50">SSE live updates + infinite scroll</div>
+		</div>
+		<div id="feed-container" hx-ext="sse" sse-connect="/sse/activity">
+			<div sse-swap="activity-event" hx-swap="afterbegin" hx-target="#feed-items" style="display:none"></div>
+			<div id="feed-items" class="space-y-2">
+				for _, e := range events {
+					@FeedItem(e)
+				}
+			</div>
+			if len(events) >= 20 {
+				@FeedLoadMore(lastID)
+			}
+		</div>
+	</div>
+}
+
+templ FeedItem(e demo.ActivityEvent) {
+	<div class="flex items-center gap-3 px-3 py-2 rounded bg-base-200/50 border border-base-300">
+		<span class={ "badge badge-xs " + feedBadgeClass(e.Action) }>{ e.Action }</span>
+		<span class="text-xs text-base-content/50 tabular-nums font-mono">{ e.Timestamp.Format("15:04:05") }</span>
+		<span class="text-sm flex-1">
+			<strong>{ e.Name }</strong>
+			<span class="text-base-content/60"> ({ e.Resource }) </span>
+			if e.Detail != "" {
+				<span class="text-base-content/50">{ e.Detail }</span>
+			}
+		</span>
+	</div>
+}
+
+func feedBadgeClass(action string) string {
+	if c, ok := feedActionIcons[action]; ok {
+		return c
+	}
+	return "badge-ghost"
+}
+
+templ FeedLoadMore(beforeID int) {
+	<div
+		id="feed-sentinel"
+		hx-get={ fmt.Sprintf("/demo/feed/more?before=%d", beforeID) }
+		hx-trigger="intersect once"
+		hx-target="this"
+		hx-swap="outerHTML"
+		class="py-4 text-center"
+	>
+		<span class="loading loading-dots loading-sm"></span>
+	</div>
+}
+
+templ FeedMoreItems(events []demo.ActivityEvent, lastID int, hasMore bool) {
+	for _, e := range events {
+		@FeedItem(e)
+	}
+	if hasMore {
+		@FeedLoadMore(lastID)
+	}
+}
+
+templ FeedItemOOB(e demo.ActivityEvent) {
+	@FeedItem(e)
+}

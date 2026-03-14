@@ -1,0 +1,110 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+
+	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/routes/hypermedia"
+	components "catgoose/dothog/web/components/core"
+)
+
+var approvalStatusBadge = map[string]string{
+	"pending":   "badge-warning",
+	"approved":  "badge-success",
+	"rejected":  "badge-error",
+	"escalated": "badge-info",
+}
+
+templ ApprovalsPage(requests []demo.ApprovalRequest) {
+	<div class="p-4 space-y-4">
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl font-bold">Approval Queue</h1>
+			<div class="text-sm text-base-content/50">HATEOAS state machine: server controls available actions</div>
+		</div>
+		<div id="approvals-list" class="space-y-3">
+			for _, r := range requests {
+				@ApprovalCard(r)
+			}
+		</div>
+	</div>
+}
+
+templ ApprovalCard(r demo.ApprovalRequest) {
+	{{ cardID := fmt.Sprintf("approval-%d", r.ID) }}
+	<div id={ cardID } class="card bg-base-200 shadow-sm border border-base-300">
+		<div class="card-body p-4">
+			<div class="flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<h3 class="font-semibold">{ r.Title }</h3>
+					<span class={ "badge badge-sm " + approvalStatusBadge[r.Status] }>{ r.Status }</span>
+				</div>
+				<div class="text-lg font-mono font-bold">{ fmt.Sprintf("$%.2f", r.Amount) }</div>
+			</div>
+			<div class="flex gap-4 text-sm text-base-content/60 mt-1">
+				<span>By: { r.Requester }</span>
+				<span>{ r.Category }</span>
+				<span>{ r.SubmittedAt.Format("Jan 2, 2006") }</span>
+			</div>
+			if r.Notes != "" {
+				<p class="text-sm text-base-content/70 mt-2">{ r.Notes }</p>
+			}
+			if r.ReviewedBy != "" {
+				<div class="text-xs text-base-content/50 mt-1">
+					Reviewed by { r.ReviewedBy }
+					if r.ReviewedAt != nil {
+						on { r.ReviewedAt.Format("Jan 2, 2006 15:04") }
+					}
+				</div>
+			}
+			{{ actions := demo.AllowedActions(r.Status) }}
+			if len(actions) > 0 {
+				<div class="card-actions mt-3">
+					@components.Controls(approvalControls(r.ID, actions))
+				</div>
+			}
+		</div>
+	</div>
+}
+
+func approvalControls(id int, actions []string) []hypermedia.Control {
+	var controls []hypermedia.Control
+	for _, action := range actions {
+		url := fmt.Sprintf("/demo/approvals/%d/%s", id, action)
+		target := fmt.Sprintf("#approval-%d", id)
+		variant := hypermedia.VariantSecondary
+		switch action {
+		case "approve":
+			variant = hypermedia.VariantPrimary
+		case "reject":
+			variant = hypermedia.VariantDanger
+		case "escalate":
+			variant = hypermedia.VariantSecondary
+		case "resubmit":
+			variant = hypermedia.VariantPrimary
+		}
+		controls = append(controls, hypermedia.Control{
+			Kind:    hypermedia.ControlKindHTMX,
+			Label:   capitalizeAction(action),
+			Variant: variant,
+			Swap:    hypermedia.SwapOuterHTML,
+			HxRequest: hypermedia.HxPost(url, target),
+		})
+	}
+	return controls
+}
+
+func capitalizeAction(s string) string {
+	if s == "" {
+		return s
+	}
+	return string(s[0]-32) + s[1:]
+}
+
+templ ApprovalsList(requests []demo.ApprovalRequest) {
+	<div id="approvals-list" class="space-y-3">
+		for _, r := range requests {
+			@ApprovalCard(r)
+		}
+	</div>
+}

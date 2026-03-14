@@ -1,0 +1,162 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+
+	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/routes/hypermedia"
+	components "catgoose/dothog/web/components/core"
+)
+
+templ VendorContactsPage(vendors []demo.Vendor, bar hypermedia.FilterBar) {
+	<div class="p-4 space-y-4">
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl font-bold">Vendor Contacts</h1>
+			<div class="text-sm text-base-content/50">Master-detail split view</div>
+		</div>
+		@components.FilterBar(bar)
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+			<div id="vendor-list" class="lg:col-span-1 space-y-1">
+				@VendorList(vendors)
+			</div>
+			<div id="contact-detail" class="lg:col-span-2">
+				<div class="card bg-base-200 border border-base-300 min-h-[300px]">
+					<div class="card-body flex items-center justify-center text-base-content/40">
+						Select a vendor to view contacts
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ VendorList(vendors []demo.Vendor) {
+	for _, v := range vendors {
+		@VendorListItem(v)
+	}
+	if len(vendors) == 0 {
+		<div class="text-center text-sm text-base-content/40 py-8">No vendors found</div>
+	}
+}
+
+templ VendorListItem(v demo.Vendor) {
+	{{ contactsURL := fmt.Sprintf("/demo/vendors/%d/contacts", v.ID) }}
+	<div
+		class="p-3 rounded cursor-pointer hover:bg-base-200 border border-transparent hover:border-base-300 transition-colors"
+		hx-get={ contactsURL }
+		hx-target="#contact-detail"
+		hx-swap="innerHTML"
+	>
+		<div class="font-medium text-sm">{ v.Name }</div>
+		<div class="text-xs text-base-content/50">{ v.Category }</div>
+	</div>
+}
+
+templ VendorContactsDetail(vendor demo.Vendor, contacts []demo.Contact) {
+	<div class="card bg-base-200 border border-base-300">
+		<div class="card-body p-4">
+			<div class="flex items-center justify-between mb-4">
+				<div>
+					<h2 class="text-lg font-bold">{ vendor.Name }</h2>
+					<span class="badge badge-sm badge-neutral">{ vendor.Category }</span>
+				</div>
+				<span class="text-sm text-base-content/50">{ fmt.Sprintf("%d contacts", len(contacts)) }</span>
+			</div>
+			<div class="space-y-3">
+				for _, c := range contacts {
+					@ContactCard(c)
+				}
+			</div>
+			if len(contacts) == 0 {
+				<div class="text-center text-sm text-base-content/40 py-8">No contacts for this vendor</div>
+			}
+		</div>
+	</div>
+}
+
+templ ContactCard(c demo.Contact) {
+	{{ cardID := fmt.Sprintf("contact-%d", c.ID) }}
+	{{ editURL := fmt.Sprintf("/demo/vendors/contacts/%d/edit", c.ID) }}
+	<div id={ cardID } class="bg-base-100 rounded-lg p-3 border border-base-300">
+		<div class="flex items-center justify-between">
+			<div>
+				<div class="font-medium text-sm">{ c.Name }</div>
+				<div class="text-xs text-base-content/50">{ c.Role }</div>
+			</div>
+			@components.Controls([]hypermedia.Control{
+				{
+					Kind:    hypermedia.ControlKindHTMX,
+					Label:   "Edit",
+					Variant: hypermedia.VariantGhost,
+					Icon:    hypermedia.IconPencilSquare,
+					Swap:    hypermedia.SwapOuterHTML,
+					HxRequest: hypermedia.HxGet(editURL, "#" + cardID),
+				},
+			})
+		</div>
+		<div class="flex gap-4 mt-2 text-xs text-base-content/60">
+			<span>{ c.Email }</span>
+			if c.Phone != "" {
+				<span>{ c.Phone }</span>
+			}
+		</div>
+	</div>
+}
+
+templ ContactEditForm(c demo.Contact) {
+	{{ cardID := fmt.Sprintf("contact-%d", c.ID) }}
+	{{ saveURL := fmt.Sprintf("/demo/vendors/contacts/%d", c.ID) }}
+	{{ cancelURL := fmt.Sprintf("/demo/vendors/contacts/%d/card", c.ID) }}
+	<div id={ cardID } class="bg-base-100 rounded-lg p-3 border border-primary/30">
+		<div class="grid grid-cols-2 gap-2">
+			<div>
+				<label class="label label-text text-xs">Name</label>
+				<input type="text" name="name" class="input input-xs input-bordered w-full" value={ c.Name }/>
+			</div>
+			<div>
+				<label class="label label-text text-xs">Role</label>
+				<input type="text" name="role" class="input input-xs input-bordered w-full" value={ c.Role }/>
+			</div>
+			<div>
+				<label class="label label-text text-xs">Email</label>
+				<input type="email" name="email" class="input input-xs input-bordered w-full" value={ c.Email }/>
+			</div>
+			<div>
+				<label class="label label-text text-xs">Phone</label>
+				<input type="text" name="phone" class="input input-xs input-bordered w-full" value={ c.Phone }/>
+			</div>
+		</div>
+		<div class="flex gap-2 mt-2">
+			@components.Controls([]hypermedia.Control{
+				{
+					Kind:    hypermedia.ControlKindHTMX,
+					Label:   "Save",
+					Variant: hypermedia.VariantPrimary,
+					Icon:    hypermedia.IconCheck,
+					Swap:    hypermedia.SwapOuterHTML,
+					HxRequest: hypermedia.HxRequestConfig{
+						Method:  hypermedia.HxMethodPut,
+						URL:     saveURL,
+						Target:  "#" + cardID,
+						Include: "#" + cardID,
+					},
+				},
+				{
+					Kind:    hypermedia.ControlKindHTMX,
+					Label:   "Cancel",
+					Variant: hypermedia.VariantGhost,
+					Icon:    hypermedia.IconXMark,
+					Swap:    hypermedia.SwapOuterHTML,
+					HxRequest: hypermedia.HxGet(cancelURL, "#" + cardID),
+				},
+			})
+		</div>
+	</div>
+}
+
+templ VendorListFiltered(vendors []demo.Vendor) {
+	<div id="vendor-list" class="lg:col-span-1 space-y-1">
+		@VendorList(vendors)
+	</div>
+}

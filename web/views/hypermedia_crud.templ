@@ -1,0 +1,153 @@
+// setup:feature:demo
+package views
+
+import "fmt"
+
+// CRUDViewItem is the view-layer representation of an in-memory CRUD demo item.
+type CRUDViewItem struct {
+	Name   string
+	Status string
+	Notes  string
+	ID     int
+}
+
+// CRUDPage is the full-page layout for /hypermedia/crud.
+templ CRUDPage(items []CRUDViewItem) {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<div class="flex items-center justify-between mb-4">
+			<h1 class="text-2xl font-bold">CRUD Patterns</h1>
+			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Overview</a>
+		</div>
+		<div role="alert" class="alert alert-info text-sm">
+			<span>Demonstrates: <strong>create</strong>, <strong>edit</strong>, <strong>patch</strong>, <strong>update</strong>, <strong>delete</strong> — all inline, no page reload.</span>
+		</div>
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<div class="flex items-center justify-between">
+					<h2 class="card-title text-base">Items</h2>
+					<button
+						class="btn btn-sm btn-primary"
+						hx-post="/hypermedia/crud/items"
+						hx-target="#crud-new-row"
+						hx-swap="outerHTML"
+						hx-vals='{"name":"New Item","notes":""}'
+					>+ Add Item</button>
+				</div>
+				@CRUDItemsTable(items)
+			</div>
+		</div>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			@crudPatternCard("Create", "POST /hypermedia/crud/items", "Appends a new row by posting a form and swapping the placeholder row with the returned row fragment.")
+			@crudPatternCard("Edit", "GET /hypermedia/crud/items/:id/edit", "Replaces the display row with an inline edit form (outerHTML swap).")
+			@crudPatternCard("Update (PUT)", "PUT /hypermedia/crud/items/:id", "Submits the edit form; server returns the updated display row.")
+			@crudPatternCard("Patch (toggle)", "PATCH /hypermedia/crud/items/:id/toggle", "Flips the status field without a full edit form.")
+			@crudPatternCard("Delete", "DELETE /hypermedia/crud/items/:id", "Removes the row from the DOM via hx-swap=\"delete\" (no server fragment returned).")
+		</div>
+	</div>
+}
+
+// CRUDItemsTable is the replaceable table fragment.
+templ CRUDItemsTable(items []CRUDViewItem) {
+	<div class="overflow-x-auto mt-2">
+		<table class="table table-sm">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Status</th>
+					<th>Notes</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody id="crud-tbody">
+				<tr id="crud-new-row"></tr>
+				for _, item := range items {
+					@CRUDItemRow(item)
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// CRUDItemRow renders a single read-only display row.
+templ CRUDItemRow(item CRUDViewItem) {
+	{{ rowID := fmt.Sprintf("crud-row-%d", item.ID) }}
+	{{ editURL := fmt.Sprintf("/hypermedia/crud/items/%d/edit", item.ID) }}
+	{{ toggleURL := fmt.Sprintf("/hypermedia/crud/items/%d/toggle", item.ID) }}
+	{{ deleteURL := fmt.Sprintf("/hypermedia/crud/items/%d", item.ID) }}
+	<tr id={ rowID }>
+		<td class="text-base-content/50 text-xs">{ fmt.Sprintf("%d", item.ID) }</td>
+		<td class="font-medium">{ item.Name }</td>
+		<td>
+			if item.Status == "active" {
+				<span class="badge badge-success badge-sm">active</span>
+			} else {
+				<span class="badge badge-ghost badge-sm">inactive</span>
+			}
+		</td>
+		<td class="text-base-content/70 text-sm">{ item.Notes }</td>
+		<td>
+			<div class="flex items-center gap-1">
+				<button
+					class="btn btn-xs btn-secondary"
+					hx-get={ editURL }
+					hx-target={ "#" + rowID }
+					hx-swap="outerHTML"
+				>Edit</button>
+				<button
+					class="btn btn-xs btn-ghost"
+					hx-patch={ toggleURL }
+					hx-target={ "#" + rowID }
+					hx-swap="outerHTML"
+				>Toggle</button>
+				<button
+					class="btn btn-xs btn-error"
+					hx-delete={ deleteURL }
+					hx-target={ "#" + rowID }
+					hx-swap="outerHTML"
+					hx-confirm="Delete this item?"
+				>Delete</button>
+			</div>
+		</td>
+	</tr>
+}
+
+// CRUDEditRow renders an inline edit form row.
+templ CRUDEditRow(item CRUDViewItem) {
+	{{ rowID := fmt.Sprintf("crud-row-%d", item.ID) }}
+	{{ saveURL := fmt.Sprintf("/hypermedia/crud/items/%d", item.ID) }}
+	{{ cancelURL := fmt.Sprintf("/hypermedia/crud/items/%d", item.ID) }}
+	<tr id={ rowID }>
+		<td class="text-base-content/50 text-xs">{ fmt.Sprintf("%d", item.ID) }</td>
+		<td><input type="text" name="name" class="input input-xs input-bordered w-full" value={ item.Name }/></td>
+		<td class="text-base-content/50 text-xs">{ item.Status }</td>
+		<td><input type="text" name="notes" class="input input-xs input-bordered w-full" value={ item.Notes }/></td>
+		<td>
+			<div class="flex items-center gap-1">
+				<button
+					class="btn btn-xs btn-primary"
+					hx-put={ saveURL }
+					hx-target={ "#" + rowID }
+					hx-swap="outerHTML"
+					hx-include={ "#" + rowID }
+				>Save</button>
+				<button
+					class="btn btn-xs btn-ghost"
+					hx-get={ cancelURL }
+					hx-target={ "#" + rowID }
+					hx-swap="outerHTML"
+				>Cancel</button>
+			</div>
+		</td>
+	</tr>
+}
+
+templ crudPatternCard(title, method, desc string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h3 class="font-semibold text-sm">{ title }</h3>
+			<code class="text-xs text-primary bg-base-200 px-2 py-1 rounded">{ method }</code>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}

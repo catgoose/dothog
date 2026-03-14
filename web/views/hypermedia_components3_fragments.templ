@@ -1,0 +1,143 @@
+// setup:feature:demo
+package views
+
+import "fmt"
+
+// FeedItemData is a view model for an infinite-scroll feed item.
+type FeedItemData struct {
+	ID    int
+	Title string
+	Body  string
+	Tag   string
+}
+
+// FavoriteItemData is a view model for an optimistic-UI favorite item.
+type FavoriteItemData struct {
+	ID        int
+	Title     string
+	Favorited bool
+}
+
+// UndoItemData is a view model for an undo/soft-delete item.
+type UndoItemData struct {
+	ID      int
+	Name    string
+	Deleted bool
+}
+
+// FeedItemsFragment renders a batch of feed items plus the next sentinel (if more pages exist).
+templ FeedItemsFragment(items []FeedItemData, currentPage int, hasMore bool) {
+	for _, item := range items {
+		<div class="card card-compact bg-base-200 border border-base-300">
+			<div class="card-body p-3">
+				<div class="flex items-center justify-between">
+					<h3 class="font-semibold text-sm">{ item.Title }</h3>
+					<span class="badge badge-sm badge-outline">{ item.Tag }</span>
+				</div>
+				<p class="text-xs text-base-content/70">{ item.Body }</p>
+			</div>
+		</div>
+	}
+	if hasMore {
+		<div
+			hx-get={ fmt.Sprintf("/hypermedia/components3/feed?page=%d", currentPage+1) }
+			hx-trigger="revealed"
+			hx-swap="outerHTML"
+			class="flex justify-center p-4"
+		>
+			<span class="loading loading-spinner loading-sm"></span>
+		</div>
+	} else {
+		<div class="text-center text-sm text-base-content/50 p-4">
+			No more items.
+		</div>
+	}
+}
+
+// FavoriteItemFragment renders a single favorite item with optimistic toggle.
+templ FavoriteItemFragment(item FavoriteItemData) {
+	{{ itemID := fmt.Sprintf("fav-%d", item.ID) }}
+	{{ heartClass := "btn-ghost" }}
+	{{ heartIcon := "♡" }}
+	if item.Favorited {
+		{{ heartClass = "btn-error" }}
+		{{ heartIcon = "♥" }}
+	}
+	<div id={ itemID } class="flex items-center justify-between p-3 rounded-lg bg-base-200">
+		<span class="text-sm font-medium">{ item.Title }</span>
+		<button
+			class={ "btn btn-sm btn-circle", heartClass }
+			hx-post={ fmt.Sprintf("/hypermedia/components3/favorite/%d", item.ID) }
+			hx-target={ "#" + itemID }
+			hx-swap="outerHTML"
+			_={ fmt.Sprintf(`on click
+				if my innerHTML is '♡'
+					set my innerHTML to '♥'
+					remove .btn-ghost from me
+					add .btn-error to me
+				else
+					set my innerHTML to '♡'
+					remove .btn-error from me
+					add .btn-ghost to me
+				end`) }
+		>{ heartIcon }</button>
+	</div>
+}
+
+// UndoListFragment renders the full list of non-deleted undo items.
+templ UndoListFragment(items []UndoItemData) {
+	<div class="space-y-2">
+		for _, item := range items {
+			if !item.Deleted {
+				@UndoItemRowFragment(item)
+			}
+		}
+		{{ activeCount := 0 }}
+		for _, item := range items {
+			if !item.Deleted {
+				{{ activeCount++ }}
+			}
+		}
+		if activeCount == 0 {
+			<p class="text-sm text-base-content/50 text-center p-4">All items deleted. Reload the page to reset.</p>
+		}
+	</div>
+}
+
+// UndoItemRowFragment renders a single undo-able item row.
+templ UndoItemRowFragment(item UndoItemData) {
+	{{ rowID := fmt.Sprintf("undo-row-%d", item.ID) }}
+	<div id={ rowID } class="flex items-center justify-between p-3 rounded-lg bg-base-200">
+		<span class="text-sm font-medium">{ item.Name }</span>
+		<button
+			class="btn btn-xs btn-error btn-outline"
+			hx-delete={ fmt.Sprintf("/hypermedia/components3/undo/%d", item.ID) }
+			hx-target={ "#" + rowID }
+			hx-swap="outerHTML"
+		>Delete</button>
+	</div>
+}
+
+// UndoToastFragment replaces the deleted row with nothing and appends a toast to the toast area.
+templ UndoToastFragment(item UndoItemData) {
+	{{ toastID := fmt.Sprintf("undo-toast-%d", item.ID) }}
+	{{ rowID := fmt.Sprintf("undo-row-%d", item.ID) }}
+	// Empty div replaces the deleted row (it gets swapped out)
+	<div id={ rowID }></div>
+	// Toast appended to the fixed toast area via OOB swap
+	<div
+		id={ toastID }
+		hx-swap-oob="beforeend:#undo-toast-area"
+		class="alert alert-warning shadow-lg text-sm flex items-center gap-3 transition-opacity duration-300"
+		_={ fmt.Sprintf(`on load wait 5s then add .opacity-0 to me then wait 300ms then remove me`) }
+	>
+		<span>Deleted <strong>{ item.Name }</strong></span>
+		<button
+			class="btn btn-xs btn-ghost"
+			hx-post={ fmt.Sprintf("/hypermedia/components3/undo/%d/restore", item.ID) }
+			hx-target={ "#undo-list" }
+			hx-select="#undo-list > div"
+			_={ fmt.Sprintf(`on click remove #%s`, toastID) }
+		>Undo</button>
+	</div>
+}
