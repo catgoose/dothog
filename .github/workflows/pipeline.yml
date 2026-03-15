@@ -327,8 +327,10 @@ jobs:
           cp README.harmony.md README.md
           rm README.harmony.md
 
-          # Swap in harmony-specific pipeline (no sync-harmony or publish-screenshots)
+          # Swap in harmony-specific workflows (no sync-harmony, publish-screenshots, or PR checks)
           mv .github/workflows/pipeline.harmony.yml .github/workflows/pipeline.yml
+          mv .github/workflows/release.harmony.yml .github/workflows/release.yml
+          rm -f .github/workflows/screenshots.yml
           rm -f docs/MANIFESTO.md
 
           # Scrub binary name references

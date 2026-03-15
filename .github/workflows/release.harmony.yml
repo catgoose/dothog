@@ -1,0 +1,191 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["Pipeline"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.decide.outputs.should_release }}
+      bump_type: ${{ steps.decide.outputs.bump_type }}
+    steps:
+      - name: Decide whether to release
+        id: decide
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "bump_type=${{ github.event.inputs.bump }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Only release if pipeline succeeded
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "Pipeline did not succeed, skipping"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Every successful pipeline on harmony is a vetted sync from dothog — always release
+          echo "should_release=true" >> $GITHUB_OUTPUT
+          echo "bump_type=patch" >> $GITHUB_OUTPUT
+
+  release:
+    needs: [check]
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine next version
+        id: version
+        run: |
+          LATEST=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$LATEST" ]; then
+            LATEST="v0.0.0"
+          fi
+
+          VERSION=${LATEST#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          case "${{ needs.check.outputs.bump_type }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous: $LATEST -> Next: $NEW_VERSION (bump: ${{ needs.check.outputs.bump_type }})"
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Install cross-compilation toolchains
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64 gcc-aarch64-linux-gnu
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: latest
+
+      - name: Generate templ files
+        run: go tool templ generate
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build all platforms
+        run: |
+          build() {
+            local goos=$1 goarch=$2 cc=$3 ext=$4 tags=${5:-}
+            echo "Building ${goos}/${goarch}..."
+            CGO_ENABLED=1 GOOS=$goos GOARCH=$goarch CC="$cc" \
+              go build -tags="$tags" -ldflags="-w -s" -o "dothog-${goos}-${goarch}${ext}" .
+          }
+
+          build linux   amd64 "zig cc -target x86_64-linux-musl"       ""
+          build linux   arm64 "zig cc -target aarch64-linux-musl"      ""
+          build darwin  amd64 "zig cc -target x86_64-macos-none"       ""     netgo
+          build darwin  arm64 "zig cc -target aarch64-macos-none"      ""     netgo
+          build windows amd64 "x86_64-w64-mingw32-gcc"                 ".exe"
+
+      - name: Create tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a ${{ steps.version.outputs.version }} -m "Release ${{ steps.version.outputs.version }}"
+          git push origin ${{ steps.version.outputs.version }}
+
+      - name: Create GitHub Release
+        run: |
+          gh release create ${{ steps.version.outputs.version }} \
+            dothog-linux-amd64 \
+            dothog-linux-arm64 \
+            dothog-darwin-amd64 \
+            dothog-darwin-arm64 \
+            dothog-windows-amd64.exe \
+            --title "Release ${{ steps.version.outputs.version }}" \
+            --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  docker:
+    needs: [release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.release.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release.outputs.version }}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
