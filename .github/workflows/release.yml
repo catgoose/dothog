@@ -143,16 +143,14 @@ jobs:
       - name: Build all platforms
         run: |
           build() {
-            local goos=$1 goarch=$2 cc=$3 ext=$4 tags=${5:-}
+            local goos=$1 goarch=$2 cc=$3 ext=$4
             echo "Building ${goos}/${goarch}..."
             CGO_ENABLED=1 GOOS=$goos GOARCH=$goarch CC="$cc" \
-              go build -tags="$tags" -ldflags="-w -s" -o "dothog-${goos}-${goarch}${ext}" .
+              go build -ldflags="-w -s" -o "dothog-${goos}-${goarch}${ext}" .
           }
 
           build linux   amd64 "zig cc -target x86_64-linux-musl"       ""
           build linux   arm64 "zig cc -target aarch64-linux-musl"      ""
-          build darwin  amd64 "zig cc -target x86_64-macos-none"       ""     netgo
-          build darwin  arm64 "zig cc -target aarch64-macos-none"      ""     netgo
           build windows amd64 "x86_64-w64-mingw32-gcc"                 ".exe"
 
       - name: Create tag
@@ -167,8 +165,6 @@ jobs:
           gh release create ${{ steps.version.outputs.version }} \
             dothog-linux-amd64 \
             dothog-linux-arm64 \
-            dothog-darwin-amd64 \
-            dothog-darwin-arm64 \
             dothog-windows-amd64.exe \
             --title "Release ${{ steps.version.outputs.version }}" \
             --generate-notes
