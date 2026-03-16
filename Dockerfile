@@ -15,7 +15,7 @@ FROM alpine:latest
 RUN apk add --no-cache ca-certificates tzdata
 COPY --from=build /dothog /usr/local/bin/dothog
 
-ENV SERVER_LISTEN_PORT=8080
-EXPOSE 8080
+ENV SERVER_LISTEN_PORT=3000
+EXPOSE 3000
 
 ENTRYPOINT ["dothog"]

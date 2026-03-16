@@ -6,7 +6,7 @@ export default defineConfig({
   retries: 2,
   workers: 1,
   use: {
-    baseURL: "http://localhost:8080",
+    baseURL: "http://localhost:3000",
     headless: true,
   },
   projects: [
@@ -20,7 +20,7 @@ export default defineConfig({
       ? `./${process.env.APP_BINARY || "dothog"} --env=test`
       : "go run main.go --env=test",
     cwd: "..",
-    url: "http://localhost:8080/health",
+    url: "http://localhost:3000/health",
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },

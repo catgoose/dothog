@@ -342,7 +342,7 @@ func hypermediaPanel() templ.Component {
 			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div class=\"max-w-lg mx-auto space-y-6\"><div class=\"text-center space-y-1\"><h3 class=\"text-2xl md:text-3xl font-bold\">The Narrowing Triangle</h3><p class=\"text-sm text-base-content/60\">Client is thin. Server narrows from fat handler to thin repository. HTML the whole way.</p></div><div class=\"flex flex-col items-center gap-1\"><!-- Server --><div class=\"text-[10px] text-base-content/30 tracking-widest uppercase mb-1\">server</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div class=\"max-w-lg mx-auto space-y-6\"><div class=\"text-center space-y-1\"><h3 class=\"text-2xl md:text-3xl font-bold\">Hypermedia</h3><p class=\"text-sm text-base-content/60\">Client is thin. Server narrows from fat handler to thin repository. HTML over the wire.</p></div><div class=\"flex flex-col items-center gap-1\"><!-- Server --><div class=\"text-[10px] text-base-content/30 tracking-widest uppercase mb-1\">server</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -411,7 +411,7 @@ func spaPanel() templ.Component {
 			templ_7745c5c3_Var15 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"max-w-lg mx-auto space-y-6\"><div class=\"text-center space-y-1\"><h3 class=\"text-2xl md:text-3xl font-bold\">The Inverted Triangle</h3><p class=\"text-sm text-base-content/60\">Thin controller squeezes to JSON. Complexity detonates on the client side.</p></div><div class=\"flex flex-col items-center gap-1\"><!-- Server --><div class=\"text-[10px] text-base-content/30 tracking-widest uppercase mb-1\">server</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"max-w-lg mx-auto space-y-6\"><div class=\"text-center space-y-1\"><h3 class=\"text-2xl md:text-3xl font-bold\">SPA</h3><p class=\"text-sm text-base-content/60\">Thin controller squeezes to JSON. Complexity shifts to the client.</p></div><div class=\"flex flex-col items-center gap-1\"><!-- Server --><div class=\"text-[10px] text-base-content/30 tracking-widest uppercase mb-1\">server</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -57,7 +57,7 @@ func main() {
 	if envErr != nil {
 		// No .env file -- apply standalone defaults so the demo binary
 		// can run without any configuration.
-		os.Setenv("SERVER_LISTEN_PORT", dio.EnvWithDefault("SERVER_LISTEN_PORT", "8080"))
+		os.Setenv("SERVER_LISTEN_PORT", dio.EnvWithDefault("SERVER_LISTEN_PORT", "3000"))
 		logger.Info("No .env file found, using environment variables and defaults")
 		envErr = nil
 	}

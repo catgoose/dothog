@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Captures screenshots of the running demo app.
-// Usage: node scripts/screenshots.mjs [--base-url http://localhost:8080]
+// Usage: node scripts/screenshots.mjs [--base-url http://localhost:3000]
 //
 // Requires: npx playwright install chromium
 
@@ -15,7 +15,7 @@ const outDir = resolve(__dirname, "..", "docs", "screenshots");
 const baseURL =
   process.argv.includes("--base-url")
     ? process.argv[process.argv.indexOf("--base-url") + 1]
-    : "http://localhost:8080";
+    : "http://localhost:3000";
 
 mkdirSync(outDir, { recursive: true });
 

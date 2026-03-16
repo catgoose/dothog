@@ -42,11 +42,11 @@ jobs:
 
       - name: Start application
         run: |
-          SERVER_LISTEN_PORT=8080 ./dothog -env production &
+          SERVER_LISTEN_PORT=3000 ./dothog -env production &
           echo "APP_PID=$!" >> $GITHUB_ENV
 
       - name: Capture screenshots and recordings
-        run: node scripts/screenshots.mjs --base-url http://localhost:8080
+        run: node scripts/screenshots.mjs --base-url http://localhost:3000
 
       - name: Stop application
         if: always()

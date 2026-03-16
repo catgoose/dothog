@@ -59,24 +59,24 @@ chmod +x harmony-linux-amd64
 harmony-windows-amd64.exe
 ```
 
-The server starts on `http://localhost:8080` by default. Override with:
+The server starts on `http://localhost:3000` by default. Override with:
 
 ```bash
-SERVER_LISTEN_PORT=3000 ./harmony-linux-amd64
+SERVER_LISTEN_PORT=8080 ./harmony-linux-amd64
 ```
 
 ### From Docker
 
 ```bash
 docker pull ghcr.io/catgoose/harmony:latest
-docker run -p 8080:8080 ghcr.io/catgoose/harmony:latest
+docker run -p 3000:3000 ghcr.io/catgoose/harmony:latest
 ```
 
 Or build it yourself:
 
 ```bash
 docker build -t harmony .
-docker run -p 8080:8080 harmony
+docker run -p 3000:3000 harmony
 ```
 
 ### From Source

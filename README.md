@@ -526,24 +526,24 @@ chmod +x dothog-linux-amd64
 dothog-windows-amd64.exe
 ```
 
-Dothog starts on `http://localhost:8080` by default. Override the port with:
+Dothog starts on `http://localhost:3000` by default. Override the port with:
 
 ```bash
-SERVER_LISTEN_PORT=3000 ./dothog-linux-amd64
+SERVER_LISTEN_PORT=8080 ./dothog-linux-amd64
 ```
 
 ### From Docker
 
 ```bash
 docker pull ghcr.io/catgoose/dothog:latest
-docker run -p 8080:8080 ghcr.io/catgoose/dothog:latest
+docker run -p 3000:3000 ghcr.io/catgoose/dothog:latest
 ```
 
 Or build it yourself:
 
 ```bash
 docker build -t dothog .
-docker run -p 8080:8080 dothog
+docker run -p 3000:3000 dothog
 ```
 
 ### From Source
