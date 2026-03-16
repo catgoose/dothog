@@ -902,7 +902,7 @@ func removeEmptyDirs(dir string) error {
 	return nil
 }
 
-// CopyRepoTo copies directory tree from src to dest, skipping named dirs.
+// CopyRepoTo copies directory tree from src to dest, skipping named dirs and symlinks.
 func CopyRepoTo(src, dest string, excludeDirs []string) error {
 	exclude := make(map[string]bool)
 	for _, d := range excludeDirs {
@@ -915,6 +915,13 @@ func CopyRepoTo(src, dest string, excludeDirs []string) error {
 	return filepath.Walk(srcAbs, func(path string, info os.FileInfo, errWalk error) error {
 		if errWalk != nil {
 			return errWalk
+		}
+		// Skip symlinks — they may point outside the repo.
+		if linfo, err := os.Lstat(path); err == nil && linfo.Mode()&os.ModeSymlink != 0 {
+			if linfo.IsDir() || info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
 		}
 		rel, err := filepath.Rel(srcAbs, path)
 		if err != nil {
