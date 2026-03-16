@@ -21,31 +21,57 @@ import (
 // appNavComponent builds the NavBar with the active item set for the given path
 func appNavComponent(path string) templ.Component {
 	items := hypermedia.SetActiveNavItemPrefix([]hypermedia.NavItem{
-		{Label: "Architecture", Href: "/"},
 		// setup:feature:demo:start
+		{Label: "Home", Href: "/"},
 		{Label: "Dashboard", Href: "/dashboard"},
 		{
-			Label: "Hypermedia Controls",
+			Label: "Patterns",
 			Children: []hypermedia.NavItem{
 				{Label: "Controls", Href: "/hypermedia/controls"},
 				{Label: "CRUD", Href: "/hypermedia/crud"},
 				{Label: "Lists", Href: "/hypermedia/lists"},
 				{Label: "Interactions", Href: "/hypermedia/interactions"},
 				{Label: "State", Href: "/hypermedia/state"},
+				{Label: "Errors", Href: "/hypermedia/errors"},
 				{Label: "Components", Href: "/hypermedia/components"},
 				{Label: "Components 2", Href: "/hypermedia/components2"},
 				{Label: "Components 3", Href: "/hypermedia/components3"},
-			{Label: "Errors", Href: "/hypermedia/errors"},
 				// setup:feature:sse:start
 				{Label: "Real-time", Href: "/hypermedia/realtime"},
 				// setup:feature:sse:end
 			},
 		},
-		{Label: "Logging", Href: "/demo/logging"},
-		{Label: "Repository", Href: "/demo/repository"},
-		{Label: "Admin", Href: "/admin"},
+		{
+			Label: "Demo",
+			Children: []hypermedia.NavItem{
+				{Label: "Logging", Href: "/demo/logging"},
+				{Label: "Repository", Href: "/demo/repository"},
+				{Label: "Inventory", Href: "/demo/inventory"},
+				{Label: "Catalog", Href: "/demo/catalog"},
+				{Label: "People", Href: "/demo/people"},
+				{Label: "Kanban", Href: "/demo/kanban"},
+				{Label: "Approvals", Href: "/demo/approvals"},
+				{Label: "Vendors", Href: "/demo/vendors"},
+				{Label: "Feed", Href: "/demo/feed"},
+				{Label: "Settings", Href: "/demo/settings"},
+				{Label: "Bulk", Href: "/demo/bulk"},
+			},
+		},
 		// setup:feature:demo:end
-		{Label: "Error Traces", Href: "/admin/error-traces"},
+		// setup:feature:session_settings:start
+		{Label: "Preferences", Href: "/user/settings"},
+		// setup:feature:session_settings:end
+		{
+			Label: "Admin",
+			Children: []hypermedia.NavItem{
+				// setup:feature:demo:start
+				{Label: "SQLite", Href: "/admin"},
+				// setup:feature:demo:end
+				{Label: "Error Traces", Href: "/admin/error-traces"},
+				{Label: "System", Href: "/admin/system"},
+				{Label: "Config", Href: "/admin/config"},
+			},
+		},
 	}, path)
 	return corecomponents.NavBar(items)
 }

@@ -55,7 +55,7 @@ templ navMenuItem(item hypermedia.NavItem) {
 					@heroIcon(item.Icon)
 					{ item.Label }
 				</summary>
-				<ul class="z-10">
+				<ul class="z-10 w-max">
 					for _, child := range item.Children {
 						@navMenuItem(child)
 					}

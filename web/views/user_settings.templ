@@ -1,0 +1,96 @@
+// setup:feature:session_settings
+
+package views
+
+import "catgoose/dothog/internal/admininfo"
+
+// UserSettingsPage renders the user preferences dashboard.
+templ UserSettingsPage(prefs admininfo.UserPreferences) {
+	<div class="p-4 space-y-6 max-w-3xl mx-auto">
+		<h1 class="text-2xl font-bold">Preferences</h1>
+		<p class="text-sm text-base-content/60">
+			Customize your experience. Settings are saved per browser session.
+		</p>
+
+		<!-- Appearance -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Appearance</h2>
+				<form
+					hx-put="/user/settings"
+					hx-target="#settings-result"
+					hx-swap="innerHTML"
+					class="space-y-4"
+				>
+					<div class="form-control">
+						<label class="label"><span class="label-text">Items per page</span></label>
+						<select name="page_size" class="select select-bordered select-sm w-full max-w-xs">
+							<option value="10" selected?={ prefs.PageSize == 10 }>10</option>
+							<option value="20" selected?={ prefs.PageSize == 20 }>20</option>
+							<option value="50" selected?={ prefs.PageSize == 50 }>50</option>
+							<option value="100" selected?={ prefs.PageSize == 100 }>100</option>
+						</select>
+					</div>
+					<div class="form-control">
+						<label class="label"><span class="label-text">Date format</span></label>
+						<select name="date_format" class="select select-bordered select-sm w-full max-w-xs">
+							<option value="relative" selected?={ prefs.DateFormat == "relative" }>Relative (2 hours ago)</option>
+							<option value="short" selected?={ prefs.DateFormat == "short" }>Short (Mar 16, 2026)</option>
+							<option value="iso" selected?={ prefs.DateFormat == "iso" }>ISO (2026-03-16)</option>
+						</select>
+					</div>
+					<div class="form-control">
+						<label class="label cursor-pointer justify-start gap-3">
+							<input type="checkbox" name="compact_tables" value="true" class="checkbox checkbox-sm" checked?={ prefs.CompactTables } />
+							<span class="label-text">Compact table rows</span>
+						</label>
+					</div>
+					<div class="divider my-0"></div>
+
+					<!-- Notifications -->
+					<h3 class="font-semibold text-sm">Notifications</h3>
+					<div class="form-control">
+						<label class="label cursor-pointer justify-start gap-3">
+							<input type="checkbox" name="email_on_error" value="true" class="checkbox checkbox-sm" checked?={ prefs.EmailOnError } />
+							<span class="label-text">Email me when an error is reported</span>
+						</label>
+					</div>
+					<div class="form-control">
+						<label class="label cursor-pointer justify-start gap-3">
+							<input type="checkbox" name="desktop_notifications" value="true" class="checkbox checkbox-sm" checked?={ prefs.DesktopNotifications } />
+							<span class="label-text">Desktop notifications for real-time events</span>
+						</label>
+					</div>
+					<div class="divider my-0"></div>
+
+					<!-- Accessibility -->
+					<h3 class="font-semibold text-sm">Accessibility</h3>
+					<div class="form-control">
+						<label class="label cursor-pointer justify-start gap-3">
+							<input type="checkbox" name="reduce_motion" value="true" class="checkbox checkbox-sm" checked?={ prefs.ReduceMotion } />
+							<span class="label-text">Reduce motion and animations</span>
+						</label>
+					</div>
+					<div class="form-control">
+						<label class="label cursor-pointer justify-start gap-3">
+							<input type="checkbox" name="high_contrast" value="true" class="checkbox checkbox-sm" checked?={ prefs.HighContrast } />
+							<span class="label-text">High contrast mode</span>
+						</label>
+					</div>
+
+					<div class="flex justify-end gap-2 pt-2">
+						<button type="submit" class="btn btn-sm btn-primary">Save Preferences</button>
+					</div>
+				</form>
+				<div id="settings-result"></div>
+			</div>
+		</div>
+	</div>
+}
+
+// UserSettingsSaved renders the success alert after saving.
+templ UserSettingsSaved() {
+	<div class="alert alert-success text-sm mt-2">
+		<span>Preferences saved.</span>
+	</div>
+}
