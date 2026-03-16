@@ -44,6 +44,7 @@ _You don't just accidentally create abstractions until you suddenly have a frame
     - [Schema Lifecycle](#schema-lifecycle)
   - [Quick Start](#quick-start)
     - [From Release Binary](#from-release-binary)
+    - [From Docker](#from-docker)
     - [From Source](#from-source)
   - [Tech Stack, Or The Sacred Instruments](#tech-stack-or-the-sacred-instruments)
   - [The Reach-Up Model](#the-reach-up-model)
@@ -529,6 +530,20 @@ Dothog starts on `http://localhost:8080` by default. Override the port with:
 
 ```bash
 SERVER_LISTEN_PORT=3000 ./dothog-linux-amd64
+```
+
+### From Docker
+
+```bash
+docker pull ghcr.io/catgoose/dothog:latest
+docker run -p 8080:8080 ghcr.io/catgoose/dothog:latest
+```
+
+Or build it yourself:
+
+```bash
+docker build -t dothog .
+docker run -p 8080:8080 dothog
 ```
 
 ### From Source
