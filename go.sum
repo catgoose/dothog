@@ -250,8 +250,8 @@ github.com/mattn/go-localereader v0.0.1/go.mod h1:8fBrzywKY7BI3czFoHkuzRoWE9C+Ei
 github.com/mattn/go-runewidth v0.0.21 h1:jJKAZiQH+2mIinzCJIaIG9Be1+0NR+5sz/lYEEjdM8w=
 github.com/mattn/go-runewidth v0.0.21/go.mod h1:XBkDxAl56ILZc9knddidhrOlY5R/pDhgLpndooCuJAs=
 github.com/mattn/go-sqlite3 v1.14.22/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
-github.com/mattn/go-sqlite3 v1.14.36 h1:EyQAxPedU6e4/lGrYcT2+1yVcOLT7ERS6jvTYKzfzgY=
-github.com/mattn/go-sqlite3 v1.14.36/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
+github.com/mattn/go-sqlite3 v1.14.37 h1:3DOZp4cXis1cUIpCfXLtmlGolNLp2VEqhiB/PARNBIg=
+github.com/mattn/go-sqlite3 v1.14.37/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
 github.com/microsoft/kiota-abstractions-go v1.9.4 h1:VI3UVzSCQHHhRswe3jyaAQHUQWIFhUMp0z5mtZbTbcs=
 github.com/microsoft/kiota-abstractions-go v1.9.4/go.mod h1:f06pl3qSyvUHEfVNkiRpXPkafx7khZqQEb71hN/pmuU=
 github.com/microsoft/kiota-authentication-azure-go v1.3.1 h1:AGta92S6IL1E6ZMDb8YYB7NVNTIFUakbtLKUdY5RTuw=
