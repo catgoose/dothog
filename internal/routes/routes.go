@@ -38,10 +38,11 @@ type AppRoutes interface {
 
 // appRoutes implements AppRoutes
 type appRoutes struct {
-	e            *echo.Echo
-	ctx          context.Context
-	reqLogStore  *requestlog.Store
+	e             *echo.Echo
+	ctx           context.Context
+	reqLogStore   *requestlog.Store
 	issueReporter IssueReporter
+	startTime     time.Time
 }
 
 // NewAppRoutes initializes routes.
@@ -56,11 +57,13 @@ func NewAppRoutes(ctx context.Context, e *echo.Echo, reqLogStore *requestlog.Sto
 		ctx:           ctx,
 		reqLogStore:   reqLogStore,
 		issueReporter: reporter,
+		startTime:     time.Now(),
 	}
 }
 
 func (ar *appRoutes) InitRoutes() error {
 	ar.e.GET("/", handler.HandleComponent(views.ArchitecturePage()))
+	ar.e.GET("/user/dashboard", handler.HandleComponent(views.UserDashboardPage()))
 	// setup:feature:demo:start
 	ar.e.GET("/welcome", handler.HandleComponent(views.WelcomePage()))
 	// setup:feature:demo:end
@@ -103,6 +106,7 @@ func (ar *appRoutes) InitRoutes() error {
 		return handler.RenderComponent(c, corecomponents.ReportIssueModal(cfg))
 	})
 
+	ar.initAdminCoreRoutes()
 	ar.initErrorTracesRoutes()
 
 	// setup:feature:demo:start

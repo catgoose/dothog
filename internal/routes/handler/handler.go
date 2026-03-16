@@ -43,9 +43,18 @@ func appNavComponent(path string) templ.Component {
 		},
 		{Label: "Logging", Href: "/demo/logging"},
 		{Label: "Repository", Href: "/demo/repository"},
-		{Label: "Admin", Href: "/admin"},
-		{Label: "Error Traces", Href: "/admin/error-traces"},
 		// setup:feature:demo:end
+		{
+			Label: "Admin",
+			Children: []hypermedia.NavItem{
+				// setup:feature:demo:start
+				{Label: "SQLite", Href: "/admin"},
+				// setup:feature:demo:end
+				{Label: "Error Traces", Href: "/admin/error-traces"},
+				{Label: "System", Href: "/admin/system"},
+				{Label: "Config", Href: "/admin/config"},
+			},
+		},
 	}, path)
 	return corecomponents.NavBar(items)
 }
