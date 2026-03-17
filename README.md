@@ -1,5 +1,7 @@
 # DOTHOG
 
+[![Pipeline](https://github.com/catgoose/dothog/actions/workflows/pipeline.yml/badge.svg?branch=main)](https://github.com/catgoose/dothog/actions/workflows/pipeline.yml)
+
 ## Or, How I Learned to Stop Worrying and Trust the Server
 
 **Being a Account of the Rediscovery of the ORIGINAL WEB by the HYPERMEDIA NOVICES, Hidden Disciples of the Honorable ROY T. FIELDING (Whose Dissertation We Have Read, Unlike You)**
