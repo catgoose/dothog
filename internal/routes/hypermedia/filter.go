@@ -130,3 +130,39 @@ func SelectOptions(current string, pairs ...string) []FilterOption {
 	}
 	return options
 }
+
+// FilterGroup is a configuration group of filter controls that can produce
+// OOB swap fragments when the available options change. It wraps a FilterBar
+// and adds the ability to update select field options and render OOB updates
+// using data-filter attributes instead of element IDs.
+type FilterGroup struct {
+	Bar FilterBar
+}
+
+// NewFilterGroup creates a FilterGroup with the given fields.
+func NewFilterGroup(action, target string, fields ...FilterField) FilterGroup {
+	return FilterGroup{
+		Bar: NewFilterBar(action, target, fields...),
+	}
+}
+
+// UpdateOptions replaces the options for the named select field.
+func (g *FilterGroup) UpdateOptions(name string, options []FilterOption) {
+	for i := range g.Bar.Fields {
+		if g.Bar.Fields[i].Name == name && g.Bar.Fields[i].Kind == FilterKindSelect {
+			g.Bar.Fields[i].Options = options
+			return
+		}
+	}
+}
+
+// SelectFields returns only the select-type fields for OOB rendering.
+func (g *FilterGroup) SelectFields() []FilterField {
+	var fields []FilterField
+	for _, f := range g.Bar.Fields {
+		if f.Kind == FilterKindSelect {
+			fields = append(fields, f)
+		}
+	}
+	return fields
+}

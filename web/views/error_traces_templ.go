@@ -185,27 +185,27 @@ func ErrorTraceRow(t requestlog.TraceSummary) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		detailURL := fmt.Sprintf("/admin/error-traces/%s", t.RequestID)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<tr class=\"hover\"><td class=\"px-1\"><button class=\"p-1 cursor-pointer\" hx-get=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<tr class=\"hover cursor-pointer select-none\" hx-get=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(detailURL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 72, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 70, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" hx-target=\"next tr.detail-row\" hx-swap=\"innerHTML\" hx-trigger=\"expand\" _=\"on click set dr to the next <tr.detail-row/>\n\t\t\t\tif dr.innerHTML is not ''\n\t\t\t\t\tput '' into dr\n\t\t\t\t\tremove .rotate-90 from .chevron in me\n\t\t\t\telse\n\t\t\t\t\tadd .rotate-90 to .chevron in me\n\t\t\t\t\ttrigger expand on me\n\t\t\t\tend\"><svg class=\"chevron w-4 h-4 text-base-content/40 transition-transform\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"2\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8.25 4.5l7.5 7.5-7.5 7.5\"></path></svg></button></td><td class=\"text-xs font-mono whitespace-nowrap\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" hx-target=\"next tr.detail-row\" hx-swap=\"innerHTML\" hx-trigger=\"expand\" _=\"on click set dr to the next <tr.detail-row/>\n\t\tif dr.innerHTML is not ''\n\t\t\tput '' into dr\n\t\t\tremove .rotate-90 from .chevron in me\n\t\telse\n\t\t\tadd .rotate-90 to .chevron in me\n\t\t\ttrigger expand on me\n\t\tend\"><td class=\"px-1\"><svg class=\"chevron w-4 h-4 text-base-content/40 transition-transform\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"2\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8.25 4.5l7.5 7.5-7.5 7.5\"></path></svg></td><td class=\"text-xs font-mono whitespace-nowrap\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(t.CreatedAt)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 90, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 88, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -226,7 +226,7 @@ func ErrorTraceRow(t requestlog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(t.Method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 94, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 92, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -239,7 +239,7 @@ func ErrorTraceRow(t requestlog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(t.Route)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 95, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 93, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -252,7 +252,7 @@ func ErrorTraceRow(t requestlog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(t.Route)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 95, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 93, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -265,7 +265,7 @@ func ErrorTraceRow(t requestlog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(t.ErrorChain)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 96, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 94, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -278,7 +278,7 @@ func ErrorTraceRow(t requestlog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(t.ErrorChain)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 96, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 94, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -291,7 +291,7 @@ func ErrorTraceRow(t requestlog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(t.RemoteIP)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 97, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 95, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -335,7 +335,7 @@ func statusBadge(code int) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(code))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 104, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 102, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -353,7 +353,7 @@ func statusBadge(code int) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(code))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 106, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 104, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -371,7 +371,7 @@ func statusBadge(code int) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(code))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 108, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 106, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -415,7 +415,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs("/report-issue/" + trace.RequestID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 121, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 119, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -428,7 +428,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs("/admin/error-traces/" + trace.RequestID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 128, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 126, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -441,7 +441,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(trace.RequestID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 148, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 146, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -462,7 +462,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(trace.Method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 156, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 154, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -475,7 +475,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(trace.Route)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 160, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 158, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -488,7 +488,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(trace.RemoteIP)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 164, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 162, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -502,7 +502,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(trace.UserID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 170, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 168, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -521,7 +521,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(trace.UserAgent)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 178, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 176, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -534,7 +534,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(trace.UserAgent)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 178, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 176, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -547,7 +547,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(trace.ErrorChain)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 183, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 181, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -565,7 +565,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(trace.Entries)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 187, Col: 107}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 185, Col: 107}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -631,7 +631,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(entry.Message)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 206, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 204, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -649,7 +649,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(pairs)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 208, Col: 87}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 206, Col: 87}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 					if templ_7745c5c3_Err != nil {
@@ -677,7 +677,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 						var templ_7745c5c3_Var33 string
 						templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(pair[0])
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 215, Col: 74}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 213, Col: 74}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 						if templ_7745c5c3_Err != nil {
@@ -690,7 +690,7 @@ func ErrorTraceDetailContent(trace *requestlog.ErrorTrace) templ.Component {
 						var templ_7745c5c3_Var34 string
 						templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(pair[1])
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 216, Col: 63}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 214, Col: 63}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 						if templ_7745c5c3_Err != nil {
@@ -754,7 +754,7 @@ func logLevelBadge(level string) templ.Component {
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(level)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 233, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 231, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 			if templ_7745c5c3_Err != nil {
@@ -772,7 +772,7 @@ func logLevelBadge(level string) templ.Component {
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(level)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 235, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 233, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 			if templ_7745c5c3_Err != nil {
@@ -790,7 +790,7 @@ func logLevelBadge(level string) templ.Component {
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(level)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 237, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 235, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -808,7 +808,7 @@ func logLevelBadge(level string) templ.Component {
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(level)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 239, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 237, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 			if templ_7745c5c3_Err != nil {

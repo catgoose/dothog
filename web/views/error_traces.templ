@@ -65,27 +65,25 @@ templ ErrorTracesBody(traces []requestlog.TraceSummary) {
 // ErrorTraceRow renders a single summary row with an expand chevron.
 templ ErrorTraceRow(t requestlog.TraceSummary) {
 	{{ detailURL := fmt.Sprintf("/admin/error-traces/%s", t.RequestID) }}
-	<tr class="hover">
+	<tr
+		class="hover cursor-pointer select-none"
+		hx-get={ detailURL }
+		hx-target="next tr.detail-row"
+		hx-swap="innerHTML"
+		hx-trigger="expand"
+		_="on click set dr to the next <tr.detail-row/>
+		if dr.innerHTML is not ''
+			put '' into dr
+			remove .rotate-90 from .chevron in me
+		else
+			add .rotate-90 to .chevron in me
+			trigger expand on me
+		end"
+	>
 		<td class="px-1">
-			<button
-				class="p-1 cursor-pointer"
-				hx-get={ detailURL }
-				hx-target="next tr.detail-row"
-				hx-swap="innerHTML"
-				hx-trigger="expand"
-				_="on click set dr to the next <tr.detail-row/>
-				if dr.innerHTML is not ''
-					put '' into dr
-					remove .rotate-90 from .chevron in me
-				else
-					add .rotate-90 to .chevron in me
-					trigger expand on me
-				end"
-			>
-				<svg class="chevron w-4 h-4 text-base-content/40 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
-				</svg>
-			</button>
+			<svg class="chevron w-4 h-4 text-base-content/40 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
+			</svg>
 		</td>
 		<td class="text-xs font-mono whitespace-nowrap">{ t.CreatedAt }</td>
 		<td>

@@ -10,9 +10,11 @@ import (
 	"catgoose/dothog/internal/requestlog"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/hypermedia"
+	"catgoose/dothog/internal/routes/response"
 	"catgoose/dothog/web/views"
 
 	hx "catgoose/dothog/internal/routes/htmx"
+	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
@@ -31,18 +33,21 @@ func (ar *appRoutes) initErrorTracesRoutes() {
 }
 
 func (ar *appRoutes) handleErrorTracesPage(c echo.Context) error {
-	bar, container, err := ar.buildErrorTracesContent(c)
+	group, container, err := ar.buildErrorTracesContent(c)
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load error traces", err)
 	}
-	return handler.RenderBaseLayout(c, views.ErrorTracesPage(bar, container))
+	return handler.RenderBaseLayout(c, views.ErrorTracesPage(group.Bar, container))
 }
 
 func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
-	_, container, err := ar.buildErrorTracesContent(c)
+	group, container, err := ar.buildErrorTracesContent(c)
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load error traces", err)
 	}
+	b := response.New(c).
+		Component(container).
+		OOB(corecomponents.FilterGroupOOB(group))
 	if hx.IsHTMX(c) {
 		pushURL := errorTracesBase
 		if q := c.Request().URL.RawQuery; q != "" {
@@ -50,7 +55,7 @@ func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
 		}
 		hx.ReplaceURL(c, pushURL)
 	}
-	return handler.RenderComponent(c, container)
+	return b.Send()
 }
 
 func (ar *appRoutes) handleErrorTraceDetail(c echo.Context) error {
@@ -73,14 +78,17 @@ func (ar *appRoutes) handleErrorTraceDelete(c echo.Context) error {
 			c.Request().URL.RawQuery = u.RawQuery
 		}
 	}
-	_, container, err := ar.buildErrorTracesContent(c)
+	group, container, err := ar.buildErrorTracesContent(c)
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to reload traces", err)
 	}
-	return handler.RenderComponent(c, container)
+	return response.New(c).
+		Component(container).
+		OOB(corecomponents.FilterGroupOOB(group)).
+		Send()
 }
 
-func (ar *appRoutes) buildErrorTracesContent(c echo.Context) (hypermedia.FilterBar, templ.Component, error) {
+func (ar *appRoutes) buildErrorTracesContent(c echo.Context) (hypermedia.FilterGroup, templ.Component, error) {
 	const perPage = 20
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	if page < 1 {
@@ -98,35 +106,51 @@ func (ar *appRoutes) buildErrorTracesContent(c echo.Context) (hypermedia.FilterB
 
 	traces, total, err := ar.reqLogStore.ListTraces(f)
 	if err != nil {
-		return hypermedia.FilterBar{}, nil, err
+		return hypermedia.FilterGroup{}, nil, err
+	}
+
+	avail, err := ar.reqLogStore.AvailableFilters(f)
+	if err != nil {
+		return hypermedia.FilterGroup{}, nil, err
 	}
 
 	target := "#error-traces-table-container"
 	listURL := errorTracesBase + "/list"
 
-	bar := hypermedia.NewFilterBar(listURL, target,
-		hypermedia.SearchField("q", "Search routes, errors, request IDs, users\u2026", f.Q),
+	// Build status options from available codes, grouping into 4xx/5xx ranges.
+	statusPairs := []string{"", "All"}
+	has4xx, has5xx := false, false
+	for _, code := range avail.StatusCodes {
+		if code >= 400 && code < 500 {
+			has4xx = true
+		}
+		if code >= 500 {
+			has5xx = true
+		}
+	}
+	if has4xx {
+		statusPairs = append(statusPairs, "4xx", "4xx Client")
+	}
+	if has5xx {
+		statusPairs = append(statusPairs, "5xx", "5xx Server")
+	}
+	for _, code := range avail.StatusCodes {
+		s := strconv.Itoa(code)
+		statusPairs = append(statusPairs, s, s)
+	}
+
+	// Build method options from available methods.
+	methodPairs := []string{"", "All"}
+	for _, m := range avail.Methods {
+		methodPairs = append(methodPairs, m, m)
+	}
+
+	group := hypermedia.NewFilterGroup(listURL, target,
+		hypermedia.SearchField("q", "Search routes, errors, IDs, users, IPs\u2026", f.Q),
 		hypermedia.SelectField("status", "Status", f.Status,
-			hypermedia.SelectOptions(f.Status,
-				"", "All",
-				"4xx", "4xx Client",
-				"5xx", "5xx Server",
-				"400", "400",
-				"401", "401",
-				"403", "403",
-				"404", "404",
-				"500", "500",
-				"502", "502",
-				"504", "504",
-			)),
+			hypermedia.SelectOptions(f.Status, statusPairs...)),
 		hypermedia.SelectField("method", "Method", f.Method,
-			hypermedia.SelectOptions(f.Method,
-				"", "All",
-				"GET", "GET",
-				"POST", "POST",
-				"PUT", "PUT",
-				"DELETE", "DELETE",
-			)),
+			hypermedia.SelectOptions(f.Method, methodPairs...)),
 	)
 
 	sortBase := traceStripParams(c.Request().URL, "sort", "dir")
@@ -153,7 +177,7 @@ func (ar *appRoutes) buildErrorTracesContent(c echo.Context) (hypermedia.FilterB
 
 	body := views.ErrorTracesBody(traces)
 	container := views.ErrorTracesTableContainer(cols, body, info)
-	return bar, container, nil
+	return group, container, nil
 }
 
 // traceStripParams returns a copy of u with the named query params removed.
