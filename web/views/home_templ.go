@@ -29,7 +29,7 @@ func WelcomePage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-5xl mx-auto p-4 space-y-8\"><!-- Hero --><div class=\"hero bg-base-200 rounded-box p-8\"><div class=\"hero-content text-center\"><div class=\"max-w-2xl space-y-4\"><h1 class=\"text-4xl font-bold\">Go + HTMX + Templ</h1><p class=\"text-base-content/70 text-lg\">A production-ready template for building server-driven hypermedia applications. Write Go, return HTML fragments, let HTMX handle the rest.</p><div class=\"flex justify-center gap-3 flex-wrap\"><a href=\"/dashboard\" class=\"btn btn-primary\">Dashboard</a> <a href=\"/hypermedia/controls\" class=\"btn btn-secondary\">Controls Gallery</a></div></div></div></div><!-- Stack --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-5xl mx-auto p-4 space-y-8\"><!-- Hero --><div class=\"hero bg-base-200 rounded-box p-8\"><div class=\"hero-content text-center\"><div class=\"max-w-2xl space-y-4\"><h1 class=\"text-4xl font-bold\">Go + aHTMX + Templ</h1><p class=\"text-base-content/70 text-lg\">A production-ready template for building server-driven hypermedia applications. Write Go, return HTML fragments, let HTMX handle the rest.</p><div class=\"flex justify-center gap-3 flex-wrap\"><a href=\"/dashboard\" class=\"btn btn-primary\">Dashboard</a> <a href=\"/hypermedia/controls\" class=\"btn btn-secondary\">Controls Gallery</a></div></div></div></div><!-- Stack --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

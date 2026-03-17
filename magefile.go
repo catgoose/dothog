@@ -570,6 +570,7 @@ func getTemplCmd() []string {
 	return []string{
 		"go", "tool", "templ", "generate",
 		"-watch",
+		"-open-browser=false",
 		"-proxy=" + resolveProxyURL(),
 		"-proxybind=" + proxyHost,
 		"-proxyport=" + resolvePort(proxyPort, 1),

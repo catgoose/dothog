@@ -92,6 +92,10 @@ templ HypermediaControlsPage() {
 					Route:      "/example/missing",
 					RequestID:  "req-abc-123",
 					Closable:   true,
+					Controls: append(
+						hypermedia.NotFoundControls("/"),
+						hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, "req-abc-123"),
+					),
 				})
 				<p class="text-sm font-medium text-base-content/60 mt-4">500 Internal Error:</p>
 				@components.ErrorStatusFromContext(hypermedia.ErrorContext{
@@ -100,6 +104,10 @@ templ HypermediaControlsPage() {
 					Route:      "/api/data",
 					RequestID:  "req-def-456",
 					Closable:   true,
+					Controls: append(
+						hypermedia.InternalErrorControls(hypermedia.ErrorControlOpts{}),
+						hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, "req-def-456"),
+					),
 				})
 			</div>
 		}

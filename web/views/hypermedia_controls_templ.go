@@ -238,6 +238,10 @@ func HypermediaControlsPage() templ.Component {
 				Route:      "/example/missing",
 				RequestID:  "req-abc-123",
 				Closable:   true,
+				Controls: append(
+					hypermedia.NotFoundControls("/"),
+					hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, "req-abc-123"),
+				),
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -252,6 +256,10 @@ func HypermediaControlsPage() templ.Component {
 				Route:      "/api/data",
 				RequestID:  "req-def-456",
 				Closable:   true,
+				Controls: append(
+					hypermedia.InternalErrorControls(hypermedia.ErrorControlOpts{}),
+					hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, "req-def-456"),
+				),
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -538,7 +546,7 @@ func controlsSection(title string) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_controls.templ`, Line: 319, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_controls.templ`, Line: 327, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {

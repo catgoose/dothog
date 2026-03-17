@@ -8,7 +8,17 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 		<body
 			hx-history="false"
 			hx-boost="true"
-			_="on showAlert call alert(event.detail.value or event.detail)"
+			_="on showAlert(detail)
+				make a <div/> then set its [class] to 'toast toast-end toast-top z-50' then set t to it
+				make a <div/> then set its [class] to 'alert alert-info shadow-lg' then set its textContent to detail
+				put it into t
+				put t into me
+				wait 3s
+				set t.style.transition to 'opacity 0.3s ease'
+				set t.style.opacity to '0'
+				wait 300ms
+				remove t
+			end"
 		>
 			<div id="error-status" class="sticky top-0 z-40"></div>
 			@menuContent

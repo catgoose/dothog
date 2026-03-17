@@ -199,11 +199,11 @@ templ archCompareSlider() {
 			 * Updates a CSS custom property (--split) that controls the
 			 * clip-path on the overlay panel and the handle position.
 			 */
-			(function() {
+			(function () {
 				/** @type {HTMLElement} */
-				const handle = document.getElementById('compare-handle');
+				const handle = document.getElementById("compare-handle");
 				/** @type {HTMLElement} */
-				const container = document.getElementById('compare');
+				const container = document.getElementById("compare");
 				if (!handle || !container) return;
 
 				/**
@@ -217,29 +217,29 @@ templ archCompareSlider() {
 				}
 
 				/** @param {PointerEvent} e */
-				handle.addEventListener('pointerdown', function(e) {
+				handle.addEventListener("pointerdown", function (e) {
 					handle.setPointerCapture(e.pointerId);
-					handle.dataset.dragging = 'true';
+					handle.dataset.dragging = "true";
 				});
 
 				/** @param {PointerEvent} e */
-				handle.addEventListener('pointermove', function(e) {
-					if (handle.dataset.dragging !== 'true') return;
-					container.style.setProperty('--split', calcPercent(e.clientX) + '%');
+				handle.addEventListener("pointermove", function (e) {
+					if (handle.dataset.dragging !== "true") return;
+					container.style.setProperty("--split", calcPercent(e.clientX) + "%");
 				});
 
-				handle.addEventListener('pointerup', function() {
+				handle.addEventListener("pointerup", function () {
 					delete handle.dataset.dragging;
 				});
 
-				handle.addEventListener('lostpointercapture', function() {
+				handle.addEventListener("lostpointercapture", function () {
 					delete handle.dataset.dragging;
 				});
 
 				/* Tap either side to snap the slider */
-				container.addEventListener('click', function(e) {
-					if (e.target.closest('#compare-handle')) return;
-					container.style.setProperty('--split', calcPercent(e.clientX) + '%');
+				container.addEventListener("click", function (e) {
+					if (e.target.closest("#compare-handle")) return;
+					container.style.setProperty("--split", calcPercent(e.clientX) + "%");
 				});
 			})();
 		</script>
