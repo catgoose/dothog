@@ -28,8 +28,10 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			<div id="error-status" class="sticky top-0 z-40"></div>
 			@menuContent
 			if len(crumbs) > 0 {
-				<div class="bg-base-200/50 border-b border-base-300 px-4 py-1.5">
-					@components.Breadcrumbs(crumbs)
+				<div class="mx-4 mt-3">
+					<div class="bg-base-100 shadow-sm border border-base-300 rounded-lg px-4 py-2 inline-block">
+						@components.Breadcrumbs(crumbs)
+					</div>
 				</div>
 			}
 			<!-- Main Content -->

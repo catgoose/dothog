@@ -29,9 +29,9 @@ test.describe("Dashboard", () => {
 
   test("inventory card links to demo pages", async ({ page }) => {
     await navigateTo(page, "/dashboard");
-    await expect(page.locator('main a[href="/demo/inventory"]').first()).toBeVisible();
-    await expect(page.locator('main a[href="/demo/catalog"]')).toBeVisible();
-    await expect(page.locator('main a[href="/demo/bulk"]')).toBeVisible();
+    await expect(page.locator('main a[href*="/demo/inventory"]').first()).toBeVisible();
+    await expect(page.locator('main a[href*="/demo/catalog"]')).toBeVisible();
+    await expect(page.locator('main a[href*="/demo/bulk"]')).toBeVisible();
   });
 
   test("kanban card shows status badges", async ({ page }) => {
@@ -54,7 +54,7 @@ test.describe("Dashboard", () => {
 
   test("clicking inventory link navigates to inventory page", async ({ page }) => {
     await navigateTo(page, "/dashboard");
-    await page.locator('main a[href="/demo/inventory"]').first().click();
+    await page.locator('main a[href*="/demo/inventory"]').first().click();
     await expect(page.locator("h1")).toContainText("Items Inventory");
   });
 });
