@@ -510,7 +510,29 @@ func HypermediaControlsPage() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</div>")
+		templ_7745c5c3_Var15 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<div class=\"space-y-4\"><p class=\"text-sm text-base-content/70\">Links carry a <code class=\"text-xs bg-base-200 px-1 rounded\">?from=N</code> bitmask that tells the destination page where the user came from. The server resolves the mask to a breadcrumb trail, derives intermediate crumbs from the URL path, and renders the bar between the navbar and content. No client state needed.</p><div class=\"overflow-x-auto\"><table class=\"table table-sm\"><thead><tr><th>Bit</th><th>Value</th><th>Label</th><th>Href</th></tr></thead> <tbody><tr><td>0</td><td>1</td><td>Home</td><td>/</td></tr><tr><td>1</td><td>2</td><td>Dashboard</td><td>/dashboard</td></tr></tbody></table></div><p class=\"text-sm text-base-content/70\"><code class=\"text-xs bg-base-200 px-1 rounded\">from=3</code> = bits 0+1 = <strong>Home + Dashboard</strong>. The destination page appends path-derived crumbs automatically. Click to see real breadcrumbs:</p><div class=\"flex flex-wrap gap-2\"><a href=\"/demo/inventory?from=1\" class=\"btn btn-sm btn-outline\">Inventory (from=1: Home only)</a> <a href=\"/demo/inventory?from=3\" class=\"btn btn-sm btn-outline\">Inventory (from=3: Home + Dashboard)</a> <a href=\"/demo/people?from=3\" class=\"btn btn-sm btn-outline\">People (from=3: Home + Dashboard)</a></div><p class=\"text-sm text-base-content/70\">Use <code class=\"text-xs bg-base-200 px-1 rounded\">FromNav(href, from)</code> to forward the param on outbound links. Use <code class=\"text-xs bg-base-200 px-1 rounded\">SetPageLabel(c, name)</code> to replace the terminal crumb's auto-generated label with a human name (e.g., a person's name instead of their ID).</p></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = controlsSection("14. Breadcrumb Origin Tracking").Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -534,33 +556,33 @@ func controlsSection(title string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var15 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var15 == nil {
-			templ_7745c5c3_Var15 = templ.NopComponent
+		templ_7745c5c3_Var16 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var16 == nil {
+			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-base\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-base\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		var templ_7745c5c3_Var17 string
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_controls.templ`, Line: 327, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_controls.templ`, Line: 362, Col: 43}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</h2>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ_7745c5c3_Var15.Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</h2>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</div></div>")
+		templ_7745c5c3_Err = templ_7745c5c3_Var16.Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

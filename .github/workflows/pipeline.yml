@@ -332,7 +332,7 @@ jobs:
           mv .github/harmony/release.yml .github/workflows/release.yml
           rm -rf .github/harmony
           rm -f .github/workflows/screenshots.yml
-          rm -f docs/MANIFESTO.md
+          rm -f MANIFESTO.md
 
           # Scrub binary name references
           sed -i 's/dothog/harmony/g' .github/workflows/*.yml Dockerfile

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	corecomponents "catgoose/dothog/web/components/core"
 
@@ -17,6 +18,14 @@ import (
 	"github.com/catgoose/dio"
 	"github.com/labstack/echo/v4"
 )
+
+const pageLabel = "pageLabel"
+
+// SetPageLabel sets a human-readable label for the current page, used as the
+// terminal breadcrumb. Call before RenderBaseLayout.
+func SetPageLabel(c echo.Context, label string) {
+	c.Set(pageLabel, label)
+}
 
 // appNavComponent builds the NavBar with the active item set for the given path
 func appNavComponent(path string) templ.Component {
@@ -76,7 +85,9 @@ func appNavComponent(path string) templ.Component {
 	return corecomponents.NavBar(items)
 }
 
-// RenderBaseLayout wraps the component in a base layout and renders it
+// RenderBaseLayout wraps the component in a base layout and renders it.
+// If the request carries a ?from= query parameter matching a registered origin,
+// breadcrumbs are rendered between the navbar and the page content.
 func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 	nav := appNavComponent(c.Request().URL.Path)
 	var csrfToken string
@@ -89,7 +100,68 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 	// setup:feature:session_settings:start
 	theme = middleware.GetSessionSettings(c).Theme
 	// setup:feature:session_settings:end
-	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme))
+
+	var crumbs []hypermedia.Breadcrumb
+	from := c.QueryParam("from")
+	pathCrumbs := buildPathCrumbs(c.Request().URL.Path, from)
+
+	if mask := hypermedia.ParseFromParam(from); mask != 0 {
+		// Prepend registered origins when ?from= is present.
+		crumbs = append(hypermedia.ResolveFromMask(mask), pathCrumbs...)
+	} else if len(pathCrumbs) > 1 {
+		// No ?from= but multiple path segments — show path-based breadcrumbs
+		// so detail pages always have a way back to their parent.
+		crumbs = append([]hypermedia.Breadcrumb{{Label: hypermedia.BreadcrumbLabelHome, Href: "/"}}, pathCrumbs...)
+	}
+
+	// Allow handlers to override the terminal crumb label via SetPageLabel.
+	if label, ok := c.Get(pageLabel).(string); ok && label != "" && len(crumbs) > 0 {
+		crumbs[len(crumbs)-1].Label = label
+	}
+
+	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme, crumbs))
+}
+
+// skipSegments are path prefixes that don't produce meaningful breadcrumb labels.
+var skipSegments = map[string]bool{
+	"demo": true, "admin": true, "hypermedia": true, "api": true,
+}
+
+// buildPathCrumbs derives breadcrumb segments from the URL path, skipping
+// non-meaningful prefixes. The terminal segment has no href. The from param
+// is forwarded on intermediate links.
+func buildPathCrumbs(path, from string) []hypermedia.Breadcrumb {
+	trimmed := strings.Trim(path, "/")
+	if trimmed == "" {
+		return nil
+	}
+	allSegments := strings.Split(trimmed, "/")
+
+	// Skip non-meaningful prefix segments (demo, admin, etc.).
+	start := 0
+	for start < len(allSegments) && skipSegments[allSegments[start]] {
+		start++
+	}
+	visible := allSegments[start:]
+	if len(visible) == 0 {
+		return nil
+	}
+
+	crumbs := make([]hypermedia.Breadcrumb, len(visible))
+	for i, seg := range visible {
+		label := seg
+		if len(label) > 0 {
+			label = strings.ToUpper(label[:1]) + label[1:]
+		}
+		href := ""
+		if i < len(visible)-1 {
+			// Reconstruct full path including the skipped prefix.
+			fullPath := "/" + strings.Join(allSegments[:start+i+1], "/")
+			href = hypermedia.FromNav(fullPath, from)
+		}
+		crumbs[i] = hypermedia.Breadcrumb{Label: label, Href: href}
+	}
+	return crumbs
 }
 
 // RenderComponent renders a templ component to the response

@@ -1,6 +1,12 @@
 package hypermedia
 
-import "strings"
+import (
+	"fmt"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+)
 
 // NavItem is a server-computed navigation affordance.
 // Active state is set by the handler (or SetActiveNavItem), not by JavaScript.
@@ -98,4 +104,109 @@ func BreadcrumbsFromPath(path string, labels map[int]string) []Breadcrumb {
 		crumbs = append(crumbs, Breadcrumb{Label: label, Href: href})
 	}
 	return crumbs
+}
+
+// FromBit is a bitmask position for a registered breadcrumb origin.
+// Lower bits render earlier in the trail. Bit 0 is reserved for Home.
+type FromBit = uint64
+
+// Well-known breadcrumb bit positions. Bit 0 (Home) is always included.
+// Register additional bits via RegisterFrom.
+const (
+	FromHome      FromBit = 1 << iota // bit 0 — always shown
+	FromDashboard                     // bit 1
+	FromBit2                          // bit 2 — available for registration
+	FromBit3                          // bit 3
+	FromBit4                          // bit 4
+	FromBit5                          // bit 5
+	FromBit6                          // bit 6
+	FromBit7                          // bit 7
+)
+
+// fromEntry is a registered breadcrumb with its bit position.
+type fromEntry struct {
+	bit   FromBit
+	crumb Breadcrumb
+}
+
+var (
+	fromMu      sync.RWMutex
+	fromEntries []fromEntry
+)
+
+func init() {
+	// Home is always registered at bit 0.
+	RegisterFrom(FromHome, Breadcrumb{Label: BreadcrumbLabelHome, Href: "/"})
+}
+
+// RegisterFrom registers a breadcrumb at the given bit position.
+// Call during route initialization. Bit 0 is pre-registered as Home.
+func RegisterFrom(bit FromBit, crumb Breadcrumb) {
+	fromMu.Lock()
+	// Replace if bit already registered.
+	for i, e := range fromEntries {
+		if e.bit == bit {
+			fromEntries[i].crumb = crumb
+			fromMu.Unlock()
+			return
+		}
+	}
+	fromEntries = append(fromEntries, fromEntry{bit: bit, crumb: crumb})
+	sort.Slice(fromEntries, func(i, j int) bool {
+		return fromEntries[i].bit < fromEntries[j].bit
+	})
+	fromMu.Unlock()
+}
+
+// ResolveFromMask decodes a bitmask into an ordered breadcrumb trail.
+// Only registered bits are included. Unregistered bits are silently ignored.
+// Home (bit 0) is always included regardless of the mask value.
+func ResolveFromMask(mask uint64) []Breadcrumb {
+	mask |= FromHome // always include Home
+	fromMu.RLock()
+	defer fromMu.RUnlock()
+
+	var crumbs []Breadcrumb
+	for _, e := range fromEntries {
+		if mask&e.bit != 0 {
+			crumbs = append(crumbs, e.crumb)
+		}
+	}
+	return crumbs
+}
+
+// ParseFromParam parses the ?from= query parameter as a uint64 bitmask.
+// Returns 0 if empty or invalid.
+func ParseFromParam(raw string) uint64 {
+	if raw == "" {
+		return 0
+	}
+	v, _ := strconv.ParseUint(raw, 10, 64)
+	return v
+}
+
+// FromParam formats a bitmask as a string suitable for ?from= query values.
+func FromParam(mask uint64) string {
+	return strconv.FormatUint(mask, 10)
+}
+
+// FromQueryString returns "from=N" for use in URL query strings.
+// Returns empty string if mask is 0.
+func FromQueryString(mask uint64) string {
+	if mask == 0 {
+		return ""
+	}
+	return fmt.Sprintf("from=%s", FromParam(mask))
+}
+
+// FromNav appends the from parameter to a href if non-empty.
+// Use in templates to forward breadcrumb context to outbound links.
+func FromNav(href, from string) string {
+	if from == "" {
+		return href
+	}
+	if strings.Contains(href, "?") {
+		return href + "&from=" + from
+	}
+	return href + "?from=" + from
 }

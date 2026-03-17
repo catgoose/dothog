@@ -23,7 +23,7 @@ func navActiveClass(active bool) string {
 // Active state should be set server-side via SetActiveNavItem or SetActiveNavItemPrefix.
 templ NavBar(items []hypermedia.NavItem) {
 	<nav
-		class="navbar bg-base-200"
+		class="navbar bg-base-200 shadow-sm"
 		x-data
 		x-on:click.window="$el.querySelectorAll('details[open]').forEach(d => { if (!d.contains($event.target)) d.open = false })"
 	>

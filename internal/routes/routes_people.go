@@ -44,7 +44,8 @@ func (p *peopleRoutes) handlePeoplePage(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load people", err)
 	}
-	return handler.RenderBaseLayout(c, views.PeoplePage(people, total, bar, cols, info))
+	from := c.QueryParam("from")
+	return handler.RenderBaseLayout(c, views.PeoplePage(people, total, bar, cols, info, from))
 }
 
 func (p *peopleRoutes) handlePeopleList(c echo.Context) error {
@@ -52,7 +53,8 @@ func (p *peopleRoutes) handlePeopleList(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load people", err)
 	}
-	return handler.RenderComponent(c, views.PeopleTableContainer(cols, people, info))
+	from := c.QueryParam("from")
+	return handler.RenderComponent(c, views.PeopleTableContainer(cols, people, info, from))
 }
 
 func (p *peopleRoutes) handlePersonProfile(c echo.Context) error {
@@ -64,7 +66,9 @@ func (p *peopleRoutes) handlePersonProfile(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 404, "Person not found", err)
 	}
-	return handler.RenderBaseLayout(c, views.PersonProfilePage(person))
+	from := c.QueryParam("from")
+	handler.SetPageLabel(c, person.FullName())
+	return handler.RenderBaseLayout(c, views.PersonProfilePage(person, from))
 }
 
 func (p *peopleRoutes) handlePersonEdit(c echo.Context) error {

@@ -70,7 +70,7 @@ _You don't just accidentally create abstractions until you suddenly have a frame
 
 Dothog runs as a single binary with all assets embedded -- no external dependencies, no configuration files, no `package.json`, no spiritual intermediaries between you and the server. It is a demonstration that you can build modern, interactive web applications with Go and HTMX without selling your soul to the JavaScript industrial complex. The soul-selling is optional and handled by a separate module.
 
-See [PHILOSOPHY.md](docs/PHILOSOPHY.md) for the sacred architectural texts, which are also not sacred, except in the sense that they are. See [MANIFESTO.md](docs/MANIFESTO.md) for the PENTAVERB, the Novice's Creed, the Wisdom of the Uniform Interface, and the Recorded Sayings of Layman Grug, which are also not sacred, except in every sense.
+See [PHILOSOPHY.md](PHILOSOPHY.md) for the sacred architectural texts, which are also not sacred, except in the sense that they are. See [MANIFESTO.md](MANIFESTO.md) for the PENTAVERB, the Novice's Creed, the Wisdom of the Uniform Interface, and the Recorded Sayings of Layman Grug, which are also not sacred, except in every sense.
 
 ## Demo
 
@@ -260,6 +260,42 @@ Additional hypermedia patterns demonstrated:
 - **Append** -- `hx-swap="beforeend"` appends new list items without replacing existing content; form resets via `hx-on::after-request="this.reset()"`
 - **Modal** -- `hx-get` fetches a `<dialog>` fragment, `hx-on::load="this.showModal()"` opens it
 - **Dismiss** -- HyperScript (`_="on click ..."`) handles client-only UI like fade-out and element removal without a server round-trip
+
+### Breadcrumb Origin Tracking
+
+Navigation links carry a `?from=N` bitmask that encodes where the user entered from. The server resolves the mask to a breadcrumb trail at render time — no sessions, no cookies, no client state.
+
+```
+/demo/people?from=3          → Home > Dashboard > People
+/demo/people/42?from=3       → Home > Dashboard > People > Jane Smith
+```
+
+**How it works:**
+
+1. **Register origins at startup** — each page gets a bit position:
+   ```go
+   hypermedia.RegisterFrom(hypermedia.FromDashboard, hypermedia.Breadcrumb{Label: "Dashboard", Href: "/dashboard"})
+   ```
+
+2. **Links include the mask** — `?from=3` encodes Home (bit 0) + Dashboard (bit 1):
+   ```html
+   <a href="/demo/inventory?from=3">Inventory</a>
+   ```
+
+3. **`RenderBaseLayout` resolves automatically** — reads `?from=`, resolves registered origins via `ResolveFromMask`, derives intermediate crumbs from the URL path, and renders the breadcrumb bar.
+
+4. **Forward with `FromNav`** — outbound links preserve the `from` param:
+   ```go
+   href={ hypermedia.FromNav("/demo/people/42", from) }
+   // → "/demo/people/42?from=3"
+   ```
+
+5. **Override labels with `SetPageLabel`** — replace auto-generated terminal crumbs (e.g., show a person's name instead of their ID):
+   ```go
+   handler.SetPageLabel(c, person.FullName())
+   ```
+
+Unknown `from` values are silently ignored — users cannot craft arbitrary breadcrumb paths. Only registered bit positions resolve to crumbs.
 
 ## Schema Builder
 
@@ -602,7 +638,7 @@ Every tool in this stack exists because HTML alone couldn't express something. Y
     |  +--------------------------------------------------+---------------------+
 ```
 
-Two tracks rise from HTML. **Behavior** (left column) -- you reach up through HTTP, HTMX, `_hyperscript`, Alpine.js, and only to raw JavaScript when nothing else can express the intent. When you reach for a `.js` file, pause. Breathe. Consider whether you actually need it, or whether you have simply been _trained_ to reach for it. **Presentation** (right column) -- CSS is the base, DaisyUI gives you semantic component classes (`btn-primary`, `modal-box`) that adapt to themes, Tailwind utilities handle layout and spacing. Both tracks follow [locality of behavior](docs/PHILOSOPHY.md#locality-of-behavior): the style is on the element, the behavior is on the element, nothing hides in a separate file. All is revealed. All is local.
+Two tracks rise from HTML. **Behavior** (left column) -- you reach up through HTTP, HTMX, `_hyperscript`, Alpine.js, and only to raw JavaScript when nothing else can express the intent. When you reach for a `.js` file, pause. Breathe. Consider whether you actually need it, or whether you have simply been _trained_ to reach for it. **Presentation** (right column) -- CSS is the base, DaisyUI gives you semantic component classes (`btn-primary`, `modal-box`) that adapt to themes, Tailwind utilities handle layout and spacing. Both tracks follow [locality of behavior](PHILOSOPHY.md#locality-of-behavior): the style is on the element, the behavior is on the element, nothing hides in a separate file. All is revealed. All is local.
 
 Map two dimensions -- **where it runs** and **what it manages** -- and six domains emerge. This is THE SACRED TABLE. It has six cells. All truths of web architecture can be found in one of these six cells. If a truth cannot be found in one of these six cells, it is either not true, or it goes in the seventh cell, which does not exist, but which we reserve for future use:
 
@@ -904,8 +940,8 @@ All commands run with `go tool mage <target>`.
 
 **_DOTHOG IS NOT A FRAMEWORK._** We cannot stress this enough. We are a software project. Software projects do not have:
 
-- ~~Commandments~~ (see: [THE PENTAVERB](docs/MANIFESTO.md#i-the-pentaverb-or-the-five-commandments-of-hypermedia))
-- ~~Sacred texts~~ (see: [PHILOSOPHY.md](docs/PHILOSOPHY.md))
+- ~~Commandments~~ (see: [THE PENTAVERB](MANIFESTO.md#i-the-pentaverb-or-the-five-commandments-of-hypermedia))
+- ~~Sacred texts~~ (see: [PHILOSOPHY.md](PHILOSOPHY.md))
 - ~~Disciples~~ (see: contributors)
 - ~~A prophet~~ (Roy Fielding is a computer scientist, not a prophet. His dissertation is a technical document, not a prophecy. The fact that it predicted the future of web architecture is a coincidence. Probably.)
 - ~~Rituals~~ (see: `go tool mage watch`)

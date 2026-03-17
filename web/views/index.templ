@@ -1,7 +1,12 @@
 package views
 
+import (
+	"catgoose/dothog/internal/routes/hypermedia"
+	components "catgoose/dothog/web/components/core"
+)
+
 // Root template
-templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string) {
+templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ theme }>
 		@header(csrfToken, devMode)
@@ -22,6 +27,11 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 		>
 			<div id="error-status" class="sticky top-0 z-40"></div>
 			@menuContent
+			if len(crumbs) > 0 {
+				<div class="bg-base-200/50 border-b border-base-300 px-4 py-1.5">
+					@components.Breadcrumbs(crumbs)
+				</div>
+			}
 			<!-- Main Content -->
 			<main class="flex-1 p-4">
 				@Layout(layoutContent)

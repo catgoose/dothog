@@ -187,3 +187,53 @@ func TestBreadcrumbsFromPath_EmptyString(t *testing.T) {
 	require.Len(t, crumbs, 1)
 	require.Equal(t, Breadcrumb{Label: BreadcrumbLabelHome, Href: "/"}, crumbs[0])
 }
+
+// ---------------------------------------------------------------------------
+// FromBit registry
+// ---------------------------------------------------------------------------
+
+func TestResolveFromMask_HomeAlwaysIncluded(t *testing.T) {
+	crumbs := ResolveFromMask(0) // mask=0 still includes Home
+	require.Len(t, crumbs, 1)
+	require.Equal(t, BreadcrumbLabelHome, crumbs[0].Label)
+	require.Equal(t, "/", crumbs[0].Href)
+}
+
+func TestResolveFromMask_DashboardTrail(t *testing.T) {
+	RegisterFrom(FromDashboard, Breadcrumb{Label: "Dashboard", Href: "/dashboard"})
+	crumbs := ResolveFromMask(FromHome | FromDashboard) // mask=3
+	require.Len(t, crumbs, 2)
+	require.Equal(t, "Home", crumbs[0].Label)
+	require.Equal(t, "Dashboard", crumbs[1].Label)
+	require.Equal(t, "/dashboard", crumbs[1].Href)
+}
+
+func TestResolveFromMask_IgnoresUnregisteredBits(t *testing.T) {
+	crumbs := ResolveFromMask(0xFF) // many bits set, most unregistered
+	// Should only contain Home + Dashboard (registered above)
+	require.GreaterOrEqual(t, len(crumbs), 1)
+	require.Equal(t, "Home", crumbs[0].Label)
+}
+
+func TestParseFromParam(t *testing.T) {
+	require.Equal(t, uint64(0), ParseFromParam(""))
+	require.Equal(t, uint64(0), ParseFromParam("abc"))
+	require.Equal(t, uint64(3), ParseFromParam("3"))
+	require.Equal(t, uint64(17), ParseFromParam("17"))
+}
+
+func TestFromParam(t *testing.T) {
+	require.Equal(t, "3", FromParam(3))
+	require.Equal(t, "17", FromParam(17))
+}
+
+func TestFromQueryString(t *testing.T) {
+	require.Equal(t, "", FromQueryString(0))
+	require.Equal(t, "from=3", FromQueryString(3))
+}
+
+func TestFromNav(t *testing.T) {
+	require.Equal(t, "/demo/people", FromNav("/demo/people", ""))
+	require.Equal(t, "/demo/people?from=3", FromNav("/demo/people", "3"))
+	require.Equal(t, "/demo/people?q=foo&from=3", FromNav("/demo/people?q=foo", "3"))
+}

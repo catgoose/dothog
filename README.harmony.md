@@ -4,7 +4,7 @@ A Go + HTMX application template for building server-driven hypermedia applicati
 
 Harmony runs as a single binary with all assets embedded. No external runtime dependencies, no configuration files required to start.
 
-See [PHILOSOPHY.md](docs/PHILOSOPHY.md) for the architectural principles behind the project.
+See [PHILOSOPHY.md](PHILOSOPHY.md) for the architectural principles behind the project.
 
 <!--toc:start-->
 

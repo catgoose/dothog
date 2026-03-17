@@ -18,7 +18,7 @@ import (
 	components "catgoose/dothog/web/components/core"
 )
 
-func PeoplePage(people []demo.Person, total int, bar hypermedia.FilterBar, cols []hypermedia.TableCol, info hypermedia.PageInfo) templ.Component {
+func PeoplePage(people []demo.Person, total int, bar hypermedia.FilterBar, cols []hypermedia.TableCol, info hypermedia.PageInfo, from string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -51,7 +51,7 @@ func PeoplePage(people []demo.Person, total int, bar hypermedia.FilterBar, cols 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.Table(cols, PeopleTableBody(people), info).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Table(cols, PeopleTableBody(people, from), info).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -63,7 +63,7 @@ func PeoplePage(people []demo.Person, total int, bar hypermedia.FilterBar, cols 
 	})
 }
 
-func PeopleTableContainer(cols []hypermedia.TableCol, people []demo.Person, info hypermedia.PageInfo) templ.Component {
+func PeopleTableContainer(cols []hypermedia.TableCol, people []demo.Person, info hypermedia.PageInfo, from string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -88,7 +88,7 @@ func PeopleTableContainer(cols []hypermedia.TableCol, people []demo.Person, info
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.Table(cols, PeopleTableBody(people), info).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Table(cols, PeopleTableBody(people, from), info).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -100,7 +100,7 @@ func PeopleTableContainer(cols []hypermedia.TableCol, people []demo.Person, info
 	})
 }
 
-func PeopleTableBody(people []demo.Person) templ.Component {
+func PeopleTableBody(people []demo.Person, from string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -126,7 +126,7 @@ func PeopleTableBody(people []demo.Person) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		for _, p := range people {
-			templ_7745c5c3_Err = PersonRow(p).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = PersonRow(p, from).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -139,7 +139,7 @@ func PeopleTableBody(people []demo.Person) templ.Component {
 	})
 }
 
-func PersonRow(p demo.Person) templ.Component {
+func PersonRow(p demo.Person, from string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -160,7 +160,7 @@ func PersonRow(p demo.Person) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		profileURL := fmt.Sprintf("/demo/people/%d", p.ID)
+		profileURL := hypermedia.FromNav(fmt.Sprintf("/demo/people/%d", p.ID), from)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<tr class=\"hover:bg-base-200/50 cursor-pointer\" hx-get=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -260,7 +260,7 @@ func PersonRow(p demo.Person) templ.Component {
 	})
 }
 
-func PersonProfilePage(p demo.Person) templ.Component {
+func PersonProfilePage(p demo.Person, from string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -281,14 +281,14 @@ func PersonProfilePage(p demo.Person) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"max-w-3xl mx-auto p-4 space-y-6\"><div class=\"flex items-center gap-2 mb-4\"><a href=\"/demo/people\" class=\"btn btn-sm btn-ghost\">&larr; Directory</a></div><div id=\"person-profile\" hx-ext=\"sse\" sse-connect=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"max-w-3xl mx-auto p-4 space-y-6\"><div id=\"person-profile\" hx-ext=\"sse\" sse-connect=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/sse/people/%d", p.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 54, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 51, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -339,7 +339,7 @@ func PersonProfileCard(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(p.FullName())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 66, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 63, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -369,7 +369,7 @@ func PersonProfileCard(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(p.Department)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 78, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 75, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -382,7 +382,7 @@ func PersonProfileCard(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(p.JobTitle)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 79, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 76, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -395,7 +395,7 @@ func PersonProfileCard(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(p.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 84, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 81, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -408,7 +408,7 @@ func PersonProfileCard(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(p.Phone)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 88, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 85, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -421,7 +421,7 @@ func PersonProfileCard(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(p.City)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 92, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 89, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -434,7 +434,7 @@ func PersonProfileCard(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(p.State)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 92, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 89, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -447,7 +447,7 @@ func PersonProfileCard(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(p.CreatedAt)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 96, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 93, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -465,7 +465,7 @@ func PersonProfileCard(p demo.Person) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(p.Bio)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 102, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 99, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -514,7 +514,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(p.FirstName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 119, Col: 107}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 116, Col: 107}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -527,7 +527,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(p.LastName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 123, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 120, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -540,7 +540,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(p.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 127, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 124, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -553,7 +553,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(p.Phone)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 131, Col: 98}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 128, Col: 98}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -566,7 +566,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(p.City)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 135, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 132, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -579,7 +579,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(p.State)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 139, Col: 98}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 136, Col: 98}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -597,7 +597,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(d)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 145, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 142, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -620,7 +620,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(d)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 145, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 142, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -638,7 +638,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(p.JobTitle)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 151, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 148, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -651,7 +651,7 @@ func PersonEditForm(p demo.Person) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(p.Bio)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 156, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/people.templ`, Line: 153, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {

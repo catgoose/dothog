@@ -318,6 +318,41 @@ templ HypermediaControlsPage() {
 				</div>
 			</div>
 		}
+		// ─── 14. Breadcrumb Origin Tracking ─────────────────────────────────
+		@controlsSection("14. Breadcrumb Origin Tracking") {
+			<div class="space-y-4">
+				<p class="text-sm text-base-content/70">
+					Links carry a <code class="text-xs bg-base-200 px-1 rounded">?from=N</code> bitmask that tells the destination page where the user came from. The server resolves the mask to a breadcrumb trail, derives intermediate crumbs from the URL path, and renders the bar between the navbar and content. No client state needed.
+				</p>
+				<div class="overflow-x-auto">
+					<table class="table table-sm">
+						<thead>
+							<tr>
+								<th>Bit</th>
+								<th>Value</th>
+								<th>Label</th>
+								<th>Href</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr><td>0</td><td>1</td><td>Home</td><td>/</td></tr>
+							<tr><td>1</td><td>2</td><td>Dashboard</td><td>/dashboard</td></tr>
+						</tbody>
+					</table>
+				</div>
+				<p class="text-sm text-base-content/70">
+					<code class="text-xs bg-base-200 px-1 rounded">from=3</code> = bits 0+1 = <strong>Home + Dashboard</strong>. The destination page appends path-derived crumbs automatically. Click to see real breadcrumbs:
+				</p>
+				<div class="flex flex-wrap gap-2">
+					<a href="/demo/inventory?from=1" class="btn btn-sm btn-outline">Inventory (from=1: Home only)</a>
+					<a href="/demo/inventory?from=3" class="btn btn-sm btn-outline">Inventory (from=3: Home + Dashboard)</a>
+					<a href="/demo/people?from=3" class="btn btn-sm btn-outline">People (from=3: Home + Dashboard)</a>
+				</div>
+				<p class="text-sm text-base-content/70">
+					Use <code class="text-xs bg-base-200 px-1 rounded">FromNav(href, from)</code> to forward the param on outbound links. Use <code class="text-xs bg-base-200 px-1 rounded">SetPageLabel(c, name)</code> to replace the terminal crumb's auto-generated label with a human name (e.g., a person's name instead of their ID).
+				</p>
+			</div>
+		}
 	</div>
 }
 
