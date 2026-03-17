@@ -261,6 +261,42 @@ Additional hypermedia patterns demonstrated:
 - **Modal** -- `hx-get` fetches a `<dialog>` fragment, `hx-on::load="this.showModal()"` opens it
 - **Dismiss** -- HyperScript (`_="on click ..."`) handles client-only UI like fade-out and element removal without a server round-trip
 
+### Breadcrumb Origin Tracking
+
+Navigation links carry a `?from=N` bitmask that encodes where the user entered from. The server resolves the mask to a breadcrumb trail at render time — no sessions, no cookies, no client state.
+
+```
+/demo/people?from=3          → Home > Dashboard > People
+/demo/people/42?from=3       → Home > Dashboard > People > Jane Smith
+```
+
+**How it works:**
+
+1. **Register origins at startup** — each page gets a bit position:
+   ```go
+   hypermedia.RegisterFrom(hypermedia.FromDashboard, hypermedia.Breadcrumb{Label: "Dashboard", Href: "/dashboard"})
+   ```
+
+2. **Links include the mask** — `?from=3` encodes Home (bit 0) + Dashboard (bit 1):
+   ```html
+   <a href="/demo/inventory?from=3">Inventory</a>
+   ```
+
+3. **`RenderBaseLayout` resolves automatically** — reads `?from=`, resolves registered origins via `ResolveFromMask`, derives intermediate crumbs from the URL path, and renders the breadcrumb bar.
+
+4. **Forward with `FromNav`** — outbound links preserve the `from` param:
+   ```go
+   href={ hypermedia.FromNav("/demo/people/42", from) }
+   // → "/demo/people/42?from=3"
+   ```
+
+5. **Override labels with `SetPageLabel`** — replace auto-generated terminal crumbs (e.g., show a person's name instead of their ID):
+   ```go
+   handler.SetPageLabel(c, person.FullName())
+   ```
+
+Unknown `from` values are silently ignored — users cannot craft arbitrary breadcrumb paths. Only registered bit positions resolve to crumbs.
+
 ## Schema Builder
 
 > _"Where are your migrations?" asked the auditor. "In the code." "Where are the migration FILES?" "There are no files. The schema is the code." "That's not how we do things." "That's not how YOU do things. We do things like this and it works. The PENTAVERB says nothing about migration files. The PENTAVERB doesn't even address databases. We checked."_

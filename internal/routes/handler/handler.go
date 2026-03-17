@@ -103,14 +103,20 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 
 	var crumbs []hypermedia.Breadcrumb
 	from := c.QueryParam("from")
+	pathCrumbs := buildPathCrumbs(c.Request().URL.Path, from)
+
 	if mask := hypermedia.ParseFromParam(from); mask != 0 {
-		origins := hypermedia.ResolveFromMask(mask)
-		pathCrumbs := buildPathCrumbs(c.Request().URL.Path, from)
-		crumbs = append(origins, pathCrumbs...)
-		// Allow handlers to override the terminal crumb label via SetPageLabel.
-		if label, ok := c.Get(pageLabel).(string); ok && label != "" && len(crumbs) > 0 {
-			crumbs[len(crumbs)-1].Label = label
-		}
+		// Prepend registered origins when ?from= is present.
+		crumbs = append(hypermedia.ResolveFromMask(mask), pathCrumbs...)
+	} else if len(pathCrumbs) > 1 {
+		// No ?from= but multiple path segments — show path-based breadcrumbs
+		// so detail pages always have a way back to their parent.
+		crumbs = append([]hypermedia.Breadcrumb{{Label: hypermedia.BreadcrumbLabelHome, Href: "/"}}, pathCrumbs...)
+	}
+
+	// Allow handlers to override the terminal crumb label via SetPageLabel.
+	if label, ok := c.Get(pageLabel).(string); ok && label != "" && len(crumbs) > 0 {
+		crumbs[len(crumbs)-1].Label = label
 	}
 
 	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme, crumbs))
