@@ -7,9 +7,9 @@ templ ArchitecturePage() {
 		<div class="hero bg-base-200 rounded-box py-12">
 			<div class="hero-content text-center">
 				<div class="max-w-3xl space-y-4">
-					<h1 class="text-4xl font-bold">Go + HTMX + Templ</h1>
+					<h1 class="text-4xl font-bold">HATEOAS &amp; REST</h1>
 					<p class="text-lg text-base-content/70">
-						Two architectures, one goal. Which model fits your problem?
+						The server owns the state. Hypermedia carries the controls. The client renders what it receives.
 					</p>
 				</div>
 			</div>
@@ -21,15 +21,16 @@ templ ArchitecturePage() {
 			<div class="text-center space-y-2">
 				<h2 class="text-3xl font-bold">The Reach-Up Model</h2>
 				<p class="text-base-content/60 max-w-2xl mx-auto">
-					Two tracks rise from their foundations. Start at the base.
-					Each step up trades simplicity for capability. Stay as low as you can.
+					REST says resources are navigated through hypermedia.
+					HATEOAS says the server tells you what you can do next.
+					Each layer below honors that contract — only reach up when it can't.
 				</p>
 			</div>
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
 				<!-- Behavior Track -->
 				<div class="space-y-3">
 					<h3 class="text-xl font-semibold text-center">Behavior</h3>
-					<p class="text-sm text-base-content/50 text-center">How things interact</p>
+					<p class="text-sm text-base-content/50 text-center">How resources are discovered and transitioned</p>
 					<div class="flex flex-col items-center gap-1.5 pt-4">
 						<div class="text-xs text-base-content/40 mb-1 tracking-widest uppercase">reach up</div>
 						@pyramidLayer("w-[18%]", "border-error/40 bg-error/15", ".js files", "locality broken")
@@ -40,16 +41,16 @@ templ ArchitecturePage() {
 						<div class="w-[60%] border-t border-dashed border-base-content/20 my-1 relative">
 							<span class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-base-100 px-2 text-[10px] text-base-content/40 uppercase tracking-widest">bridge</span>
 						</div>
-						@pyramidLayer("w-[65%]", "border-secondary/40 bg-secondary/20", "HTMX", "completes hypertext")
+						@pyramidLayer("w-[65%]", "border-secondary/40 bg-secondary/20", "HTMX", "HATEOAS for the browser")
 						@pyramidLayer("w-[80%]", "border-primary/40 bg-primary/20", "HTTP", "uniform interface")
-						@pyramidLayer("w-full", "border-primary/50 bg-primary/30 font-bold", "HTML", "structure")
+						@pyramidLayer("w-full", "border-primary/50 bg-primary/30 font-bold", "HTML", "the hypermedia")
 						<div class="text-xs text-base-content/40 mt-1 tracking-widest uppercase">start here</div>
 					</div>
 				</div>
 				<!-- Presentation Track -->
 				<div class="space-y-3">
 					<h3 class="text-xl font-semibold text-center">Presentation</h3>
-					<p class="text-sm text-base-content/50 text-center">How things look</p>
+					<p class="text-sm text-base-content/50 text-center">How representations are rendered</p>
 					<div class="flex flex-col items-center gap-1.5 pt-4">
 						<div class="text-xs text-base-content/40 mb-1 tracking-widest uppercase">reach up</div>
 						@pyramidLayer("w-[30%]", "border-error/40 bg-error/15", "raw CSS", "escape hatch")
@@ -263,9 +264,9 @@ templ hypermediaPanel() {
 			</div>
 			<!-- Client: reach-up pyramid (thin, intentionally small) -->
 			<div class="text-[10px] text-base-content/30 tracking-widest uppercase">client (thin by design)</div>
-			@pyramidLayer("w-[88%]", "border-primary/50 bg-primary/30 font-bold", "HTML", "structure")
+			@pyramidLayer("w-[88%]", "border-primary/50 bg-primary/30 font-bold", "HTML", "the hypermedia")
 			@pyramidLayer("w-[75%]", "border-primary/40 bg-primary/20", "HTTP", "uniform interface")
-			@pyramidLayer("w-[62%]", "border-secondary/40 bg-secondary/20", "HTMX", "completes hypertext")
+			@pyramidLayer("w-[62%]", "border-secondary/40 bg-secondary/20", "HTMX", "HATEOAS for the browser")
 			@pyramidLayer("w-[50%]", "border-accent/40 bg-accent/15", "_hyperscript", "client behavior")
 			@pyramidLayer("w-[38%]", "border-info/40 bg-info/15", "Alpine.js", "client state")
 			@pyramidLayer("w-[28%]", "border-warning/40 bg-warning/15", "inline script", "locality bent")

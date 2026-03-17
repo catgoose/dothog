@@ -5,6 +5,7 @@ import (
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/internal/routes/middleware"
+	"catgoose/dothog/internal/version"
 	"catgoose/dothog/web/views"
 	"context"
 	"errors"
@@ -119,7 +120,7 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 		crumbs[len(crumbs)-1].Label = label
 	}
 
-	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme, crumbs))
+	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme, crumbs, version.Version))
 }
 
 // skipSegments are path prefixes that don't produce meaningful breadcrumb labels.

@@ -6,7 +6,7 @@ import (
 )
 
 // Root template
-templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb) {
+templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, version string) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ theme }>
 		@header(csrfToken, devMode)
@@ -38,6 +38,9 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			<main class="flex-1 p-4">
 				@Layout(layoutContent)
 			</main>
+			<footer class="text-center text-xs text-base-content/40 py-2">
+				{ version }
+			</footer>
 			<div id="report-modal-container"></div>
 			<div id="report-email-container"></div>
 			@settingsModal(theme)

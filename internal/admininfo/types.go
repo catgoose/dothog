@@ -3,6 +3,7 @@ package admininfo
 
 // SystemInfo holds runtime stats for the admin system page.
 type SystemInfo struct {
+	Version    string
 	GoVersion  string
 	OS         string
 	Arch       string

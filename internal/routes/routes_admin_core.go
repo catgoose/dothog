@@ -9,6 +9,7 @@ import (
 	"catgoose/dothog/internal/admininfo"
 	"catgoose/dothog/internal/config"
 	"catgoose/dothog/internal/routes/handler"
+	"catgoose/dothog/internal/version"
 	"catgoose/dothog/web/views"
 
 	"github.com/labstack/echo/v4"
@@ -16,6 +17,7 @@ import (
 
 func (ar *appRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin/system", ar.handleSystemInfo)
+	ar.e.GET("/admin/system/check-update", ar.handleCheckUpdate)
 	ar.e.GET("/admin/config", ar.handleConfigInfo)
 }
 
@@ -30,6 +32,7 @@ func (ar *appRoutes) handleSystemInfo(c echo.Context) error {
 	}
 
 	info := admininfo.SystemInfo{
+		Version:    version.Version,
 		GoVersion:  runtime.Version(),
 		OS:         runtime.GOOS,
 		Arch:       runtime.GOARCH,
@@ -52,6 +55,16 @@ func (ar *appRoutes) handleSystemInfo(c echo.Context) error {
 	}
 
 	return handler.RenderBaseLayout(c, views.AdminSystemPage(info))
+}
+
+func (ar *appRoutes) handleCheckUpdate(c echo.Context) error {
+	info, err := version.CheckLatest(c.Request().Context())
+	if err != nil {
+		return handler.RenderComponent(c, views.UpdateCheckResult(version.UpdateInfo{
+			Current: version.Version,
+		}, err))
+	}
+	return handler.RenderComponent(c, views.UpdateCheckResult(info, nil))
 }
 
 func (ar *appRoutes) handleConfigInfo(c echo.Context) error {
