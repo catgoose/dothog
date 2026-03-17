@@ -35,15 +35,17 @@ const (
 	FeatureAvatar   = "avatar"
 	FeatureDemo             = "demo"
 	FeatureSessionSettings  = "session_settings"
+	FeatureAlpine           = "alpine"
 )
 
 // AllFeatures lists every selectable feature tag.
 // "database" is always included (implied by the base template) and is not user-selectable.
-var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings}
+var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine}
 
 // ImplicitFeatures are always selected and not presented to the user.
 // "database" is implicit because SQLite is the base database engine.
-var ImplicitFeatures = []string{FeatureDatabase}
+// "alpine" is implicit because Alpine.js is the standard client-side state layer.
+var ImplicitFeatures = []string{FeatureDatabase, FeatureAlpine}
 
 // Options configures the template setup run.
 type Options struct {
@@ -364,6 +366,7 @@ func removeOptionalContent(dir string, opts Options) error {
 	if removeTags[FeatureCaddy] {
 		_ = os.Remove(filepath.Join(dir, "config", "Caddyfile"))
 	}
+	// Alpine.js is always included (implicit feature); no removal needed.
 
 	var toRemove []string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, errWalk error) error {

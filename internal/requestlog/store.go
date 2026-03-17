@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	dbrepo "catgoose/dothog/internal/database/repository"
@@ -169,30 +170,88 @@ type TraceFilter struct {
 	PerPage int
 }
 
-// ListTraces returns a page of trace summaries matching the given filters.
-func (s *Store) ListTraces(f TraceFilter) ([]TraceSummary, int, error) {
-	w := dbrepo.NewWhere()
-	if f.Q != "" {
-		pattern := "%" + f.Q + "%"
-		w.And("(Route LIKE @Q OR ErrorChain LIKE @Q OR RequestID LIKE @Q OR UserID LIKE @Q)", sql.Named("Q", pattern))
+// FilterOptions holds the distinct values available for filter dropdowns,
+// computed from rows that match the *other* active filters.
+type FilterOptions struct {
+	StatusCodes []int
+	Methods     []string
+}
+
+// AvailableFilters returns the distinct status codes and methods present in
+// the store. Each facet is filtered by the *other* facet's selection so the
+// dropdowns only show values that would produce results.
+//   - Available status codes: filtered by search + method
+//   - Available methods: filtered by search + status
+func (s *Store) AvailableFilters(f TraceFilter) (FilterOptions, error) {
+	// Status codes: apply search + method (not status itself)
+	sw := s.buildSearchWhere(f)
+	applyMethodWhere(sw, f)
+	statusQ := fmt.Sprintf("SELECT DISTINCT StatusCode FROM %s %s ORDER BY StatusCode", tableName, sw.String())
+	var codes []int
+	if err := s.db.Select(&codes, statusQ, sw.Args()...); err != nil {
+		return FilterOptions{}, fmt.Errorf("available status codes: %w", err)
 	}
-	if f.Status != "" {
+
+	// Methods: apply search + status (not method itself)
+	mw := s.buildSearchWhere(f)
+	applyStatusWhere(mw, f)
+	methodQ := fmt.Sprintf("SELECT DISTINCT Method FROM %s %s ORDER BY Method", tableName, mw.String())
+	var methods []string
+	if err := s.db.Select(&methods, methodQ, mw.Args()...); err != nil {
+		return FilterOptions{}, fmt.Errorf("available methods: %w", err)
+	}
+
+	return FilterOptions{StatusCodes: codes, Methods: methods}, nil
+}
+
+// applyStatusWhere adds the status filter clause to w.
+func applyStatusWhere(w *dbrepo.WhereBuilder, f TraceFilter) {
+	if f.Status == "" {
+		return
+	}
+	switch f.Status {
+	case "4xx":
+		w.And("StatusCode >= 400 AND StatusCode < 500")
+	case "5xx":
+		w.And("StatusCode >= 500")
+	default:
 		code := 0
-		switch f.Status {
-		case "4xx":
-			w.And("StatusCode >= 400 AND StatusCode < 500")
-		case "5xx":
-			w.And("StatusCode >= 500")
-		default:
-			fmt.Sscanf(f.Status, "%d", &code)
-			if code > 0 {
-				w.And("StatusCode = @StatusCode", sql.Named("StatusCode", code))
-			}
+		fmt.Sscanf(f.Status, "%d", &code)
+		if code > 0 {
+			w.And("StatusCode = @StatusCode", sql.Named("StatusCode", code))
 		}
 	}
+}
+
+// applyMethodWhere adds the method filter clause to w.
+func applyMethodWhere(w *dbrepo.WhereBuilder, f TraceFilter) {
 	if f.Method != "" {
 		w.And("Method = @Method", sql.Named("Method", f.Method))
 	}
+}
+
+// buildSearchWhere builds the WHERE clause for the search query only (no
+// status/method filters) so it can be reused by AvailableFilters.
+func (s *Store) buildSearchWhere(f TraceFilter) *dbrepo.WhereBuilder {
+	w := dbrepo.NewWhere()
+	if f.Q != "" {
+		for i, term := range strings.Fields(f.Q) {
+			param := fmt.Sprintf("Q%d", i)
+			pattern := "%" + term + "%"
+			clause := fmt.Sprintf(
+				"(Route LIKE @%s OR ErrorChain LIKE @%s OR RequestID LIKE @%s OR UserID LIKE @%s OR RemoteIP LIKE @%s OR CAST(StatusCode AS TEXT) LIKE @%s OR Method LIKE @%s)",
+				param, param, param, param, param, param, param)
+			w.And(clause, sql.Named(param, pattern))
+		}
+	}
+	return w
+}
+
+// ListTraces returns a page of trace summaries matching the given filters.
+func (s *Store) ListTraces(f TraceFilter) ([]TraceSummary, int, error) {
+	w := s.buildSearchWhere(f)
+	applyStatusWhere(w, f)
+	applyMethodWhere(w, f)
 
 	// Count total
 	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s %s", tableName, w.String())

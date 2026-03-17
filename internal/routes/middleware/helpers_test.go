@@ -139,7 +139,7 @@ func TestHypermediaError_MultipleControls(t *testing.T) {
 
 	require.Len(t, ec.Controls, 2)
 	require.Equal(t, hypermedia.ControlKindBack, ec.Controls[0].Kind)
-	require.Equal(t, hypermedia.ControlKindHTMX, ec.Controls[1].Kind)
+	require.Equal(t, hypermedia.ControlKindHome, ec.Controls[1].Kind)
 }
 
 // ---------------------------------------------------------------------------

@@ -18,6 +18,8 @@ templ ErrorControls(controls []hypermedia.Control) {
 						@dismissButton(ctrl)
 					case hypermedia.ControlKindBack:
 						@errorBackButton(ctrl)
+					case hypermedia.ControlKindHome:
+						@errorHomeButton(ctrl)
 				case hypermedia.ControlKindReport:
 					@reportButton(ctrl)
 				}
@@ -68,7 +70,7 @@ templ htmxButton(ctrl hypermedia.Control) {
 templ dismissButton(ctrl hypermedia.Control) {
 	<button
 		class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded text-error-content/70 hover:text-error-content hover:underline focus:outline-none"
-		_="on click set #error-status.innerHTML to ''"
+		x-on:click="document.getElementById('error-status').innerHTML = ''"
 	>
 		{ ctrl.Label }
 	</button>
@@ -77,7 +79,16 @@ templ dismissButton(ctrl hypermedia.Control) {
 templ errorBackButton(ctrl hypermedia.Control) {
 	<button
 		class="inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-base-content/20 bg-base-100 text-base-content hover:bg-base-200 focus:outline-none"
-		_="on click send showAlert(detail: 'Go Back intercepted — this is where navigation would happen') to body"
+		x-on:click="$dispatch('show-alert', 'Go Back intercepted — this is where navigation would happen')"
+	>
+		{ ctrl.Label }
+	</button>
+}
+
+templ errorHomeButton(ctrl hypermedia.Control) {
+	<button
+		{ hxAttrsFromControl(ctrl)... }
+		class="inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-base-content/20 bg-base-100 text-base-content hover:bg-base-200 focus:outline-none"
 	>
 		{ ctrl.Label }
 	</button>

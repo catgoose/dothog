@@ -14,8 +14,10 @@ const (
 	ControlKindHTMX ControlKind = "htmx"
 	// ControlKindDismiss renders a HyperScript close button.
 	ControlKindDismiss ControlKind = "dismiss"
-	// ControlKindBack renders a HyperScript browser history.back() button.
+	// ControlKindBack renders a browser history.back() button.
 	ControlKindBack ControlKind = "back"
+	// ControlKindHome renders a "Go Home" navigation button.
+	ControlKindHome ControlKind = "home"
 	// ControlKindReport renders an HTMX button that posts a report and triggers an alert.
 	ControlKindReport ControlKind = "report"
 )
@@ -210,11 +212,12 @@ func BackButton(label string) Control {
 	}
 }
 
-// GoHomeButton creates an HTMX GET navigation control that pushes homeURL to browser history.
+// GoHomeButton creates a "Go Home" navigation control that pushes homeURL to browser history.
 func GoHomeButton(label, homeURL, target string) Control {
 	return Control{
-		Kind:      ControlKindHTMX,
+		Kind:      ControlKindHome,
 		Label:     label,
+		Href:      homeURL,
 		PushURL:   homeURL,
 		HxRequest: HxGet(homeURL, target),
 	}

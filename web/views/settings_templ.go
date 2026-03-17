@@ -92,7 +92,7 @@ func SettingsPage(sections []demo.SettingsSection) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " _=\"on click remove .active from .settings-tab then add .active to me\"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"w-5 h-5 shrink-0\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " x-on:click=\"document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active')); $el.classList.add('active')\"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"w-5 h-5 shrink-0\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

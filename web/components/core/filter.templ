@@ -79,22 +79,41 @@ templ searchFilterField(field hypermedia.FilterField, bar hypermedia.FilterBar) 
 }
 
 // selectFilterField renders a DaisyUI <select> dropdown with label.
+// The wrapping label carries data-filter={name} for OOB targeting by FilterGroup.
 templ selectFilterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
-	<label class="form-control w-full max-w-xs">
+	<label class="form-control w-full max-w-xs" data-filter={ field.Name }>
 		if field.Label != "" {
 			<div class="label"><span class="label-text">{ field.Label }</span></div>
 		}
-		<select
-			name={ field.Name }
-			class="select select-bordered select-sm"
-			{ filterHxAttrs(field, bar)... }
-			disabled?={ field.Disabled }
-		>
-			for _, opt := range field.Options {
-				<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
-			}
-		</select>
+		@selectFilterOptions(field, bar)
 	</label>
+}
+
+// selectFilterOptions renders just the <select> element, reusable for OOB swaps.
+templ selectFilterOptions(field hypermedia.FilterField, bar hypermedia.FilterBar) {
+	<select
+		name={ field.Name }
+		class="select select-bordered select-sm"
+		{ filterHxAttrs(field, bar)... }
+		disabled?={ field.Disabled }
+	>
+		for _, opt := range field.Options {
+			<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
+		}
+	</select>
+}
+
+// FilterGroupOOB renders OOB swap fragments for all select fields in a FilterGroup.
+// Each fragment targets [data-filter='{name}'] and replaces the <select> element.
+templ FilterGroupOOB(group hypermedia.FilterGroup) {
+	for _, field := range group.SelectFields() {
+		<div hx-swap-oob={ "innerHTML:[data-filter='" + field.Name + "']" }>
+			if field.Label != "" {
+				<div class="label"><span class="label-text">{ field.Label }</span></div>
+			}
+			@selectFilterOptions(field, group.Bar)
+		</div>
+	}
 }
 
 // rangeFilterField renders a DaisyUI range slider with live value display via HyperScript.
@@ -111,7 +130,7 @@ templ rangeFilterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
 			step={ field.Step }
 			value={ field.Value }
 			class="range range-sm"
-			_="on input put my value into next <output/>"
+			x-on:input="$el.nextElementSibling.textContent = $el.value"
 			{ filterHxAttrs(field, bar)... }
 			disabled?={ field.Disabled }
 		/>

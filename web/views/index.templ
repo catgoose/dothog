@@ -8,17 +8,17 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 		<body
 			hx-history="false"
 			hx-boost="true"
-			_="on showAlert(detail)
-				make a <div/> then set its [class] to 'toast toast-end toast-top z-50' then set t to it
-				make a <div/> then set its [class] to 'alert alert-info shadow-lg' then set its textContent to detail
-				put it into t
-				put t into me
-				wait 3s
-				set t.style.transition to 'opacity 0.3s ease'
-				set t.style.opacity to '0'
-				wait 300ms
-				remove t
-			end"
+			x-data
+			x-on:show-alert.window="
+				const t = document.createElement('div');
+				t.className = 'toast toast-end toast-top z-50';
+				const a = document.createElement('div');
+				a.className = 'alert alert-info shadow-lg';
+				a.textContent = $event.detail;
+				t.appendChild(a);
+				document.body.appendChild(t);
+				setTimeout(() => { t.style.transition = 'opacity 0.3s ease'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+			"
 		>
 			<div id="error-status" class="sticky top-0 z-40"></div>
 			@menuContent
@@ -57,6 +57,9 @@ templ header(csrfToken string, devMode bool) {
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<script src="/public/js/htmx.min.js"></script>
 		<script src="/public/js/_hyperscript.min.js"></script>
+		<script src="/public/js/htmx.alpine-morph.js"></script>
+		<script defer src="/public/js/alpine.morph.min.js"></script>
+		<script defer src="/public/js/alpine.min.js"></script>
 		// setup:feature:sse:start
 		<script src="/public/js/htmx.ext.sse.js"></script>
 		// setup:feature:sse:end
@@ -88,7 +91,7 @@ var DaisyThemes = []string{
 
 // settingsModal renders a modal with the DaisyUI theme picker.
 templ settingsModal(currentTheme string) {
-	<dialog id="settings-modal" class="modal">
+	<dialog id="settings-modal" class="modal" x-data>
 		<div class="modal-box bg-base-100 text-base-content w-full max-w-2xl">
 			<form method="dialog">
 				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
@@ -117,9 +120,7 @@ templ settingsThemeOption(theme string, current string) {
 		data-theme={ theme }
 		class={ "btn btn-sm w-full justify-start gap-2 border border-base-content/10",
 			templ.KV("ring-2 ring-primary", theme == current) }
-		_={ "on click set document.documentElement.dataset.theme to '" + theme + "'" +
-			" then fetch /settings/theme { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'theme=" + theme + "' }" +
-			" then get #settings-modal then call its close()" }
+		x-on:click={ "document.documentElement.dataset.theme = '" + theme + "'; fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'theme=" + theme + "' }); $el.closest('dialog').close()" }
 	>
 		<span class="flex gap-0.5">
 			<span class="w-2 h-4 rounded-sm bg-primary"></span>

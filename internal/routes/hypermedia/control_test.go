@@ -40,7 +40,8 @@ func TestBackButton(t *testing.T) {
 func TestGoHomeButton(t *testing.T) {
 	ctrl := GoHomeButton("Home", "/", "#main")
 
-	require.Equal(t, ControlKindHTMX, ctrl.Kind)
+	require.Equal(t, ControlKindHome, ctrl.Kind)
+	require.Equal(t, "/", ctrl.Href)
 	require.Equal(t, "/", ctrl.PushURL)
 	require.Equal(t, HxMethodGet, ctrl.HxRequest.Method)
 	require.Equal(t, "/", ctrl.HxRequest.URL)

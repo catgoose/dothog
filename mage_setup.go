@@ -204,8 +204,8 @@ func runWizard() (*setup.Options, error) {
 	for _, tag := range featureLabelOrder {
 		label := featureLabels[tag]
 		opt := huh.NewOption(label, tag)
-		// Demo is opt-in: not preselected by default
-		if tag != setup.FeatureDemo {
+		// Demo and Alpine are opt-in: not preselected by default
+		if tag != setup.FeatureDemo && tag != setup.FeatureAlpine {
 			opt = opt.Selected(true)
 		}
 		featureOptions = append(featureOptions, opt)
@@ -460,7 +460,7 @@ func printSetupUsage() {
   -n APP_NAME        Human-readable app name (e.g. "My App"). Required.
   -m MODULE_PATH     Go module path (e.g. "github.com/you/my-app").
   -p BASE_PORT       5-digit base port < 60000; APP_TLS_PORT=BASE_PORT, TEMPL_HTTP_PORT=BASE_PORT+1, CADDY_TLS_PORT=BASE_PORT+2.
-  --features LIST    Comma-separated feature tags to keep: auth,graph,avatar,database,sse,caddy,demo.
+  --features LIST    Comma-separated feature tags to keep: auth,graph,avatar,database,sse,caddy,demo,alpine.
                      "all" = keep everything (default), "none" = bare HTMX app.
   --no-caddy         Deprecated. Equivalent to omitting caddy from --features.
   --force            Allow re-running setup even if module is already customized.`)

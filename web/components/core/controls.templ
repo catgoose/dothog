@@ -70,6 +70,8 @@ templ control(ctrl hypermedia.Control) {
 			@genericButton(ctrl)
 		case hypermedia.ControlKindBack:
 			@backButton(ctrl)
+		case hypermedia.ControlKindHome:
+			@homeButton(ctrl)
 		case hypermedia.ControlKindLink:
 			@genericLink(ctrl)
 		case hypermedia.ControlKindDismiss:
@@ -94,7 +96,18 @@ templ backButton(ctrl hypermedia.Control) {
 	<button
 		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
 		disabled?={ ctrl.Disabled }
-		_="on click send showAlert(detail: 'Go Back intercepted — this is where navigation would happen') to body"
+		x-on:click="$dispatch('show-alert', 'Go Back intercepted — this is where navigation would happen')"
+	>
+		@heroIcon(string(ctrl.Icon))
+		{ ctrl.Label }
+	</button>
+}
+
+templ homeButton(ctrl hypermedia.Control) {
+	<button
+		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
+		disabled?={ ctrl.Disabled }
+		x-on:click={ "$dispatch('show-alert', 'Go Home intercepted — would navigate to " + ctrl.Href + "')" }
 	>
 		@heroIcon(string(ctrl.Icon))
 		{ ctrl.Label }
@@ -114,7 +127,12 @@ templ genericLink(ctrl hypermedia.Control) {
 templ genericDismiss(ctrl hypermedia.Control) {
 	<button
 		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
-		_="on click tell #error-message-content transition opacity to 0 over 300ms then remove me"
+		x-on:click="
+			const el = document.getElementById('error-message-content');
+			el.style.transition = 'opacity 0.3s ease';
+			el.style.opacity = '0';
+			setTimeout(() => el.remove(), 300);
+		"
 	>
 		@heroIcon(string(ctrl.Icon))
 		{ ctrl.Label }

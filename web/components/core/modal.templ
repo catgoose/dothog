@@ -19,7 +19,7 @@ func modalButtonClass(variant hypermedia.ControlVariant) string {
 }
 
 // Modal renders a reusable DaisyUI modal dialog driven by ModalConfig.
-// Opened via HyperScript: `on click call #id.showModal()`
+// Opened via Alpine: `x-on:click="$refs.modal.showModal()"` or getElementById.
 // Closed via `<form method="dialog">` buttons or ESC key.
 // Child content is rendered inside the modal body between the title and action buttons.
 templ Modal(cfg hypermedia.ModalConfig) {
@@ -51,7 +51,7 @@ templ Modal(cfg hypermedia.ModalConfig) {
 								hx-swap={ string(cfg.HxSwap) }
 							}
 							hx-include={ "#" + cfg.ID + " .modal-body" }
-							_={ "on htmx:afterRequest get #" + cfg.ID + " then call its close()" }
+							x-on:htmx:after-request="$el.closest('dialog').close()"
 						>
 							{ btn.Label }
 						</button>
@@ -82,14 +82,18 @@ templ Modal(cfg hypermedia.ModalConfig) {
 // Log data is retrieved from the ring buffer server-side when the report is submitted.
 // When fetched dynamically via HTMX the dialog auto-opens on load.
 templ ReportIssueModal(cfg hypermedia.ModalConfig) {
-	<div _={ "on load call #" + cfg.ID + ".showModal()" }>
+	<div x-data x-init={ "$nextTick(() => document.getElementById('" + cfg.ID + "').showModal())" }>
 	@Modal(cfg) {
 		<p class="text-sm text-base-content/70 mb-3">This will send error details to our support team for investigation.</p>
-		<div id="report-add-message-toggle">
+		<div x-ref="addToggle">
 			<button
 				type="button"
 				class="btn btn-ghost btn-sm text-base-content/60"
-				_="on click remove #report-add-message-toggle then remove .hidden from #report-message-field then focus() the first <textarea/> in #report-message-field"
+				x-on:click="
+					$refs.addToggle.remove();
+					$refs.msgField.classList.remove('hidden');
+					$refs.msgField.querySelector('textarea').focus();
+				"
 			>
 				<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
@@ -97,7 +101,7 @@ templ ReportIssueModal(cfg hypermedia.ModalConfig) {
 				Add message
 			</button>
 		</div>
-		<div id="report-message-field" class="hidden">
+		<div x-ref="msgField" class="hidden">
 			<fieldset class="fieldset">
 				<legend class="fieldset-legend text-base-content/70">Additional details (optional)</legend>
 				<textarea

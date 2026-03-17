@@ -15,7 +15,7 @@ func TestNotFoundControls_WithHomeURL(t *testing.T) {
 	require.Len(t, controls, 2)
 	require.Equal(t, ControlKindBack, controls[0].Kind, "first control should be BackButton")
 	require.Equal(t, LabelGoBack, controls[0].Label)
-	require.Equal(t, ControlKindHTMX, controls[1].Kind, "second control should be GoHomeButton")
+	require.Equal(t, ControlKindHome, controls[1].Kind, "second control should be GoHomeButton")
 	require.Equal(t, LabelGoHome, controls[1].Label)
 }
 

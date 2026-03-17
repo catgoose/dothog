@@ -21,7 +21,7 @@ func TestErrorContext_WithControls(t *testing.T) {
 	// Updated has both controls.
 	require.Len(t, updated.Controls, 2)
 	require.Equal(t, ControlKindBack, updated.Controls[0].Kind)
-	require.Equal(t, ControlKindHTMX, updated.Controls[1].Kind)
+	require.Equal(t, ControlKindHome, updated.Controls[1].Kind)
 }
 
 func TestErrorContext_WithOOB(t *testing.T) {

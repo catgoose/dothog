@@ -103,7 +103,7 @@ func TestDefaultControls_NotFound(t *testing.T) {
 	controls := defaultControls(http.StatusNotFound, "test-req-id")
 	require.Len(t, controls, 3)
 	assert.Equal(t, hypermedia.ControlKindBack, controls[0].Kind)
-	assert.Equal(t, hypermedia.ControlKindHTMX, controls[1].Kind)
+	assert.Equal(t, hypermedia.ControlKindHome, controls[1].Kind)
 	assert.Equal(t, hypermedia.ControlKindReport, controls[2].Kind)
 }
 
@@ -119,7 +119,7 @@ func TestDefaultControls_ServerError(t *testing.T) {
 	controls := defaultControls(http.StatusInternalServerError, "test-req-id")
 	require.Len(t, controls, 3)
 	assert.Equal(t, hypermedia.ControlKindDismiss, controls[0].Kind)
-	assert.Equal(t, hypermedia.ControlKindHTMX, controls[1].Kind)
+	assert.Equal(t, hypermedia.ControlKindHome, controls[1].Kind)
 	assert.Equal(t, hypermedia.ControlKindReport, controls[2].Kind)
 }
 
