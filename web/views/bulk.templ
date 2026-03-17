@@ -68,7 +68,7 @@ templ BulkTableContainer(cols []hypermedia.TableCol, body templ.Component, info 
 							<input
 								type="checkbox"
 								class="checkbox checkbox-sm"
-								_="on change for row in .row-check set row.checked to my.checked"
+								x-on:change="$el.closest('table').querySelectorAll('.row-check').forEach(cb => cb.checked = $el.checked)"
 							/>
 						</th>
 						for _, col := range cols {
@@ -104,7 +104,7 @@ templ BulkItemsBody(items []demo.Item) {
 
 // BulkItemRow renders a single row with a leading checkbox for bulk selection.
 templ BulkItemRow(item demo.Item) {
-	<tr class="cursor-pointer" _="on click if event.target.tagName != 'INPUT' then set cb to the first .row-check in me then set cb.checked to (not cb.checked) end">
+	<tr class="cursor-pointer" x-on:click="if ($event.target.tagName !== 'INPUT') { const cb = $el.querySelector('.row-check'); cb.checked = !cb.checked }">
 		<td>
 			<input
 				type="checkbox"

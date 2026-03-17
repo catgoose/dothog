@@ -126,7 +126,7 @@ func BulkTableContainer(cols []hypermedia.TableCol, body templ.Component, info h
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"bulk-table-container\"><div class=\"overflow-x-auto\"><table class=\"table table-sm w-full\"><thead><tr><th class=\"w-10\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" _=\"on change for row in .row-check set row.checked to my.checked\"></th>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"bulk-table-container\"><div class=\"overflow-x-auto\"><table class=\"table table-sm w-full\"><thead><tr><th class=\"w-10\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" x-on:change=\"$el.closest('table').querySelectorAll('.row-check').forEach(cb => cb.checked = $el.checked)\"></th>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -274,7 +274,7 @@ func BulkItemRow(item demo.Item) templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<tr class=\"cursor-pointer\" _=\"on click if event.target.tagName != 'INPUT' then set cb to the first .row-check in me then set cb.checked to (not cb.checked) end\"><td><input type=\"checkbox\" name=\"ids\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<tr class=\"cursor-pointer\" x-on:click=\"if ($event.target.tagName !== 'INPUT') { const cb = $el.querySelector('.row-check'); cb.checked = !cb.checked }\"><td><input type=\"checkbox\" name=\"ids\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

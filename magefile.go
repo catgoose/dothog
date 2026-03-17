@@ -44,6 +44,9 @@ var (
 	htmxResponseTargetsURL = "https://unpkg.com/htmx-ext-response-targets"
 	htmxSSEURL             = "https://unpkg.com/htmx-ext-sse"
 	hyperscriptURL         = "https://unpkg.com/hyperscript.org"
+	alpineURL              = "https://unpkg.com/alpinejs@3/dist/cdn.min.js"
+	alpineMorphURL         = "https://unpkg.com/@alpinejs/morph@3/dist/cdn.min.js"
+	htmxAlpineMorphURL     = "https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js"
 	publicSourceDir        = "web/assets/public"
 	publicOutputDir        = filepath.Join(buildPath, publicSourceDir)
 	publicJSDir            = filepath.Join(publicSourceDir, "js")
@@ -283,6 +286,18 @@ func HyperscriptUpdate() error {
 	return downloadFile(hyperscriptURL, filepath.Join(publicJSDir, "_hyperscript.min.js"))
 }
 
+// AlpineUpdate downloads Alpine.js core, the morph plugin, and the htmx alpine-morph extension.
+func AlpineUpdate() error {
+	mg.Deps(PrepareDirs)
+	if err := downloadFile(alpineURL, filepath.Join(publicJSDir, "alpine.min.js")); err != nil {
+		return err
+	}
+	if err := downloadFile(alpineMorphURL, filepath.Join(publicJSDir, "alpine.morph.min.js")); err != nil {
+		return err
+	}
+	return downloadFile(htmxAlpineMorphURL, filepath.Join(publicJSDir, "htmx.alpine-morph.js"))
+}
+
 // UpdateAssets updates all assets
 func UpdateAssets() error {
 	if err := HyperscriptUpdate(); err != nil {
@@ -290,6 +305,9 @@ func UpdateAssets() error {
 	}
 	if err := HtmxUpdate(); err != nil {
 		return fmt.Errorf("htmx update failed: %v", err)
+	}
+	if err := AlpineUpdate(); err != nil {
+		return fmt.Errorf("alpine update failed: %v", err)
 	}
 	if err := DaisyUpdate(); err != nil {
 		return fmt.Errorf("daisy update failed: %v", err)
