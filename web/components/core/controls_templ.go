@@ -401,7 +401,7 @@ func backButton(ctrl hypermedia.Control) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " _=\"on click go back\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " _=\"on click send showAlert(detail: 'Go Back intercepted — this is where navigation would happen') to body\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

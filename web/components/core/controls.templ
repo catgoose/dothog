@@ -94,7 +94,7 @@ templ backButton(ctrl hypermedia.Control) {
 	<button
 		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
 		disabled?={ ctrl.Disabled }
-		_="on click go back"
+		_="on click send showAlert(detail: 'Go Back intercepted — this is where navigation would happen') to body"
 	>
 		@heroIcon(string(ctrl.Icon))
 		{ ctrl.Label }
