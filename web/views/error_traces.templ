@@ -57,7 +57,7 @@ templ ErrorTracesBody(traces []requestlog.TraceSummary) {
 		}
 		for _, t := range traces {
 			@ErrorTraceRow(t)
-			<tr id={ "detail-row-" + t.RequestID }></tr>
+			<tr class="detail-row"></tr>
 		}
 	</tbody>
 }
@@ -65,18 +65,27 @@ templ ErrorTracesBody(traces []requestlog.TraceSummary) {
 // ErrorTraceRow renders a single summary row with an expand chevron.
 templ ErrorTraceRow(t requestlog.TraceSummary) {
 	{{ detailURL := fmt.Sprintf("/admin/error-traces/%s", t.RequestID) }}
-	{{ detailTarget := "#detail-row-" + t.RequestID }}
-	{{ chevronID := "chevron-" + t.RequestID }}
-	<tr id={ "trace-row-" + t.RequestID } class="hover cursor-pointer"
-		hx-get={ detailURL }
-		hx-target={ detailTarget }
-		hx-swap="innerHTML"
-		_={ "on click toggle .rotate-90 on #" + chevronID }
-	>
+	<tr class="hover">
 		<td class="px-1">
-			<svg id={ chevronID } class="w-4 h-4 text-base-content/40 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
-			</svg>
+			<button
+				class="p-1 cursor-pointer"
+				hx-get={ detailURL }
+				hx-target="next tr.detail-row"
+				hx-swap="innerHTML"
+				hx-trigger="expand"
+				_="on click set dr to the next <tr.detail-row/>
+				if dr.innerHTML is not ''
+					put '' into dr
+					remove .rotate-90 from .chevron in me
+				else
+					add .rotate-90 to .chevron in me
+					trigger expand on me
+				end"
+			>
+				<svg class="chevron w-4 h-4 text-base-content/40 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
+				</svg>
+			</button>
 		</td>
 		<td class="text-xs font-mono whitespace-nowrap">{ t.CreatedAt }</td>
 		<td>
@@ -102,12 +111,18 @@ templ statusBadge(code int) {
 
 // ErrorTraceDetailContent renders the expandable detail panel.
 templ ErrorTraceDetailContent(trace *requestlog.ErrorTrace) {
-	{{ detailRowSelector := "#detail-row-" + trace.RequestID }}
 	<td colspan="7" class="bg-base-200 p-4">
 		<div class="space-y-4">
 			<div class="flex items-start justify-between">
 				<h3 class="text-lg font-semibold">Error Trace Details</h3>
 				<div class="flex gap-1">
+					<button
+						class="btn btn-sm btn-warning btn-outline"
+						hx-post={ "/report-issue/" + trace.RequestID }
+						hx-swap="none"
+					>
+						Show Issue Email
+					</button>
 					<button
 						class="btn btn-sm btn-error btn-outline"
 						hx-delete={ "/admin/error-traces/" + trace.RequestID }
@@ -119,7 +134,9 @@ templ ErrorTraceDetailContent(trace *requestlog.ErrorTrace) {
 					</button>
 					<button
 						class="btn btn-sm btn-ghost"
-						_={ "on click set innerHTML of " + detailRowSelector + " to '' then remove .rotate-90 from #chevron-" + trace.RequestID }
+						_="on click set dr to the closest <tr/>
+							put '' into dr
+							remove .rotate-90 from .chevron in the previous <tr/>"
 					>
 						Close
 					</button>
@@ -169,14 +186,13 @@ templ ErrorTraceDetailContent(trace *requestlog.ErrorTrace) {
 				<div>
 					<span class="font-medium text-sm text-base-content/60">Log Entries ({ strconv.Itoa(len(trace.Entries)) })</span>
 					<div class="mt-1 space-y-1">
-						for i, entry := range trace.Entries {
-							{{ entryID := fmt.Sprintf("entry-attrs-%s-%d", trace.RequestID, i) }}
+						for _, entry := range trace.Entries {
 							{{ pairs := parseAttrs(entry.Attrs) }}
 							<div class={ "rounded-lg border p-2", templ.KV("border-error/30 bg-error/5", entry.Level == "ERROR"), templ.KV("border-warning/30 bg-warning/5", entry.Level == "WARN"), templ.KV("border-base-300 bg-base-200", entry.Level != "ERROR" && entry.Level != "WARN") }>
 								<div
 									class="flex items-center gap-2 cursor-pointer select-none"
 									if len(pairs) > 0 {
-										_={ "on click toggle .hidden on #" + entryID + " then toggle .rotate-90 on .chevron in me" }
+										_="on click toggle .hidden on the next <div/> then toggle .rotate-90 on .chevron in me"
 									}
 								>
 									if len(pairs) > 0 {
@@ -193,7 +209,7 @@ templ ErrorTraceDetailContent(trace *requestlog.ErrorTrace) {
 									}
 								</div>
 								if len(pairs) > 0 {
-									<div id={ entryID } class="hidden mt-2 ml-5 pl-3 border-l-2 border-base-300">
+									<div class="hidden mt-2 ml-5 pl-3 border-l-2 border-base-300">
 										<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5">
 											for _, pair := range pairs {
 												<span class="text-xs font-mono text-base-content/50">{ pair[0] }</span>
