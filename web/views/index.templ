@@ -6,10 +6,10 @@ import (
 )
 
 // Root template
-templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, version string) {
+templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, version string, appName string) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ theme }>
-		@header(csrfToken, devMode)
+		@header(csrfToken, devMode, appName)
 		<body
 			hx-history="false"
 			hx-boost="true"
@@ -49,7 +49,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 }
 
 // Header is the header of the HTML document
-templ header(csrfToken string, devMode bool) {
+templ header(csrfToken string, devMode bool, appName string) {
 	<head>
 		if csrfToken != "" {
 			<meta name="csrf-token" content={ csrfToken }/>
@@ -81,7 +81,7 @@ templ header(csrfToken string, devMode bool) {
 		<link rel="stylesheet" href="/public/css/tailwind.css" type="text/css"/>
 		<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
 		<link rel="icon" href="/public/images/favicon.svg" type="image/x-svg+xml"/>
-		<title>Demo</title>
+		<title>{ appName }</title>
 		if devMode {
 			<script src="/public/js/dev-logging.js"></script>
 		}

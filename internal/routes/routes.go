@@ -157,7 +157,11 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initDashboardRoutes(db, board, queue, actLog)
 	// setup:feature:demo:end
 	ar.e.RouteNotFound("/*", handler.HandleNotFound)
-	handler.InitRouteSet(ar.e)
+	cfg, err := config.GetConfig()
+	if err != nil {
+		return fmt.Errorf("handler init: %w", err)
+	}
+	handler.InitRouteSet(ar.e, cfg.AppName)
 	return nil
 }
 

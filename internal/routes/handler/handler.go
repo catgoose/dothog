@@ -120,14 +120,19 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 		crumbs[len(crumbs)-1].Label = label
 	}
 
-	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme, crumbs, version.Version))
+	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme, crumbs, version.Version, appName))
 }
 
-var getRoutes map[string]bool
+var (
+	getRoutes map[string]bool
+	appName   string
+)
 
-// InitRouteSet builds the set of GET-routable paths from the Echo router.
-// Call once after all routes are registered, before the server starts.
-func InitRouteSet(e *echo.Echo) {
+// InitRouteSet builds the set of GET-routable paths from the Echo router and
+// stores the app name for use in page titles. Call once after all routes are
+// registered, before the server starts.
+func InitRouteSet(e *echo.Echo, name string) {
+	appName = name
 	getRoutes = make(map[string]bool)
 	for _, r := range e.Routes() {
 		if r.Method == http.MethodGet {
