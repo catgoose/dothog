@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
+
 
 	corecomponents "catgoose/dothog/web/components/core"
 
@@ -105,8 +105,7 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 
 	var crumbs []hypermedia.Breadcrumb
 	from := c.QueryParam("from")
-	routes := routeSet(c.Echo())
-	pathCrumbs := buildPathCrumbs(c.Request().URL.Path, from, routes)
+	pathCrumbs := buildPathCrumbs(c.Request().URL.Path, from, getRoutes)
 
 	if mask := hypermedia.ParseFromParam(from); mask != 0 {
 		// Prepend registered origins when ?from= is present.
@@ -125,24 +124,17 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme, crumbs, version.Version))
 }
 
-var (
-	getRoutes     map[string]bool
-	getRoutesOnce sync.Once
-)
+var getRoutes map[string]bool
 
-// routeSet returns the set of GET-routable paths registered with the Echo
-// instance. The set is built once on first call and cached for the process
-// lifetime (routes are fixed after startup).
-func routeSet(e *echo.Echo) map[string]bool {
-	getRoutesOnce.Do(func() {
-		getRoutes = make(map[string]bool)
-		for _, r := range e.Routes() {
-			if r.Method == http.MethodGet {
-				getRoutes[r.Path] = true
-			}
+// InitRouteSet builds the set of GET-routable paths from the Echo router.
+// Call once after all routes are registered, before the server starts.
+func InitRouteSet(e *echo.Echo) {
+	getRoutes = make(map[string]bool)
+	for _, r := range e.Routes() {
+		if r.Method == http.MethodGet {
+			getRoutes[r.Path] = true
 		}
-	})
-	return getRoutes
+	}
 }
 
 // buildPathCrumbs derives breadcrumb segments from the URL path. Only
