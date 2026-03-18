@@ -145,7 +145,8 @@ jobs:
       - name: Build all platforms
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          LDFLAGS="-w -s -X catgoose/dothog/internal/version.Version=${VERSION}"
+          BUILD_DATE=$(date -u +%Y-%m-%d)
+          LDFLAGS="-w -s -X catgoose/dothog/internal/version.Version=${VERSION} -X catgoose/dothog/internal/version.BuildDate=${BUILD_DATE}"
 
           build() {
             local goos=$1 goarch=$2 cc=$3 ext=$4

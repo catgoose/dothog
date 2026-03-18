@@ -3,18 +3,18 @@
 
 MAGE := go tool mage
 IMAGE := ghcr.io/catgoose/dothog
-VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 
 # .PHONY targets
-.PHONY: watch docker-build docker-login docker-push docker-release
+.PHONY: watch docker-build docker-login docker-push docker-release help
 
 # Watch mode
 watch:
 	OPEN_BROWSER=false $(MAGE) watch
 
-# Build Docker image with the current version
+# Build Docker image tagged with commit SHA and latest
 docker-build:
-	docker build --build-arg APP_VERSION=$(VERSION) -t $(IMAGE):$(VERSION) -t $(IMAGE):latest .
+	docker build --build-arg APP_VERSION=$(SHA) -t $(IMAGE):$(SHA) -t $(IMAGE):latest .
 
 # Log in to GHCR using gh CLI token
 docker-login:
@@ -22,10 +22,10 @@ docker-login:
 
 # Push Docker image to GHCR
 docker-push: docker-login
-	docker push $(IMAGE):$(VERSION)
+	docker push $(IMAGE):$(SHA)
 	docker push $(IMAGE):latest
 
-# Build and push in one step
+# Build and push in one step (versioned tags are created by CI)
 docker-release: docker-build docker-push
 
 # Help target to display available targets and their descriptions
@@ -33,9 +33,9 @@ help:
 	@echo "Available targets:"
 	@echo ""
 	@echo "  watch              - Run templ, air, and tailwind in watch mode without opening browser"
-	@echo "  docker-build       - Build Docker image (VERSION=$(VERSION))"
+	@echo "  docker-build       - Build Docker image (SHA=$(SHA))"
 	@echo "  docker-login       - Log in to GHCR via gh CLI"
 	@echo "  docker-push        - Push Docker image to GHCR (auto-logins)"
 	@echo "  docker-release     - Build and push Docker image"
 	@echo ""
-	@echo "  Override version:    make docker-release VERSION=v0.0.29"
+	@echo "  Semver tags are managed by CI on merge to main."
