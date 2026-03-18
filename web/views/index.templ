@@ -70,6 +70,10 @@ templ header(csrfToken string, devMode bool, appName string) {
 		<meta name="htmx-config" content='{"globalViewTransitions":true,"refreshOnHistoryMiss":true,"responseHandling":[{"code":".*","swap":true}]}'/>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<meta name="description" content={ appName + " - IT operations dashboard for managing infrastructure, inventory, and real-time monitoring" }/>
+		<link rel="preload" href="/public/css/tailwind.css" as="style"/>
+		<link rel="preload" href="/public/js/_hyperscript.min.js" as="script"/>
+		<link rel="preload" href="/public/js/htmx.min.js" as="script"/>
 		<script defer src="/public/js/htmx.min.js"></script>
 		<script defer src="/public/js/_hyperscript.min.js"></script>
 		<script defer src="/public/js/htmx.alpine-morph.js"></script>
