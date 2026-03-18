@@ -92,6 +92,7 @@ jobs:
       - name: Determine next version
         id: version
         run: |
+          git fetch --tags --force
           LATEST=$(git tag -l 'v*' --sort=-v:refname | head -n1)
           if [ -z "$LATEST" ]; then
             LATEST="v0.0.0"
