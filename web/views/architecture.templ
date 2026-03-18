@@ -32,19 +32,19 @@ templ ArchitecturePage() {
 					<h3 class="text-xl font-semibold text-center">Behavior</h3>
 					<p class="text-sm text-base-content/50 text-center">How resources are discovered and transitioned</p>
 					<div class="flex flex-col items-center gap-1.5 pt-4">
-						<div class="text-xs text-base-content/40 mb-1 tracking-widest uppercase">reach up</div>
+						<div class="text-xs text-base-content/60 mb-1 tracking-widest uppercase">reach up</div>
 						@pyramidLayer("w-[18%]", "border-error/40 bg-error/15", ".js files", "locality broken")
 						@pyramidLayer("w-[28%]", "border-warning/40 bg-warning/15", "inline script", "locality bent")
 						@pyramidLayer("w-[38%]", "border-info/40 bg-info/15", "Alpine.js", "client state")
 						@pyramidLayer("w-[50%]", "border-accent/40 bg-accent/15", "_hyperscript", "client behavior")
 						<!-- Bridge -->
 						<div class="w-[60%] border-t border-dashed border-base-content/20 my-1 relative">
-							<span class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-base-100 px-2 text-[10px] text-base-content/40 uppercase tracking-widest">bridge</span>
+							<span class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-base-100 px-2 text-[10px] text-base-content/60 uppercase tracking-widest">bridge</span>
 						</div>
 						@pyramidLayer("w-[65%]", "border-secondary/40 bg-secondary/20", "HTMX", "HATEOAS for the browser")
 						@pyramidLayer("w-[80%]", "border-primary/40 bg-primary/20", "HTTP", "uniform interface")
 						@pyramidLayer("w-full", "border-primary/50 bg-primary/30 font-bold", "HTML", "the hypermedia")
-						<div class="text-xs text-base-content/40 mt-1 tracking-widest uppercase">start here</div>
+						<div class="text-xs text-base-content/60 mt-1 tracking-widest uppercase">start here</div>
 					</div>
 				</div>
 				<!-- Presentation Track -->
@@ -52,12 +52,12 @@ templ ArchitecturePage() {
 					<h3 class="text-xl font-semibold text-center">Presentation</h3>
 					<p class="text-sm text-base-content/50 text-center">How representations are rendered</p>
 					<div class="flex flex-col items-center gap-1.5 pt-4">
-						<div class="text-xs text-base-content/40 mb-1 tracking-widest uppercase">reach up</div>
+						<div class="text-xs text-base-content/60 mb-1 tracking-widest uppercase">reach up</div>
 						@pyramidLayer("w-[30%]", "border-error/40 bg-error/15", "raw CSS", "escape hatch")
 						@pyramidLayer("w-[55%]", "border-accent/40 bg-accent/15", "Tailwind", "layout + spacing")
 						@pyramidLayer("w-[80%]", "border-accent/30 bg-accent/20", "DaisyUI", "semantic components")
 						@pyramidLayer("w-full", "border-primary/50 bg-primary/30 font-bold", "CSS", "the cascade")
-						<div class="text-xs text-base-content/40 mt-1 tracking-widest uppercase">start here</div>
+						<div class="text-xs text-base-content/60 mt-1 tracking-widest uppercase">start here</div>
 					</div>
 				</div>
 			</div>
@@ -137,7 +137,7 @@ templ ArchitecturePage() {
 					@domainCard("bg-accent/5 border-accent/20", "Tailwind + CSS", "Layout. Spacing. Visual adjustments. The cascade at work.")
 				</div>
 			</div>
-			<p class="text-center text-sm text-base-content/40 max-w-xl mx-auto">
+			<p class="text-center text-sm text-base-content/60 max-w-xl mx-auto">
 				Server row: thick, authoritative. Client row: thin, ephemeral.
 				Nothing in the bottom row pretends to be the top row.
 			</p>
@@ -190,7 +190,7 @@ templ archCompareSlider() {
 				</div>
 			</div>
 		</div>
-		<p class="text-center text-xs text-base-content/40">
+		<p class="text-center text-xs text-base-content/60">
 			Drag the handle or tap either side to compare architectures.
 		</p>
 		<script>
@@ -250,14 +250,14 @@ templ archCompareSlider() {
 templ hypermediaPanel() {
 	<div class="max-w-lg mx-auto space-y-6">
 		<div class="text-center space-y-1">
-			<h3 class="text-2xl md:text-3xl font-bold">Hypermedia</h3>
+			<h2 class="text-2xl md:text-3xl font-bold">Hypermedia</h2>
 			<p class="text-sm text-base-content/60">Client is thin. Server narrows from fat handler to thin repository. HTML over the wire.</p>
 		</div>
 		<div class="flex flex-col items-center gap-1">
 			<!-- Server -->
 			<div class="text-[10px] text-base-content/30 tracking-widest uppercase mb-1">server</div>
 			@pyramidLayer("w-full", "border-primary/50 bg-primary/30 font-bold", "Handler", "fat controller")
-			<div class="text-[10px] text-base-content/40 text-center max-w-xs">domain logic + templates + hypermedia controls + error affordances</div>
+			<div class="text-[10px] text-base-content/60 text-center max-w-xs">domain logic + templates + hypermedia controls + error affordances</div>
 			<!-- Network: HTML over the wire -->
 			<div class="w-[90%] border-t-2 border-dashed border-primary/40 my-2 relative">
 				<span class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-base-100 px-2 text-[10px] text-primary/60 uppercase tracking-widest font-bold">HTML over the wire</span>
@@ -274,7 +274,7 @@ templ hypermediaPanel() {
 		</div>
 		<!-- Where it shines -->
 		<div class="space-y-2">
-			<h4 class="font-semibold text-sm text-center">Where it shines</h4>
+			<h3 class="font-semibold text-sm text-center">Where it shines</h3>
 			<ul class="text-xs text-base-content/60 space-y-1.5 max-w-sm mx-auto">
 				<li class="flex gap-2">
 					<span class="text-primary shrink-0">&#9654;</span>
@@ -300,7 +300,7 @@ templ hypermediaPanel() {
 		</div>
 		<!-- Where it sucks -->
 		<div class="space-y-2">
-			<h4 class="font-semibold text-sm text-center text-error/70">Where it sucks</h4>
+			<h3 class="font-semibold text-sm text-center text-error/70">Where it sucks</h3>
 			<ul class="text-xs text-base-content/60 space-y-1.5 max-w-sm mx-auto">
 				<li class="flex gap-2">
 					<span class="text-error/60 shrink-0">&#9654;</span>
@@ -326,14 +326,14 @@ templ hypermediaPanel() {
 templ spaPanel() {
 	<div class="max-w-lg mx-auto space-y-6">
 		<div class="text-center space-y-1">
-			<h3 class="text-2xl md:text-3xl font-bold">SPA</h3>
+			<h2 class="text-2xl md:text-3xl font-bold">SPA</h2>
 			<p class="text-sm text-base-content/60">Thin controller squeezes to JSON. Complexity shifts to the client.</p>
 		</div>
 		<div class="flex flex-col items-center gap-1">
 			<!-- Server -->
 			<div class="text-[10px] text-base-content/30 tracking-widest uppercase mb-1">server</div>
 			@pyramidLayer("w-[55%]", "border-warning/40 bg-warning/15", "DTO / Mapping", "does not exist in hypermedia")
-			<div class="text-[10px] text-base-content/40">OpenAPI specs, validation schemas, response models</div>
+			<div class="text-[10px] text-base-content/60">OpenAPI specs, validation schemas, response models</div>
 			@pyramidLayer("w-[35%]", "border-info/30 bg-info/10", "Controller", "thin API, serialize to JSON")
 			<!-- Network: JSON over the wire -->
 			<div class="w-[90%] border-t-2 border-dashed border-error/40 my-2 relative">
@@ -345,13 +345,13 @@ templ spaPanel() {
 			@pyramidLayer("w-[55%]", "border-warning/30 bg-warning/10", "Client Router", "routes, guards, lazy loading")
 			@pyramidLayer("w-[70%]", "border-warning/40 bg-warning/10", "Parsing + Validation", "deserialize, transform, normalize")
 			@pyramidLayer("w-[85%]", "border-error/30 bg-error/10", "State Management", "store, selectors, reducers, sagas")
-			<div class="text-[10px] text-base-content/40">normalized cache, optimistic updates, stale-while-revalidate</div>
+			<div class="text-[10px] text-base-content/60">normalized cache, optimistic updates, stale-while-revalidate</div>
 			@pyramidLayer("w-full", "border-error/40 bg-error/15 font-bold", "Rendering", "vDOM, diffing, hydration, effects")
 			<div class="text-[10px] text-base-content/30 tracking-widest uppercase mt-1">the user sees a table of users</div>
 		</div>
 		<!-- Where it shines -->
 		<div class="space-y-2">
-			<h4 class="font-semibold text-sm text-center">Where it shines</h4>
+			<h3 class="font-semibold text-sm text-center">Where it shines</h3>
 			<ul class="text-xs text-base-content/60 space-y-1.5 max-w-sm mx-auto">
 				<li class="flex gap-2">
 					<span class="text-secondary shrink-0">&#9654;</span>
@@ -373,7 +373,7 @@ templ spaPanel() {
 		</div>
 		<!-- Where it sucks -->
 		<div class="space-y-2">
-			<h4 class="font-semibold text-sm text-center text-error/70">Where it sucks</h4>
+			<h3 class="font-semibold text-sm text-center text-error/70">Where it sucks</h3>
 			<ul class="text-xs text-base-content/60 space-y-1.5 max-w-sm mx-auto">
 				<li class="flex gap-2">
 					<span class="text-error/60 shrink-0">&#9654;</span>
@@ -404,7 +404,7 @@ templ pyramidLayer(widthClass, colorClasses, name, desc string) {
 	<div class={ "rounded-lg border px-4 py-2.5 text-center text-sm transition-all hover:scale-[1.02] cursor-default", widthClass, colorClasses }>
 		<span class="font-semibold">{ name }</span>
 		if desc != "" {
-			<span class="text-base-content/40 text-xs ml-1.5 hidden sm:inline">{ desc }</span>
+			<span class="text-base-content/60 text-xs ml-1.5 hidden sm:inline">{ desc }</span>
 		}
 	</div>
 }
@@ -412,7 +412,7 @@ templ pyramidLayer(widthClass, colorClasses, name, desc string) {
 templ domainCard(colorClasses, title, description string) {
 	<div class={ "card border shadow-sm", colorClasses }>
 		<div class="card-body p-4">
-			<h4 class="card-title text-sm">{ title }</h4>
+			<h3 class="card-title text-sm">{ title }</h3>
 			<p class="text-xs text-base-content/60">{ description }</p>
 		</div>
 	</div>
