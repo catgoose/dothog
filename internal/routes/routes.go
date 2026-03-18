@@ -156,6 +156,7 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initVendorContactRoutes(db, actLog, broker)
 	ar.initDashboardRoutes(db, board, queue, actLog)
 	// setup:feature:demo:end
+	ar.e.RouteNotFound("/*", handler.HandleNotFound)
 	handler.InitRouteSet(ar.e)
 	return nil
 }

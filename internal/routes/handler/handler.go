@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"strings"
 
-
 	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"
@@ -246,6 +245,17 @@ func defaultControls(statusCode int, requestID string) []hypermedia.Control {
 	default:
 		return []hypermedia.Control{dismiss, report}
 	}
+}
+
+// HandleNotFound renders a full-page 404 within the base layout for direct
+// navigation. HTMX requests fall through to ErrorHandlerMiddleware for OOB
+// banner delivery. Register with e.RouteNotFound.
+func HandleNotFound(c echo.Context) error {
+	if c.Request().Header.Get("HX-Request") == "true" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not Found")
+	}
+	c.Response().Status = http.StatusNotFound
+	return RenderBaseLayout(c, views.NotFoundPage(c.Request().URL.Path))
 }
 
 // HandleComponent is a handler that renders a templ component
