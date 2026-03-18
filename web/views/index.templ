@@ -70,13 +70,13 @@ templ header(csrfToken string, devMode bool, appName string) {
 		<meta name="htmx-config" content='{"globalViewTransitions":true,"refreshOnHistoryMiss":true,"responseHandling":[{"code":".*","swap":true}]}'/>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		<script src="/public/js/htmx.min.js"></script>
-		<script src="/public/js/_hyperscript.min.js"></script>
-		<script src="/public/js/htmx.alpine-morph.js"></script>
+		<script defer src="/public/js/htmx.min.js"></script>
+		<script defer src="/public/js/_hyperscript.min.js"></script>
+		<script defer src="/public/js/htmx.alpine-morph.js"></script>
 		<script defer src="/public/js/alpine.morph.min.js"></script>
 		<script defer src="/public/js/alpine.min.js"></script>
 		// setup:feature:sse:start
-		<script src="/public/js/htmx.ext.sse.js"></script>
+		<script defer src="/public/js/htmx.ext.sse.js"></script>
 		// setup:feature:sse:end
 		<link rel="stylesheet" href="/public/css/tailwind.css" type="text/css"/>
 		<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
