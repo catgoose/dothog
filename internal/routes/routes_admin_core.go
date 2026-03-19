@@ -21,6 +21,7 @@ func (ar *appRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin/config", ar.handleConfigInfo)
 	// setup:feature:session_settings:start
 	ar.e.GET("/admin/sessions", ar.handleSessionsPage)
+	ar.e.GET("/admin/sessions/table", ar.handleSessionsTable)
 	// setup:feature:session_settings:end
 }
 
@@ -106,6 +107,17 @@ func (ar *appRoutes) handleSessionsPage(c echo.Context) error {
 		return handler.HandleHypermediaError(c, 500, "Failed to load sessions", err)
 	}
 	return handler.RenderBaseLayout(c, views.AdminSessionsPage(sessions))
+}
+
+func (ar *appRoutes) handleSessionsTable(c echo.Context) error {
+	if ar.settingsRepo == nil {
+		return handler.HandleHypermediaError(c, 500, "Session settings not configured", nil)
+	}
+	sessions, err := ar.settingsRepo.ListAll(c.Request().Context())
+	if err != nil {
+		return handler.HandleHypermediaError(c, 500, "Failed to load sessions", err)
+	}
+	return handler.RenderComponent(c, views.AdminSessionsTable(sessions))
 }
 
 // setup:feature:session_settings:end
