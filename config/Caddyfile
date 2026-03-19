@@ -4,6 +4,13 @@
 
 :{{CADDY_TLS_PORT}} {
 	tls localhost.crt localhost.key
+	@sse path /sse/*
+	reverse_proxy @sse localhost:{{TEMPL_HTTP_PORT}} {
+		header_up Host {host}
+		header_up X-Real-IP {remote}
+		flush_interval -1
+	}
+
 	reverse_proxy localhost:{{TEMPL_HTTP_PORT}} {
 		header_up Host {host}
 		header_up X-Real-IP {remote}
