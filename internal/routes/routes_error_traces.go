@@ -191,7 +191,7 @@ func traceStripParams(u *url.URL, params ...string) string {
 	return cp.String()
 }
 
-// SeedErrorTraces inserts 1000 demo error traces spread over the past 3 years.
+// SeedErrorTraces inserts 1000 demo error traces spread over the past 90 days.
 func SeedErrorTraces(store *requestlog.Store) {
 	// Check if already seeded
 	existing, _, _ := store.ListTraces(requestlog.TraceFilter{Page: 1, PerPage: 1})
@@ -350,13 +350,13 @@ func SeedErrorTraces(store *requestlog.Store) {
 	}
 
 	now := time.Now()
-	threeYears := 3 * 365 * 24 * time.Hour
+	ninetyDays := 90 * 24 * time.Hour
 	const count = 1000
 
 	for i := 0; i < count; i++ {
-		// Spread evenly over 3 years
-		offset := threeYears * time.Duration(i) / count
-		createdAt := now.Add(-threeYears + offset)
+		// Spread evenly over 90 days
+		offset := ninetyDays * time.Duration(i) / count
+		createdAt := now.Add(-ninetyDays + offset)
 
 		tmpl := templates[i%len(templates)]
 		id := i + 1

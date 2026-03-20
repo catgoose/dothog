@@ -93,7 +93,7 @@ func main() {
 		logger.Fatal("Failed to ensure error traces schema", "error", err)
 	}
 	reqLogStore := requestlog.NewStore(traceDB)
-	reqLogStore.StartCleanup(appCtx, 24*time.Hour, 1*time.Hour)
+	reqLogStore.StartCleanup(appCtx, 90*24*time.Hour, 1*time.Hour)
 	// setup:feature:demo:start
 	routes.SeedErrorTraces(reqLogStore)
 	// setup:feature:demo:end
