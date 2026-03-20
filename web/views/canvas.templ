@@ -90,7 +90,7 @@ templ CanvasPage(startColor string) {
 					});
 				}
 
-				/** @param {MouseEvent} e @returns {{x:number,y:number}|null} */
+				/** @param {MouseEvent|Touch} e @returns {{x:number,y:number}|null} */
 				function gridCoords(e) {
 					var rect = canvas.getBoundingClientRect();
 					var x = Math.floor((e.clientX - rect.left) * size / rect.width);
@@ -123,6 +123,10 @@ templ CanvasPage(startColor string) {
 				}
 
 				var painting = false, lastX = -1, lastY = -1;
+
+				/* Prevent scrolling while drawing on canvas */
+				canvas.style.touchAction = "none";
+
 				canvas.addEventListener("mousedown", function(e) {
 					painting = true;
 					var c = gridCoords(e);
@@ -132,6 +136,26 @@ templ CanvasPage(startColor string) {
 				canvas.addEventListener("mousemove", function(e) {
 					if (!painting) return;
 					var c = gridCoords(e);
+					if (!c) return;
+					if (lastX >= 0 && lastY >= 0 && (c.x !== lastX || c.y !== lastY)) {
+						line(lastX, lastY, c.x, c.y);
+					}
+					lastX = c.x; lastY = c.y;
+				});
+
+				/* Touch support for drawing on mobile */
+				canvas.addEventListener("touchstart", function(e) {
+					e.preventDefault();
+					painting = true;
+					var c = gridCoords(e.touches[0]);
+					if (c) { lastX = c.x; lastY = c.y; paint(c.x, c.y); }
+				});
+				canvas.addEventListener("touchend", function() { painting = false; lastX = -1; lastY = -1; });
+				canvas.addEventListener("touchcancel", function() { painting = false; lastX = -1; lastY = -1; });
+				canvas.addEventListener("touchmove", function(e) {
+					e.preventDefault();
+					if (!painting) return;
+					var c = gridCoords(e.touches[0]);
 					if (!c) return;
 					if (lastX >= 0 && lastY >= 0 && (c.x !== lastX || c.y !== lastY)) {
 						line(lastX, lastY, c.x, c.y);
