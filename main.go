@@ -34,7 +34,7 @@ import (
 	"github.com/catgoose/dio"
 )
 
-//go:embed web/assets/public/css/* web/assets/public/js/*
+//go:embed web/assets/public/css/* web/assets/public/js/* all:web/assets/public/images
 var staticAssets embed.FS
 
 var staticFS = must(fs.Sub(staticAssets, "web/assets/public"))
