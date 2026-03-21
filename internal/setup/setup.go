@@ -368,6 +368,13 @@ func removeOptionalContent(dir string, opts Options) error {
 	}
 	// Alpine.js is always included (implicit feature); no removal needed.
 
+	// Favicon handling: demo uses hot dog, non-demo uses generic defaults.
+	if removeTags[FeatureDemo] {
+		replaceDefaultFavicons(dir)
+	} else {
+		_ = os.RemoveAll(filepath.Join(dir, "web", "assets", "public", "images", "default"))
+	}
+
 	var toRemove []string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, errWalk error) error {
 		if errWalk != nil {
@@ -865,6 +872,40 @@ func composeSetupEnv(content string) string {
 		out = append(out, line)
 	}
 	return strings.Join(out, "\n")
+}
+
+// replaceDefaultFavicons copies the generic favicons from images/default/ over
+// the demo-specific ones in images/, then removes the default/ directory.
+func replaceDefaultFavicons(dir string) {
+	imgDir := filepath.Join(dir, "web", "assets", "public", "images")
+	defaultDir := filepath.Join(imgDir, "default")
+	entries, err := os.ReadDir(defaultDir)
+	if err != nil {
+		return // default directory doesn't exist — nothing to do
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		src := filepath.Join(defaultDir, e.Name())
+		dst := filepath.Join(imgDir, e.Name())
+		data, err := os.ReadFile(src)
+		if err != nil {
+			continue
+		}
+		_ = os.WriteFile(dst, data, 0644)
+	}
+	// Remove demo-only assets that have no default replacement.
+	for _, name := range []string{
+		"android-chrome-192x192.png",
+		"android-chrome-512x512.png",
+		"site.webmanifest",
+	} {
+		if _, err := os.Stat(filepath.Join(defaultDir, name)); os.IsNotExist(err) {
+			_ = os.Remove(filepath.Join(imgDir, name))
+		}
+	}
+	_ = os.RemoveAll(defaultDir)
 }
 
 // isTextFile returns true for file extensions that may contain setup markers.

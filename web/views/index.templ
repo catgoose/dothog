@@ -84,7 +84,13 @@ templ header(csrfToken string, devMode bool, appName string) {
 		// setup:feature:sse:end
 		<link rel="stylesheet" href="/public/css/tailwind.css" type="text/css"/>
 		<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
-		<link rel="icon" href="/public/images/favicon.svg" type="image/x-svg+xml"/>
+		<link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg"/>
+		<link rel="icon" type="image/png" sizes="32x32" href="/public/images/favicon-32x32.png"/>
+		<link rel="icon" type="image/png" sizes="16x16" href="/public/images/favicon-16x16.png"/>
+		<link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png"/>
+		// setup:feature:demo:start
+		<link rel="manifest" href="/public/images/site.webmanifest"/>
+		// setup:feature:demo:end
 		<title>{ appName }</title>
 		if devMode {
 			<script src="/public/js/dev-logging.js"></script>

@@ -173,14 +173,14 @@ func header(csrfToken string, devMode bool, appName string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\"><link rel=\"preload\" href=\"/public/css/tailwind.css\" as=\"style\"><link rel=\"preload\" href=\"/public/js/_hyperscript.min.js\" as=\"script\"><link rel=\"preload\" href=\"/public/js/htmx.min.js\" as=\"script\"><script defer src=\"/public/js/htmx.min.js\"></script><script defer src=\"/public/js/_hyperscript.min.js\"></script><script defer src=\"/public/js/htmx.alpine-morph.js\"></script><script defer src=\"/public/js/alpine.morph.min.js\"></script><script defer src=\"/public/js/alpine.min.js\"></script><script defer src=\"/public/js/htmx.ext.sse.js\"></script><link rel=\"stylesheet\" href=\"/public/css/tailwind.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"/public/css/daisyui.css\" type=\"text/css\"><link rel=\"icon\" href=\"/public/images/favicon.svg\" type=\"image/x-svg+xml\"><title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\"><link rel=\"preload\" href=\"/public/css/tailwind.css\" as=\"style\"><link rel=\"preload\" href=\"/public/js/_hyperscript.min.js\" as=\"script\"><link rel=\"preload\" href=\"/public/js/htmx.min.js\" as=\"script\"><script defer src=\"/public/js/htmx.min.js\"></script><script defer src=\"/public/js/_hyperscript.min.js\"></script><script defer src=\"/public/js/htmx.alpine-morph.js\"></script><script defer src=\"/public/js/alpine.morph.min.js\"></script><script defer src=\"/public/js/alpine.min.js\"></script><script defer src=\"/public/js/htmx.ext.sse.js\"></script><link rel=\"stylesheet\" href=\"/public/css/tailwind.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"/public/css/daisyui.css\" type=\"text/css\"><link rel=\"icon\" type=\"image/svg+xml\" href=\"/public/images/favicon.svg\"><link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/public/images/favicon-32x32.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/public/images/favicon-16x16.png\"><link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/public/images/apple-touch-icon.png\"><link rel=\"manifest\" href=\"/public/images/site.webmanifest\"><title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(appName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 88, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 94, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -271,7 +271,7 @@ func ThemeChanged(theme string) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 122, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 128, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -369,7 +369,7 @@ func settingsThemeOption(theme string, current string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 162, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 168, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -395,7 +395,7 @@ func settingsThemeOption(theme string, current string) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs("document.documentElement.dataset.theme = '" + theme + "'; fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'theme=" + theme + "' }); $el.closest('dialog').close()")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 165, Col: 243}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 171, Col: 243}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -408,7 +408,7 @@ func settingsThemeOption(theme string, current string) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 172, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 178, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
