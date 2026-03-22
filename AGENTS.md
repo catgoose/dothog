@@ -25,10 +25,13 @@ Common upstream issues:
 | Code | Where it lives | Import |
 |------|---------------|--------|
 | SQL dialects (SQLite, Postgres, MSSQL) | [catgoose/fraggle](https://github.com/catgoose/fraggle) | `dialect "github.com/catgoose/fraggle"` |
-| Error trace capture | [catgoose/promolog](https://github.com/catgoose/promolog) | `"github.com/catgoose/promolog"` |
+| Schema DSL, table traits, DDL generation | [catgoose/fraggle/schema](https://github.com/catgoose/fraggle) | `"github.com/catgoose/fraggle/schema"` |
+| Query builders, SQL fragments, audit helpers | [catgoose/fraggle/dbrepo](https://github.com/catgoose/fraggle) | `"github.com/catgoose/fraggle/dbrepo"` |
+| Error trace capture, promote-on-error | [catgoose/promolog](https://github.com/catgoose/promolog) | `"github.com/catgoose/promolog"` |
 | OIDC authentication | [catgoose/crooner](https://github.com/catgoose/crooner) | `"github.com/catgoose/crooner"` |
 | Environment config | [catgoose/dio](https://github.com/catgoose/dio) | `"github.com/catgoose/dio"` |
-| Schema, repository, query building | `internal/database/repository/` | In-tree (will move to fraggle) |
+| App table definitions | `internal/database/schema/` | In-tree (re-exports fraggle/schema) |
+| RepoManager, schema lifecycle, transactions | `internal/database/repository/` | In-tree (uses sqlx + dothog logger) |
 | App routes, middleware, hypermedia | `internal/routes/` | In-tree |
 
 ### Creating a New App
@@ -44,7 +47,7 @@ Implicit (always included): `database`, `alpine`
 ### Key Patterns
 
 - **Config**: Flat `AppConfig` struct, singleton via `config.GetConfig()`. Extend by adding fields and reading env vars in `buildConfig()`.
-- **Database**: `dialect.OpenURL(ctx, dsn)` for app databases. `database.OpenSQLite(ctx, path)` for framework internals.
+- **Database**: `dialect.OpenURL(ctx, dsn)` for app databases. `dialect.OpenSQLite(ctx, path)` for framework internals (e.g. error trace store).
 - **Layout**: Override with `handler.SetLayout(fn)` to use your own page wrapper.
 - **Auth**: Set `OIDC_ISSUER_URL` + `OIDC_CLIENT_ID` to enable. Works with any OIDC provider.
 - **Feature gates**: `// setup:feature:X:start` / `// setup:feature:X:end` for blocks. `// setup:feature:X` as first line for whole files.

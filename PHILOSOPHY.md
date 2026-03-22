@@ -145,7 +145,7 @@ Each side's weaknesses are the other side's strengths. Pick the architecture tha
 
 ORMs hide SQL behind method chains and magic. When something goes wrong — a slow query, a missing join, an unexpected NULL — you're debugging the ORM's generated SQL, not your own. This project takes the opposite approach: **write the SQL, but don't write it by hand every time.**
 
-The repository layer provides composable helpers that keep SQL visible:
+[Fraggle's dbrepo package](https://github.com/catgoose/fraggle) provides composable helpers that keep SQL visible:
 
 ```go
 sb := NewSelect(TasksTable.Name, cols).
