@@ -9,7 +9,7 @@ import (
 	"time"
 
 	dialect "github.com/catgoose/fraggle"
-	dbrepo "catgoose/dothog/internal/database/repository"
+	"github.com/catgoose/fraggle/dbrepo"
 	"catgoose/dothog/internal/database/schema"
 )
 

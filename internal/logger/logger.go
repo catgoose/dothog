@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/shared"
 
 	"github.com/catgoose/dio"
@@ -166,7 +166,7 @@ func WithContext(ctx context.Context) *slog.Logger {
 	args := make([]any, 0)
 
 	// Add request ID if available
-	if requestID := ctx.Value(tracy.RequestIDKey); requestID != nil {
+	if requestID := ctx.Value(promolog.RequestIDKey); requestID != nil {
 		args = append(args, "request_id", requestID)
 	}
 

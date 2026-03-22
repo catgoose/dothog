@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"catgoose/dothog/internal/logger"
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 
 	"github.com/labstack/echo/v4"
 )
@@ -29,8 +29,8 @@ func RequestIDMiddleware() echo.MiddlewareFunc {
 
 			c.Response().Header().Set("X-Request-ID", requestID)
 
-			ctx := context.WithValue(c.Request().Context(), tracy.RequestIDKey, requestID)
-			ctx = tracy.NewBufferContext(ctx)
+			ctx := context.WithValue(c.Request().Context(), promolog.RequestIDKey, requestID)
+			ctx = promolog.NewBufferContext(ctx)
 			c.SetRequest(c.Request().WithContext(ctx))
 
 			start := time.Now()
@@ -52,7 +52,7 @@ func RequestIDMiddleware() echo.MiddlewareFunc {
 // GetRequestID retrieves the request ID from the Go context.
 // The request ID is set by RequestIDMiddleware on every request.
 func GetRequestID(c echo.Context) string {
-	if id := c.Request().Context().Value(tracy.RequestIDKey); id != nil {
+	if id := c.Request().Context().Value(promolog.RequestIDKey); id != nil {
 		if requestID, ok := id.(string); ok {
 			return requestID
 		}

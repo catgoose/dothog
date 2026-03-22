@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 )
 
 // LoggingPage is the full-page layout for /demo/logging.
@@ -132,7 +132,7 @@ func loggingPatternCard(title, method, desc string) templ.Component {
 }
 
 // LoggingTracesList renders the list of recent error traces.
-func LoggingTracesList(traces []tracy.TraceSummary) templ.Component {
+func LoggingTracesList(traces []promolog.TraceSummary) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -178,7 +178,7 @@ func LoggingTracesList(traces []tracy.TraceSummary) templ.Component {
 	})
 }
 
-func loggingTraceRow(t tracy.TraceSummary) templ.Component {
+func loggingTraceRow(t promolog.TraceSummary) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -205,9 +205,9 @@ func loggingTraceRow(t tracy.TraceSummary) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(t.CreatedAt)
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(t.CreatedAt.Format("2006-01-02 15:04:05"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 147, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 147, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -308,7 +308,7 @@ func loggingTraceRow(t tracy.TraceSummary) templ.Component {
 }
 
 // LoggingTraceRowOOB renders a new trace row as an OOB swap that prepends to the tbody.
-func LoggingTraceRowOOB(t tracy.TraceSummary) templ.Component {
+func LoggingTraceRowOOB(t promolog.TraceSummary) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -426,7 +426,7 @@ func loggingStatusBadge(code int) templ.Component {
 }
 
 // LoggingReportOutput renders the simulated support report as formatted JSON.
-func LoggingReportOutput(trace *tracy.ErrorTrace, jsonPayload string) templ.Component {
+func LoggingReportOutput(trace *promolog.ErrorTrace, jsonPayload string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

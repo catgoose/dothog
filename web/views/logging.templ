@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 )
 
 // LoggingPage is the full-page layout for /demo/logging.
@@ -113,7 +113,7 @@ templ loggingPatternCard(title, method, desc string) {
 }
 
 // LoggingTracesList renders the list of recent error traces.
-templ LoggingTracesList(traces []tracy.TraceSummary) {
+templ LoggingTracesList(traces []promolog.TraceSummary) {
 	if len(traces) == 0 {
 		<div class="text-center text-base-content/50 py-4">
 			No error traces yet. Trigger some errors above to see them captured here.
@@ -141,10 +141,10 @@ templ LoggingTracesList(traces []tracy.TraceSummary) {
 	}
 }
 
-templ loggingTraceRow(t tracy.TraceSummary) {
+templ loggingTraceRow(t promolog.TraceSummary) {
 	{{ reportURL := fmt.Sprintf("/demo/logging/report/%s", t.RequestID) }}
 	<tr>
-		<td class="text-xs font-mono whitespace-nowrap">{ t.CreatedAt }</td>
+		<td class="text-xs font-mono whitespace-nowrap">{ t.CreatedAt.Format("2006-01-02 15:04:05") }</td>
 		<td>
 			@loggingStatusBadge(t.StatusCode)
 		</td>
@@ -163,7 +163,7 @@ templ loggingTraceRow(t tracy.TraceSummary) {
 }
 
 // LoggingTraceRowOOB renders a new trace row as an OOB swap that prepends to the tbody.
-templ LoggingTraceRowOOB(t tracy.TraceSummary) {
+templ LoggingTraceRowOOB(t promolog.TraceSummary) {
 	<tbody id="logging-traces-tbody" hx-swap-oob="afterbegin">
 		@loggingTraceRow(t)
 	</tbody>
@@ -180,7 +180,7 @@ templ loggingStatusBadge(code int) {
 }
 
 // LoggingReportOutput renders the simulated support report as formatted JSON.
-templ LoggingReportOutput(trace *tracy.ErrorTrace, jsonPayload string) {
+templ LoggingReportOutput(trace *promolog.ErrorTrace, jsonPayload string) {
 	<div class="card bg-base-100 shadow border border-base-300 mt-4">
 		<div class="card-body p-4">
 			<div class="flex items-center justify-between">

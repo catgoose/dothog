@@ -10,7 +10,7 @@ import (
 	"catgoose/dothog/internal/ssebroker"
 	// setup:feature:sse:end
 	// setup:feature:demo:end
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/hypermedia"
 	// setup:feature:session_settings:start
@@ -40,7 +40,7 @@ type AppRoutes interface {
 type appRoutes struct {
 	e             *echo.Echo
 	ctx           context.Context
-	reqLogStore   *tracy.Store
+	reqLogStore   *promolog.Store
 	issueReporter IssueReporter
 	startTime     time.Time
 	// setup:feature:session_settings:start
@@ -51,7 +51,7 @@ type appRoutes struct {
 // NewAppRoutes initializes routes.
 // reqLogStore may be nil if request log capture is disabled.
 // reporter may be nil; a default no-op reporter is used.
-func NewAppRoutes(ctx context.Context, e *echo.Echo, reqLogStore *tracy.Store, reporter IssueReporter,
+func NewAppRoutes(ctx context.Context, e *echo.Echo, reqLogStore *promolog.Store, reporter IssueReporter,
 	// setup:feature:session_settings:start
 	settingsRepo repository.SessionSettingsRepository,
 	// setup:feature:session_settings:end
@@ -99,9 +99,9 @@ func (ar *appRoutes) InitRoutes() error {
 	reportHandler := func(c echo.Context) error {
 		requestID := c.Param("requestID")
 		description := c.FormValue("description")
-		var trace *tracy.ErrorTrace
+		var trace *promolog.ErrorTrace
 		if ar.reqLogStore != nil && requestID != "" {
-			trace = ar.reqLogStore.Get(requestID)
+			trace, _ = ar.reqLogStore.Get(c.Request().Context(), requestID)
 		}
 		if err := ar.issueReporter.Report(requestID, description, trace); err != nil {
 			logger.WithContext(c.Request().Context()).Error("Issue report failed",
@@ -186,7 +186,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
 	settingsRepo repository.SessionSettingsRepository,
 	// setup:feature:session_settings:end
-	reqLogStore *tracy.Store,
+	reqLogStore *promolog.Store,
 ) (*echo.Echo, error) {
 	e := echo.New()
 

@@ -15,7 +15,7 @@ import (
 
 	"catgoose/dothog/internal/routes/hypermedia"
 	components "catgoose/dothog/web/components/core"
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 )
 
 // parseAttrs splits a "key=value key2=value2" string into pairs.
@@ -113,7 +113,7 @@ func ErrorTracesTableContainer(cols []hypermedia.TableCol, body templ.Component,
 }
 
 // ErrorTracesBody renders the <tbody> rows.
-func ErrorTracesBody(traces []tracy.TraceSummary) templ.Component {
+func ErrorTracesBody(traces []promolog.TraceSummary) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -159,7 +159,7 @@ func ErrorTracesBody(traces []tracy.TraceSummary) templ.Component {
 }
 
 // ErrorTraceRow renders a single summary row with an expand chevron.
-func ErrorTraceRow(t tracy.TraceSummary) templ.Component {
+func ErrorTraceRow(t promolog.TraceSummary) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -199,9 +199,9 @@ func ErrorTraceRow(t tracy.TraceSummary) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(t.CreatedAt)
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(t.CreatedAt.Format("2006-01-02 15:04:05"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 83, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_traces.templ`, Line: 83, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -383,7 +383,7 @@ func statusBadge(code int) templ.Component {
 }
 
 // ErrorTraceDetailContent renders the expandable detail panel.
-func ErrorTraceDetailContent(trace *tracy.ErrorTrace) templ.Component {
+func ErrorTraceDetailContent(trace *promolog.ErrorTrace) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

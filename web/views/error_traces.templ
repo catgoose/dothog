@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/hypermedia"
 	components "catgoose/dothog/web/components/core"
 )
@@ -46,7 +46,7 @@ templ ErrorTracesTableContainer(cols []hypermedia.TableCol, body templ.Component
 }
 
 // ErrorTracesBody renders the <tbody> rows.
-templ ErrorTracesBody(traces []tracy.TraceSummary) {
+templ ErrorTracesBody(traces []promolog.TraceSummary) {
 	if len(traces) == 0 {
 		<tbody>
 			<tr>
@@ -65,7 +65,7 @@ templ ErrorTracesBody(traces []tracy.TraceSummary) {
 }
 
 // ErrorTraceRow renders a single summary row with an expand chevron.
-templ ErrorTraceRow(t tracy.TraceSummary) {
+templ ErrorTraceRow(t promolog.TraceSummary) {
 	{{ detailURL := fmt.Sprintf("/admin/error-traces/%s", t.RequestID) }}
 	<tr
 		class="hover cursor-pointer select-none"
@@ -80,7 +80,7 @@ templ ErrorTraceRow(t tracy.TraceSummary) {
 				<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
 			</svg>
 		</td>
-		<td class="text-xs font-mono whitespace-nowrap">{ t.CreatedAt }</td>
+		<td class="text-xs font-mono whitespace-nowrap">{ t.CreatedAt.Format("2006-01-02 15:04:05") }</td>
 		<td>
 			@statusBadge(t.StatusCode)
 		</td>
@@ -103,7 +103,7 @@ templ statusBadge(code int) {
 }
 
 // ErrorTraceDetailContent renders the expandable detail panel.
-templ ErrorTraceDetailContent(trace *tracy.ErrorTrace) {
+templ ErrorTraceDetailContent(trace *promolog.ErrorTrace) {
 	<td colspan="7" class="bg-base-200 p-4">
 		<div class="space-y-4">
 			<div class="flex items-start justify-between">

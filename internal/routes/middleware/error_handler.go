@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"catgoose/dothog/internal/logger"
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/internal/routes/response"
 	corecomponents "catgoose/dothog/web/components/core"
@@ -100,7 +100,7 @@ func handleErrorWithContext(c echo.Context, ec hypermedia.ErrorContext) error {
 // ErrorHandlerMiddleware automatically wraps errors returned by handlers in HandleError.
 // When a reqLogStore is provided, the per-request log buffer is promoted to
 // the shared store on error so it can be retrieved for issue reports.
-func ErrorHandlerMiddleware(reqLogStore *tracy.Store) echo.MiddlewareFunc {
+func ErrorHandlerMiddleware(reqLogStore *promolog.Store) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			err := next(c)
@@ -122,8 +122,8 @@ func ErrorHandlerMiddleware(reqLogStore *tracy.Store) echo.MiddlewareFunc {
 			if reqLogStore != nil {
 				requestID := GetRequestID(c)
 				if requestID != "" {
-					var entries []tracy.Entry
-					if buf := tracy.GetBuffer(c.Request().Context()); buf != nil {
+					var entries []promolog.Entry
+					if buf := promolog.GetBuffer(c.Request().Context()); buf != nil {
 						entries = buf.Entries
 					}
 					userID, _ := c.Get("azureId").(string)
@@ -132,7 +132,7 @@ func ErrorHandlerMiddleware(reqLogStore *tracy.Store) echo.MiddlewareFunc {
 					logger.WithContext(c.Request().Context()).Warn("Error trace missing UserID: azureId not set on echo context")
 				}
 				// setup:feature:auth:end
-					reqLogStore.Promote(tracy.ErrorTrace{
+					reqLogStore.Promote(c.Request().Context(), promolog.ErrorTrace{
 						RequestID:  requestID,
 						ErrorChain: err.Error(),
 						StatusCode: statusCode,

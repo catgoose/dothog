@@ -12,7 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	// setup:feature:database:end
 	"catgoose/dothog/internal/logger"
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/repository"
@@ -51,7 +51,7 @@ func must(fs fs.FS, err error) fs.FS {
 
 func main() {
 	logger.SetHandlerWrapper(func(h slog.Handler) slog.Handler {
-		return tracy.NewHandler(h)
+		return promolog.NewHandler(h)
 	})
 	logger.Init()
 	flag.Parse()
@@ -78,7 +78,7 @@ func main() {
 	defer cancel()
 
 	// Error trace store — persists error request logs to SQLite for debugging.
-	traceDB, err := dialect.OpenSQLite(appCtx, "db/error_traces.db")
+	traceDB, _, err := dialect.OpenSQLite(appCtx, "db/error_traces.db")
 	if err != nil {
 		logger.Fatal("Failed to open error traces database", "error", err)
 	}
@@ -87,7 +87,7 @@ func main() {
 			logger.Info("Error closing error traces database", "error", closeErr)
 		}
 	}()
-	reqLogStore := tracy.NewStore(traceDB)
+	reqLogStore := promolog.NewStore(traceDB)
 	if err := reqLogStore.InitSchema(); err != nil {
 		logger.Fatal("Failed to init error traces schema", "error", err)
 	}

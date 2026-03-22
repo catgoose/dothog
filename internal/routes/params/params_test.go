@@ -117,40 +117,6 @@ func TestParseParamID_Negative(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestParseSortString(t *testing.T) {
-	sorts := ParseSortString("name:asc,created:desc")
-	require.Len(t, sorts, 2)
-	assert.Equal(t, "name", sorts[0].Column)
-	assert.Equal(t, "asc", sorts[0].Direction)
-	assert.Equal(t, "created", sorts[1].Column)
-	assert.Equal(t, "desc", sorts[1].Direction)
-}
-
-func TestParseSortString_Empty(t *testing.T) {
-	assert.Nil(t, ParseSortString(""))
-	assert.Nil(t, ParseSortString("   "))
-}
-
-func TestParseSortString_InvalidDirection_Ignored(t *testing.T) {
-	sorts := ParseSortString("name:invalid,foo:asc")
-	require.Len(t, sorts, 1)
-	assert.Equal(t, "foo", sorts[0].Column)
-	assert.Equal(t, "asc", sorts[0].Direction)
-}
-
-func TestBuildSortString(t *testing.T) {
-	sorts := []SortColumn{
-		{Column: "name", Direction: "asc"},
-		{Column: "date", Direction: "desc"},
-	}
-	assert.Equal(t, "name:asc,date:desc", BuildSortString(sorts))
-}
-
-func TestBuildSortString_Empty(t *testing.T) {
-	assert.Empty(t, BuildSortString(nil))
-	assert.Empty(t, BuildSortString([]SortColumn{}))
-}
-
 func TestParseFilterParams(t *testing.T) {
 	c := newContext("/", "search=foo&status=active&type=short&sort=name:asc&page=2&limit=20&year=2024")
 	fp := ParseFilterParams(c, 10, 100)

@@ -1,5 +1,43 @@
 package schema
 
+import (
+	s "github.com/catgoose/fraggle/schema"
+)
+
+// Re-export fraggle/schema types so consumers can continue to import
+// this package for both table definitions and schema types.
+type (
+	TableDef  = s.TableDef
+	ColumnDef = s.ColumnDef
+	IndexDef  = s.IndexDef
+	SeedRow   = s.SeedRow
+	TypeFunc  = s.TypeFunc
+)
+
+// Re-export fraggle/schema constructors.
+var (
+	NewTable           = s.NewTable
+	Col                = s.Col
+	AutoIncrCol        = s.AutoIncrCol
+	Index              = s.Index
+	NewLookupTable     = s.NewLookupTable
+	NewLookupJoinTable = s.NewLookupJoinTable
+	NewMappingTable    = s.NewMappingTable
+	NewConfigTable     = s.NewConfigTable
+	NewEventTable      = s.NewEventTable
+	NewQueueTable      = s.NewQueueTable
+)
+
+// Re-export type functions.
+var (
+	TypeInt       = s.TypeInt
+	TypeText      = s.TypeText
+	TypeString    = s.TypeString
+	TypeVarchar   = s.TypeVarchar
+	TypeTimestamp = s.TypeTimestamp
+	TypeLiteral   = s.TypeLiteral
+)
+
 // setup:feature:session_settings:start
 
 var SessionSettingsTable = NewTable("SessionSettings").

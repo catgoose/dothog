@@ -7,9 +7,11 @@ import (
 	"database/sql"
 	"fmt"
 
-	dbrepo "catgoose/dothog/internal/database/repository"
+	dbrepoManager "catgoose/dothog/internal/database/repository"
 	"catgoose/dothog/internal/database/schema"
 	"catgoose/dothog/internal/domain"
+
+	"github.com/catgoose/fraggle/dbrepo"
 )
 
 // SessionSettingsRepository defines operations for session settings data access.
@@ -24,11 +26,11 @@ type SessionSettingsRepository interface {
 
 // sessionSettingsRepository implements SessionSettingsRepository.
 type sessionSettingsRepository struct {
-	repo *dbrepo.RepoManager
+	repo *dbrepoManager.RepoManager
 }
 
 // NewSessionSettingsRepository creates a new SessionSettingsRepository.
-func NewSessionSettingsRepository(repo *dbrepo.RepoManager) SessionSettingsRepository {
+func NewSessionSettingsRepository(repo *dbrepoManager.RepoManager) SessionSettingsRepository {
 	return &sessionSettingsRepository{repo: repo}
 }
 

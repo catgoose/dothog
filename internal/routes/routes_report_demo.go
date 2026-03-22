@@ -23,7 +23,7 @@ func (ar *appRoutes) initReportDemoRoutes() {
 
 		var trace *views.ReportEmailData
 		if ar.reqLogStore != nil && requestID != "" {
-			t := ar.reqLogStore.Get(requestID)
+			t, _ := ar.reqLogStore.Get(c.Request().Context(), requestID)
 			if t != nil {
 				jsonBytes, _ := json.MarshalIndent(map[string]any{
 					"request_id":  t.RequestID,

@@ -11,7 +11,7 @@ import (
 	"net/http"
 
 	"catgoose/dothog/internal/logger"
-	"github.com/catgoose/tracy"
+	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/shared"
 	"catgoose/dothog/internal/ssebroker"
@@ -28,7 +28,7 @@ func (ar *appRoutes) initLoggingRoutes() {
 
 	// Wire up SSE broadcasting on error trace promotion.
 	if ar.reqLogStore != nil {
-		ar.reqLogStore.SetOnPromote(func(summary tracy.TraceSummary) {
+		ar.reqLogStore.SetOnPromote(func(summary promolog.TraceSummary) {
 			broadcastErrorTrace(broker, summary)
 		})
 	}
@@ -90,7 +90,7 @@ func (ar *appRoutes) initLoggingRoutes() {
 		if ar.reqLogStore == nil {
 			return handler.RenderComponent(c, views.LoggingTracesList(nil))
 		}
-		traces, _, err := ar.reqLogStore.ListTraces(tracy.TraceFilter{
+		traces, _, err := ar.reqLogStore.ListTraces(c.Request().Context(), promolog.TraceFilter{
 			Sort: "CreatedAt", Dir: "desc", Page: 1, PerPage: 20,
 		})
 		if err != nil {
@@ -105,7 +105,7 @@ func (ar *appRoutes) initLoggingRoutes() {
 		if ar.reqLogStore == nil {
 			return handler.HandleHypermediaError(c, 404, "Store not configured", nil)
 		}
-		trace := ar.reqLogStore.Get(requestID)
+		trace, _ := ar.reqLogStore.Get(c.Request().Context(), requestID)
 		if trace == nil {
 			return handler.HandleHypermediaError(c, 404, "Trace not found or expired", nil)
 		}
@@ -159,7 +159,7 @@ func handleErrorTracesSSE(broker *ssebroker.SSEBroker) echo.HandlerFunc {
 	}
 }
 
-func broadcastErrorTrace(broker *ssebroker.SSEBroker, summary tracy.TraceSummary) {
+func broadcastErrorTrace(broker *ssebroker.SSEBroker, summary promolog.TraceSummary) {
 	if !broker.HasSubscribers(ssebroker.TopicErrorTraces) {
 		return
 	}

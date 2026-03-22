@@ -12,6 +12,7 @@ import (
 	"catgoose/dothog/internal/database/schema"
 	"catgoose/dothog/internal/domain"
 
+	"github.com/catgoose/fraggle/dbrepo"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -35,23 +36,23 @@ func (r *userRepository) CreateOrUpdate(ctx context.Context, user *domain.User, 
 		return fmt.Errorf("failed to check for existing user: %w", err)
 	}
 
-	now := repository.GetNow()
+	now := dbrepo.GetNow()
 
 	if existing != nil {
 		user.ID = existing.ID
 		user.CreatedAt = existing.CreatedAt
 		user.LastLoginAt = sql.NullTime{Time: now, Valid: true}
-		repository.SetUpdateTimestamp(&user.UpdatedAt)
+		dbrepo.SetUpdateTimestamp(&user.UpdatedAt)
 		return r.Update(ctx, user, tx)
 	}
 
-	repository.SetCreateTimestamps(&user.CreatedAt, &user.UpdatedAt)
+	dbrepo.SetCreateTimestamps(&user.CreatedAt, &user.UpdatedAt)
 	user.LastLoginAt = sql.NullTime{Time: now, Valid: true}
 
 	exec := r.repo.Exec(tx)
 
 	insertCols := schema.UsersTable.InsertColumns()
-	query := repository.InsertInto(schema.UsersTable.Name, insertCols...) + ";\n\t\tSELECT SCOPE_IDENTITY() AS ID;"
+	query := dbrepo.InsertInto(schema.UsersTable.Name, insertCols...) + ";\n\t\tSELECT SCOPE_IDENTITY() AS ID;"
 
 	var id int64
 	err = exec.GetContext(ctx, &id, query,
@@ -81,9 +82,9 @@ func (r *userRepository) CreateOrUpdate(ctx context.Context, user *domain.User, 
 
 // GetByID retrieves a user by its ID
 func (r *userRepository) GetByID(ctx context.Context, id int) (*domain.User, error) {
-	cols := repository.Columns(schema.UsersTable.SelectColumns()...)
-	w := repository.NewWhere().And("ID = @ID", sql.Named("ID", id))
-	query, args := repository.NewSelect(schema.UsersTable.Name, cols).Where(w).Build()
+	cols := dbrepo.Columns(schema.UsersTable.SelectColumns()...)
+	w := dbrepo.NewWhere().And("ID = @ID", sql.Named("ID", id))
+	query, args := dbrepo.NewSelect(schema.UsersTable.Name, cols).Where(w).Build()
 
 	var user domain.User
 	err := r.repo.GetDB().GetContext(ctx, &user, query, args...)
@@ -98,9 +99,9 @@ func (r *userRepository) GetByID(ctx context.Context, id int) (*domain.User, err
 
 // getByAzureIDInternal retrieves a user by their Azure ID (internal method that returns sql.ErrNoRows)
 func (r *userRepository) getByAzureIDInternal(ctx context.Context, azureID string, tx *sqlx.Tx) (*domain.User, error) {
-	cols := repository.Columns(schema.UsersTable.SelectColumns()...)
-	w := repository.NewWhere().And("AzureId = @AzureId", sql.Named("AzureId", azureID))
-	query, args := repository.NewSelect(schema.UsersTable.Name, cols).Where(w).Build()
+	cols := dbrepo.Columns(schema.UsersTable.SelectColumns()...)
+	w := dbrepo.NewWhere().And("AzureId = @AzureId", sql.Named("AzureId", azureID))
+	query, args := dbrepo.NewSelect(schema.UsersTable.Name, cols).Where(w).Build()
 
 	var user domain.User
 	err := r.repo.Exec(tx).GetContext(ctx, &user, query, args...)
@@ -128,10 +129,10 @@ func (r *userRepository) Update(ctx context.Context, user *domain.User, tx *sqlx
 
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE ID = @ID",
 		schema.UsersTable.Name,
-		repository.SetClause(schema.UsersTable.UpdateColumns()...),
+		dbrepo.SetClause(schema.UsersTable.UpdateColumns()...),
 	)
 
-	repository.SetUpdateTimestamp(&user.UpdatedAt)
+	dbrepo.SetUpdateTimestamp(&user.UpdatedAt)
 
 	result, err := exec.ExecContext(ctx, query,
 		sql.Named("ID", user.ID),
@@ -172,10 +173,10 @@ func (r *userRepository) UpdateLastLogin(ctx context.Context, id int, tx *sqlx.T
 
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE ID = @ID",
 		schema.UsersTable.Name,
-		repository.SetClause("LastLoginAt", "UpdatedAt"),
+		dbrepo.SetClause("LastLoginAt", "UpdatedAt"),
 	)
 
-	now := repository.GetNow()
+	now := dbrepo.GetNow()
 	result, err := exec.ExecContext(ctx, query,
 		sql.Named("ID", id),
 		sql.Named("LastLoginAt", now),

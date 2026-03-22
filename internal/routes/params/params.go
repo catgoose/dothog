@@ -4,7 +4,6 @@ package params
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -113,45 +112,3 @@ func ResolveYearWithDefault(c echo.Context, year int, availableYears []int) int 
 	return year
 }
 
-// SortColumn represents a single sort column with direction
-type SortColumn struct {
-	Column    string
-	Direction string
-}
-
-// ParseSortString parses a sort string in the format "column1:direction,column2:direction" into SortColumn slices
-func ParseSortString(sortStr string) []SortColumn {
-	if sortStr == "" {
-		return nil
-	}
-
-	var sorts []SortColumn
-	for part := range strings.SplitSeq(sortStr, ",") {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			continue
-		}
-		colonIdx := strings.LastIndex(part, ":")
-		if colonIdx == -1 {
-			continue
-		}
-		column := strings.ToLower(strings.TrimSpace(part[:colonIdx]))
-		direction := strings.ToLower(strings.TrimSpace(part[colonIdx+1:]))
-		if column != "" && (direction == "asc" || direction == "desc") {
-			sorts = append(sorts, SortColumn{Column: column, Direction: direction})
-		}
-	}
-	return sorts
-}
-
-// BuildSortString builds a sort string from SortColumn slices
-func BuildSortString(sorts []SortColumn) string {
-	if len(sorts) == 0 {
-		return ""
-	}
-	var parts []string
-	for _, sort := range sorts {
-		parts = append(parts, fmt.Sprintf("%s:%s", sort.Column, sort.Direction))
-	}
-	return strings.Join(parts, ",")
-}
