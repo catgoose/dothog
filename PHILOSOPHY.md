@@ -555,43 +555,23 @@ logger.WithContext(c.Request().Context()).Error("Request error",
 
 ### Promote-on-error
 
-Not every request deserves to be remembered. The hot path — the 99% of requests that succeed — should not pay for observability infrastructure it doesn't need. This is why logging follows a **promote-on-error** pattern.
+Not every request deserves to be remembered. The hot path — the 99% of requests that succeed — should not pay for observability infrastructure it doesn't need. This is why logging follows a **promote-on-error** pattern: buffer everything per-request, discard on success, persist on error. The successful request pays only the cost of appending to a local slice. The failed request gets a full forensic record.
 
-Each request gets a lightweight `Buffer` attached to its context. All slog entries for that request are captured into this buffer. The buffer is per-request, per-goroutine — no shared locks, no contention on the hot path, no global ring buffer that every request writes to.
+The mechanics — per-request buffers, SQLite-backed trace storage, TTL cleanup, the `Promote` call and its `ErrorTrace` payload — live in [promolog](https://github.com/catgoose/promolog). Dothog wires promolog into its middleware stack:
 
-When a request succeeds, the buffer is garbage collected with the request context. Nothing is written. Nothing is stored. The successful request paid only the cost of appending to a local slice.
+1. **Correlation middleware** attaches a request ID and promolog buffer to each request's context
+2. **The slog handler** (wrapped by `promolog.NewHandler`) captures every log record into the buffer
+3. **Error handler middleware** calls `store.Promote()` when a request fails, persisting the full trace
+4. **The SSE broker** listens for promoted traces via `store.SetOnPromote()` and broadcasts them to connected admin clients
 
-When a request errors, the `ErrorHandlerMiddleware` promotes the buffer to a SQLite-backed `Store`. The store persists a full `ErrorTrace`: the request ID, the complete error chain (`err.Error()`), status code, route, method, user agent, remote IP, user ID (from the `azureId` context value when auth is configured), and all captured slog entries serialized as JSON. This is the only moment data crosses from the per-request buffer into shared storage.
-
-```go
-// ErrorHandlerMiddleware promotes the per-request log buffer on error.
-reqLogStore.Promote(promolog.ErrorTrace{
-    RequestID:  requestID,
-    ErrorChain: err.Error(),
-    StatusCode: statusCode,
-    Route:      c.Request().URL.Path,
-    Method:     c.Request().Method,
-    UserAgent:  c.Request().UserAgent(),
-    RemoteIP:   c.RealIP(),
-    UserID:     userID,
-    Entries:    buf.Entries,
-})
-```
-
-TTL-based cleanup runs in the background — configurable, defaulting to 24 hours — so the error trace table doesn't grow without bound. Old traces are deleted on a periodic sweep.
-
-An `OnPromote` callback on the store enables SSE broadcasting. When a new error trace is persisted, the callback fires with a `TraceSummary`, which the SSE broker can push to connected admin clients for real-time error monitoring.
-
-The demo page at `/demo/logging` demonstrates the full promote-on-error flow with simulated support reports, showing how a request's log buffer is captured, promoted on error, and retrieved for issue reporting.
+The demo page at `/demo/logging` demonstrates the full flow with simulated support reports.
 
 ### Request and background context
 
-User-initiated actions (HTTP requests) are logged with `request_id` — the request lifecycle from arrival to response, including method, path, status, and latency. Background operations (workers, async jobs, scheduled tasks) use a separate `context_id` and `context_description` to distinguish them from user traffic. Both flow through the same structured logger, but they're tagged differently so you can filter by origin.
+User-initiated actions (HTTP requests) and background operations (workers, async jobs, scheduled tasks) both flow through the same structured logger, but they're tagged differently so you can filter by origin. Requests carry a `request_id`; background work carries a `context_id` and `context_description`.
 
-This means:
+Dothog builds on top of promolog's trace storage to provide:
 
-- **User reports an error** → look up the `request_id` in the error trace store, see the full error chain, all log entries, and request metadata
-- **Browse error traces** → the admin UI at `/admin/error-traces` provides sortable, filterable, paginated access to all persisted error traces
-- **Real-time monitoring** → SSE broadcasts new error traces as they're promoted, so the admin dashboard updates live
-- **Background job fails** → the `context_id` and `context_description` tell you which job, what it was doing, and when
-- **Correlate across layers** → the same context flows from middleware through handlers into repository calls, so a single ID traces the full operation
+- **Admin UI** at `/admin/error-traces` — sortable, filterable, paginated browser for all persisted error traces
+- **Real-time monitoring** — SSE broadcasts new traces as they're promoted, so the admin dashboard updates live
+- **Cross-layer correlation** — the same context flows from middleware through handlers into repository calls, so a single ID traces the full operation
