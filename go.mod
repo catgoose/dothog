@@ -9,7 +9,6 @@ require (
 	github.com/catgoose/crooner v1.4.0
 	github.com/catgoose/dio v1.0.24
 	github.com/catgoose/fraggle v0.0.1
-	github.com/catgoose/tracy v0.0.1
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-playground/validator v9.31.0+incompatible
@@ -37,6 +36,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bep/godartsass/v2 v2.5.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
+	github.com/catgoose/tracy v0.0.1
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

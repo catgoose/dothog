@@ -25,7 +25,7 @@ Common upstream issues:
 | Code | Where it lives | Import |
 |------|---------------|--------|
 | SQL dialects (SQLite, Postgres, MSSQL) | [catgoose/fraggle](https://github.com/catgoose/fraggle) | `dialect "github.com/catgoose/fraggle"` |
-| Error trace capture | [catgoose/tracy](https://github.com/catgoose/tracy) | `"github.com/catgoose/tracy"` |
+| Error trace capture | [catgoose/promolog](https://github.com/catgoose/promolog) | `"github.com/catgoose/promolog"` |
 | OIDC authentication | [catgoose/crooner](https://github.com/catgoose/crooner) | `"github.com/catgoose/crooner"` |
 | Environment config | [catgoose/dio](https://github.com/catgoose/dio) | `"github.com/catgoose/dio"` |
 | Schema, repository, query building | `internal/database/repository/` | In-tree (will move to fraggle) |
@@ -54,5 +54,3 @@ Implicit (always included): `database`, `alpine`
 - Don't commit changes back to the dothog repo for app-specific code
 - Don't add dothog dependencies to derived apps — dothog is a starting point, not an upstream
 - Don't use the old `DB_ENGINE` / `DB_PATH` env vars — use `DATABASE_URL` with a scheme
-- Don't import `internal/database/dialect` — use `github.com/catgoose/fraggle` instead
-- Don't import `internal/requestlog` — use `github.com/catgoose/tracy` instead

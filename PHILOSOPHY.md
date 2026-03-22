@@ -526,7 +526,7 @@ The `IssueReporter` interface is a single method, defined by the consumer. It re
 
 ```go
 type IssueReporter interface {
-    Report(requestID string, description string, trace *requestlog.ErrorTrace) error
+    Report(requestID string, description string, trace *promolog.ErrorTrace) error
 }
 ```
 
@@ -565,7 +565,7 @@ When a request errors, the `ErrorHandlerMiddleware` promotes the buffer to a SQL
 
 ```go
 // ErrorHandlerMiddleware promotes the per-request log buffer on error.
-reqLogStore.Promote(requestlog.ErrorTrace{
+reqLogStore.Promote(promolog.ErrorTrace{
     RequestID:  requestID,
     ErrorChain: err.Error(),
     StatusCode: statusCode,
