@@ -40,8 +40,16 @@ func (ar *appRoutes) initCanvasRoutes(canvas *demo.PixelCanvas, broker *ssebroke
 
 func (cr *canvasRoutes) handleCanvasPage(c echo.Context) error {
 	getOrCreateClientID(c)
-	n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(demo.CanvasPalette))))
-	startColor := demo.CanvasPalette[n.Int64()]
+	// Exclude white (#ffffff) from random start color since it's invisible on the
+	// white canvas background. White stays in the palette as an eraser.
+	nonWhite := make([]string, 0, len(demo.CanvasPalette))
+	for _, c := range demo.CanvasPalette {
+		if c != "#ffffff" {
+			nonWhite = append(nonWhite, c)
+		}
+	}
+	n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(nonWhite))))
+	startColor := nonWhite[n.Int64()]
 	return handler.RenderBaseLayout(c, views.CanvasPage(startColor))
 }
 

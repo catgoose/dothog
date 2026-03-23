@@ -9,7 +9,7 @@ import (
 templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, version string, appName string) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ theme }>
-		@header(csrfToken, devMode, appName)
+		@header(csrfToken, devMode, appName, nil)
 		<body
 			hx-history="false"
 			hx-boost="true"
@@ -49,7 +49,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 }
 
 // Header is the header of the HTML document
-templ header(csrfToken string, devMode bool, appName string) {
+templ header(csrfToken string, devMode bool, appName string, extraCSS []string) {
 	<head>
 		if csrfToken != "" {
 			<meta name="csrf-token" content={ csrfToken }/>
@@ -84,6 +84,9 @@ templ header(csrfToken string, devMode bool, appName string) {
 		// setup:feature:sse:end
 		<link rel="stylesheet" href="/public/css/tailwind.css" type="text/css"/>
 		<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
+		for _, href := range extraCSS {
+			<link rel="stylesheet" href={ href } type="text/css"/>
+		}
 		<link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg"/>
 		<link rel="icon" type="image/png" sizes="32x32" href="/public/images/favicon-32x32.png"/>
 		<link rel="icon" type="image/png" sizes="16x16" href="/public/images/favicon-16x16.png"/>

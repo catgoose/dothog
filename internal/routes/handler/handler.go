@@ -112,9 +112,15 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 	return renderDefaultLayout(c, cmp)
 }
 
-// renderDefaultLayout is the standard dothog layout with nav, breadcrumbs, and theme.
-func renderDefaultLayout(c echo.Context, cmp templ.Component) error {
-	nav := appNavComponent(c.Request().URL.Path)
+// layoutCtx holds common layout state extracted from the request context.
+type layoutCtx struct {
+	csrfToken string
+	theme     string
+	crumbs    []hypermedia.Breadcrumb
+}
+
+// getLayoutCtx extracts CSRF token, theme, and breadcrumbs from the request.
+func getLayoutCtx(c echo.Context) layoutCtx {
 	var csrfToken string
 	// setup:feature:csrf:start
 	if t, ok := c.Get("csrf_token").(string); ok {
@@ -131,20 +137,43 @@ func renderDefaultLayout(c echo.Context, cmp templ.Component) error {
 	pathCrumbs := buildPathCrumbs(c.Request().URL.Path, from, getRoutes)
 
 	if mask := hypermedia.ParseFromParam(from); mask != 0 {
-		// Prepend registered origins when ?from= is present.
 		crumbs = append(hypermedia.ResolveFromMask(mask), pathCrumbs...)
 	} else if len(pathCrumbs) > 1 {
-		// No ?from= but multiple path segments — show path-based breadcrumbs
-		// so detail pages always have a way back to their parent.
 		crumbs = append([]hypermedia.Breadcrumb{{Label: hypermedia.BreadcrumbLabelHome, Href: "/"}}, pathCrumbs...)
 	}
 
-	// Allow handlers to override the terminal crumb label via SetPageLabel.
 	if label, ok := c.Get(pageLabel).(string); ok && label != "" && len(crumbs) > 0 {
 		crumbs[len(crumbs)-1].Label = label
 	}
 
-	return RenderComponent(c, views.Index(cmp, nav, csrfToken, dio.Dev(), theme, crumbs, version.Display(), appName))
+	return layoutCtx{csrfToken: csrfToken, theme: theme, crumbs: crumbs}
+}
+
+// renderDefaultLayout is the standard dothog layout with nav, breadcrumbs, and theme.
+func renderDefaultLayout(c echo.Context, cmp templ.Component) error {
+	nav := appNavComponent(c.Request().URL.Path)
+	lc := getLayoutCtx(c)
+	return RenderComponent(c, views.Index(cmp, nav, lc.csrfToken, dio.Dev(), lc.theme, lc.crumbs, version.Display(), appName))
+}
+
+// AppNavLayoutFunc returns a LayoutFunc that uses the responsive app-nav layout.
+// items defines the navigation structure. promoted (may be nil) gets the raised
+// mobile button treatment. maxVisible controls how many items appear in the
+// main bar; the rest go to the overflow menu (0 = show all).
+func AppNavLayoutFunc(items []hypermedia.NavItem, promoted *hypermedia.NavItem, maxVisible int) LayoutFunc {
+	if maxVisible <= 0 {
+		maxVisible = len(items)
+	}
+	return func(c echo.Context, cmp templ.Component) error {
+		path := c.Request().URL.Path
+		activeItems := hypermedia.SetActiveNavItemPrefix(items, path)
+		lc := getLayoutCtx(c)
+		return RenderComponent(c, views.AppNavLayout(
+			cmp, activeItems, promoted, maxVisible,
+			lc.csrfToken, dio.Dev(), lc.theme,
+			lc.crumbs, version.Display(), appName,
+		))
+	}
 }
 
 var (
