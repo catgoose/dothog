@@ -73,10 +73,12 @@ github.com/catgoose/crooner v1.4.0 h1:WQc45oZdgwBAYDZ1mRx1WcT3X9UC2mnLAwShtlS7Jm
 github.com/catgoose/crooner v1.4.0/go.mod h1:OTuZ/UmP/58JdGeyJv0J6wrBY1Lzqd8wxE8vgCRmRqo=
 github.com/catgoose/dio v1.0.24 h1:3XxS+gU+QHzQUunfn2L2ZNyLRXku9WTiCY3P9V16xMo=
 github.com/catgoose/dio v1.0.24/go.mod h1:yE/ZyAyo5lXoOECw2phIMHyZTr7/e6zD0G4ZU8bSD7E=
-github.com/catgoose/fraggle v0.1.1 h1:UMndahMz/bumHjhhCrFzdLnMUGsH5q//I7VOtB8wu4s=
-github.com/catgoose/fraggle v0.1.1/go.mod h1:cH5k1/se9azQqMj6aBgjR0iu5knl52ZxVu6wlPer+6s=
+github.com/catgoose/fraggle v0.1.2 h1:oRbsr7VNAuh/IOecPKjzwNpT2FD1B/IKA4K3pbqJp5k=
+github.com/catgoose/fraggle v0.1.2/go.mod h1:cH5k1/se9azQqMj6aBgjR0iu5knl52ZxVu6wlPer+6s=
 github.com/catgoose/promolog v0.2.0 h1:XpLj3fNKafTLhhWRejGvsAGY5AGPbtfQ/f8TuUpaOtE=
 github.com/catgoose/promolog v0.2.0/go.mod h1:GbcuVryWlVefxM2jbOSyBd4R7mxoMky0i5eV+cAAfJk=
+github.com/catgoose/promolog v0.2.1 h1:dSW/D163DYNyLsbnxIQQua8MiE7fa7bfw8mYgNvoYjE=
+github.com/catgoose/promolog v0.2.1/go.mod h1:GbcuVryWlVefxM2jbOSyBd4R7mxoMky0i5eV+cAAfJk=
 github.com/catppuccin/go v0.3.0 h1:d+0/YicIq+hSTo5oPuRi5kOpqkVA5tAsU6dNhvRu+aY=
 github.com/catppuccin/go v0.3.0/go.mod h1:8IHJuMGaUUjQM82qBrGNBv7LFq6JI3NnQCF6MOlZjpc=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=
