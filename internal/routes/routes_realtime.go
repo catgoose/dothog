@@ -40,7 +40,8 @@ func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
 		stats := ssebroker.CollectRuntimeStats(time.Now())
 		snap := initialMetrics()
 		services := initialServices()
-		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services))
+		svcLatencies := initialServiceLatencies()
+		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services, svcLatencies))
 	}
 }
 
@@ -206,6 +207,12 @@ func initialMetrics() views.MetricsSnapshot {
 		ConnActive: 15,
 		ConnIdle:   12,
 		ConnWait:   8,
+		LatencyHist:  []views.LatencyBucket{{P50: 15, P90: 35, P99: 42}},
+		ErrorHistory: []views.ErrorRatePoint{{Value: 0.3}},
+		DiskIO:       []views.DiskIOPoint{{ReadMBps: 50, WriteMBps: 30}},
+		StatusDist:   views.StatusDistribution{S2xx: 1100, S3xx: 36, S4xx: 36, S5xx: 4},
+		MaxLatency:   50,
+		MaxDiskIO:    100,
 	}
 }
 
@@ -226,6 +233,11 @@ func (ar *appRoutes) publishMetrics(broker *ssebroker.SSEBroker) {
 	connActive := snap.ConnActive
 	connIdle := snap.ConnIdle
 	connWait := snap.ConnWait
+	// New chart state
+	p50 := 15.0
+	p90 := 35.0
+	diskRead := 50.0
+	diskWrite := 30.0
 
 	for {
 		select {
@@ -306,6 +318,67 @@ func (ar *appRoutes) publishMetrics(broker *ssebroker.SSEBroker) {
 			}
 			connWait = remaining - connIdle
 
+			// P50/P90 random walk (enforce ordering)
+			p50 += (rand.Float64() - 0.5) * 8
+			p50 = math.Max(5, math.Min(p90-5, p50))
+			p90 += (rand.Float64() - 0.5) * 12
+			p90 = math.Max(p50+5, math.Min(p99-5, p90))
+
+			// Latency histogram (rolling 10)
+			snap.LatencyHist = append(snap.LatencyHist, views.LatencyBucket{
+				P50: math.Round(p50*10) / 10,
+				P90: math.Round(p90*10) / 10,
+				P99: math.Round(p99*10) / 10,
+			})
+			if len(snap.LatencyHist) > 10 {
+				snap.LatencyHist = snap.LatencyHist[len(snap.LatencyHist)-10:]
+			}
+			maxLat := 0.0
+			for _, b := range snap.LatencyHist {
+				if b.P99 > maxLat {
+					maxLat = b.P99
+				}
+			}
+			snap.MaxLatency = maxLat * 1.1
+
+			// Error history (rolling 30)
+			snap.ErrorHistory = append(snap.ErrorHistory, views.ErrorRatePoint{Value: math.Round(errPct*10) / 10})
+			if len(snap.ErrorHistory) > 30 {
+				snap.ErrorHistory = snap.ErrorHistory[len(snap.ErrorHistory)-30:]
+			}
+
+			// Disk I/O random walk (rolling 15)
+			diskRead += (rand.Float64() - 0.48) * 12
+			diskRead = math.Max(1, math.Min(200, diskRead))
+			diskWrite += (rand.Float64() - 0.5) * 10
+			diskWrite = math.Max(1, math.Min(150, diskWrite))
+			snap.DiskIO = append(snap.DiskIO, views.DiskIOPoint{
+				ReadMBps:  math.Round(diskRead*10) / 10,
+				WriteMBps: math.Round(diskWrite*10) / 10,
+			})
+			if len(snap.DiskIO) > 15 {
+				snap.DiskIO = snap.DiskIO[len(snap.DiskIO)-15:]
+			}
+			maxDisk := 0.0
+			for _, d := range snap.DiskIO {
+				combined := d.ReadMBps + d.WriteMBps
+				if combined > maxDisk {
+					maxDisk = combined
+				}
+			}
+			snap.MaxDiskIO = maxDisk * 1.1
+
+			// Status distribution (derived from RPS)
+			reqTotal := int(math.Round(rps))
+			s5xx := int(math.Round(errPct / 100 * float64(reqTotal)))
+			s4xx := int(float64(reqTotal) * (0.02 + rand.Float64()*0.02))
+			s3xx := int(float64(reqTotal) * (0.02 + rand.Float64()*0.02))
+			s2xx := reqTotal - s3xx - s4xx - s5xx
+			if s2xx < 0 {
+				s2xx = 0
+			}
+			snap.StatusDist = views.StatusDistribution{S2xx: s2xx, S3xx: s3xx, S4xx: s4xx, S5xx: s5xx}
+
 			snap.RPS = math.Round(rps)
 			snap.ErrorPct = math.Round(errPct*10) / 10
 			snap.P99Ms = math.Round(p99*10) / 10
@@ -356,11 +429,23 @@ func statusFromLoad(load float64) string {
 	}
 }
 
+func initialServiceLatencies() []views.ServiceLatency {
+	svcLats := make([]views.ServiceLatency, len(serviceNames))
+	for i, name := range serviceNames {
+		svcLats[i] = views.ServiceLatency{
+			Name:    name,
+			History: []float64{20 + rand.Float64()*30},
+		}
+	}
+	return svcLats
+}
+
 func (ar *appRoutes) publishServices(broker *ssebroker.SSEBroker) {
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 
 	services := initialServices()
+	svcLatencies := initialServiceLatencies()
 
 	for {
 		select {
@@ -371,16 +456,32 @@ func (ar *appRoutes) publishServices(broker *ssebroker.SSEBroker) {
 				continue
 			}
 
+			maxMs := 0.0
 			for i := range services {
 				services[i].Load += (rand.Float64() - 0.48) * 0.12
 				services[i].Load = math.Max(0.05, math.Min(1.0, services[i].Load))
 				services[i].Load = math.Round(services[i].Load*100) / 100
 				services[i].Status = statusFromLoad(services[i].Load)
+
+				// Per-service latency correlates with load
+				baseLat := 20 + services[i].Load*80
+				lat := baseLat + (rand.Float64()-0.5)*20
+				lat = math.Max(5, math.Min(300, lat))
+				lat = math.Round(lat*10) / 10
+				svcLatencies[i].History = append(svcLatencies[i].History, lat)
+				if len(svcLatencies[i].History) > 20 {
+					svcLatencies[i].History = svcLatencies[i].History[len(svcLatencies[i].History)-20:]
+				}
+				for _, v := range svcLatencies[i].History {
+					if v > maxMs {
+						maxMs = v
+					}
+				}
 			}
 
 			buf := statsBufPool.Get().(*bytes.Buffer)
 			buf.Reset()
-			if err := views.ServicesOOB(services).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "publish services"), buf); err != nil {
+			if err := views.ServicesOOB(services, svcLatencies, maxMs*1.1).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "publish services"), buf); err != nil {
 				statsBufPool.Put(buf)
 				continue
 			}

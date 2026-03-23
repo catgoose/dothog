@@ -10,6 +10,8 @@ import (
 	"catgoose/dothog/internal/ssebroker"
 	// setup:feature:sse:end
 	// setup:feature:demo:end
+	"catgoose/dothog/internal/health"
+	"catgoose/dothog/internal/version"
 	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/hypermedia"
@@ -34,6 +36,10 @@ import (
 // AppRoutes defines the interface for app routes
 type AppRoutes interface {
 	InitRoutes() error
+	// SetHealthDB sets the database connection for the /health endpoint to ping.
+	SetHealthDB(db health.Pinger)
+	// SetHealthStats sets a function that returns app-specific stats for /health.
+	SetHealthStats(fn health.StatsFunc)
 }
 
 // appRoutes implements AppRoutes
@@ -43,6 +49,7 @@ type appRoutes struct {
 	reqLogStore   *promolog.Store
 	issueReporter IssueReporter
 	startTime     time.Time
+	healthCfg     health.Config
 	// setup:feature:session_settings:start
 	settingsRepo repository.SessionSettingsRepository
 	// setup:feature:session_settings:end
@@ -59,12 +66,17 @@ func NewAppRoutes(ctx context.Context, e *echo.Echo, reqLogStore *promolog.Store
 	if reporter == nil {
 		reporter = defaultReporter{}
 	}
+	startTime := time.Now()
 	return &appRoutes{
 		e:             e,
 		ctx:           ctx,
 		reqLogStore:   reqLogStore,
 		issueReporter: reporter,
-		startTime: time.Now(),
+		startTime:     startTime,
+		healthCfg: health.Config{
+			Version:   version.Version,
+			StartTime: startTime,
+		},
 		// setup:feature:session_settings:start
 		settingsRepo: settingsRepo,
 		// setup:feature:session_settings:end
@@ -86,12 +98,9 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.e.GET("/welcome", handler.HandleComponent(views.WelcomePage()))
 	// setup:feature:demo:end
 
-	// Health check endpoint for Caddy
+	// Health check endpoint — returns structured ops metadata.
 	ar.e.GET("/health", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{
-			"status": "ok",
-			"time":   time.Now().Format(time.RFC3339),
-		})
+		return c.JSON(http.StatusOK, health.Check(c.Request().Context(), ar.healthCfg))
 	})
 
 	// Report issue endpoint — accepts a report, passes log entries to the
@@ -178,7 +187,16 @@ func (ar *appRoutes) InitRoutes() error {
 		return fmt.Errorf("handler init: %w", err)
 	}
 	handler.InitRouteSet(ar.e, cfg.AppName)
+	ar.healthCfg.Name = cfg.AppName
 	return nil
+}
+
+func (ar *appRoutes) SetHealthDB(db health.Pinger) {
+	ar.healthCfg.DB = db
+}
+
+func (ar *appRoutes) SetHealthStats(fn health.StatsFunc) {
+	ar.healthCfg.Stats = fn
 }
 
 // InitEcho initializes Echo with global configurations

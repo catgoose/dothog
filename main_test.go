@@ -178,7 +178,8 @@ func TestWorkflowGETHealth(t *testing.T) {
 	e.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Contains(t, rec.Body.String(), `"status":"ok"`)
+	assert.Contains(t, rec.Body.String(), `"status":"healthy"`)
+	assert.Contains(t, rec.Body.String(), `"name":"dothog"`)
 }
 
 func TestWorkflowStatic(t *testing.T) {

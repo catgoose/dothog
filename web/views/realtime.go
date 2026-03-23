@@ -18,6 +18,38 @@ type NetworkPoint struct {
 	OutMBps float64
 }
 
+// LatencyBucket holds P50/P90/P99 for a single time tick.
+type LatencyBucket struct {
+	P50 float64
+	P90 float64
+	P99 float64
+}
+
+// ErrorRatePoint is a single point in the error rate sparkline history.
+type ErrorRatePoint struct {
+	Value float64
+}
+
+// DiskIOPoint holds read/write throughput at one tick.
+type DiskIOPoint struct {
+	ReadMBps  float64
+	WriteMBps float64
+}
+
+// StatusDistribution holds counts per HTTP status class.
+type StatusDistribution struct {
+	S2xx int
+	S3xx int
+	S4xx int
+	S5xx int
+}
+
+// ServiceLatency holds per-service P99 latency history for multi-line chart.
+type ServiceLatency struct {
+	Name    string
+	History []float64
+}
+
 // MetricsSnapshot holds the current dashboard metrics state.
 type MetricsSnapshot struct {
 	RPS        float64
@@ -30,6 +62,13 @@ type MetricsSnapshot struct {
 	ConnActive int
 	ConnIdle   int
 	ConnWait   int
+	// New chart data
+	LatencyHist  []LatencyBucket
+	ErrorHistory []ErrorRatePoint
+	DiskIO       []DiskIOPoint
+	StatusDist   StatusDistribution
+	MaxLatency   float64
+	MaxDiskIO    float64
 }
 
 // networkAreaStyles returns CSS style strings for a Charts.css area chart.
@@ -225,5 +264,146 @@ func statsEntries(s ssebroker.SystemStats) []statsEntry {
 		{"stat-frees", "Frees", fmt.Sprintf("%d", s.Frees), "Allocator"},
 		{"stat-liveobjects", "Live Objects", fmt.Sprintf("%d", s.LiveObjects), "Allocator"},
 	}
+}
+
+// --- New chart style helpers ---
+
+// latencyHistStyle holds CSS styles for one bucket of the latency histogram (3 series).
+type latencyHistStyle struct {
+	P50Style string
+	P90Style string
+	P99Style string
+}
+
+func latencyHistStyles(snap MetricsSnapshot) []latencyHistStyle {
+	max := maxOrOne(snap.MaxLatency)
+	styles := make([]latencyHistStyle, len(snap.LatencyHist))
+	for i, b := range snap.LatencyHist {
+		styles[i] = latencyHistStyle{
+			P50Style: fmt.Sprintf("--size: %s", fmtSize(b.P50/max)),
+			P90Style: fmt.Sprintf("--size: %s", fmtSize(b.P90/max)),
+			P99Style: fmt.Sprintf("--size: %s", fmtSize(b.P99/max)),
+		}
+	}
+	return styles
+}
+
+func errorSparklineStyles(snap MetricsSnapshot) []string {
+	if len(snap.ErrorHistory) == 0 {
+		return nil
+	}
+	// Use a fixed ceiling of 10% so small fluctuations don't look chaotic.
+	// If the actual max exceeds 10%, scale to that instead.
+	max := 10.0
+	for _, pt := range snap.ErrorHistory {
+		if pt.Value > max {
+			max = pt.Value
+		}
+	}
+	max *= 1.1
+	styles := make([]string, len(snap.ErrorHistory))
+	for i, pt := range snap.ErrorHistory {
+		size := pt.Value / max
+		start := 0.0
+		if i > 0 {
+			start = snap.ErrorHistory[i-1].Value / max
+		}
+		styles[i] = fmt.Sprintf("--start: %s; --size: %s", fmtSize(start), fmtSize(size))
+	}
+	return styles
+}
+
+func throughputInStyles(snap MetricsSnapshot) []string {
+	max := maxOrOne(snap.MaxNetwork)
+	styles := make([]string, len(snap.Network))
+	for i, pt := range snap.Network {
+		size := pt.InMBps / max
+		start := 0.0
+		if i > 0 {
+			start = snap.Network[i-1].InMBps / max
+		}
+		styles[i] = fmt.Sprintf("--start: %s; --size: %s", fmtSize(start), fmtSize(size))
+	}
+	return styles
+}
+
+func throughputOutStyles(snap MetricsSnapshot) []string {
+	max := maxOrOne(snap.MaxNetwork)
+	styles := make([]string, len(snap.Network))
+	for i, pt := range snap.Network {
+		size := pt.OutMBps / max
+		start := 0.0
+		if i > 0 {
+			start = snap.Network[i-1].OutMBps / max
+		}
+		styles[i] = fmt.Sprintf("--start: %s; --size: %s", fmtSize(start), fmtSize(size))
+	}
+	return styles
+}
+
+// diskIOStyle holds per-point styles for Read and Write series.
+type diskIOStyle struct {
+	ReadStyle  string
+	WriteStyle string
+}
+
+func diskIOStyles(snap MetricsSnapshot) []diskIOStyle {
+	max := maxOrOne(snap.MaxDiskIO)
+	styles := make([]diskIOStyle, len(snap.DiskIO))
+	for i, pt := range snap.DiskIO {
+		styles[i] = diskIOStyle{
+			ReadStyle:  fmt.Sprintf("--size: %s", fmtSize(pt.ReadMBps/max)),
+			WriteStyle: fmt.Sprintf("--size: %s", fmtSize(pt.WriteMBps/max)),
+		}
+	}
+	return styles
+}
+
+// statusDistStyle holds the style and label for one status class bar.
+type statusDistStyle struct {
+	Label string
+	Style string
+	Count int
+}
+
+func statusDistStyles(snap MetricsSnapshot) []statusDistStyle {
+	d := snap.StatusDist
+	max := d.S2xx
+	if d.S3xx > max {
+		max = d.S3xx
+	}
+	if d.S4xx > max {
+		max = d.S4xx
+	}
+	if d.S5xx > max {
+		max = d.S5xx
+	}
+	m := float64(maxOrOne(float64(max)))
+	return []statusDistStyle{
+		{"2xx", fmt.Sprintf("--size: %s; --color: #34d399", fmtSize(float64(d.S2xx)/m)), d.S2xx},
+		{"3xx", fmt.Sprintf("--size: %s; --color: #38bdf8", fmtSize(float64(d.S3xx)/m)), d.S3xx},
+		{"4xx", fmt.Sprintf("--size: %s; --color: #fbbf24", fmtSize(float64(d.S4xx)/m)), d.S4xx},
+		{"5xx", fmt.Sprintf("--size: %s; --color: #f87171", fmtSize(float64(d.S5xx)/m)), d.S5xx},
+	}
+}
+
+func svcLatestLatency(svc ServiceLatency) float64 {
+	if len(svc.History) == 0 {
+		return 0
+	}
+	return svc.History[len(svc.History)-1]
+}
+
+func svcLatencyBarStyle(svc ServiceLatency, maxMs float64) string {
+	lat := svcLatestLatency(svc)
+	max := maxOrOne(maxMs)
+	size := lat / max
+	color := "#34d399" // green
+	if lat > 150 {
+		color = "#f87171" // red
+	} else if lat > 80 {
+		color = "#fbbf24" // amber
+	}
+	return fmt.Sprintf("--size: %s; --color: %s", fmtSize(size), color)
 }
 
