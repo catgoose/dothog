@@ -120,8 +120,11 @@ jobs:
       - name: Vet
         run: go vet ./...
 
-      - name: Test
-        run: go test -race -timeout 15m ./...
+      - name: Unit tests
+        run: go test -race -timeout 10m $(go list ./... | grep -v /tests)
+
+      - name: Integration tests
+        run: go test -timeout 15m ./tests/
 
   e2e-test:
     needs: [update-deps]

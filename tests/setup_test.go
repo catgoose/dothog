@@ -283,6 +283,9 @@ func assertBuildSucceeds(t *testing.T, dir string) {
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "go", "build", "./...")
 	cmd.Dir = dir
+	// WaitDelay ensures pipes are closed even if child processes linger
+	// after context cancellation kills the parent go build process.
+	cmd.WaitDelay = 10 * time.Second
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err, "go build failed (timeout=%v): %s", ctx.Err(), string(out))
 }
