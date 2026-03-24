@@ -251,6 +251,20 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		}
 	}
 
+	// Rewrite Dockerfile: binary name and port
+	dockerfilePath := filepath.Join(dir, "Dockerfile")
+	if data, err := os.ReadFile(dockerfilePath); err == nil {
+		content := string(data)
+		content = strings.ReplaceAll(content, "-o /dothog", "-o /"+binaryName)
+		content = strings.ReplaceAll(content, "/usr/local/bin/dothog", "/usr/local/bin/"+binaryName)
+		content = strings.ReplaceAll(content, `ENTRYPOINT ["dothog"]`, `ENTRYPOINT ["`+binaryName+`"]`)
+		content = strings.ReplaceAll(content, "SERVER_LISTEN_PORT=3000", "SERVER_LISTEN_PORT="+appTLSPort)
+		content = strings.ReplaceAll(content, "EXPOSE 3000", "EXPOSE "+appTLSPort)
+		if err := os.WriteFile(dockerfilePath, []byte(content), 0644); err != nil {
+			return err
+		}
+	}
+
 	if data, err := os.ReadFile(filepath.Join(dir, "package-lock.json")); err == nil {
 		content := strings.ReplaceAll(string(data), `"name": "dothog"`, `"name": "`+binaryName+`"`)
 		content = regexp.MustCompile(`"name":\s*"dothog"`).ReplaceAllString(content, `"name": "`+binaryName+`"`)
@@ -695,7 +709,7 @@ func removeOrphanedImportLines(content, baseDir, modulePath string) string {
 	// Determine which import lines to remove
 	removeLines := make(map[int]bool)
 	for _, imp := range imports {
-		// Check internal packages: does the directory still exist?
+		// Check internal packages: directory must exist AND identifier must be used.
 		if strings.HasPrefix(imp.importPath, modulePath+"/") {
 			relPkg := strings.TrimPrefix(imp.importPath, modulePath+"/")
 			pkgDir := filepath.Join(baseDir, filepath.FromSlash(relPkg))
@@ -703,6 +717,21 @@ func removeOrphanedImportLines(content, baseDir, modulePath string) string {
 				removeLines[imp.lineIdx] = true
 				continue
 			}
+			// Directory exists but identifier may be unused after feature stripping.
+			// Check if the package identifier appears as "ident." (a qualified reference)
+			// to avoid false positives from the word appearing in strings/comments.
+			ident := imp.pkgName
+			if imp.alias != "" && imp.alias != "_" {
+				ident = imp.alias
+			}
+			if imp.alias == "_" {
+				continue
+			}
+			qualifiedRe := regexp.MustCompile(regexp.QuoteMeta(ident) + `\.`)
+			if !qualifiedRe.MatchString(body) {
+				removeLines[imp.lineIdx] = true
+			}
+			continue
 		}
 
 		// For stdlib imports (no dot in first path segment), check if the

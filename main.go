@@ -113,7 +113,9 @@ func main() {
 			// setup:feature:session_settings:start
 			schema.SessionSettingsTable,
 			// setup:feature:session_settings:end
+			// setup:feature:graph:start
 			schema.UsersTable,
+			// setup:feature:graph:end
 		)
 
 		// InitRepo gates schema init. Destructive: drops existing tables and recreates them, wiping data. Only enable when intentionally resetting the database.

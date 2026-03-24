@@ -126,8 +126,9 @@ func ErrorHandlerMiddleware(reqLogStore *promolog.Store) echo.MiddlewareFunc {
 					if buf := promolog.GetBuffer(c.Request().Context()); buf != nil {
 						entries = buf.Entries
 					}
-					userID, _ := c.Get("azureId").(string)
+					var userID string
 				// setup:feature:auth:start
+				userID, _ = c.Get("azureId").(string)
 				if userID == "" {
 					logger.WithContext(c.Request().Context()).Warn("Error trace missing UserID: azureId not set on echo context")
 				}

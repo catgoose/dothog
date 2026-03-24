@@ -50,6 +50,8 @@ var SessionSettingsTable = NewTable("SessionSettings").
 
 // setup:feature:session_settings:end
 
+// setup:feature:graph:start
+
 var UsersTable = NewTable("Users").
 	Columns(
 		AutoIncrCol("ID"),
@@ -74,3 +76,5 @@ var UsersTable = NewTable("Users").
 		Index("idx_users_mail", "Mail"),
 		Index("idx_users_lastloginat", "LastLoginAt"),
 	)
+
+// setup:feature:graph:end
