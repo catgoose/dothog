@@ -84,6 +84,9 @@ func appNavComponent(path string) templ.Component {
 				// setup:feature:session_settings:end
 				{Label: "System", Href: "/admin/system"},
 				{Label: "Config", Href: "/admin/config"},
+				// setup:feature:demo:start
+				{Label: "Settings", Href: "/admin/settings"},
+				// setup:feature:demo:end
 			},
 		},
 	}, path)

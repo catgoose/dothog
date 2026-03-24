@@ -19,6 +19,11 @@ func (ar *appRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin/system", ar.handleSystemInfo)
 	ar.e.GET("/admin/system/check-update", ar.handleCheckUpdate)
 	ar.e.GET("/admin/config", ar.handleConfigInfo)
+	// setup:feature:demo:start
+	ar.e.GET("/admin/settings", func(c echo.Context) error {
+		return handler.RenderBaseLayout(c, views.AdminSettingsPage())
+	})
+	// setup:feature:demo:end
 	// setup:feature:session_settings:start
 	ar.e.GET("/admin/sessions", ar.handleSessionsPage)
 	ar.e.GET("/admin/sessions/table", ar.handleSessionsTable)

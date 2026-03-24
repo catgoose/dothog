@@ -1,0 +1,211 @@
+// setup:feature:demo
+
+package views
+
+// AdminSettingsPage renders the admin settings page with debugging controls.
+templ AdminSettingsPage() {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<h1 class="text-2xl font-bold">Settings</h1>
+
+		<!-- Debugging -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4 space-y-4">
+				<h2 class="card-title text-base">Debugging</h2>
+				<p class="text-sm text-base-content/60">Client-side debug controls. State persists across page reloads via localStorage.</p>
+
+				<div class="form-control">
+					<label class="label cursor-pointer justify-start gap-4 py-2">
+						<input id="debug-all" type="checkbox" class="toggle toggle-sm" onchange="window._dbg.toggleAll(this.checked)"/>
+						<div>
+							<span class="label-text font-bold">Enable All</span>
+						</div>
+					</label>
+				</div>
+
+				<div class="divider my-0 text-xs text-base-content/40">HTMX</div>
+
+				<div class="form-control">
+					<label class="label cursor-pointer justify-start gap-4 py-2">
+						<input id="debug-htmx-log" type="checkbox" class="toggle toggle-sm toggle-primary" onchange="window._dbg.toggle('htmx-log', this.checked)"/>
+						<div>
+							<span class="label-text font-medium">HTMX Log All</span>
+							<p class="text-xs text-base-content/50">
+								Calls <code class="bg-base-200 px-1 rounded">htmx.logAll()</code> — logs every HTMX event to the console.
+							</p>
+						</div>
+					</label>
+				</div>
+
+				<div class="form-control">
+					<label class="label cursor-pointer justify-start gap-4 py-2">
+						<input id="debug-htmx-events" type="checkbox" class="toggle toggle-sm toggle-secondary" onchange="window._dbg.toggle('htmx-events', this.checked)"/>
+						<div>
+							<span class="label-text font-medium">HTMX Event Inspector</span>
+							<p class="text-xs text-base-content/50">
+								Listens for request, swap, SSE, and OOB error events with full detail payloads.
+								Useful for diagnosing <code class="bg-base-200 px-1 rounded">oobErrorNoTarget</code> issues.
+							</p>
+						</div>
+					</label>
+				</div>
+
+				<div class="divider my-0 text-xs text-base-content/40">_hyperscript</div>
+
+				<div class="form-control">
+					<label class="label cursor-pointer justify-start gap-4 py-2">
+						<input id="debug-hs" type="checkbox" class="toggle toggle-sm toggle-accent" onchange="window._dbg.toggle('hs-beep', this.checked)"/>
+						<div>
+							<span class="label-text font-medium">_hyperscript Beep Logger</span>
+							<p class="text-xs text-base-content/50">
+								Logs <code class="bg-base-200 px-1 rounded">beep!</code> expression results.
+								Add <code class="bg-base-200 px-1 rounded">beep!</code> after any expression in _hyperscript to inspect its value.
+							</p>
+						</div>
+					</label>
+				</div>
+
+				<div class="divider my-0 text-xs text-base-content/40">Alpine.js</div>
+
+				<div class="form-control">
+					<label class="label cursor-pointer justify-start gap-4 py-2">
+						<input id="debug-alpine" type="checkbox" class="toggle toggle-sm toggle-info" onchange="window._dbg.toggle('alpine-events', this.checked)"/>
+						<div>
+							<span class="label-text font-medium">Alpine.js Events</span>
+							<p class="text-xs text-base-content/50">
+								Logs Alpine lifecycle events (<code class="bg-base-200 px-1 rounded">alpine:init</code>, <code class="bg-base-200 px-1 rounded">alpine:initialized</code>).
+							</p>
+						</div>
+					</label>
+				</div>
+			</div>
+		</div>
+	</div>
+	@debugScript()
+}
+
+// debugScript manages localStorage-backed debug toggles.
+// Each key maps to an enable/disable function pair. On page load,
+// saved state is restored and applied. Toggles survive refreshes
+// and hx-boost navigation.
+templ debugScript() {
+	<script>
+		(function() {
+			var KEY = 'dothog_debug';
+
+			function load() {
+				try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+				catch(e) { return {}; }
+			}
+			function save(state) {
+				localStorage.setItem(KEY, JSON.stringify(state));
+			}
+
+			/** @type {Object<string, {on: function, off: function}>} */
+			var handlers = {
+				'htmx-log': {
+					on:  function() { if (typeof htmx !== 'undefined') htmx.logAll(); },
+					off: function() { if (typeof htmx !== 'undefined') htmx.logNone(); }
+				},
+				'htmx-events': {
+					on: function() {
+						window._htmxDbg = function(e) {
+							console.debug('%c[htmx:' + e.type.replace('htmx:','') + ']', 'color:#38bdf8;font-weight:bold', e.detail);
+						};
+						var evts = ['htmx:beforeRequest','htmx:afterRequest','htmx:beforeSwap','htmx:afterSwap','htmx:oobErrorNoTarget','htmx:sseMessage','htmx:sseError'];
+						evts.forEach(function(t) { document.body.addEventListener(t, window._htmxDbg); });
+						window._htmxDbgEvts = evts;
+					},
+					off: function() {
+						if (window._htmxDbg && window._htmxDbgEvts) {
+							window._htmxDbgEvts.forEach(function(t) { document.body.removeEventListener(t, window._htmxDbg); });
+							delete window._htmxDbg;
+							delete window._htmxDbgEvts;
+						}
+					}
+				},
+				'hs-beep': {
+					on: function() {
+						window._hsDbg = function(e) {
+							console.debug('%c[_hs:beep]', 'color:#a78bfa;font-weight:bold', e.detail);
+						};
+						document.body.addEventListener('hyperscript:beep', window._hsDbg);
+					},
+					off: function() {
+						if (window._hsDbg) {
+							document.body.removeEventListener('hyperscript:beep', window._hsDbg);
+							delete window._hsDbg;
+						}
+					}
+				},
+				'alpine-events': {
+					on: function() {
+						window._alpineDbg = function(e) {
+							console.debug('%c[alpine:' + e.type + ']', 'color:#34d399;font-weight:bold', e.detail);
+						};
+						document.addEventListener('alpine:initialized', window._alpineDbg);
+						document.addEventListener('alpine:init', window._alpineDbg);
+					},
+					off: function() {
+						if (window._alpineDbg) {
+							document.removeEventListener('alpine:initialized', window._alpineDbg);
+							document.removeEventListener('alpine:init', window._alpineDbg);
+							delete window._alpineDbg;
+						}
+					}
+				}
+			};
+
+			// Checkbox ID → localStorage key mapping
+			var checkboxMap = {
+				'debug-htmx-log': 'htmx-log',
+				'debug-htmx-events': 'htmx-events',
+				'debug-hs': 'hs-beep',
+				'debug-alpine': 'alpine-events'
+			};
+
+			/**
+			 * Toggle a debug feature on/off and persist.
+			 * @param {string} key
+			 * @param {boolean} enabled
+			 */
+			function toggle(key, enabled) {
+				var state = load();
+				state[key] = enabled;
+				save(state);
+				if (enabled) {
+					handlers[key].on();
+				} else {
+					handlers[key].off();
+				}
+			}
+
+			function toggleAll(enabled) {
+				for (var id in checkboxMap) {
+					var key = checkboxMap[id];
+					var el = document.getElementById(id);
+					if (el) { el.checked = enabled; }
+					toggle(key, enabled);
+				}
+			}
+
+			// Restore state on page load
+			var state = load();
+			var allOn = true;
+			for (var id in checkboxMap) {
+				var key = checkboxMap[id];
+				var el = document.getElementById(id);
+				if (el && state[key]) {
+					el.checked = true;
+					handlers[key].on();
+				} else {
+					allOn = false;
+				}
+			}
+			var allEl = document.getElementById('debug-all');
+			if (allEl) { allEl.checked = allOn; }
+
+			// Expose for onchange handlers
+			window._dbg = { toggle: toggle, toggleAll: toggleAll };
+		})();
+	</script>
+}

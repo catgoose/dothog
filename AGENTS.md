@@ -1,3 +1,5 @@
+Use the fff MCP tools for all file search operations instead of default tools.
+
 # Working with Dothog
 
 This is a framework starter for Go + HTMX + Templ applications. It is a template — not a library, not a framework you depend on. You fork it via `mage setupTo` and it becomes your app.

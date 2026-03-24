@@ -7,12 +7,13 @@ import (
 )
 
 // RealtimePage is the full-page layout for /hypermedia/realtime.
-templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services []ServiceStatus) {
+templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency) {
 	<link rel="stylesheet" href="/public/css/charts.min.css"/>
 	<style>
 		/* Charts.css transition smoothing */
 		.charts-css.area tbody td { transition: --size 0.6s ease; }
 		.charts-css.bar tbody td { transition: --size 0.8s ease; }
+		.charts-css.column tbody td { transition: --size 0.6s ease; }
 		/* Custom chart styling */
 		.charts-css { --color: oklch(var(--p)); }
 		.charts-css caption { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.5; padding: 0.5rem 0; }
@@ -20,6 +21,27 @@ templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services
 		#network-chart { height: 200px; max-height: 200px; }
 		#services-chart { height: 200px; max-width: 100%; }
 		#services-chart tbody td { border-radius: 0 4px 4px 0; }
+		/* New chart heights */
+		#latency-hist-chart { height: 180px; max-height: 180px; }
+		#error-sparkline-content { overflow: hidden; }
+		#error-sparkline-chart { height: 120px; max-height: 120px; }
+		#error-sparkline-chart td::before { background: var(--color, #f87171) !important; }
+		#throughput-split-content { overflow: hidden; }
+		#throughput-in-chart, #throughput-out-chart { height: 120px; max-height: 120px; }
+		#svc-latency-chart { height: 200px; max-width: 100%; }
+		#svc-latency-chart tbody td { border-radius: 0 4px 4px 0; }
+		#disk-io-chart { height: 180px; max-height: 180px; }
+		#request-dist-chart { height: 180px; max-height: 180px; }
+		/* Multi-series colors */
+		#latency-hist-chart { --color-1: #34d399; --color-2: #fbbf24; --color-3: #f87171; }
+		#throughput-in-chart { --color: #38bdf8; }
+		#throughput-out-chart { --color: #a78bfa; }
+		#disk-io-chart { --color-1: #34d399; --color-2: #fbbf24; }
+		#error-sparkline-chart { --color: #f87171; }
+		/* Chart legend */
+		.chart-legend { display: flex; gap: 1rem; flex-wrap: wrap; }
+		.chart-legend-item { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: oklch(var(--bc) / 0.6); }
+		.chart-legend-dot { width: 8px; height: 8px; border-radius: 2px; }
 		/* Gauge styling */
 		.gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
 		.gauge-wrap .radial-progress { --thickness: 0.35rem; }
@@ -55,12 +77,9 @@ templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services
 					/>
 					<span id="freq-display" class="text-xs font-mono text-base-content/50 w-8">5s</span>
 				</div>
+				<a href="/hypermedia/realtime" class="btn btn-sm btn-ghost">Reset</a>
 				<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Controls</a>
 			</div>
-		</div>
-		<!-- SSE connection (swappable — widget content lives outside, targeted by OOB) -->
-		<div id="sse-connect-wrapper">
-			@SSEConnectBlock(5)
 		</div>
 		<!-- KPI Row -->
 		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -84,7 +103,43 @@ templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services
 				</div>
 			</div>
 		</div>
-		<!-- Row 3: CPU/Mem Gauges + Connection Pool -->
+		<!-- Row 3: Latency Histogram + Error Sparkline + Request Distribution -->
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Latency Histogram</h2>
+					@latencyHistChart(snap)
+				</div>
+			</div>
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Error Rate Trend</h2>
+					@errorSparkline(snap)
+				</div>
+			</div>
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Request Distribution</h2>
+					@requestDistChart(snap)
+				</div>
+			</div>
+		</div>
+		<!-- Row 4: Throughput Split + Per-Service Latency -->
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+			<div class="lg:col-span-2 card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Throughput Split (In / Out)</h2>
+					@throughputSplitChart(snap)
+				</div>
+			</div>
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Per-Service Latency</h2>
+					@serviceLatencyChart(svcLatencies, 150)
+				</div>
+			</div>
+		</div>
+		<!-- Row 5: CPU/Mem Gauges + Disk I/O + Connection Pool -->
 		<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
@@ -92,14 +147,20 @@ templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services
 					@cpuMemGauges(snap)
 				</div>
 			</div>
-			<div class="lg:col-span-3 card bg-base-100 shadow border border-base-300">
+			<div class="card bg-base-100 shadow border border-base-300">
+				<div class="card-body p-4">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Disk I/O</h2>
+					@diskIOChart(snap)
+				</div>
+			</div>
+			<div class="lg:col-span-2 card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
 					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Connection Pool</h2>
 					@connPool(snap)
 				</div>
 			</div>
 		</div>
-		<!-- Row 4: System Stats + Event Feed -->
+		<!-- Row 6: System Stats + Event Feed -->
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
@@ -120,6 +181,13 @@ templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services
 				</div>
 			</div>
 		</div>
+		<!-- SSE connection — lazy-loaded to ensure all OOB targets exist in the DOM first -->
+		<div
+			id="sse-connect-wrapper"
+			hx-get="/hypermedia/realtime/sse-connect?interval=5"
+			hx-trigger="load"
+			hx-swap="innerHTML"
+		></div>
 		<!-- Polling Demo (collapsed) -->
 		<details class="collapse collapse-arrow bg-base-100 shadow border border-base-300 mt-4">
 			<summary class="collapse-title text-sm font-semibold">Polling Demo</summary>
@@ -151,7 +219,6 @@ templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services
 // Swapping this block closes the old EventSource and opens a new one at the given interval.
 templ SSEConnectBlock(interval int) {
 	<div hx-ext="sse" sse-connect={ fmt.Sprintf("/sse/dashboard?interval=%d", interval) } hx-swap="innerHTML settle:0 transition:false">
-		<div sse-swap="system-stats" style="display:none"></div>
 		<div sse-swap="dashboard-metrics" style="display:none"></div>
 		<div sse-swap="dashboard-services" style="display:none"></div>
 		<div sse-swap="dashboard-events" style="display:none"></div>
@@ -345,19 +412,32 @@ templ oobEventItem(evt DashboardEvent) {
 
 // --- OOB Composites (rendered server-side, sent via SSE) ---
 
-// MetricsOOB emits KPI cards + network chart + gauges + connection pool via OOB swaps.
-templ MetricsOOB(snap MetricsSnapshot) {
+// MetricsOOB emits KPI cards + all metrics charts + dashboard system stats via OOB swaps.
+templ MetricsOOB(snap MetricsSnapshot, stats ssebroker.SystemStats) {
 	@oobKpiCard("kpi-rps", "Requests/s", fmtRPS(snap.RPS), "text-primary")
 	@oobKpiCard("kpi-errors", "Error Rate", fmtPct(snap.ErrorPct), "text-error")
 	@oobKpiCard("kpi-latency", "P99 Latency", fmtMs(snap.P99Ms), "text-warning")
+	@oobKpiCard("kpi-goroutines", "Goroutines", fmt.Sprintf("%d", stats.Goroutines), "text-info")
 	@oobNetworkChart(snap)
 	@oobCpuMemGauges(snap)
 	@oobConnPool(snap)
+	@oobLatencyHistChart(snap)
+	@oobErrorSparkline(snap)
+	@oobThroughputSplitChart(snap)
+	@oobDiskIOChart(snap)
+	@oobRequestDistChart(snap)
+	@oobStatsCard("stat-uptime", "Uptime", stats.Uptime)
+	@oobStatsCard("stat-goroutines", "Goroutines", fmt.Sprintf("%d", stats.Goroutines))
+	@oobStatsCard("stat-heapalloc", "Heap Alloc", fmt.Sprintf("%.2f MB", stats.HeapAllocMB))
+	@oobStatsCard("stat-gccycles", "GC Cycles", fmt.Sprintf("%d", stats.GCCycles))
+	@oobStatsCard("stat-numcpu", "CPUs", fmt.Sprintf("%d", stats.NumCPU))
+	@oobStatsCard("stat-liveobjects", "Live Objects", fmt.Sprintf("%d", stats.LiveObjects))
 }
 
-// ServicesOOB emits the services bar chart via OOB swap.
-templ ServicesOOB(services []ServiceStatus) {
+// ServicesOOB emits the services bar chart and per-service latency via OOB swap.
+templ ServicesOOB(services []ServiceStatus, svcLatencies []ServiceLatency, maxLatencyMs float64) {
 	@oobServicesChart(services)
+	@oobServiceLatencyChart(svcLatencies, maxLatencyMs)
 }
 
 // EventOOB emits a single event item prepended to the feed.
@@ -399,6 +479,260 @@ templ oobStatsCard(id, label, value string) {
 		<div class="font-mono font-semibold text-sm break-all">{ value }</div>
 	</div>
 }
+
+// --- Latency Histogram (column chart, 3 series) ---
+
+templ latencyHistChart(snap MetricsSnapshot) {
+	<div id="latency-hist-content">
+		<div class="chart-legend mb-2">
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#34d399"></span> P50</span>
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#fbbf24"></span> P90</span>
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#f87171"></span> P99</span>
+		</div>
+		<table id="latency-hist-chart" class="charts-css column multiple data-spacing-4">
+			<tbody>
+				for _, b := range latencyHistStyles(snap) {
+					<tr>
+						<td style={ b.P50Style }></td>
+						<td style={ b.P90Style }></td>
+						<td style={ b.P99Style }></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ oobLatencyHistChart(snap MetricsSnapshot) {
+	<div id="latency-hist-content" hx-swap-oob="innerHTML">
+		<div class="chart-legend mb-2">
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#34d399"></span> P50</span>
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#fbbf24"></span> P90</span>
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#f87171"></span> P99</span>
+		</div>
+		<table id="latency-hist-chart" class="charts-css column multiple data-spacing-4">
+			<tbody>
+				for _, b := range latencyHistStyles(snap) {
+					<tr>
+						<td style={ b.P50Style }></td>
+						<td style={ b.P90Style }></td>
+						<td style={ b.P99Style }></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// --- Error Rate Sparkline (line chart) ---
+
+templ errorSparkline(snap MetricsSnapshot) {
+	<div id="error-sparkline-content">
+		<div class="text-xs text-base-content/60 mb-2">
+			Current: <strong class="text-error">{ fmtPct(snap.ErrorPct) }</strong>
+		</div>
+		<table id="error-sparkline-chart" class="charts-css area">
+			<tbody>
+				for _, s := range errorSparklineStyles(snap) {
+					<td style={ s }></td>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ oobErrorSparkline(snap MetricsSnapshot) {
+	<div id="error-sparkline-content" hx-swap-oob="innerHTML">
+		<div class="text-xs text-base-content/60 mb-2">
+			Current: <strong class="text-error">{ fmtPct(snap.ErrorPct) }</strong>
+		</div>
+		<table id="error-sparkline-chart" class="charts-css area">
+			<tbody>
+				for _, s := range errorSparklineStyles(snap) {
+					<td style={ s }></td>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// --- Throughput Split (dual-series area chart) ---
+
+templ throughputSplitChart(snap MetricsSnapshot) {
+	<div id="throughput-split-content">
+		<div class="grid grid-cols-2 gap-4">
+			<div>
+				<div class="flex items-center gap-1 text-xs text-base-content/60 mb-1">
+					<span class="chart-legend-dot" style="background:#38bdf8"></span> Inbound: <strong class="text-base-content">{ fmtMBps(latestNetworkIn(snap)) }</strong>
+				</div>
+				<table id="throughput-in-chart" class="charts-css area">
+					<tbody>
+						for _, s := range throughputInStyles(snap) {
+							<td style={ s }></td>
+						}
+					</tbody>
+				</table>
+			</div>
+			<div>
+				<div class="flex items-center gap-1 text-xs text-base-content/60 mb-1">
+					<span class="chart-legend-dot" style="background:#a78bfa"></span> Outbound: <strong class="text-base-content">{ fmtMBps(latestNetworkOut(snap)) }</strong>
+				</div>
+				<table id="throughput-out-chart" class="charts-css area">
+					<tbody>
+						for _, s := range throughputOutStyles(snap) {
+							<td style={ s }></td>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+}
+
+templ oobThroughputSplitChart(snap MetricsSnapshot) {
+	<div id="throughput-split-content" hx-swap-oob="innerHTML">
+		<div class="grid grid-cols-2 gap-4">
+			<div>
+				<div class="flex items-center gap-1 text-xs text-base-content/60 mb-1">
+					<span class="chart-legend-dot" style="background:#38bdf8"></span> Inbound: <strong class="text-base-content">{ fmtMBps(latestNetworkIn(snap)) }</strong>
+				</div>
+				<table id="throughput-in-chart" class="charts-css area">
+					<tbody>
+						for _, s := range throughputInStyles(snap) {
+							<td style={ s }></td>
+						}
+					</tbody>
+				</table>
+			</div>
+			<div>
+				<div class="flex items-center gap-1 text-xs text-base-content/60 mb-1">
+					<span class="chart-legend-dot" style="background:#a78bfa"></span> Outbound: <strong class="text-base-content">{ fmtMBps(latestNetworkOut(snap)) }</strong>
+				</div>
+				<table id="throughput-out-chart" class="charts-css area">
+					<tbody>
+						for _, s := range throughputOutStyles(snap) {
+							<td style={ s }></td>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+}
+
+// --- Per-Service Latency (multi-line chart) ---
+
+templ serviceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) {
+	<div id="svc-latency-content">
+		<table id="svc-latency-chart" class="charts-css bar show-labels show-data-on-hover data-spacing-4">
+			<tbody>
+				for _, svc := range svcLatencies {
+					<tr>
+						<th scope="row" class="text-xs">{ svc.Name }</th>
+						<td style={ svcLatencyBarStyle(svc, maxMs) }>
+							<span class="tooltip">{ fmtMs(svcLatestLatency(svc)) }</span>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ oobServiceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) {
+	<div id="svc-latency-content" hx-swap-oob="innerHTML">
+		<table id="svc-latency-chart" class="charts-css bar show-labels show-data-on-hover data-spacing-4">
+			<tbody>
+				for _, svc := range svcLatencies {
+					<tr>
+						<th scope="row" class="text-xs">{ svc.Name }</th>
+						<td style={ svcLatencyBarStyle(svc, maxMs) }>
+							<span class="tooltip">{ fmtMs(svcLatestLatency(svc)) }</span>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// --- Disk I/O (column chart, 2 series) ---
+
+templ diskIOChart(snap MetricsSnapshot) {
+	<div id="disk-io-content">
+		<div class="chart-legend mb-2">
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#34d399"></span> Read</span>
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#fbbf24"></span> Write</span>
+		</div>
+		<table id="disk-io-chart" class="charts-css column multiple data-spacing-4">
+			<tbody>
+				for _, d := range diskIOStyles(snap) {
+					<tr>
+						<td style={ d.ReadStyle }></td>
+						<td style={ d.WriteStyle }></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ oobDiskIOChart(snap MetricsSnapshot) {
+	<div id="disk-io-content" hx-swap-oob="innerHTML">
+		<div class="chart-legend mb-2">
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#34d399"></span> Read</span>
+			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#fbbf24"></span> Write</span>
+		</div>
+		<table id="disk-io-chart" class="charts-css column multiple data-spacing-4">
+			<tbody>
+				for _, d := range diskIOStyles(snap) {
+					<tr>
+						<td style={ d.ReadStyle }></td>
+						<td style={ d.WriteStyle }></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// --- Request Distribution (column chart, 4 bars) ---
+
+templ requestDistChart(snap MetricsSnapshot) {
+	<div id="request-dist-content">
+		<table id="request-dist-chart" class="charts-css column show-labels show-data-on-hover data-spacing-8">
+			<tbody>
+				for _, s := range statusDistStyles(snap) {
+					<tr>
+						<th scope="row" class="text-xs">{ s.Label }</th>
+						<td style={ s.Style }>
+							<span class="tooltip">{ fmt.Sprintf("%d", s.Count) }</span>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ oobRequestDistChart(snap MetricsSnapshot) {
+	<div id="request-dist-content" hx-swap-oob="innerHTML">
+		<table id="request-dist-chart" class="charts-css column show-labels show-data-on-hover data-spacing-8">
+			<tbody>
+				for _, s := range statusDistStyles(snap) {
+					<tr>
+						<th scope="row" class="text-xs">{ s.Label }</th>
+						<td style={ s.Style }>
+							<span class="tooltip">{ fmt.Sprintf("%d", s.Count) }</span>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// --- Helpers ---
 
 templ realtimePatternCard(title, method, desc string) {
 	<div class="card bg-base-100 shadow border border-base-300">
