@@ -106,7 +106,7 @@ func buildConfig() (*AppConfig, error) {
 	// setup:feature:csrf:start
 	cfg.CSRFRotatePerRequest = envBool("CSRF_ROTATE_PER_REQUEST", false)
 	cfg.CSRFPerRequestPaths = envList("CSRF_PER_REQUEST_PATHS")
-	cfg.CSRFExemptPaths = []string{"/login", "/callback", "/logout"}
+	cfg.CSRFExemptPaths = []string{"/login", "/callback", "/logout", "/report-issue"}
 	// setup:feature:csrf:end
 
 	// setup:feature:graph:start

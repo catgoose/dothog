@@ -18,6 +18,7 @@ type ErrorContext struct {
 	Controls   []Control
 	StatusCode int
 	Closable   bool
+	Theme      string // DaisyUI theme for full-page error renders; empty = "dark"
 }
 
 // WithControls returns a copy of the ErrorContext with the given controls appended.

@@ -50,13 +50,14 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 			Send()
 	}
 
-	// Non-HTMX: render a full HATEOAS error page with default controls
+	// Non-HTMX: render a full HATEOAS error page with navigation controls
 	ec := hypermedia.ErrorContext{
 		StatusCode: statusCode,
 		Message:    message,
 		Err:        err,
 		Route:      c.Request().URL.Path,
 		RequestID:  requestID,
+		Theme:      errorPageTheme(c),
 		Controls: []hypermedia.Control{
 			hypermedia.BackButton("Go Back"),
 			hypermedia.GoHomeButton("Go Home", "/", "body"),
@@ -85,6 +86,7 @@ func handleErrorWithContext(c echo.Context, ec hypermedia.ErrorContext) error {
 	// Non-HTMX: render a full HATEOAS error page (full page can't be dismissed)
 	if c.Request().Header.Get("HX-Request") != "true" {
 		ec.Closable = false
+		ec.Theme = errorPageTheme(c)
 		c.Response().Status = ec.StatusCode
 		return corecomponents.ErrorPage(ec).Render(c.Request().Context(), c.Response())
 	}
@@ -174,4 +176,15 @@ func ErrorHandlerMiddleware(reqLogStore *promolog.Store) echo.MiddlewareFunc {
 			return handleError(c, http.StatusInternalServerError, "operation failed", err)
 		}
 	}
+}
+
+// errorPageTheme returns the DaisyUI theme for full-page error renders.
+// Falls back to "dark" if session settings are unavailable.
+func errorPageTheme(c echo.Context) string {
+	// setup:feature:session_settings:start
+	if s := GetSessionSettings(c); s != nil && s.Theme != "" {
+		return s.Theme
+	}
+	// setup:feature:session_settings:end
+	return "light"
 }

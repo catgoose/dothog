@@ -7,7 +7,7 @@ import "catgoose/dothog/internal/routes/hypermedia"
 // so it works outside the normal SPA layout.
 templ ErrorPage(ec hypermedia.ErrorContext) {
 	<!DOCTYPE html>
-	<html lang="en" class="light">
+	<html lang="en" data-theme={ errorPageTheme(ec) }>
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -17,6 +17,13 @@ templ ErrorPage(ec hypermedia.ErrorContext) {
 			<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
 			<link rel="icon" href="/public/images/favicon.svg" type="image/x-svg+xml"/>
 			<title>Error</title>
+			if ec.Theme == "" {
+				<script>
+					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+						document.documentElement.dataset.theme = 'dark';
+					}
+				</script>
+			}
 		</head>
 		<body class="min-h-screen flex items-center justify-center bg-base-200">
 			<div class="card bg-base-100 shadow-xl max-w-lg w-full">
@@ -24,6 +31,8 @@ templ ErrorPage(ec hypermedia.ErrorContext) {
 					@ErrorStatusFromContext(ec)
 				</div>
 			</div>
+			<div id="report-modal-container"></div>
+			<div id="report-email-container"></div>
 		</body>
 	</html>
 }
