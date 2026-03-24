@@ -1,0 +1,90 @@
+package views
+
+import "catgoose/dothog/internal/health"
+
+// AdminHealthPage renders the /admin/health page with live health status.
+templ AdminHealthPage(h health.Response) {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<div class="flex items-center justify-between">
+			<div class="space-y-1">
+				<h1 class="text-2xl font-bold">Health</h1>
+				<p class="text-sm text-base-content/60">Live application health status. Auto-refreshes every 5 seconds.</p>
+			</div>
+			<a href="/health" target="_blank" class="btn btn-sm btn-ghost font-mono">GET /health</a>
+		</div>
+
+		<div
+			id="health-content"
+			hx-get="/admin/health/check"
+			hx-trigger="every 5s"
+			hx-swap="innerHTML"
+		>
+			@healthContent(h)
+		</div>
+	</div>
+}
+
+templ AdminHealthFragment(h health.Response) {
+	@healthContent(h)
+}
+
+templ healthContent(h health.Response) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-0">
+			<table class="table">
+				<tbody>
+					<tr>
+						<td class="text-xs uppercase tracking-wider text-base-content/40 w-40">Status</td>
+						<td>
+							<div class={ "badge gap-1.5", healthBadgeClass(h.Status) }>
+								@healthStatusIcon(h.Status)
+								{ h.Status }
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td class="text-xs uppercase tracking-wider text-base-content/40">Application</td>
+						<td><span class="font-mono font-semibold">{ h.Name }</span></td>
+					</tr>
+					<tr>
+						<td class="text-xs uppercase tracking-wider text-base-content/40">Version</td>
+						<td><span class="badge badge-ghost badge-sm font-mono">{ h.Version }</span></td>
+					</tr>
+					<tr>
+						<td class="text-xs uppercase tracking-wider text-base-content/40">Uptime</td>
+						<td><span class="font-mono tabular-nums">{ h.Uptime }</span></td>
+					</tr>
+					if h.Database != "" {
+						<tr>
+							<td class="text-xs uppercase tracking-wider text-base-content/40">Database</td>
+							<td>
+								<div class={ "badge gap-1.5", dbBadgeClass(h.Database) }>
+									@dbStatusIcon(h.Database)
+									{ h.Database }
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+}
+
+templ healthStatusIcon(status string) {
+	if status == "healthy" {
+		<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+	} else if status == "degraded" {
+		<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+	} else {
+		<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+	}
+}
+
+templ dbStatusIcon(status string) {
+	if status == "connected" {
+		<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+	} else {
+		<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+	}
+}

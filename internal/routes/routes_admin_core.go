@@ -8,6 +8,7 @@ import (
 
 	"catgoose/dothog/internal/admininfo"
 	"catgoose/dothog/internal/config"
+	"catgoose/dothog/internal/health"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/version"
 	"catgoose/dothog/web/views"
@@ -17,6 +18,8 @@ import (
 
 func (ar *appRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin", handler.HandleComponent(views.AdminIndexPage()))
+	ar.e.GET("/admin/health", ar.handleAdminHealth)
+	ar.e.GET("/admin/health/check", ar.handleAdminHealthCheck)
 	ar.e.GET("/admin/system", ar.handleSystemInfo)
 	ar.e.GET("/admin/system/check-update", ar.handleCheckUpdate)
 	ar.e.GET("/admin/config", ar.handleConfigInfo)
@@ -160,4 +163,14 @@ func defaultStr(s, fallback string) string {
 		return fallback
 	}
 	return s
+}
+
+func (ar *appRoutes) handleAdminHealth(c echo.Context) error {
+	h := health.Check(c.Request().Context(), ar.healthCfg)
+	return handler.RenderBaseLayout(c, views.AdminHealthPage(h))
+}
+
+func (ar *appRoutes) handleAdminHealthCheck(c echo.Context) error {
+	h := health.Check(c.Request().Context(), ar.healthCfg)
+	return handler.RenderComponent(c, views.AdminHealthFragment(h))
 }
