@@ -42,7 +42,7 @@ test.describe("Home Page", () => {
     const resp = await request.get("/health");
     expect(resp.ok()).toBe(true);
     const body = await resp.json();
-    expect(body.status).toBe("ok");
-    expect(body.time).toBeTruthy();
+    expect(body.status).toBe("healthy");
+    expect(body.name).toBe("dothog");
   });
 });
