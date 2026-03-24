@@ -70,8 +70,6 @@ github.com/catgoose/crooner v1.4.0 h1:WQc45oZdgwBAYDZ1mRx1WcT3X9UC2mnLAwShtlS7Jm
 github.com/catgoose/crooner v1.4.0/go.mod h1:OTuZ/UmP/58JdGeyJv0J6wrBY1Lzqd8wxE8vgCRmRqo=
 github.com/catgoose/dio v1.0.24 h1:3XxS+gU+QHzQUunfn2L2ZNyLRXku9WTiCY3P9V16xMo=
 github.com/catgoose/dio v1.0.24/go.mod h1:yE/ZyAyo5lXoOECw2phIMHyZTr7/e6zD0G4ZU8bSD7E=
-github.com/catgoose/fraggle v0.1.3 h1:Zci0+5s22aP1SBPDQYvObxS7um+Xuq5h6w/owBRy0RQ=
-github.com/catgoose/fraggle v0.1.3/go.mod h1:cH5k1/se9azQqMj6aBgjR0iu5knl52ZxVu6wlPer+6s=
 github.com/catgoose/fraggle v0.1.4 h1:IjrQ2GChSagO+Puz2E4NUNqER5GoJ5DFHcBBoDnED5w=
 github.com/catgoose/fraggle v0.1.4/go.mod h1:cH5k1/se9azQqMj6aBgjR0iu5knl52ZxVu6wlPer+6s=
 github.com/catgoose/promolog v0.2.1 h1:dSW/D163DYNyLsbnxIQQua8MiE7fa7bfw8mYgNvoYjE=
