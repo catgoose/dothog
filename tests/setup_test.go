@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"catgoose/dothog/internal/setup"
 
@@ -264,10 +265,12 @@ func assertDirRemoved(t *testing.T, dir string) {
 
 func assertBuildSucceeds(t *testing.T, dir string) {
 	t.Helper()
-	cmd := exec.Command("go", "build", "./...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "go", "build", "./...")
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, "go build failed: %s", string(out))
+	require.NoError(t, err, "go build failed (timeout=%v): %s", ctx.Err(), string(out))
 }
 
 // ---------------------------------------------------------------------------

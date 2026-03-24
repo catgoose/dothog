@@ -91,6 +91,56 @@ State lives on the server. The client is a thin rendering layer. When state chan
 
 No client-side routing. No client-side state management. No `useState`, no Redux, no Zustand, no Pinia. The URL is the state. The HTML is the API.
 
+## Postel's Law: Be Conservative in What You Send, Liberal in What You Accept
+
+[Postel's Law](https://en.wikipedia.org/wiki/Robustness_principle) (the Robustness Principle) was written for TCP but it governs every boundary in this application: **be conservative in what you send, be liberal in what you accept.**
+
+### Forms: accept anything, validate on the server
+
+HTML form inputs should be permissive. Don't prevent the user from typing. Don't mask, truncate, or reject input on the client side. Let the browser send whatever the user entered. The server validates it, and if it's wrong, the server sends back a representation of the error — inline, next to the field, with a clear message and the original input preserved so the user can fix it.
+
+```html
+<!-- Good: the browser accepts anything, the server decides -->
+<input type="text" name="email" value="" />
+
+<!-- Bad: client-side regex that rejects valid emails, confuses users,
+     and duplicates validation that the server must do anyway -->
+<input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+       required oninvalid="this.setCustomValidity('Enter a valid email')" />
+```
+
+Use HTML's built-in `type`, `required`, `min`, `max`, and `maxlength` attributes for baseline guardrails — these are the browser doing its job without JavaScript. But don't pile on `pattern` attributes, custom `oninvalid` handlers, or JavaScript validation libraries that duplicate what the server already does. The server is the authority. The client is a convenience.
+
+When validation fails, the server returns the form with errors rendered inline:
+
+```html
+<div class="form-control">
+  <input type="text" name="email" value="not-an-email" class="input input-error" />
+  <span class="label-text-alt text-error">Not a valid email address</span>
+</div>
+```
+
+HTMX makes this seamless — `hx-post` submits the form, the server validates, and the response swaps in either the success state or the form with errors. No JavaScript validation library. No `useState` for error messages. No client-side schema that drifts from the server's rules. One source of truth for validation, one rendering path for errors.
+
+### Responses: send exactly what the client needs
+
+The server should be conservative — precise, minimal, correct — in what it sends. Every response is a complete, valid representation. No partial states that require the client to assemble meaning. No ambiguous status codes. No silent failures.
+
+- Return the correct HTTP status code. A validation failure is 422, not 200 with an error field buried in JSON.
+- Include hypermedia controls that tell the client what to do next. A successful create returns the new resource with edit/delete controls. A failed validation returns the form with errors and a retry control.
+- Don't send more data than the representation requires. A list page doesn't need every field of every record — it needs the fields that appear in the list, plus controls for pagination and detail navigation.
+
+### At every boundary
+
+This principle applies beyond forms:
+
+- **URL parameters**: accept unexpected query params gracefully (ignore them), but only emit well-documented params in links and controls.
+- **SSE events**: accept reconnections and stale clients without error, but send only the OOB fragments that target elements actually on the current page.
+- **Configuration**: accept missing env vars with sensible defaults, but document exactly which vars the app reads and what each one does.
+- **API consumers**: if you expose `/health`, return a stable, documented schema. Don't break consumers who only read `status` by renaming it to `state`.
+
+The robustness principle isn't about being sloppy. It's about building systems that compose well across trust boundaries. The server trusts nothing from the client but handles everything gracefully. The client trusts the server's response completely because the server is conservative about what it sends.
+
 ## The Stack
 
 | Layer         | Technology         | Why                                                           |
