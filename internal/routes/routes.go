@@ -171,6 +171,7 @@ func (ar *appRoutes) InitRoutes() error {
 	actLog := demo.NewActivityLog(200)
 	board := demo.NewKanbanBoard()
 	queue := demo.NewApprovalQueue()
+	ar.initAdminSettingsRoutes(broker)
 	ar.initAdminRoutes(db, actLog, broker)
 	ar.initPeopleRoutes(db, broker, actLog)
 	ar.initKanbanRoutes(board, actLog, broker)

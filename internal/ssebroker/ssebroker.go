@@ -48,6 +48,17 @@ func (b *SSEBroker) HasSubscribers(topic string) bool {
 	return n > 0
 }
 
+// TopicCounts returns the number of active subscribers per topic.
+func (b *SSEBroker) TopicCounts() map[string]int {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	counts := make(map[string]int, len(b.topics))
+	for topic, subs := range b.topics {
+		counts[topic] = len(subs)
+	}
+	return counts
+}
+
 // Publish sends a message to all subscribers of a topic.
 // Non-blocking: if a subscriber channel is full, the message is skipped for that subscriber.
 func (b *SSEBroker) Publish(topic, msg string) {

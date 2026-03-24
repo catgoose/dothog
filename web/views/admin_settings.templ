@@ -2,80 +2,156 @@
 
 package views
 
-// AdminSettingsPage renders the admin settings page with debugging controls.
-templ AdminSettingsPage() {
-	<div class="p-4 space-y-6 max-w-4xl mx-auto">
-		<h1 class="text-2xl font-bold">Settings</h1>
+import (
+	"catgoose/dothog/internal/ssebroker"
+	"fmt"
+)
 
-		<!-- Debugging -->
+// AdminPanelData holds all data for the admin control panel.
+type AdminPanelData struct {
+	AppName   string
+	Version   string
+	Uptime    string
+	Status    string
+	Stats     ssebroker.SystemStats
+	SSECounts map[string]int
+	Features  []FeatureFlag
+	Routes    []RouteInfo
+}
+
+type FeatureFlag struct {
+	Name   string
+	Active bool
+}
+
+type RouteInfo struct {
+	Method string
+	Path   string
+}
+
+// AdminSettingsPage renders the full admin control panel.
+templ AdminSettingsPage(data AdminPanelData) {
+	<div class="p-4 space-y-6 max-w-5xl mx-auto">
+		<h1 class="text-2xl font-bold">Control Panel</h1>
+
+		<!-- Health Overview -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-3">Health</h2>
+				<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+					@panelStat("Status", adminStatusBadge(data.Status))
+					@panelStat("App", data.AppName)
+					@panelStat("Version", data.Version)
+					@panelStat("Uptime", data.Uptime)
+				</div>
+			</div>
+		</div>
+
+		<!-- System Metrics (auto-refresh) -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<div class="flex items-center justify-between mb-3">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">System Metrics</h2>
+					<span class="text-xs text-base-content/30">auto-refresh 5s</span>
+				</div>
+				<div
+					id="admin-system-metrics"
+					hx-get="/admin/settings/system"
+					hx-trigger="every 5s"
+					hx-swap="innerHTML"
+				>
+					@adminSystemMetrics(data.Stats, data.Uptime)
+				</div>
+			</div>
+		</div>
+
+		<!-- SSE Connections (auto-refresh) -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<div class="flex items-center justify-between mb-3">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">SSE Connections</h2>
+					<span class="text-xs text-base-content/30">auto-refresh 3s</span>
+				</div>
+				<div
+					id="admin-sse-counts"
+					hx-get="/admin/settings/sse"
+					hx-trigger="every 3s"
+					hx-swap="innerHTML"
+				>
+					@adminSSECounts(data.SSECounts)
+				</div>
+			</div>
+		</div>
+
+		<!-- Feature Flags -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-3">Feature Flags</h2>
+				<div class="flex flex-wrap gap-2">
+					for _, f := range data.Features {
+						if f.Active {
+							<span class="badge badge-success gap-1">
+								<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+								{ f.Name }
+							</span>
+						} else {
+							<span class="badge badge-ghost gap-1 opacity-40">
+								{ f.Name }
+							</span>
+						}
+					}
+				</div>
+			</div>
+		</div>
+
+		<!-- Debug Controls -->
 		<div class="card bg-base-100 shadow border border-base-300">
 			<div class="card-body p-4 space-y-4">
-				<h2 class="card-title text-base">Debugging</h2>
-				<p class="text-sm text-base-content/60">Client-side debug controls. State persists across page reloads via localStorage.</p>
+				<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Debug Controls</h2>
+				<p class="text-xs text-base-content/50">Persisted to localStorage. Survives page reloads.</p>
 
 				<div class="form-control">
-					<label class="label cursor-pointer justify-start gap-4 py-2">
+					<label class="label cursor-pointer justify-start gap-4 py-1">
 						<input id="debug-all" type="checkbox" class="toggle toggle-sm" onchange="window._dbg.toggleAll(this.checked)"/>
-						<div>
-							<span class="label-text font-bold">Enable All</span>
-						</div>
+						<span class="label-text font-bold text-sm">Enable All</span>
 					</label>
 				</div>
 
-				<div class="divider my-0 text-xs text-base-content/40">HTMX</div>
-
-				<div class="form-control">
-					<label class="label cursor-pointer justify-start gap-4 py-2">
-						<input id="debug-htmx-log" type="checkbox" class="toggle toggle-sm toggle-primary" onchange="window._dbg.toggle('htmx-log', this.checked)"/>
-						<div>
-							<span class="label-text font-medium">HTMX Log All</span>
-							<p class="text-xs text-base-content/50">
-								Calls <code class="bg-base-200 px-1 rounded">htmx.logAll()</code> — logs every HTMX event to the console.
-							</p>
-						</div>
-					</label>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+					@debugToggle("debug-htmx-log", "htmx-log", "toggle-primary", "HTMX Log All", "htmx.logAll()")
+					@debugToggle("debug-htmx-events", "htmx-events", "toggle-secondary", "HTMX Event Inspector", "request/swap/SSE/OOB events")
+					@debugToggle("debug-hs", "hs-beep", "toggle-accent", "_hyperscript Beep", "beep! expressions")
+					@debugToggle("debug-alpine", "alpine-events", "toggle-info", "Alpine.js Events", "lifecycle events")
 				</div>
+			</div>
+		</div>
 
-				<div class="form-control">
-					<label class="label cursor-pointer justify-start gap-4 py-2">
-						<input id="debug-htmx-events" type="checkbox" class="toggle toggle-sm toggle-secondary" onchange="window._dbg.toggle('htmx-events', this.checked)"/>
-						<div>
-							<span class="label-text font-medium">HTMX Event Inspector</span>
-							<p class="text-xs text-base-content/50">
-								Listens for request, swap, SSE, and OOB error events with full detail payloads.
-								Useful for diagnosing <code class="bg-base-200 px-1 rounded">oobErrorNoTarget</code> issues.
-							</p>
-						</div>
-					</label>
+		<!-- Registered Routes -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<div class="flex items-center justify-between mb-3">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Registered Routes</h2>
+					<span class="badge badge-ghost badge-sm">{ fmt.Sprintf("%d", len(data.Routes)) }</span>
 				</div>
-
-				<div class="divider my-0 text-xs text-base-content/40">_hyperscript</div>
-
-				<div class="form-control">
-					<label class="label cursor-pointer justify-start gap-4 py-2">
-						<input id="debug-hs" type="checkbox" class="toggle toggle-sm toggle-accent" onchange="window._dbg.toggle('hs-beep', this.checked)"/>
-						<div>
-							<span class="label-text font-medium">_hyperscript Beep Logger</span>
-							<p class="text-xs text-base-content/50">
-								Logs <code class="bg-base-200 px-1 rounded">beep!</code> expression results.
-								Add <code class="bg-base-200 px-1 rounded">beep!</code> after any expression in _hyperscript to inspect its value.
-							</p>
-						</div>
-					</label>
-				</div>
-
-				<div class="divider my-0 text-xs text-base-content/40">Alpine.js</div>
-
-				<div class="form-control">
-					<label class="label cursor-pointer justify-start gap-4 py-2">
-						<input id="debug-alpine" type="checkbox" class="toggle toggle-sm toggle-info" onchange="window._dbg.toggle('alpine-events', this.checked)"/>
-						<div>
-							<span class="label-text font-medium">Alpine.js Events</span>
-							<p class="text-xs text-base-content/50">
-								Logs Alpine lifecycle events (<code class="bg-base-200 px-1 rounded">alpine:init</code>, <code class="bg-base-200 px-1 rounded">alpine:initialized</code>).
-							</p>
-						</div>
-					</label>
+				<div class="overflow-x-auto max-h-96 overflow-y-auto">
+					<table class="table table-xs table-zebra">
+						<thead class="sticky top-0 bg-base-100">
+							<tr>
+								<th class="w-20">Method</th>
+								<th>Path</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, r := range data.Routes {
+								<tr>
+									<td>
+										<span class={ "badge badge-xs font-mono", routeMethodBadge(r.Method) }>{ r.Method }</span>
+									</td>
+									<td class="font-mono text-xs">{ r.Path }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
 				</div>
 			</div>
 		</div>
@@ -83,10 +159,80 @@ templ AdminSettingsPage() {
 	@debugScript()
 }
 
+// --- Fragments for auto-refresh ---
+
+templ AdminSettingsSystemFragment(stats ssebroker.SystemStats, uptime string) {
+	@adminSystemMetrics(stats, uptime)
+}
+
+templ AdminSettingsSSEFragment(counts map[string]int) {
+	@adminSSECounts(counts)
+}
+
+// --- Internal components ---
+
+templ adminSystemMetrics(stats ssebroker.SystemStats, uptime string) {
+	<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+		@metricCard("Uptime", uptime)
+		@metricCard("Goroutines", fmt.Sprintf("%d", stats.Goroutines))
+		@metricCard("Heap Alloc", fmt.Sprintf("%.1f MB", stats.HeapAllocMB))
+		@metricCard("Heap Sys", fmt.Sprintf("%.1f MB", stats.HeapSysMB))
+		@metricCard("GC Cycles", fmt.Sprintf("%d", stats.GCCycles))
+		@metricCard("CPUs", fmt.Sprintf("%d", stats.NumCPU))
+		@metricCard("OS Threads", fmt.Sprintf("%d", stats.NumThread))
+		@metricCard("Live Objects", fmt.Sprintf("%d", stats.LiveObjects))
+		@metricCard("Stack", fmt.Sprintf("%.1f MB", stats.StackInUseMB))
+		@metricCard("Total Alloc", fmt.Sprintf("%.1f MB", stats.TotalAllocMB))
+		@metricCard("Last GC", fmt.Sprintf("%d us", stats.LastPauseMicros))
+		@metricCard("Next GC", fmt.Sprintf("%.1f MB", stats.NextGCMB))
+	</div>
+}
+
+templ adminSSECounts(counts map[string]int) {
+	if len(counts) == 0 {
+		<p class="text-sm text-base-content/40">No active topics</p>
+	} else {
+		<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+			for _, topic := range sortedTopics(counts) {
+				<div class="flex items-center justify-between bg-base-200 rounded px-3 py-2">
+					<span class="text-xs font-mono truncate">{ topic }</span>
+					<span class={ "badge badge-sm font-mono", sseCountBadge(counts[topic]) }>{ fmt.Sprintf("%d", counts[topic]) }</span>
+				</div>
+			}
+		</div>
+	}
+}
+
+templ panelStat(label, value string) {
+	<div class="bg-base-200 rounded-lg p-3 text-center">
+		<div class="text-xs text-base-content/50 mb-1">{ label }</div>
+		<div class="font-mono font-semibold text-sm">{ value }</div>
+	</div>
+}
+
+templ metricCard(label, value string) {
+	<div class="bg-base-200 rounded px-3 py-2">
+		<div class="text-[10px] text-base-content/40 uppercase tracking-wider">{ label }</div>
+		<div class="font-mono font-semibold text-sm tabular-nums">{ value }</div>
+	</div>
+}
+
+templ debugToggle(id, key, toggleClass, label, desc string) {
+	<label class="label cursor-pointer justify-start gap-3 py-2 bg-base-200 rounded-lg px-3">
+		<input
+			id={ id }
+			type="checkbox"
+			class={ "toggle toggle-sm", toggleClass }
+			{ debugOnChange(key)... }
+		/>
+		<div>
+			<span class="text-sm font-medium">{ label }</span>
+			<p class="text-xs text-base-content/40">{ desc }</p>
+		</div>
+	</label>
+}
+
 // debugScript manages localStorage-backed debug toggles.
-// Each key maps to an enable/disable function pair. On page load,
-// saved state is restored and applied. Toggles survive refreshes
-// and hx-boost navigation.
 templ debugScript() {
 	<script>
 		(function() {
@@ -100,7 +246,6 @@ templ debugScript() {
 				localStorage.setItem(KEY, JSON.stringify(state));
 			}
 
-			/** @type {Object<string, {on: function, off: function}>} */
 			var handlers = {
 				'htmx-log': {
 					on:  function() { if (typeof htmx !== 'undefined') htmx.logAll(); },
@@ -118,30 +263,22 @@ templ debugScript() {
 					off: function() {
 						if (window._htmxDbg && window._htmxDbgEvts) {
 							window._htmxDbgEvts.forEach(function(t) { document.body.removeEventListener(t, window._htmxDbg); });
-							delete window._htmxDbg;
-							delete window._htmxDbgEvts;
+							delete window._htmxDbg; delete window._htmxDbgEvts;
 						}
 					}
 				},
 				'hs-beep': {
 					on: function() {
-						window._hsDbg = function(e) {
-							console.debug('%c[_hs:beep]', 'color:#a78bfa;font-weight:bold', e.detail);
-						};
+						window._hsDbg = function(e) { console.debug('%c[_hs:beep]', 'color:#a78bfa;font-weight:bold', e.detail); };
 						document.body.addEventListener('hyperscript:beep', window._hsDbg);
 					},
 					off: function() {
-						if (window._hsDbg) {
-							document.body.removeEventListener('hyperscript:beep', window._hsDbg);
-							delete window._hsDbg;
-						}
+						if (window._hsDbg) { document.body.removeEventListener('hyperscript:beep', window._hsDbg); delete window._hsDbg; }
 					}
 				},
 				'alpine-events': {
 					on: function() {
-						window._alpineDbg = function(e) {
-							console.debug('%c[alpine:' + e.type + ']', 'color:#34d399;font-weight:bold', e.detail);
-						};
+						window._alpineDbg = function(e) { console.debug('%c[alpine:' + e.type + ']', 'color:#34d399;font-weight:bold', e.detail); };
 						document.addEventListener('alpine:initialized', window._alpineDbg);
 						document.addEventListener('alpine:init', window._alpineDbg);
 					},
@@ -155,7 +292,6 @@ templ debugScript() {
 				}
 			};
 
-			// Checkbox ID → localStorage key mapping
 			var checkboxMap = {
 				'debug-htmx-log': 'htmx-log',
 				'debug-htmx-events': 'htmx-events',
@@ -163,48 +299,33 @@ templ debugScript() {
 				'debug-alpine': 'alpine-events'
 			};
 
-			/**
-			 * Toggle a debug feature on/off and persist.
-			 * @param {string} key
-			 * @param {boolean} enabled
-			 */
 			function toggle(key, enabled) {
 				var state = load();
 				state[key] = enabled;
 				save(state);
-				if (enabled) {
-					handlers[key].on();
-				} else {
-					handlers[key].off();
-				}
+				if (enabled) handlers[key].on(); else handlers[key].off();
 			}
 
 			function toggleAll(enabled) {
 				for (var id in checkboxMap) {
 					var key = checkboxMap[id];
 					var el = document.getElementById(id);
-					if (el) { el.checked = enabled; }
+					if (el) el.checked = enabled;
 					toggle(key, enabled);
 				}
 			}
 
-			// Restore state on page load
 			var state = load();
 			var allOn = true;
 			for (var id in checkboxMap) {
 				var key = checkboxMap[id];
 				var el = document.getElementById(id);
-				if (el && state[key]) {
-					el.checked = true;
-					handlers[key].on();
-				} else {
-					allOn = false;
-				}
+				if (el && state[key]) { el.checked = true; handlers[key].on(); }
+				else { allOn = false; }
 			}
 			var allEl = document.getElementById('debug-all');
-			if (allEl) { allEl.checked = allOn; }
+			if (allEl) allEl.checked = allOn;
 
-			// Expose for onchange handlers
 			window._dbg = { toggle: toggle, toggleAll: toggleAll };
 		})();
 	</script>
