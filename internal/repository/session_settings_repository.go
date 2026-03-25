@@ -14,23 +14,15 @@ import (
 	"github.com/catgoose/fraggle/dbrepo"
 )
 
-// SessionSettingsRepository defines operations for session settings data access.
-type SessionSettingsRepository interface {
-	GetByUUID(ctx context.Context, uuid string) (*domain.SessionSettings, error)
-	Upsert(ctx context.Context, s *domain.SessionSettings) error
-	Touch(ctx context.Context, uuid string) error
-	DeleteStale(ctx context.Context, days int) (int64, error)
-	ListAll(ctx context.Context) ([]domain.SessionSettings, error)
-	GetMostRecent(ctx context.Context) (*domain.SessionSettings, error)
-}
-
-// sessionSettingsRepository implements SessionSettingsRepository.
+// sessionSettingsRepository provides session settings data access.
 type sessionSettingsRepository struct {
 	repo *dbrepoManager.RepoManager
 }
 
-// NewSessionSettingsRepository creates a new SessionSettingsRepository.
-func NewSessionSettingsRepository(repo *dbrepoManager.RepoManager) SessionSettingsRepository {
+// NewSessionSettingsRepository creates a new session settings repository.
+// The returned value satisfies both middleware.SessionSettingsProvider and
+// routes.SessionSettingsStore via Go's implicit interface satisfaction.
+func NewSessionSettingsRepository(repo *dbrepoManager.RepoManager) *sessionSettingsRepository {
 	return &sessionSettingsRepository{repo: repo}
 }
 
@@ -124,29 +116,3 @@ func (r *sessionSettingsRepository) ListAll(ctx context.Context) ([]domain.Sessi
 	return rows, nil
 }
 
-// GetMostRecent returns the most recently updated session settings row, or nil if none exist.
-func (r *sessionSettingsRepository) GetMostRecent(ctx context.Context) (*domain.SessionSettings, error) {
-	query, args := dbrepo.NewSelect(tableName, selectCols).OrderBy("UpdatedAt DESC").Paginate(1, 0).Build()
-	var s domain.SessionSettings
-	err := r.repo.GetDB().GetContext(ctx, &s, query, args...)
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("get most recent session settings: %w", err)
-	}
-	return &s, nil
-}
-
-// DeleteStale removes session settings rows not updated in the given number of days.
-func (r *sessionSettingsRepository) DeleteStale(ctx context.Context, days int) (int64, error) {
-	w := dbrepo.NewWhere().And("UpdatedAt < datetime('now', @StaleInterval)",
-		sql.Named("StaleInterval", fmt.Sprintf("-%d days", days)),
-	)
-	query := fmt.Sprintf("DELETE FROM %s %s", tableName, w.String())
-	res, err := r.repo.GetDB().ExecContext(ctx, query, w.Args()...)
-	if err != nil {
-		return 0, fmt.Errorf("delete stale session settings: %w", err)
-	}
-	return res.RowsAffected()
-}
