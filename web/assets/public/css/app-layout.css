@@ -6,23 +6,20 @@
 .app-nav .nav-link {
 	display: flex;
 	text-decoration: none;
-	color: oklch(var(--bc) / 0.6);
+	color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
 	transition: color 0.15s ease;
 }
-.app-nav .nav-link:hover { color: oklch(var(--bc)); }
-.app-nav .nav-link.active { color: oklch(var(--p)); }
+.app-nav .nav-link:hover { color: var(--color-base-content); }
+.app-nav .nav-link.active { color: var(--color-primary); }
 
 /* Mobile: bottom bar */
 @media (max-width: 767px) {
 	.app-shell { flex-direction: column; }
 	.app-nav {
-		position: fixed;
+		position: sticky;
 		bottom: 0;
-		left: 0;
-		right: 0;
-		top: auto;
-		border-top: 1px solid oklch(var(--bc) / 0.1);
-		background: oklch(var(--b1));
+		border-top: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+		background-color: var(--color-base-100);
 		z-index: 50;
 	}
 	.app-nav .nav-tabs {
@@ -41,19 +38,18 @@
 	}
 	.app-nav .nav-icon { width: 1.25rem; height: 1.25rem; }
 	.app-nav .nav-link.promoted .nav-icon-wrap {
-		background: oklch(var(--p));
-		color: oklch(var(--pc));
+		background-color: var(--color-primary);
+		color: var(--color-primary-content);
 		border-radius: 9999px;
 		padding: 0.5rem;
 		margin-top: -0.75rem;
-		box-shadow: 0 2px 8px oklch(var(--p) / 0.3);
+		box-shadow: 0 2px 8px color-mix(in oklab, var(--color-primary) 30%, transparent);
 	}
 	.app-nav .nav-link.promoted .nav-icon { width: 1.25rem; height: 1.25rem; }
 	.app-nav .nav-brand { display: none; }
 	.app-nav .nav-overflow { display: none; }
 	.app-nav .nav-settings { display: none; }
 	.app-main {
-		padding-bottom: 5rem;
 		padding-left: max(1rem, env(safe-area-inset-left));
 		padding-right: max(1rem, env(safe-area-inset-right));
 	}
@@ -68,9 +64,9 @@
 		position: sticky;
 		top: 0;
 		z-index: 50;
-		border-bottom: 1px solid oklch(var(--bc) / 0.1);
-		background: oklch(var(--b1));
-		box-shadow: 0 1px 3px oklch(var(--bc) / 0.05);
+		border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+		background-color: var(--color-base-100);
+		box-shadow: 0 1px 3px color-mix(in oklab, var(--color-base-content) 5%, transparent);
 	}
 	.app-nav .nav-tabs {
 		flex-direction: row;
@@ -89,7 +85,7 @@
 		font-size: 1.125rem;
 		padding-right: 1.5rem;
 		margin-right: auto;
-		color: oklch(var(--bc));
+		color: var(--color-base-content);
 		text-decoration: none;
 	}
 	.app-nav .nav-link {
@@ -100,7 +96,7 @@
 		font-size: 0.875rem;
 		border-radius: 0.5rem;
 	}
-	.app-nav .nav-link:hover { background: oklch(var(--bc) / 0.05); }
+	.app-nav .nav-link:hover { background-color: color-mix(in oklab, var(--color-base-content) 5%, transparent); }
 	.app-nav .nav-icon { width: 1rem; height: 1rem; }
 	.app-nav .nav-link.promoted .nav-icon-wrap {
 		display: contents;
