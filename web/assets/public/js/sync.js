@@ -133,3 +133,66 @@ async function clearSynced() {
     tx.onerror = () => reject(tx.error);
   });
 }
+
+/**
+ * Flush all pending operations to the server's /sync endpoint.
+ * Called when connectivity is restored.
+ * @returns {Promise<{applied: number, conflicts: number, rejected: number}>}
+ */
+async function flushQueue() {
+  const ops = await getPendingOperations();
+  if (ops.length === 0) {
+    return { applied: 0, conflicts: 0, rejected: 0 };
+  }
+
+  const payload = {
+    operations: ops.map((op) => ({
+      method: op.method,
+      url: op.url,
+      body: op.body,
+      content_type: op.contentType,
+      version: op.version,
+      queued_at: op.createdAt,
+    })),
+    schema_version: 1,
+  };
+
+  const res = await fetch('/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Sync failed: ${res.status}`);
+  }
+
+  const data = await res.json();
+  const counts = { applied: 0, conflicts: 0, rejected: 0 };
+
+  for (const result of data.results) {
+    const op = ops[result.index];
+    if (!op) continue;
+
+    switch (result.status) {
+      case 'applied':
+        await updateStatus(op.id, 'synced');
+        counts.applied++;
+        break;
+      case 'conflict':
+        await updateStatus(op.id, 'conflict');
+        counts.conflicts++;
+        break;
+      case 'rejected':
+        await updateStatus(op.id, 'rejected');
+        counts.rejected++;
+        break;
+      default:
+        await updateStatus(op.id, 'error');
+        break;
+    }
+  }
+
+  await clearSynced();
+  return counts;
+}

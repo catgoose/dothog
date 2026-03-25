@@ -154,6 +154,7 @@ func (ar *appRoutes) InitRoutes() error {
 
 	// setup:feature:sync:start
 	ar.initSyncRoutes()
+	ar.initConflictRoutes()
 	// setup:feature:sync:end
 
 	ar.initAdminCoreRoutes()
