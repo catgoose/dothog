@@ -18,8 +18,7 @@ templ AppNavLayout(content templ.Component, items []hypermedia.NavItem, promoted
 					<a href="/" class="font-bold text-lg">{ appName }</a>
 					<button
 						class="btn btn-ghost btn-sm btn-circle"
-						x-data
-						x-on:click="document.getElementById('settings-modal').showModal()"
+						_="on click call #settings-modal.showModal()"
 						aria-label="Settings"
 					>
 						@settingsGearIcon()
@@ -97,7 +96,7 @@ templ appNav(items []hypermedia.NavItem, promoted *hypermedia.NavItem, maxVisibl
 			<div class="nav-settings items-center ml-1">
 				<button
 					class="nav-link"
-					x-on:click="document.getElementById('settings-modal').showModal()"
+					_="on click call #settings-modal.showModal()"
 					aria-label="Settings"
 				>
 					@settingsGearIcon()
