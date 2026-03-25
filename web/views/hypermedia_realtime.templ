@@ -15,7 +15,7 @@ templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services
 		.charts-css.bar tbody td { transition: --size 0.8s ease; }
 		.charts-css.column tbody td { transition: --size 0.6s ease; }
 		/* Custom chart styling */
-		.charts-css { --color: oklch(var(--p)); }
+		.charts-css { --color: var(--color-primary); }
 		.charts-css caption { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.5; padding: 0.5rem 0; }
 		#network-content { overflow: hidden; }
 		#network-chart { height: 200px; max-height: 200px; }
@@ -40,7 +40,7 @@ templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services
 		#error-sparkline-chart { --color: #f87171; }
 		/* Chart legend */
 		.chart-legend { display: flex; gap: 1rem; flex-wrap: wrap; }
-		.chart-legend-item { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: oklch(var(--bc) / 0.6); }
+		.chart-legend-item { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: color-mix(in oklab, var(--color-base-content) 60%, transparent); }
 		.chart-legend-dot { width: 8px; height: 8px; border-radius: 2px; }
 		/* Gauge styling */
 		.gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
