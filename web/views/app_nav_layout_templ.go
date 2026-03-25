@@ -69,7 +69,7 @@ func AppNavLayout(content templ.Component, items []hypermedia.NavItem, promoted 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</a> <button class=\"btn btn-ghost btn-sm btn-circle\" x-data x-on:click=\"document.getElementById('settings-modal').showModal()\" aria-label=\"Settings\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</a> <button class=\"btn btn-ghost btn-sm btn-circle\" _=\"on click call #settings-modal.showModal()\" aria-label=\"Settings\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -114,7 +114,7 @@ func AppNavLayout(content templ.Component, items []hypermedia.NavItem, promoted 
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/app_nav_layout.templ`, Line: 42, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/app_nav_layout.templ`, Line: 41, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -125,6 +125,10 @@ func AppNavLayout(content templ.Component, items []hypermedia.NavItem, promoted 
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = settingsModal(theme).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.OfflineIndicator().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -333,7 +337,7 @@ func appNav(items []hypermedia.NavItem, promoted *hypermedia.NavItem, maxVisible
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<!-- Settings gear (desktop only, hidden on mobile via CSS) --><div class=\"nav-settings items-center ml-1\"><button class=\"nav-link\" x-on:click=\"document.getElementById('settings-modal').showModal()\" aria-label=\"Settings\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<!-- Settings gear (desktop only, hidden on mobile via CSS) --><div class=\"nav-settings items-center ml-1\"><button class=\"nav-link\" _=\"on click call #settings-modal.showModal()\" aria-label=\"Settings\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
