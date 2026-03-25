@@ -887,3 +887,42 @@ func CaddyStart() error {
 
 	return sh.Run("caddy", "run", "--config", tmpCaddyfile)
 }
+
+// IosDeps installs Capacitor iOS dependencies (requires macOS with Xcode).
+func IosDeps() error {
+	if runtime.GOOS != "darwin" {
+		return fmt.Errorf("iOS targets require macOS with Xcode installed")
+	}
+	// Add the iOS platform if not already present
+	if _, err := os.Stat("ios"); os.IsNotExist(err) {
+		if err := sh.Run("npx", "cap", "add", "ios"); err != nil {
+			return fmt.Errorf("cap add ios: %w", err)
+		}
+	}
+	return nil
+}
+
+// IosSync copies web assets and Capacitor config to the iOS project.
+func IosSync() error {
+	if runtime.GOOS != "darwin" {
+		return fmt.Errorf("iOS targets require macOS with Xcode installed")
+	}
+	return sh.Run("npx", "cap", "sync", "ios")
+}
+
+// IosOpen opens the iOS project in Xcode.
+func IosOpen() error {
+	if runtime.GOOS != "darwin" {
+		return fmt.Errorf("iOS targets require macOS with Xcode installed")
+	}
+	return sh.Run("npx", "cap", "open", "ios")
+}
+
+// IosRun builds and runs the app in the iOS simulator.
+func IosRun() error {
+	if runtime.GOOS != "darwin" {
+		return fmt.Errorf("iOS targets require macOS with Xcode installed")
+	}
+	mg.Deps(IosSync)
+	return sh.Run("npx", "cap", "run", "ios")
+}
