@@ -70,7 +70,7 @@ templ htmxButton(ctrl hypermedia.Control) {
 templ dismissButton(ctrl hypermedia.Control) {
 	<button
 		class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded text-error-content/70 hover:text-error-content hover:underline focus:outline-none"
-		x-on:click="document.getElementById('error-status').innerHTML = ''"
+		_="on click set #error-status.innerHTML to ''"
 	>
 		{ ctrl.Label }
 	</button>

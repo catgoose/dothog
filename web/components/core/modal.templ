@@ -82,7 +82,7 @@ templ Modal(cfg hypermedia.ModalConfig) {
 // Log data is retrieved from the ring buffer server-side when the report is submitted.
 // When fetched dynamically via HTMX the dialog auto-opens on load.
 templ ReportIssueModal(cfg hypermedia.ModalConfig) {
-	<div x-data x-init={ "$nextTick(() => document.getElementById('" + cfg.ID + "').showModal())" }>
+	<div _={ "init call #" + cfg.ID + ".showModal()" }>
 	@Modal(cfg) {
 		<p class="text-sm text-base-content/70 mb-3">This will send error details to our support team for investigation.</p>
 		<div x-ref="addToggle">
