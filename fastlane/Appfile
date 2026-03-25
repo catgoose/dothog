@@ -1,0 +1,7 @@
+# App identifier and Apple ID for Fastlane
+# These are placeholders — replace with actual values when configuring for a project.
+app_identifier("com.catgoose.dothog")
+# apple_id("your@email.com")
+
+# For App Store Connect API key authentication (recommended for CI):
+# See: https://docs.fastlane.tools/app-store-connect-api/
