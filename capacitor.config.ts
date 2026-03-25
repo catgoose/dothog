@@ -1,3 +1,4 @@
+// setup:feature:capacitor
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {

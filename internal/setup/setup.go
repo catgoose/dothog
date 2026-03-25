@@ -37,16 +37,68 @@ const (
 	FeatureDemo             = "demo"
 	FeatureSessionSettings  = "session_settings"
 	FeatureAlpine           = "alpine"
+	FeatureCapacitor        = "capacitor"
+	FeatureOffline          = "offline"
+	FeatureSync             = "sync"
 )
 
 // AllFeatures lists every selectable feature tag.
 // "database" is always included (implied by the base template) and is not user-selectable.
-var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine}
+var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureOffline, FeatureSync}
 
 // ImplicitFeatures are always selected and not presented to the user.
 // "database" is implicit because SQLite is the base database engine.
 // "alpine" is implicit because Alpine.js is the standard client-side state layer.
 var ImplicitFeatures = []string{FeatureDatabase, FeatureAlpine}
+
+// featureDeps maps a feature to the features it implies.
+// sync -> offline -> capacitor.
+var featureDeps = map[string][]string{
+	FeatureSync:    {FeatureOffline},
+	FeatureOffline: {FeatureCapacitor},
+}
+
+// ExpandFeatureDeps adds any transitive dependencies implied by the
+// selected features. For example, selecting "sync" pulls in "offline"
+// and "capacitor".
+func ExpandFeatureDeps(features []string) []string {
+	have := make(map[string]bool, len(features))
+	for _, f := range features {
+		have[f] = true
+	}
+	changed := true
+	for changed {
+		changed = false
+		for f := range have {
+			for _, dep := range featureDeps[f] {
+				if !have[dep] {
+					have[dep] = true
+					changed = true
+				}
+			}
+		}
+	}
+	out := make([]string, 0, len(have))
+	for _, f := range AllFeatures {
+		if have[f] {
+			out = append(out, f)
+		}
+	}
+	// Preserve any features not in AllFeatures (shouldn't happen, but safe).
+	for f := range have {
+		found := false
+		for _, af := range AllFeatures {
+			if af == f {
+				found = true
+				break
+			}
+		}
+		if !found {
+			out = append(out, f)
+		}
+	}
+	return out
+}
 
 // Options configures the template setup run.
 type Options struct {
@@ -359,8 +411,9 @@ func removeOptionalContent(dir string, opts Options) error {
 	// Build set of features being removed (empty when Features is nil — legacy mode)
 	removeTags := make(map[string]bool)
 	if opts.Features != nil {
+		expanded := ExpandFeatureDeps(opts.Features)
 		keep := make(map[string]bool)
-		for _, f := range opts.Features {
+		for _, f := range expanded {
 			keep[f] = true
 		}
 		// Implicit features are always kept
@@ -384,6 +437,10 @@ func removeOptionalContent(dir string, opts Options) error {
 	}
 	if removeTags[FeatureCaddy] {
 		_ = os.Remove(filepath.Join(dir, "config", "Caddyfile"))
+	}
+	if removeTags[FeatureCapacitor] {
+		_ = os.Remove(filepath.Join(dir, "capacitor.config.ts"))
+		_ = os.Remove(filepath.Join(dir, "tsconfig.json"))
 	}
 	// Alpine.js is always included (implicit feature); no removal needed.
 

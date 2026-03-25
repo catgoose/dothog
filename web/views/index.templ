@@ -44,7 +44,9 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			<div id="report-modal-container"></div>
 			<div id="report-email-container"></div>
 			@settingsModal(theme)
+			// setup:feature:offline:start
 			@components.OfflineIndicator()
+			// setup:feature:offline:end
 		</body>
 	</html>
 }
@@ -83,7 +85,9 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:sse:start
 		<script defer src="/public/js/htmx.ext.sse.js"></script>
 		// setup:feature:sse:end
+		// setup:feature:offline:start
 		<script defer src="/public/js/offline-indicator.js"></script>
+		// setup:feature:offline:end
 		<link rel="stylesheet" href="/public/css/tailwind.css" type="text/css"/>
 		<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
 		for _, href := range extraCSS {
@@ -149,6 +153,7 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		</script>
 		// setup:feature:session_settings:end
 		// setup:feature:sse:end
+		// setup:feature:offline:start
 		<script>
 			if ('serviceWorker' in navigator) {
 				navigator.serviceWorker.register('/public/sw.js').catch(function(err) {
@@ -156,6 +161,7 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 				});
 			}
 		</script>
+		// setup:feature:offline:end
 	</head>
 }
 

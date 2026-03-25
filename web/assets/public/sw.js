@@ -1,3 +1,4 @@
+// setup:feature:offline
 /**
  * Service worker for offline-first HTML caching.
  * Strategy: network-first with cache fallback.

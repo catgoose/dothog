@@ -888,6 +888,8 @@ func CaddyStart() error {
 	return sh.Run("caddy", "run", "--config", tmpCaddyfile)
 }
 
+// setup:feature:capacitor:start
+
 // IosDeps installs Capacitor iOS dependencies (requires macOS with Xcode).
 func IosDeps() error {
 	if runtime.GOOS != "darwin" {
@@ -926,3 +928,5 @@ func IosRun() error {
 	mg.Deps(IosSync)
 	return sh.Run("npx", "cap", "run", "ios")
 }
+
+// setup:feature:capacitor:end

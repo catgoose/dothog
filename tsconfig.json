@@ -1,3 +1,4 @@
+// setup:feature:capacitor
 {
   "compilerOptions": {
     "target": "es2022",

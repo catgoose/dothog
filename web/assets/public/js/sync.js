@@ -1,3 +1,4 @@
+// setup:feature:sync
 /**
  * Sync manager for offline write queuing.
  * Uses IndexedDB for local storage — works in service workers, main thread,

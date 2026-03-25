@@ -1,3 +1,4 @@
+// setup:feature:offline
 /**
  * Alpine.js data component for offline status detection.
  * Uses navigator.onLine and periodic /health pings to determine connectivity.

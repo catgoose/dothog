@@ -43,7 +43,9 @@ templ AppNavLayout(content templ.Component, items []hypermedia.NavItem, promoted
 				<div id="report-modal-container"></div>
 				<div id="report-email-container"></div>
 				@settingsModal(theme)
+				// setup:feature:offline:start
 				@components.OfflineIndicator()
+				// setup:feature:offline:end
 			</div>
 		</body>
 	</html>
