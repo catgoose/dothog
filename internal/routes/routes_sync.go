@@ -2,6 +2,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -65,30 +66,75 @@ func (ar *appRoutes) handleSync(c echo.Context) error {
 }
 
 // processSyncOperation handles a single queued operation.
-// This is a placeholder implementation that accepts all operations.
-// Real implementations will:
-// 1. Parse the URL to determine the resource and action
-// 2. Check the version against the current row
-// 3. Apply or reject based on conflict detection
-//
-// For now, it forwards the request internally and reports the result.
-// This allows the existing CRUD handlers to process the mutations
-// without duplicating business logic.
+// It checks row versions against the database to detect conflicts:
+//   - Creates (no version) are accepted unconditionally
+//   - Unknown resource URLs are accepted without version check
+//   - Known resources are checked against the current database version
+//   - Version match → applied; mismatch → conflict; row gone → rejected
 func (ar *appRoutes) processSyncOperation(c echo.Context, index int, op SyncOperation) SyncResult {
-	// TODO: Phase 4b — implement version checking and conflict detection
-	// For now, return a placeholder that acknowledges the operation.
-	//
-	// The full implementation will:
-	// - Parse op.URL to extract resource type and ID
-	// - Look up current version in the database
-	// - Compare with op.Version
-	// - If match: forward to the existing handler, return applied
-	// - If mismatch: return conflict with current data
-	// - If row deleted: return rejected
+	// Creates (no version) are accepted without version check
+	if op.Version == nil {
+		return SyncResult{
+			Index:   index,
+			Status:  SyncApplied,
+			Message: "created",
+		}
+	}
 
+	// Try to parse the URL for version checking
+	table, id, ok := parseResourceURL(op.URL)
+	if !ok {
+		// Unknown resource — accept without version check
+		return SyncResult{
+			Index:   index,
+			Status:  SyncApplied,
+			Message: "accepted (unknown resource type)",
+		}
+	}
+
+	// If no version checker is configured, accept all
+	if ar.versionChecker == nil {
+		return SyncResult{
+			Index:   index,
+			Status:  SyncApplied,
+			Message: "accepted (no version checker)",
+		}
+	}
+
+	// Check the current version
+	currentVersion, err := ar.versionChecker.CurrentVersion(c.Request().Context(), table, id)
+	if err != nil {
+		return SyncResult{
+			Index:   index,
+			Status:  SyncError,
+			Message: fmt.Sprintf("version check failed: %v", err),
+		}
+	}
+
+	// Row not found (deleted)
+	if currentVersion == -1 {
+		return SyncResult{
+			Index:   index,
+			Status:  SyncRejected,
+			Message: "resource no longer exists",
+		}
+	}
+
+	// Version mismatch — conflict
+	if *op.Version != currentVersion {
+		return SyncResult{
+			Index:      index,
+			Status:     SyncConflict,
+			Message:    fmt.Sprintf("version mismatch: client=%d, server=%d", *op.Version, currentVersion),
+			NewVersion: currentVersion,
+		}
+	}
+
+	// Version matches — accept
 	return SyncResult{
-		Index:   index,
-		Status:  SyncApplied,
-		Message: "accepted (version checking not yet implemented)",
+		Index:      index,
+		Status:     SyncApplied,
+		Message:    "applied",
+		NewVersion: currentVersion + 1,
 	}
 }
