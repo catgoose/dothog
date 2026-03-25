@@ -68,3 +68,10 @@ docs/screenshots/
 # Playwright
 test-results/
 playwright-report/
+
+# Capacitor native projects (generated, not tracked)
+ios/
+android/
+
+# Capacitor build artifacts
+capacitor.config.d.ts
