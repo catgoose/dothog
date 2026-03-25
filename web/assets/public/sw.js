@@ -15,6 +15,11 @@ const CACHE_NAME = 'dothog-v1';
 // Connectivity state — updated by the main thread via postMessage
 self._isOnline = true;
 
+/**
+ * Handle messages from the main thread.
+ * SET_ONLINE_STATUS updates the connectivity flag used by fetch interception.
+ * GET_PENDING_COUNT responds with the current queue size.
+ */
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SET_ONLINE_STATUS') {
     self._isOnline = event.data.online;
@@ -53,6 +58,12 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+/**
+ * Intercept all fetch requests.
+ * - Non-GET mutations when offline: queue to IndexedDB, return synthetic response.
+ * - Static assets (/public/): cache-first (immutable).
+ * - HTML/HTMX requests: network-first with cache fallback.
+ */
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
