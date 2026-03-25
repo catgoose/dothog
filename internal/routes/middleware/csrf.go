@@ -28,6 +28,30 @@ type CSRFSessionStore interface {
 	Set(c echo.Context, key string, value any) error
 }
 
+// CookieCSRFStore stores CSRF tokens in an HTTP cookie.
+// Use this for apps that rely on HMAC-signed session cookies
+// and have no server-side session store to pass to [CSRF].
+type CookieCSRFStore struct{}
+
+func (CookieCSRFStore) Get(c echo.Context, key string) (any, error) {
+	cookie, err := c.Cookie("_csrf")
+	if err != nil {
+		return nil, err
+	}
+	return cookie.Value, nil
+}
+
+func (CookieCSRFStore) Set(c echo.Context, key string, value any) error {
+	c.SetCookie(&http.Cookie{
+		Name:     "_csrf",
+		Value:    value.(string),
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	return nil
+}
+
 // CSRFConfig holds CSRF middleware configuration.
 type CSRFConfig struct {
 	PerRequestPaths  []string
