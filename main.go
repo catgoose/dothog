@@ -55,18 +55,20 @@ func main() {
 	})
 	logger.Init()
 	flag.Parse()
-	envErr := dio.InitEnvironment(nil)
+	dioOpts := &dio.Options{}
+	if env := os.Getenv("ENV"); env != "" {
+		dioOpts.Env = env
+	}
+	envErr := dio.InitEnvironment(dioOpts)
 	// setup:feature:demo:start
 	if envErr != nil {
 		// No .env file -- apply standalone defaults so the demo binary
 		// can run without any configuration.
 		os.Setenv("SERVER_LISTEN_PORT", dio.EnvWithDefault("SERVER_LISTEN_PORT", "3000"))
-		logger.Info("No .env file found, using environment variables and defaults")
-		envErr = nil
 	}
 	// setup:feature:demo:end
 	if envErr != nil {
-		logger.Fatal("Failed to initialize environment", "error", envErr)
+		logger.Info("Environment file not found (using OS env vars)", "error", envErr)
 	}
 
 	cfg, err := config.GetConfig()
