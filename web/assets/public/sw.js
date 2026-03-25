@@ -3,11 +3,27 @@
  * Strategy: network-first with cache fallback.
  *
  * - GET requests: try server first, cache response, fall back to cache
- * - POST/PUT/DELETE: pass through when online (Phase 3 adds offline queue)
+ * - POST/PUT/DELETE: queue to IndexedDB when offline, pass through when online
  * - Static assets (/public/): cache-first (they're immutable with long max-age)
  */
 
+importScripts('/public/js/sync.js');
+
 const CACHE_NAME = 'dothog-v1';
+
+// Connectivity state — updated by the main thread via postMessage
+self._isOnline = true;
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SET_ONLINE_STATUS') {
+    self._isOnline = event.data.online;
+  }
+  if (event.data && event.data.type === 'GET_PENDING_COUNT') {
+    getPendingCount().then((count) => {
+      event.source.postMessage({ type: 'PENDING_COUNT', count });
+    });
+  }
+});
 
 // Static assets to pre-cache on install
 const PRECACHE_URLS = [
@@ -39,8 +55,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Only handle GET requests — mutations pass through (Phase 3 will intercept offline writes)
+  // Mutations: queue offline, pass through online
   if (request.method !== 'GET') {
+    if (!self._isOnline) {
+      event.respondWith(handleOfflineWrite(request));
+    }
     return;
   }
 
@@ -126,6 +145,48 @@ function buildCacheKey(request) {
     return new Request(url.toString(), { method: 'GET' });
   }
   return request;
+}
+
+/**
+ * Handle a mutation request when offline.
+ * Queues the write to IndexedDB and returns a synthetic "pending" response.
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+async function handleOfflineWrite(request) {
+  const body = await request.text();
+
+  await queueWrite({
+    method: request.method,
+    url: new URL(request.url).pathname + new URL(request.url).search,
+    body: body,
+    contentType: request.headers.get('Content-Type'),
+  });
+
+  const count = await getPendingCount();
+
+  // Notify all clients of the new pending count
+  const clients = await self.clients.matchAll();
+  for (const client of clients) {
+    client.postMessage({ type: 'PENDING_COUNT', count });
+  }
+
+  // Return a synthetic HTML response that HTMX can swap
+  const html = `<div class="badge badge-warning badge-sm gap-1">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+  </svg>
+  Saved (pending sync)
+</div>`;
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html',
+      'HX-Trigger': JSON.stringify({ pendingSync: count }),
+      'HX-Reswap': 'innerHTML',
+    },
+  });
 }
 
 /**
