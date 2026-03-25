@@ -17,6 +17,7 @@ import (
 )
 
 func TestSetupReplacesAppNameAndModule(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -115,6 +116,7 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 }
 
 func TestSetupUsesRandomPortWhenPOmitted(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -297,6 +299,7 @@ func assertBuildSucceeds(t *testing.T, dir string) {
 // TestSetup_NoBareBinaryInGitignore verifies that .gitignore does not contain
 // a bare binary name entry after setup. The build/ directory covers compiled output.
 func TestSetup_NoBareBinaryInGitignore(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -335,6 +338,7 @@ func TestSetup_NoBareBinaryInGitignore(t *testing.T) {
 // and still build successfully with mage. This simulates the copy-to-new-directory
 // flow where these files are removed before the user runs mage.
 func TestSetup_MageSetupAndInternalSetupRemovable(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -369,6 +373,7 @@ func TestSetup_MageSetupAndInternalSetupRemovable(t *testing.T) {
 }
 
 func TestSetup_FeaturesAll(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -398,6 +403,7 @@ func TestSetup_FeaturesAll(t *testing.T) {
 }
 
 func TestSetup_FeaturesNone(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -433,6 +439,7 @@ func TestSetup_FeaturesNone(t *testing.T) {
 }
 
 func TestSetup_FeaturesAuthOnly(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -470,6 +477,7 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 }
 
 func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -499,6 +507,7 @@ func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
 }
 
 func TestSetup_FeaturesMSSQL(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -524,6 +533,7 @@ func TestSetup_FeaturesMSSQL(t *testing.T) {
 }
 
 func TestSetup_FeaturesSSECaddy(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
@@ -553,6 +563,7 @@ func TestSetup_FeaturesSSECaddy(t *testing.T) {
 }
 
 func TestSetup_FeaturesDemo(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
 
