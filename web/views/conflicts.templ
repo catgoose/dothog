@@ -1,0 +1,72 @@
+package views
+
+import (
+	"fmt"
+)
+
+// ConflictsPage renders the conflict resolution list.
+templ ConflictsPage(conflicts []map[string]string) {
+	<div class="container mx-auto p-4 max-w-4xl">
+		<h1 class="text-2xl font-bold mb-4">Sync Conflicts</h1>
+		if len(conflicts) == 0 {
+			<div class="text-center py-12">
+				<div class="text-5xl mb-4">&#10003;</div>
+				<h2 class="text-xl font-semibold mb-2">No conflicts</h2>
+				<p class="text-base-content/60">All offline changes synced successfully.</p>
+			</div>
+		} else {
+			<div class="space-y-4">
+				for i, c := range conflicts {
+					@ConflictCard(i, c)
+				}
+			</div>
+		}
+	</div>
+}
+
+// ConflictCard renders a single conflict with resolution controls.
+templ ConflictCard(index int, conflict map[string]string) {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body">
+			<div class="flex items-center justify-between">
+				<h3 class="card-title text-sm">
+					<span class={ "badge", templ.KV("badge-warning", conflict["status"] == "pending"), templ.KV("badge-success", conflict["status"] != "pending") }>
+						{ conflict["status"] }
+					</span>
+					<span class="font-mono text-xs">{ conflict["method"] } { conflict["url"] }</span>
+				</h3>
+				<span class="text-xs text-base-content/50">{ conflict["detected_at"] }</span>
+			</div>
+			<div class="grid grid-cols-2 gap-4 mt-4">
+				<div>
+					<h4 class="text-sm font-semibold mb-2">Your version</h4>
+					<pre class="bg-base-300 p-3 rounded text-xs overflow-x-auto">{ conflict["client_data"] }</pre>
+				</div>
+				<div>
+					<h4 class="text-sm font-semibold mb-2">Current version</h4>
+					<pre class="bg-base-300 p-3 rounded text-xs overflow-x-auto">{ conflict["server_data"] }</pre>
+				</div>
+			</div>
+			if conflict["status"] == "pending" {
+				<div class="card-actions justify-end mt-4">
+					<form
+						hx-post={ fmt.Sprintf("/conflicts/%d/resolve", index) }
+						hx-target="closest .card"
+						hx-swap="outerHTML"
+					>
+						<input type="hidden" name="resolution" value="mine"/>
+						<button type="submit" class="btn btn-primary btn-sm">Keep Mine</button>
+					</form>
+					<form
+						hx-post={ fmt.Sprintf("/conflicts/%d/resolve", index) }
+						hx-target="closest .card"
+						hx-swap="outerHTML"
+					>
+						<input type="hidden" name="resolution" value="theirs"/>
+						<button type="submit" class="btn btn-ghost btn-sm">Keep Theirs</button>
+					</form>
+				</div>
+			}
+		</div>
+	</div>
+}
