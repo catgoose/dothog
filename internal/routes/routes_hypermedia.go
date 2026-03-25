@@ -360,9 +360,6 @@ func crudItemsToView(items []crudItem) []views.CRUDViewItem {
 	return out
 }
 
-// pollCount is accessed atomically from the realtime routes file.
-var globalPollCount int64
-
-func incrementPollCount() int64 {
-	return atomic.AddInt64(&globalPollCount, 1)
+func (ar *appRoutes) incrementPollCount() int64 {
+	return atomic.AddInt64(&ar.pollCount, 1)
 }

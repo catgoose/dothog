@@ -23,7 +23,7 @@ import (
 
 func (ar *appRoutes) initRealtimeRoutes(broker *ssebroker.SSEBroker) {
 	ar.e.GET("/hypermedia/realtime", ar.handleRealtimePage())
-	ar.e.GET("/hypermedia/realtime/poll", handleRealtimePoll)
+	ar.e.GET("/hypermedia/realtime/poll", ar.handleRealtimePoll)
 	ar.e.GET("/hypermedia/realtime/sse-connect", handleSSEConnect)
 	ar.e.GET("/sse/system", handleSSESystem(broker))
 	ar.e.GET("/sse/dashboard", handleSSEDashboard(broker))
@@ -45,8 +45,8 @@ func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
 	}
 }
 
-func handleRealtimePoll(c echo.Context) error {
-	n := incrementPollCount()
+func (ar *appRoutes) handleRealtimePoll(c echo.Context) error {
+	n := ar.incrementPollCount()
 	return handler.RenderComponent(c, views.PollCountFragment(n))
 }
 

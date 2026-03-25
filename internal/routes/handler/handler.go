@@ -261,11 +261,12 @@ func defaultControls(statusCode int, requestID string) []hypermedia.Control {
 }
 
 // HandleNotFound renders a full-page 404 within the base layout for direct
-// navigation. HTMX requests fall through to ErrorHandlerMiddleware for OOB
-// banner delivery. Register with e.RouteNotFound.
+// navigation. HTMX requests return a hypermedia error with back/home/report
+// controls, rendered as an OOB banner by ErrorHandlerMiddleware.
+// Register with e.RouteNotFound.
 func HandleNotFound(c echo.Context) error {
 	if c.Request().Header.Get("HX-Request") == "true" {
-		return echo.NewHTTPError(http.StatusNotFound, "Not Found")
+		return HandleHypermediaError(c, http.StatusNotFound, "Not Found", nil)
 	}
 	c.Response().Status = http.StatusNotFound
 	return RenderBaseLayout(c, views.NotFoundPage(c.Request().URL.Path))
