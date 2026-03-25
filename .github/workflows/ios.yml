@@ -58,25 +58,44 @@ jobs:
           ls -la ios/App/App.xcworkspace || echo "WARNING: xcworkspace not found"
           ls -la ios/App/Podfile || echo "WARNING: Podfile not found"
 
-      - name: Install CocoaPods
+      - name: Install CocoaPods (if Podfile exists)
         run: |
-          cd ios/App
-          pod install --repo-update || echo "pod install failed, trying without repo-update..."
-          pod install || true
+          if [ -f ios/App/Podfile ]; then
+            cd ios/App
+            pod install --repo-update
+          else
+            echo "No Podfile found, skipping CocoaPods"
+          fi
 
       - name: Build for simulator
         run: |
           set -eo pipefail
           cd ios/App
-          xcodebuild \
-            -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
-            -derivedDataPath "$GITHUB_WORKSPACE/build/ios-derived" \
-            CODE_SIGNING_ALLOWED=NO \
-            build
+
+          # Use workspace if CocoaPods created one, otherwise use project
+          if [ -d "App.xcworkspace" ]; then
+            echo "Building with workspace..."
+            xcodebuild \
+              -workspace App.xcworkspace \
+              -scheme App \
+              -configuration Debug \
+              -sdk iphonesimulator \
+              -destination 'platform=iOS Simulator,name=iPhone 16' \
+              -derivedDataPath "$GITHUB_WORKSPACE/build/ios-derived" \
+              CODE_SIGNING_ALLOWED=NO \
+              build
+          else
+            echo "Building with project..."
+            xcodebuild \
+              -project App.xcodeproj \
+              -scheme App \
+              -configuration Debug \
+              -sdk iphonesimulator \
+              -destination 'platform=iOS Simulator,name=iPhone 16' \
+              -derivedDataPath "$GITHUB_WORKSPACE/build/ios-derived" \
+              CODE_SIGNING_ALLOWED=NO \
+              build
+          fi
 
       - name: Package simulator app
         run: |
