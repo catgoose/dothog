@@ -16,7 +16,7 @@ import (
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/hypermedia"
 	// setup:feature:session_settings:start
-	"catgoose/dothog/internal/repository"
+	"catgoose/dothog/internal/domain"
 	// setup:feature:session_settings:end
 	corecomponents "catgoose/dothog/web/components/core"
 	"catgoose/dothog/web/views"
@@ -42,6 +42,17 @@ type AppRoutes interface {
 	SetHealthStats(fn health.StatsFunc)
 }
 
+// setup:feature:session_settings:start
+
+// SessionSettingsStore is the subset of session-settings operations that route
+// handlers need: listing all rows and upserting a single row.
+type SessionSettingsStore interface {
+	ListAll(ctx context.Context) ([]domain.SessionSettings, error)
+	Upsert(ctx context.Context, s *domain.SessionSettings) error
+}
+
+// setup:feature:session_settings:end
+
 // appRoutes implements AppRoutes
 type appRoutes struct {
 	e             *echo.Echo
@@ -51,7 +62,7 @@ type appRoutes struct {
 	startTime     time.Time
 	healthCfg     health.Config
 	// setup:feature:session_settings:start
-	settingsRepo repository.SessionSettingsRepository
+	settingsRepo SessionSettingsStore
 	// setup:feature:session_settings:end
 }
 
@@ -60,7 +71,7 @@ type appRoutes struct {
 // reporter may be nil; a default no-op reporter is used.
 func NewAppRoutes(ctx context.Context, e *echo.Echo, reqLogStore *promolog.Store, reporter IssueReporter,
 	// setup:feature:session_settings:start
-	settingsRepo repository.SessionSettingsRepository,
+	settingsRepo SessionSettingsStore,
 	// setup:feature:session_settings:end
 ) AppRoutes {
 	if reporter == nil {
@@ -205,7 +216,7 @@ func (ar *appRoutes) SetHealthStats(fn health.StatsFunc) {
 // InitEcho initializes Echo with global configurations
 func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
-	settingsRepo repository.SessionSettingsRepository,
+	settingsRepo middleware.SessionSettingsProvider,
 	// setup:feature:session_settings:end
 	reqLogStore *promolog.Store,
 ) (*echo.Echo, error) {

@@ -3,14 +3,22 @@
 package middleware
 
 import (
+	"context"
 	"time"
 
 	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/logger"
-	"catgoose/dothog/internal/repository"
 
 	"github.com/labstack/echo/v4"
 )
+
+// SessionSettingsProvider is the subset of session-settings operations that
+// the middleware needs: look up, create-or-update, and touch a row.
+type SessionSettingsProvider interface {
+	GetByUUID(ctx context.Context, uuid string) (*domain.SessionSettings, error)
+	Upsert(ctx context.Context, s *domain.SessionSettings) error
+	Touch(ctx context.Context, uuid string) error
+}
 
 const (
 	settingsContextKey = "sessionSettings"
@@ -21,7 +29,7 @@ const (
 
 // SessionSettingsMiddleware loads the shared session settings row and stores
 // it on the echo context. All visitors share the same settings.
-func SessionSettingsMiddleware(repo repository.SessionSettingsRepository) echo.MiddlewareFunc {
+func SessionSettingsMiddleware(repo SessionSettingsProvider) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx := c.Request().Context()
