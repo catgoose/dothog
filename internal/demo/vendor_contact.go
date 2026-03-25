@@ -112,7 +112,7 @@ func (d *DB) initVendors() error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL, category TEXT NOT NULL
 	)`); err != nil {
-		return err
+		return fmt.Errorf("create vendors table: %w", err)
 	}
 	if _, err := d.db.Exec(`CREATE TABLE IF NOT EXISTS contacts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,12 +120,12 @@ func (d *DB) initVendors() error {
 		email TEXT NOT NULL, phone TEXT, role TEXT,
 		FOREIGN KEY (vendor_id) REFERENCES vendors(id)
 	)`); err != nil {
-		return err
+		return fmt.Errorf("create contacts table: %w", err)
 	}
 
 	var count int
 	if err := d.db.QueryRow("SELECT COUNT(*) FROM vendors").Scan(&count); err != nil {
-		return err
+		return fmt.Errorf("count vendors rows: %w", err)
 	}
 	if count > 0 {
 		return nil
@@ -172,7 +172,7 @@ func (d *DB) initVendors() error {
 		len(vendors), func(i int) []any {
 			return []any{vendors[i].name, vendors[i].cat}
 		}); err != nil {
-		return err
+		return fmt.Errorf("seed vendors: %w", err)
 	}
 	return seedBulk(d.db,
 		"INSERT INTO contacts (vendor_id,name,email,phone,role) VALUES (?,?,?,?,?)",

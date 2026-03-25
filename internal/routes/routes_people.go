@@ -116,7 +116,10 @@ func (p *peopleRoutes) handlePersonUpdate(c echo.Context) error {
 		return handler.HandleHypermediaError(c, 500, "Failed to update person", err)
 	}
 	// Re-fetch to get full data including created_at
-	person, _ = p.db.GetPerson(c.Request().Context(), id)
+	person, err = p.db.GetPerson(c.Request().Context(), id)
+	if err != nil {
+		return handler.HandleHypermediaError(c, 500, "Failed to re-fetch person after update", err)
+	}
 
 	// Record activity and broadcast to feed
 	evt := p.actLog.Record("updated", "person", id, person.FullName(), "profile updated")

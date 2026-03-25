@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"catgoose/dothog/internal/logger"
 	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/hypermedia"
@@ -61,7 +62,11 @@ func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
 
 func (ar *appRoutes) handleErrorTraceDetail(c echo.Context) error {
 	requestID := c.Param("requestID")
-	trace, _ := ar.reqLogStore.Get(c.Request().Context(), requestID)
+	trace, err := ar.reqLogStore.Get(c.Request().Context(), requestID)
+	if err != nil {
+		logger.WithContext(c.Request().Context()).Error("Failed to retrieve error trace",
+			"request_id", requestID, "error", err)
+	}
 	if trace == nil {
 		return handler.HandleHypermediaError(c, 404, "Error trace not found", nil)
 	}

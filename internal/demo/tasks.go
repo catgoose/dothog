@@ -292,7 +292,7 @@ func (d *DB) initTasks() error {
 
 	var count int
 	if err := d.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", TasksTable.Name)).Scan(&count); err != nil {
-		return err
+		return fmt.Errorf("count tasks rows: %w", err)
 	}
 	if count == 0 {
 		for _, stmt := range TasksTable.SeedSQL(sqliteDialect) {

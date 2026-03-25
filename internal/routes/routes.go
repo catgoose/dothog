@@ -112,7 +112,12 @@ func (ar *appRoutes) InitRoutes() error {
 		description := c.FormValue("description")
 		var trace *promolog.ErrorTrace
 		if ar.reqLogStore != nil && requestID != "" {
-			trace, _ = ar.reqLogStore.Get(c.Request().Context(), requestID)
+			var err error
+			trace, err = ar.reqLogStore.Get(c.Request().Context(), requestID)
+			if err != nil {
+				logger.WithContext(c.Request().Context()).Error("Failed to retrieve error trace for report",
+					"request_id", requestID, "error", err)
+			}
 		}
 		if err := ar.issueReporter.Report(requestID, description, trace); err != nil {
 			logger.WithContext(c.Request().Context()).Error("Issue report failed",

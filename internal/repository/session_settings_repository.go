@@ -61,7 +61,7 @@ func (r *sessionSettingsRepository) GetByUUID(ctx context.Context, uuid string) 
 func (r *sessionSettingsRepository) Upsert(ctx context.Context, s *domain.SessionSettings) error {
 	existing, err := r.GetByUUID(ctx, s.SessionUUID)
 	if err != nil {
-		return err
+		return fmt.Errorf("lookup existing session settings: %w", err)
 	}
 	if existing != nil {
 		query := fmt.Sprintf("UPDATE %s SET %s WHERE SessionUUID = @SessionUUID",

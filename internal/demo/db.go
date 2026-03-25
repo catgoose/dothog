@@ -167,15 +167,15 @@ func (d *DB) initSchema() error {
 		created_at TEXT    NOT NULL
 	)`)
 	if err != nil {
-		return err
+		return fmt.Errorf("create items table: %w", err)
 	}
 	var count int
 	if err := d.db.QueryRow("SELECT COUNT(*) FROM items").Scan(&count); err != nil {
-		return err
+		return fmt.Errorf("count items rows: %w", err)
 	}
 	if count == 0 {
 		if err := d.seed(); err != nil {
-			return err
+			return fmt.Errorf("seed items: %w", err)
 		}
 	}
 	if err := d.initPeople(); err != nil {
@@ -278,18 +278,18 @@ func IntToBool(i int) bool {
 func seedBulk(db *sql.DB, query string, count int, argsFn func(i int) []any) error {
 	tx, err := db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("begin transaction: %w", err)
 	}
 	stmt, err := tx.Prepare(query)
 	if err != nil {
 		_ = tx.Rollback()
-		return err
+		return fmt.Errorf("prepare statement: %w", err)
 	}
 	defer stmt.Close()
 	for i := range count {
 		if _, err := stmt.Exec(argsFn(i)...); err != nil {
 			_ = tx.Rollback()
-			return err
+			return fmt.Errorf("exec row %d: %w", i, err)
 		}
 	}
 	return tx.Commit()

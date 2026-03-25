@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"catgoose/dothog/internal/logger"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/middleware"
@@ -40,7 +41,9 @@ func (ar *appRoutes) handleTheme(broker *ssebroker.SSEBroker) echo.HandlerFunc {
 		settings := middleware.GetSessionSettings(c)
 		settings.Theme = theme
 		if ar.settingsRepo != nil {
-			_ = ar.settingsRepo.Upsert(c.Request().Context(), settings)
+			if err := ar.settingsRepo.Upsert(c.Request().Context(), settings); err != nil {
+				logger.WithContext(c.Request().Context()).Error("Failed to save theme setting", "error", err)
+			}
 		}
 
 		// Broadcast theme change to all connected browsers.

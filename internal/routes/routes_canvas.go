@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -60,8 +61,14 @@ func (cr *canvasRoutes) handleCanvasState(c echo.Context) error {
 
 func (cr *canvasRoutes) handlePlace(c echo.Context) error {
 	clientID := getOrCreateClientID(c)
-	x, _ := strconv.Atoi(c.FormValue("x"))
-	y, _ := strconv.Atoi(c.FormValue("y"))
+	x, err := strconv.Atoi(c.FormValue("x"))
+	if err != nil {
+		return c.String(http.StatusBadRequest, "invalid x coordinate")
+	}
+	y, err := strconv.Atoi(c.FormValue("y"))
+	if err != nil {
+		return c.String(http.StatusBadRequest, "invalid y coordinate")
+	}
 	color := c.FormValue("color")
 	if err := cr.canvas.PlaceColor(x, y, color); err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
@@ -135,7 +142,11 @@ func (cr *canvasRoutes) broadcastPixel(x, y int, color string) {
 	if !cr.broker.HasSubscribers(ssebroker.TopicCanvasUpdate) {
 		return
 	}
-	data, _ := json.Marshal(map[string]any{"x": x, "y": y, "color": color})
+	data, err := json.Marshal(map[string]any{"x": x, "y": y, "color": color})
+	if err != nil {
+		slog.Error("marshal pixel update", "error", err)
+		return
+	}
 	msg := ssebroker.NewSSEMessage("pixel-update", string(data)).String()
 	cr.broker.Publish(ssebroker.TopicCanvasUpdate, msg)
 }
@@ -145,7 +156,11 @@ func (cr *canvasRoutes) broadcastClients() {
 		return
 	}
 	clients := cr.canvas.ActiveClients()
-	data, _ := json.Marshal(map[string]any{"count": len(clients), "clients": clients})
+	data, err := json.Marshal(map[string]any{"count": len(clients), "clients": clients})
+	if err != nil {
+		slog.Error("marshal clients update", "error", err)
+		return
+	}
 	msg := ssebroker.NewSSEMessage("clients-update", string(data)).String()
 	cr.broker.Publish(ssebroker.TopicCanvasUpdate, msg)
 }

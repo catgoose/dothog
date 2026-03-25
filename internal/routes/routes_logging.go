@@ -105,7 +105,11 @@ func (ar *appRoutes) initLoggingRoutes() {
 		if ar.reqLogStore == nil {
 			return handler.HandleHypermediaError(c, 404, "Store not configured", nil)
 		}
-		trace, _ := ar.reqLogStore.Get(c.Request().Context(), requestID)
+		trace, err := ar.reqLogStore.Get(c.Request().Context(), requestID)
+		if err != nil {
+			logger.WithContext(c.Request().Context()).Error("Failed to retrieve error trace",
+				"request_id", requestID, "error", err)
+		}
 		if trace == nil {
 			return handler.HandleHypermediaError(c, 404, "Trace not found or expired", nil)
 		}

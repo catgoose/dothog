@@ -136,11 +136,11 @@ func (d *DB) initPeople() error {
 		created_at TEXT NOT NULL
 	)`)
 	if err != nil {
-		return err
+		return fmt.Errorf("create people table: %w", err)
 	}
 	var count int
 	if err := d.db.QueryRow("SELECT COUNT(*) FROM people").Scan(&count); err != nil {
-		return err
+		return fmt.Errorf("count people rows: %w", err)
 	}
 	if count == 0 {
 		return d.seedPeople()
