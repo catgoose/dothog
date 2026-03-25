@@ -9,6 +9,15 @@ import (
 	"strconv"
 )
 
+// knownTables is the set of tables that support version-based sync.
+// This is the single source of truth for SQL table name validation —
+// no regex needed when we can enumerate the valid values.
+var knownTables = map[string]bool{
+	"Tasks":  true,
+	"Items":  true,
+	"People": true,
+}
+
 // VersionChecker looks up the current version of a row by table and ID.
 type VersionChecker interface {
 	CurrentVersion(ctx context.Context, table string, id int) (int, error)
@@ -28,9 +37,8 @@ func NewSQLVersionChecker(db *sql.DB) *SQLVersionChecker {
 
 // CurrentVersion returns the current version of a row, or -1 if not found.
 func (vc *SQLVersionChecker) CurrentVersion(ctx context.Context, table string, id int) (int, error) {
-	// Validate table name to prevent SQL injection (only allow alphanumeric + underscore)
-	if !isValidTableName(table) {
-		return 0, fmt.Errorf("invalid table name: %s", table)
+	if !knownTables[table] {
+		return 0, fmt.Errorf("unknown table: %s", table)
 	}
 
 	var version int
@@ -43,12 +51,6 @@ func (vc *SQLVersionChecker) CurrentVersion(ctx context.Context, table string, i
 		return 0, fmt.Errorf("check version for %s/%d: %w", table, id, err)
 	}
 	return version, nil
-}
-
-var validTableRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
-
-func isValidTableName(name string) bool {
-	return validTableRe.MatchString(name)
 }
 
 // parseResourceURL extracts a table name hint and row ID from a sync operation URL.

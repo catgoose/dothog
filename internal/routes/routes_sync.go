@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"catgoose/dothog/internal/logger"
+	"catgoose/dothog/internal/routes/middleware"
 
 	"github.com/labstack/echo/v4"
 )
@@ -19,7 +20,8 @@ func (ar *appRoutes) handleSync(c echo.Context) error {
 	var req SyncRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid sync request",
+			"error":      "invalid sync request",
+			"request_id": middleware.GetRequestID(c),
 		})
 	}
 
