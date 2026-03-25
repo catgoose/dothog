@@ -51,8 +51,22 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync ios
 
+      - name: Verify iOS project
+        run: |
+          echo "Checking iOS project structure..."
+          ls -la ios/App/
+          ls -la ios/App/App.xcworkspace || echo "WARNING: xcworkspace not found"
+          ls -la ios/App/Podfile || echo "WARNING: Podfile not found"
+
+      - name: Install CocoaPods
+        run: |
+          cd ios/App
+          pod install --repo-update || echo "pod install failed, trying without repo-update..."
+          pod install || true
+
       - name: Build for simulator
         run: |
+          set -eo pipefail
           cd ios/App
           xcodebuild \
             -workspace App.xcworkspace \
@@ -60,17 +74,19 @@ jobs:
             -configuration Debug \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
-            -derivedDataPath ../../build/ios-derived \
+            -derivedDataPath "$GITHUB_WORKSPACE/build/ios-derived" \
             CODE_SIGNING_ALLOWED=NO \
-            build \
-            2>&1 | tail -30
+            build
 
       - name: Package simulator app
         run: |
-          APP_PATH=$(find build/ios-derived -name "*.app" -type d | head -1)
+          echo "Searching for .app bundle..."
+          find "$GITHUB_WORKSPACE/build/ios-derived" -name "*.app" -type d || true
+          APP_PATH=$(find "$GITHUB_WORKSPACE/build/ios-derived" -name "*.app" -type d | head -1)
           if [ -z "$APP_PATH" ]; then
-            echo "ERROR: .app bundle not found. Build output:"
-            find build/ios-derived -type d -maxdepth 5 || true
+            echo "ERROR: .app bundle not found"
+            echo "Build directory contents:"
+            find "$GITHUB_WORKSPACE/build/ios-derived" -type d -maxdepth 6 2>/dev/null || echo "build/ios-derived does not exist"
             exit 1
           fi
           echo "Found app at: $APP_PATH"
