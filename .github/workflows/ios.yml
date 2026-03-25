@@ -1,24 +1,16 @@
 name: iOS Build
 
 on:
+  push:
+    branches: [feat/capacitor, feat/ios-demo-build]
   workflow_dispatch:
-    inputs:
-      lane:
-        description: 'Fastlane lane to run'
-        required: true
-        default: 'build_debug'
-        type: choice
-        options:
-          - build_debug
-          - beta
 
-# Only allow one iOS build at a time
 concurrency:
-  group: ios-build
+  group: ios-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ios:
+  build-simulator:
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -35,39 +27,78 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.3'
-          bundler-cache: true
-
       - name: Install npm dependencies
         run: npm ci
 
       - name: Generate templ files
         run: go tool templ generate
 
-      - name: Build Go binary
-        run: go build -o dothog .
+      - name: Prepare web assets for Capacitor
+        run: |
+          # Create the webDir that capacitor.config.ts expects
+          mkdir -p build/web/assets/public
+          # Copy all public assets (CSS, JS, images, service worker)
+          cp -r web/assets/public/* build/web/assets/public/
+
+      - name: Configure Capacitor for bundled mode
+        run: |
+          # Remove server.url so Capacitor serves from webDir instead of localhost
+          sed -i '' '/server:/,/},/d' capacitor.config.ts
+
+      - name: Add iOS platform
+        run: npx cap add ios
 
       - name: Sync Capacitor
         run: npx cap sync ios
 
-      - name: Install CocoaPods
-        run: cd ios/App && pod install
-        continue-on-error: true  # pods may already be installed via cap sync
+      - name: Build for simulator
+        run: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -20
 
-      - name: Run Fastlane
-        run: cd ios/App && bundle exec fastlane ${{ github.event.inputs.lane }}
-        env:
-          # For beta lane (TestFlight uploads), set these secrets:
-          # MATCH_GIT_URL: private repo URL for code signing certs
-          # MATCH_PASSWORD: encryption password for match
-          # APP_STORE_CONNECT_API_KEY_ID: API key ID
-          # APP_STORE_CONNECT_API_ISSUER_ID: Issuer ID
-          # APP_STORE_CONNECT_API_KEY: Base64-encoded .p8 key
-          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY: ${{ secrets.ASC_API_KEY }}
+      - name: Package simulator app
+        run: |
+          # Find the .app bundle
+          APP_PATH=$(find ios/App/build -name "App.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: App.app not found"
+            find ios/App/build -name "*.app" -type d
+            exit 1
+          fi
+          echo "Found app at: $APP_PATH"
+          # Zip it for download
+          cd "$(dirname "$APP_PATH")"
+          zip -r "$GITHUB_WORKSPACE/dothog-simulator.zip" "$(basename "$APP_PATH")"
+          echo "Packaged: dothog-simulator.zip"
+          ls -lh "$GITHUB_WORKSPACE/dothog-simulator.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dothog-ios-simulator
+          path: dothog-simulator.zip
+          retention-days: 30
+
+      - name: Create release (on manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ios-dev-${{ github.run_number }}
+          name: "iOS Simulator Build #${{ github.run_number }}"
+          body: |
+            Unsigned simulator build of the dothog demo iOS app.
+
+            This is a development build — it runs in the iOS Simulator only, not on physical devices.
+            To install: unzip and drag into a running iOS Simulator.
+
+            For physical device builds, code signing certificates are required.
+          files: dothog-simulator.zip
+          prerelease: true
