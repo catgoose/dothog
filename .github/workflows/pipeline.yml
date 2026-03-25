@@ -339,8 +339,12 @@ jobs:
           rm -f .github/workflows/screenshots.yml
           rm -f MANIFESTO.md
 
-          # Scrub binary name references
-          sed -i 's/dothog/harmony/g' .github/workflows/*.yml Dockerfile
+          # Replace Go module path in all source files
+          find . -name '*.go' -exec sed -i 's|catgoose/dothog|catgoose/harmony|g' {} +
+          sed -i 's|catgoose/dothog|catgoose/harmony|g' go.mod
+
+          # Scrub binary name references (workflows, Dockerfile, and files with literal "dothog")
+          sed -i 's/dothog/harmony/g' .github/workflows/*.yml Dockerfile magefile.go internal/logger/logger.go
 
       - name: Push to harmony
         run: |
