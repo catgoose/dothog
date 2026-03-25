@@ -65,6 +65,9 @@ type appRoutes struct {
 	// setup:feature:session_settings:start
 	settingsRepo SessionSettingsStore
 	// setup:feature:session_settings:end
+	// setup:feature:sync:start
+	versionChecker VersionChecker
+	// setup:feature:sync:end
 }
 
 // NewAppRoutes initializes routes.
@@ -191,6 +194,9 @@ func (ar *appRoutes) InitRoutes() error {
 		logger.WithContext(ar.ctx).Warn("Demo DB unavailable; /demo/* routes disabled", "error", err)
 		return nil
 	}
+	// setup:feature:sync:start
+	ar.versionChecker = NewSQLVersionChecker(db.RawDB())
+	// setup:feature:sync:end
 	ar.initInventoryRoutes(db)
 	ar.initCatalogRoutes(db)
 	ar.initBulkRoutes(db)
