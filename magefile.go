@@ -929,4 +929,13 @@ func IosRun() error {
 	return sh.Run("npx", "cap", "run", "ios")
 }
 
+// IosBeta builds and uploads to TestFlight via Fastlane (requires macOS).
+func IosBeta() error {
+	if runtime.GOOS != "darwin" {
+		return fmt.Errorf("iOS targets require macOS with Xcode installed")
+	}
+	mg.Deps(IosSync)
+	return sh.Run("bundle", "exec", "fastlane", "beta")
+}
+
 // setup:feature:capacitor:end

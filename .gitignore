@@ -75,3 +75,14 @@ android/
 
 # Capacitor build artifacts
 capacitor.config.d.ts
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Ruby / Bundler
+Gemfile.lock
+vendor/bundle/
+.bundle/
