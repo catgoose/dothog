@@ -1,0 +1,41 @@
+# Fastfile for iOS builds via Capacitor
+# See: https://docs.fastlane.tools
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    setup_ci if ENV["CI"]
+
+    # Match handles code signing via a private git repo of certificates/profiles
+    match(
+      type: "appstore",
+      readonly: is_ci,
+    )
+
+    build_app(
+      workspace: "ios/App/App.xcworkspace",
+      scheme: "App",
+      export_method: "app-store",
+      clean: true,
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+    )
+  end
+
+  desc "Build for simulator (CI validation only)"
+  lane :build_debug do
+    build_app(
+      workspace: "ios/App/App.xcworkspace",
+      scheme: "App",
+      configuration: "Debug",
+      destination: "generic/platform=iOS Simulator",
+      skip_codesigning: true,
+      skip_archive: true,
+      derived_data_path: "build/ios",
+    )
+  end
+end
