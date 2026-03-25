@@ -43,11 +43,11 @@ func TestParseResourceURL_CreateURL(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestIsValidTableName(t *testing.T) {
-	assert.True(t, isValidTableName("Tasks"))
-	assert.True(t, isValidTableName("Items"))
-	assert.True(t, isValidTableName("my_table"))
-	assert.False(t, isValidTableName("Tasks; DROP TABLE"))
-	assert.False(t, isValidTableName(""))
-	assert.False(t, isValidTableName("123"))
+func TestKnownTables(t *testing.T) {
+	assert.True(t, knownTables["Tasks"])
+	assert.True(t, knownTables["Items"])
+	assert.True(t, knownTables["People"])
+	assert.False(t, knownTables["Unknown"])
+	assert.False(t, knownTables[""])
+	assert.False(t, knownTables["Tasks; DROP TABLE"])
 }

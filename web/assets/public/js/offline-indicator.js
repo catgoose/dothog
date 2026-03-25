@@ -12,6 +12,11 @@ function offlineIndicator() {
     _interval: null,
     _wasOffline: false,
 
+    /**
+     * Initialize the offline indicator. Registers online/offline event listeners,
+     * starts the /health heartbeat, and listens for pending count updates from
+     * the service worker.
+     */
     init() {
       window.addEventListener('online', () => {
         this.online = true;
@@ -38,6 +43,9 @@ function offlineIndicator() {
       this._interval = setInterval(() => this.checkHealth(), 30000);
     },
 
+    /**
+     * Clean up the health check interval when the component is destroyed.
+     */
     destroy() {
       if (this._interval) {
         clearInterval(this._interval);
