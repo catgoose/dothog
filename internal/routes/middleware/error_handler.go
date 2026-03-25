@@ -121,7 +121,7 @@ func NewHTTPErrorHandler(reqLogStore *promolog.Store) func(err error, c echo.Con
 			if requestID != "" {
 				var entries []promolog.Entry
 				if buf := promolog.GetBuffer(c.Request().Context()); buf != nil {
-					entries = buf.Entries
+					entries = buf.Snapshot()
 				}
 				var userID string
 				// setup:feature:auth:start
