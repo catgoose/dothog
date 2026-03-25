@@ -156,6 +156,10 @@ func (ar *appRoutes) InitRoutes() error {
 		return handler.RenderComponent(c, corecomponents.ReportIssueModal(cfg))
 	})
 
+	// setup:feature:sync:start
+	ar.initSyncRoutes()
+	// setup:feature:sync:end
+
 	ar.initAdminCoreRoutes()
 	ar.initErrorTracesRoutes()
 
