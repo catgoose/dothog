@@ -123,6 +123,8 @@ Query parameters represent views of a collection. `/tasks?sort=name&dir=asc&page
 
 Sub-resources nest hierarchically. `/people/7/edit` is the edit representation of person 7. `/tasks/42/notes` would be the notes belonging to task 42. The URL path mirrors the resource graph — you can read the hierarchy by reading the path segments.
 
+When sub-resources have fixed, known identities — use semantic slugs, not opaque IDs. `/punchlist/2/checklist` is better than `/punchlist/2/step/3`. Numeric IDs are for database-assigned identifiers; named resources get named paths. If you can enumerate the set at development time (sections, phases, categories), those are slugs, not indices.
+
 URLs should be bookmarkable, shareable, and stable. A user should be able to copy the address bar, send it to a colleague, and that colleague should see the same resource. This is a consequence of stateless requests and resource identification working together — the URL contains enough information to reconstruct the view.
 
 ## Chesterton's Fence
