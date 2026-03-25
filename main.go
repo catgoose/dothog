@@ -3,6 +3,8 @@ package main
 import (
 	"catgoose/dothog/internal/config"
 	dialect "github.com/catgoose/fraggle"
+	_ "github.com/catgoose/fraggle/driver/postgres"
+	_ "github.com/catgoose/fraggle/driver/sqlite"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/database"
 	// setup:feature:session_settings:end
