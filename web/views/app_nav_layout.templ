@@ -6,19 +6,23 @@ import components "catgoose/dothog/web/components/core"
 // AppNavLayout is a responsive page layout with CSS-driven auto-positioning:
 // bottom nav bar on mobile, sticky top bar on desktop. Derived apps opt in
 // via handler.SetLayout(handler.AppNavLayoutFunc(...)).
-templ AppNavLayout(content templ.Component, items []hypermedia.NavItem, promoted *hypermedia.NavItem, maxVisible int, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, version string, appName string) {
+templ AppNavLayout(content templ.Component, cfg hypermedia.NavConfig, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, version string) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ theme }>
-		@header(csrfToken, devMode, appName, []string{"/public/css/app-layout.css"})
+		@header(csrfToken, devMode, cfg.AppName, []string{"/public/css/app-layout.css"})
 		<body class="min-h-screen bg-base-200">
 			<div class="app-shell">
 				<div id="error-status" class="sticky top-0 z-40"></div>
 				<!-- Mobile topbar (CSS shows/hides) -->
 				<div class="app-topbar sticky top-0 z-50 bg-base-100 border-b border-base-300 items-center justify-between px-4 py-2.5">
-					<a href="/" class="font-bold text-lg">{ appName }</a>
+					if cfg.Topbar != nil {
+						@cfg.Topbar
+					} else {
+						<a href="/" class="font-bold text-lg">{ cfg.AppName }</a>
+					}
 				</div>
 				<!-- Nav bar (CSS positions: bottom on mobile, top on desktop) -->
-				@appNav(items, promoted, maxVisible, appName)
+				@appNav(cfg)
 				if len(crumbs) > 0 {
 					<div class="mx-4 mt-3">
 						<div class="bg-base-100 shadow-sm border border-base-300 rounded-lg px-4 py-2 inline-block">
@@ -44,22 +48,28 @@ templ AppNavLayout(content templ.Component, items []hypermedia.NavItem, promoted
 }
 
 // appNav renders a single nav element that CSS repositions based on screen size.
-templ appNav(items []hypermedia.NavItem, promoted *hypermedia.NavItem, maxVisible int, appName string) {
+templ appNav(cfg hypermedia.NavConfig) {
 	<nav class="app-nav" x-data>
 		<div class="nav-tabs flex items-stretch">
 			<!-- Brand (desktop only, hidden on mobile via CSS) -->
-			<a href="/" class="nav-brand">{ appName }</a>
+			if cfg.Brand != nil {
+				<div class="nav-brand">
+					@cfg.Brand
+				</div>
+			} else {
+				<a href="/" class="nav-brand">{ cfg.AppName }</a>
+			}
 			<!-- Visible nav links -->
-			for i, item := range items {
-				if i < maxVisible && len(item.Children) == 0 {
+			for i, item := range cfg.Items {
+				if i < navMaxVisible(cfg) && len(item.Children) == 0 {
 					@appNavLink(item, false)
 				}
 			}
-			if promoted != nil {
-				@appNavLink(*promoted, true)
+			if cfg.Promoted != nil {
+				@appNavLink(*cfg.Promoted, true)
 			}
 			<!-- Desktop overflow menu -->
-			if appNavHasOverflow(items, maxVisible) {
+			if appNavHasOverflow(cfg.Items, navMaxVisible(cfg)) {
 				<div class="nav-overflow items-center ml-auto">
 					<div class="dropdown dropdown-end" x-data="{ open: false }">
 						<div tabindex="0" role="button" class="nav-link" x-on:click="open = !open">
@@ -71,8 +81,8 @@ templ appNav(items []hypermedia.NavItem, promoted *hypermedia.NavItem, maxVisibl
 							x-show="open"
 							x-on:click.outside="open = false"
 						>
-							for i, item := range items {
-								if i >= maxVisible || len(item.Children) > 0 {
+							for i, item := range cfg.Items {
+								if i >= navMaxVisible(cfg) || len(item.Children) > 0 {
 									if len(item.Children) > 0 {
 										<li class="menu-title text-xs">{ item.Label }</li>
 										for _, child := range item.Children {
@@ -123,6 +133,15 @@ func appNavActiveClass(active bool) string {
 		return "active"
 	}
 	return ""
+}
+
+// navMaxVisible returns the effective max-visible count, defaulting to
+// the total number of items when MaxVisible is zero.
+func navMaxVisible(cfg hypermedia.NavConfig) int {
+	if cfg.MaxVisible <= 0 {
+		return len(cfg.Items)
+	}
+	return cfg.MaxVisible
 }
 
 // appNavHasOverflow returns true if any items would go into the overflow menu.

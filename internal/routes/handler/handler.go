@@ -116,21 +116,23 @@ func renderDefaultLayout(c echo.Context, cmp templ.Component) error {
 }
 
 // AppNavLayoutFunc returns a LayoutFunc that uses the responsive app-nav layout.
-// items defines the navigation structure. promoted (may be nil) gets the raised
-// mobile button treatment. maxVisible controls how many items appear in the
-// main bar; the rest go to the overflow menu (0 = show all).
-func AppNavLayoutFunc(items []hypermedia.NavItem, promoted *hypermedia.NavItem, maxVisible int) LayoutFunc {
-	if maxVisible <= 0 {
-		maxVisible = len(items)
-	}
+// The NavConfig defines navigation structure and optional custom slots.
+func AppNavLayoutFunc(cfg hypermedia.NavConfig) LayoutFunc {
 	return func(c echo.Context, cmp templ.Component) error {
 		path := c.Request().URL.Path
-		activeItems := hypermedia.SetActiveNavItemPrefix(items, path)
+		navCfg := cfg
+		navCfg.Items = hypermedia.SetActiveNavItemPrefix(cfg.Items, path)
+		if navCfg.MaxVisible <= 0 {
+			navCfg.MaxVisible = len(navCfg.Items)
+		}
+		if navCfg.AppName == "" {
+			navCfg.AppName = appName
+		}
 		lc := getLayoutCtx(c)
 		return RenderComponent(c, views.AppNavLayout(
-			cmp, activeItems, promoted, maxVisible,
+			cmp, navCfg,
 			lc.csrfToken, dio.Dev(), lc.theme,
-			lc.crumbs, version.Display(), appName,
+			lc.crumbs, version.Display(),
 		))
 	}
 }

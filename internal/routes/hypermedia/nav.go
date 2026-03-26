@@ -6,7 +6,20 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/a-h/templ"
 )
+
+// NavConfig holds the app-controlled parts of the nav layout.
+// Zero values are safe: no promoted item, all items visible, no custom slots.
+type NavConfig struct {
+	Items      []NavItem       // Navigation items
+	Promoted   *NavItem        // Optional promoted FAB item (mobile)
+	MaxVisible int             // Items visible before overflow (0 = show all)
+	AppName    string          // Brand text
+	Brand      templ.Component // Custom brand slot (replaces default appName text)
+	Topbar     templ.Component // Custom mobile topbar content (replaces default)
+}
 
 // NavItem is a server-computed navigation affordance.
 // Active state is set by the handler (or SetActiveNavItem), not by JavaScript.
