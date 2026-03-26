@@ -1,0 +1,36 @@
+package components
+
+// FormSection groups related fields with consistent vertical spacing.
+templ FormSection() {
+	<div class="space-y-4 mt-2">{ children... }</div>
+}
+
+// FormField wraps a labeled form input.
+templ FormField(label string) {
+	<div class="form-control w-full">
+		<label class="label pb-1"><span class="label-text font-medium">{ label }</span></label>
+		{ children... }
+	</div>
+}
+
+// FormFieldWithHelp wraps a labeled form input with help text below.
+templ FormFieldWithHelp(label, help string) {
+	<div class="form-control w-full">
+		<label class="label pb-1"><span class="label-text font-medium">{ label }</span></label>
+		{ children... }
+		<label class="label pt-0.5"><span class="label-text-alt text-base-content/40">{ help }</span></label>
+	</div>
+}
+
+// FormCheckbox wraps a labeled checkbox toggle.
+templ FormCheckbox(label string) {
+	<label class="label cursor-pointer justify-start gap-3 py-2">
+		{ children... }
+		<span class="label-text">{ label }</span>
+	</label>
+}
+
+// FormActions renders the form submit area with consistent spacing.
+templ FormActions() {
+	<div class="pt-2">{ children... }</div>
+}
