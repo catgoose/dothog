@@ -105,6 +105,10 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.e.GET("/", handler.HandleComponent(views.ArchitecturePage()))
 	// setup:feature:session_settings:start
 	ar.initUserSettingsRoutes()
+	ar.e.GET("/settings", func(c echo.Context) error {
+		theme := middleware.GetSessionSettings(c).Theme
+		return handler.RenderBaseLayout(c, views.AppSettingsPage(theme))
+	})
 	// setup:feature:session_settings:end
 	// setup:feature:demo:start
 	ar.e.GET("/welcome", handler.HandleComponent(views.WelcomePage()))

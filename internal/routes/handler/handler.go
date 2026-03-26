@@ -40,6 +40,7 @@ func appNavComponent(path string) templ.Component {
 		// setup:feature:session_settings:start
 		{Label: "Preferences", Href: "/user/settings"},
 		// setup:feature:session_settings:end
+		{Label: "Settings", Href: "/settings"},
 		{Label: "Admin", Href: "/admin"},
 	}, path)
 	return corecomponents.NavBar(items)

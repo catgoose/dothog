@@ -43,7 +43,6 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			</footer>
 			<div id="report-modal-container"></div>
 			<div id="report-email-container"></div>
-			@settingsModal(theme)
 		</body>
 	</html>
 }
@@ -171,44 +170,3 @@ var DaisyThemes = []string{
 	"winter", "dim", "nord", "sunset", "caramellatte", "abyss", "silk",
 }
 
-// settingsModal renders a modal with the DaisyUI theme picker.
-templ settingsModal(currentTheme string) {
-	<dialog id="settings-modal" class="modal" x-data>
-		<div class="modal-box bg-base-100 text-base-content w-full max-w-2xl">
-			<form method="dialog">
-				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-			</form>
-			<h3 class="font-bold text-lg mb-4">Settings</h3>
-			<div class="fieldset mb-2">
-				<label class="label">
-					<span class="label-text font-medium">Theme</span>
-				</label>
-				<div class="grid grid-cols-4 gap-2">
-					for _, theme := range DaisyThemes {
-						@settingsThemeOption(theme, currentTheme)
-					}
-				</div>
-			</div>
-		</div>
-		<form method="dialog" class="modal-backdrop">
-			<button>close</button>
-		</form>
-	</dialog>
-}
-
-// settingsThemeOption renders a single theme button that updates the DOM and persists to the server.
-templ settingsThemeOption(theme string, current string) {
-	<button
-		data-theme={ theme }
-		class={ "btn btn-sm w-full justify-start gap-2 border border-base-content/10",
-			templ.KV("ring-2 ring-primary", theme == current) }
-		x-on:click={ "document.documentElement.dataset.theme = '" + theme + "'; fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'theme=" + theme + "' }); $el.closest('dialog').close()" }
-	>
-		<span class="flex gap-0.5">
-			<span class="w-2 h-4 rounded-sm bg-primary"></span>
-			<span class="w-2 h-4 rounded-sm bg-secondary"></span>
-			<span class="w-2 h-4 rounded-sm bg-accent"></span>
-		</span>
-		<span class="text-xs capitalize">{ theme }</span>
-	</button>
-}

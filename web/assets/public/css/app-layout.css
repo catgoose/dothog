@@ -48,7 +48,6 @@
 	.app-nav .nav-link.promoted .nav-icon { width: 1.25rem; height: 1.25rem; }
 	.app-nav .nav-brand { display: none; }
 	.app-nav .nav-overflow { display: none; }
-	.app-nav .nav-settings { display: none; }
 	.app-main {
 		padding-left: max(1rem, env(safe-area-inset-left));
 		padding-right: max(1rem, env(safe-area-inset-right));
@@ -106,7 +105,6 @@
 		height: 1rem;
 	}
 	.app-nav .nav-overflow { display: flex; }
-	.app-nav .nav-settings { display: flex; }
 	.app-topbar { display: none; }
 	.app-topbar-spacer { display: none; }
 }
