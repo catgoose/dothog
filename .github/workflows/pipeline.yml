@@ -11,6 +11,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  issues: write
 
 concurrency:
   group: pipeline-${{ github.ref }}
@@ -88,14 +89,6 @@ jobs:
         id: result
         run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Notify on failure
-        if: failure() && steps.check-changes.outputs.changes_detected == 'true'
-        run: |
-          echo "Dependency update failed (build broke or rebase conflict)."
-          gh issue create --title "Auto-update workflow failed" \
-            --body "Failed to apply dependency/Go version updates. Please resolve manually."
-        env:
-          GH_TOKEN: ${{ github.token }}
 
   # ── Stage 2: Build and test (parallel) ─────────────────────────────────────
   go-test:
@@ -359,3 +352,26 @@ jobs:
           fi
           git commit -m "harmonizing the Hodge with the Podge"
           git push origin main
+
+  # ── Notify on pipeline failure ──────────────────────────────────────────────
+  notify-failure:
+    if: ${{ failure() }}
+    needs: [update-deps, go-test, e2e-test, docs, screenshots, publish-screenshots, sync-harmony]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue on pipeline failure
+        run: |
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "Pipeline failure: ${{ github.workflow }} (#${{ github.run_number }})" \
+            --label "ci" \
+            --body "$(cat <<EOF
+          **Workflow:** \`${{ github.workflow }}\`
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          **Branch:** \`${{ github.ref_name }}\`
+          **Commit:** \`${{ github.sha }}\`
+          **Triggered by:** ${{ github.actor }}
+          EOF
+          )"
+        env:
+          GH_TOKEN: ${{ github.token }}
