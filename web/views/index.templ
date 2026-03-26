@@ -155,7 +155,7 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:offline:start
 		<script>
 			if ('serviceWorker' in navigator) {
-				navigator.serviceWorker.register('/public/sw.js').catch(function(err) {
+				navigator.serviceWorker.register('/sw.js').catch(function(err) {
 					console.warn('ServiceWorker registration failed:', err);
 				});
 			}

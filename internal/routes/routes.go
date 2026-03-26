@@ -161,7 +161,6 @@ func (ar *appRoutes) InitRoutes() error {
 
 	// setup:feature:sync:start
 	ar.initSyncRoutes()
-	ar.initConflictRoutes()
 	// setup:feature:sync:end
 
 	ar.initAdminCoreRoutes()
@@ -291,6 +290,20 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		}
 	})
 	static.StaticFS("/", staticFS)
+
+	// setup:feature:offline:start
+	// Serve the service worker from the root so it can control all pages.
+	e.GET("/sw.js", func(c echo.Context) error {
+		f, err := staticFS.Open("sw.js")
+		if err != nil {
+			return echo.NewHTTPError(http.StatusNotFound)
+		}
+		defer f.Close()
+		c.Response().Header().Set("Content-Type", "application/javascript")
+		c.Response().Header().Set("Service-Worker-Allowed", "/")
+		return c.Stream(http.StatusOK, "application/javascript", f)
+	})
+	// setup:feature:offline:end
 
 	return e, nil
 }
