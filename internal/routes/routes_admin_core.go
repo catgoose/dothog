@@ -1,6 +1,7 @@
 package routes
 
 import (
+	// setup:feature:demo:start
 	"fmt"
 	"runtime"
 	"runtime/pprof"
@@ -8,9 +9,11 @@ import (
 
 	"catgoose/dothog/internal/admininfo"
 	"catgoose/dothog/internal/config"
+	"catgoose/dothog/internal/version"
+	// setup:feature:demo:end
+
 	"catgoose/dothog/internal/health"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/version"
 	"catgoose/dothog/web/views"
 
 	"github.com/labstack/echo/v4"
@@ -20,15 +23,19 @@ func (ar *appRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin", handler.HandleComponent(views.AdminIndexPage()))
 	ar.e.GET("/admin/health", ar.handleAdminHealth)
 	ar.e.GET("/admin/health/check", ar.handleAdminHealthCheck)
+	// setup:feature:demo:start
 	ar.e.GET("/admin/system", ar.handleSystemInfo)
 	ar.e.GET("/admin/system/check-update", ar.handleCheckUpdate)
 	ar.e.GET("/admin/config", ar.handleConfigInfo)
+	// setup:feature:demo:end
 	// setup:feature:session_settings:start
 	ar.e.GET("/admin/sessions", ar.handleSessionsPage)
 	ar.e.GET("/admin/sessions/table", ar.handleSessionsTable)
 	// setup:feature:session_settings:end
 }
 
+
+// setup:feature:demo:start
 
 func (ar *appRoutes) handleSystemInfo(c echo.Context) error {
 	var ms runtime.MemStats
@@ -108,6 +115,8 @@ func (ar *appRoutes) handleConfigInfo(c echo.Context) error {
 	return handler.RenderBaseLayout(c, views.AdminConfigPage(entries))
 }
 
+// setup:feature:demo:end
+
 // setup:feature:session_settings:start
 
 func (ar *appRoutes) handleSessionsPage(c echo.Context) error {
@@ -133,6 +142,8 @@ func (ar *appRoutes) handleSessionsTable(c echo.Context) error {
 }
 
 // setup:feature:session_settings:end
+
+// setup:feature:demo:start
 
 func formatUptime(d time.Duration) string {
 	days := int(d.Hours()) / 24
@@ -164,6 +175,8 @@ func defaultStr(s, fallback string) string {
 	}
 	return s
 }
+
+// setup:feature:demo:end
 
 func (ar *appRoutes) handleAdminHealth(c echo.Context) error {
 	h := health.Check(c.Request().Context(), ar.healthCfg)

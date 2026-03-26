@@ -1,12 +1,16 @@
 package views
 
 import (
+	// setup:feature:demo:start
 	"fmt"
 	"strconv"
 
 	"catgoose/dothog/internal/admininfo"
 	"catgoose/dothog/internal/version"
+	// setup:feature:demo:end
 )
+
+// setup:feature:demo:start
 
 // AdminSystemPage displays runtime system information.
 templ AdminSystemPage(info admininfo.SystemInfo) {
@@ -155,6 +159,8 @@ templ AdminConfigPage(entries []admininfo.ConfigEntry) {
 		</div>
 	</div>
 }
+
+// setup:feature:demo:end
 
 // UserDashboardPage is a placeholder for application-specific user dashboards.
 // Override this page with your own content after running mage setup.
