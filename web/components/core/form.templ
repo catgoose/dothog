@@ -34,3 +34,18 @@ templ FormCheckbox(label string) {
 templ FormActions() {
 	<div class="pt-2">{ children... }</div>
 }
+
+// FormGrid renders a responsive two-column grid for form fields.
+// Stacks to single column on mobile, two columns on medium+ screens.
+templ FormGrid() {
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">{ children... }</div>
+}
+
+// FormToggle wraps a right-aligned toggle switch with label on the left.
+// Use for settings-style on/off switches. The child should be an input checkbox/toggle.
+templ FormToggle(label string) {
+	<label class="flex items-center justify-between max-w-sm cursor-pointer">
+		<span class="label-text">{ label }</span>
+		{ children... }
+	</label>
+}
