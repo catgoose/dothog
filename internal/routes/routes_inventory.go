@@ -98,6 +98,10 @@ func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 404, "Item not found", err)
 	}
+	if c.Request().Header.Get("HX-Request") == "" {
+		handler.SetPageLabel(c, item.Name)
+		return handler.RenderBaseLayout(c, views.InventoryDetailPage(item))
+	}
 	return handler.RenderComponent(c, views.InventoryItemRow(item))
 }
 

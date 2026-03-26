@@ -21,6 +21,7 @@ func (ar *appRoutes) initCatalogRoutes(db *demo.DB) {
 	cat := &catalogRoutes{db: db}
 	ar.e.GET(catalogBase, cat.handleCatalogPage)
 	ar.e.GET(catalogBase+"/items", cat.handleCatalogItems)
+	ar.e.GET(catalogBase+"/items/:id", cat.handleCatalogDetailPage)
 	ar.e.GET(catalogBase+"/items/:id/details", cat.handleCatalogItemDetails)
 }
 
@@ -39,6 +40,19 @@ func (cat *catalogRoutes) handleCatalogItems(c echo.Context) error {
 	}
 	setTableReplaceURL(c, catalogBase)
 	return handler.RenderComponent(c, container)
+}
+
+func (cat *catalogRoutes) handleCatalogDetailPage(c echo.Context) error {
+	id, err := params.ParseParamID(c, "id")
+	if err != nil {
+		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+	}
+	item, err := cat.db.GetItem(c.Request().Context(), id)
+	if err != nil {
+		return handler.HandleHypermediaError(c, 404, "Item not found", err)
+	}
+	handler.SetPageLabel(c, item.Name)
+	return handler.RenderBaseLayout(c, views.CatalogDetailPage(item))
 }
 
 func (cat *catalogRoutes) handleCatalogItemDetails(c echo.Context) error {
