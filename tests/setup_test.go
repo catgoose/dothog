@@ -281,15 +281,26 @@ func setupTempDir(t *testing.T) string {
 
 func assertBuildSucceeds(t *testing.T, dir string) {
 	t.Helper()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+
+	// Regenerate templ files after feature stripping removed gated code.
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "go", "build", "./...")
+	cmd := exec.CommandContext(ctx, "go", "tool", "templ", "generate")
 	cmd.Dir = dir
-	// WaitDelay ensures pipes are closed even if child processes linger
-	// after context cancellation kills the parent go build process.
 	cmd.WaitDelay = 10 * time.Second
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, "go build failed (timeout=%v): %s", ctx.Err(), string(out))
+	require.NoError(t, err, "templ generate failed: %s", string(out))
+
+	// Now build.
+	ctx2, cancel2 := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel2()
+	cmd2 := exec.CommandContext(ctx2, "go", "build", "./...")
+	cmd2.Dir = dir
+	// WaitDelay ensures pipes are closed even if child processes linger
+	// after context cancellation kills the parent go build process.
+	cmd2.WaitDelay = 10 * time.Second
+	out2, err2 := cmd2.CombinedOutput()
+	require.NoError(t, err2, "go build failed (timeout=%v): %s", ctx2.Err(), string(out2))
 }
 
 // ---------------------------------------------------------------------------
