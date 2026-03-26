@@ -34,17 +34,48 @@ func filterHxAttrs(field hypermedia.FilterField, bar hypermedia.FilterBar) templ
 	return attrs
 }
 
-// FilterBar renders the <form> container with all filter fields.
-templ FilterBar(bar hypermedia.FilterBar) {
-	<form id={ bar.ID } class="flex flex-wrap gap-4 items-end mb-4">
-		for _, field := range bar.Fields {
-			@filterField(field, bar)
+// filterBarHasSearch returns true if any field in the bar is a search field.
+func filterBarHasSearch(bar hypermedia.FilterBar) bool {
+	for _, f := range bar.Fields {
+		if f.Kind == hypermedia.FilterKindSearch {
+			return true
 		}
-	</form>
+	}
+	return false
 }
 
-// filterField dispatches to the correct field renderer by Kind.
-templ filterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
+// FilterBar renders the filter form. When a search field is present, it splits
+// into two rows: search full-width on top, other fields in a flex row below.
+templ FilterBar(bar hypermedia.FilterBar) {
+	if filterBarHasSearch(bar) {
+		<form id={ bar.ID } class="space-y-3 mb-4">
+			for _, field := range bar.Fields {
+				if field.Kind == hypermedia.FilterKindSearch {
+					<div>
+						@FilterField(field, bar)
+					</div>
+				}
+			}
+			<div class="flex flex-wrap gap-3 items-end">
+				for _, field := range bar.Fields {
+					if field.Kind != hypermedia.FilterKindSearch {
+						@FilterField(field, bar)
+					}
+				}
+			</div>
+		</form>
+	} else {
+		<form id={ bar.ID } class="flex flex-wrap gap-4 items-end mb-4">
+			for _, field := range bar.Fields {
+				@FilterField(field, bar)
+			}
+		</form>
+	}
+}
+
+// FilterField dispatches to the correct field renderer by Kind.
+// Exported so apps can build custom filter layouts using the standard field renderers.
+templ FilterField(field hypermedia.FilterField, bar hypermedia.FilterBar) {
 	switch field.Kind {
 		case hypermedia.FilterKindSearch:
 			@searchFilterField(field, bar)
