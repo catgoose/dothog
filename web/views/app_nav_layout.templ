@@ -23,6 +23,7 @@ templ AppNavLayout(content templ.Component, cfg hypermedia.NavConfig, csrfToken 
 				</div>
 				<!-- Nav bar (CSS positions: bottom on mobile, top on desktop) -->
 				@appNav(cfg)
+				<div id="context-bar-slot"></div>
 				if len(crumbs) > 0 {
 					@components.ContextStrip(crumbs)
 				}

@@ -24,7 +24,10 @@ templ ContextStrip(crumbs []hypermedia.Breadcrumb) {
 // ContextBar renders a horizontal strip of context links below the nav.
 // Use at the top of page content to show sibling navigation.
 templ ContextBar() {
-	<div class="flex items-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm">
+	<div
+		class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm"
+		_="init if #context-bar-slot put me into #context-bar-slot"
+	>
 		{ children... }
 	</div>
 }

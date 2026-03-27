@@ -27,6 +27,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 		>
 			<div id="error-status" class="sticky top-0 z-40"></div>
 			@menuContent
+			<div id="context-bar-slot"></div>
 			if len(crumbs) > 0 {
 				<div class="mx-4 mt-3">
 					<div class="bg-base-100 shadow-sm border border-base-300 rounded-lg px-4 py-2 inline-block">
