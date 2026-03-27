@@ -67,6 +67,9 @@ type appRoutes struct {
 	// setup:feature:sync:start
 	versionChecker VersionChecker
 	// setup:feature:sync:end
+	// setup:feature:demo:start
+	demoDB *demo.DB
+	// setup:feature:demo:end
 }
 
 // NewAppRoutes initializes routes.
@@ -162,6 +165,7 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:sync:start
 	ar.versionChecker = NewSQLVersionChecker(db.RawDB())
 	// setup:feature:sync:end
+	ar.demoDB = db
 	ar.initInventoryRoutes(db)
 	ar.initCatalogRoutes(db)
 	ar.initBulkRoutes(db)
@@ -180,6 +184,7 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initSettingsRoutes(demo.NewSettingsStore())
 	ar.initVendorContactRoutes(db, actLog, broker)
 	ar.initDashboardRoutes(db, board, queue, actLog)
+	ar.initAdminErrorReportsRoutes(db)
 	// setup:feature:demo:end
 	ar.e.RouteNotFound("/*", handler.HandleNotFound)
 	cfg, err := config.GetConfig()
