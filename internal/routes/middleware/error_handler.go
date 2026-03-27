@@ -31,6 +31,12 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 	)
 	log.Error("Request error", "error", err)
 
+	opts := hypermedia.ErrorControlOpts{HomeURL: "/", LoginURL: "/login"}
+	controls := hypermedia.ErrorControlsForStatus(statusCode, opts)
+	if statusCode >= 500 {
+		controls = append(controls, hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID))
+	}
+
 	if c.Request().Header.Get("HX-Request") == "true" {
 		ec := hypermedia.ErrorContext{
 			StatusCode: statusCode,
@@ -39,9 +45,7 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 			Route:      c.Request().URL.Path,
 			RequestID:  requestID,
 			Closable:   true,
-			Controls: []hypermedia.Control{
-				hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID),
-			},
+			Controls:   controls,
 		}
 		return response.New(c).
 			Status(statusCode).
@@ -58,11 +62,7 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 		Route:      c.Request().URL.Path,
 		RequestID:  requestID,
 		Theme:      errorPageTheme(c),
-		Controls: []hypermedia.Control{
-			hypermedia.BackButton("Go Back"),
-			hypermedia.GoHomeButton("Go Home", "/", "body"),
-			hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID),
-		},
+		Controls:   controls,
 	}
 	c.Response().Status = statusCode
 	return corecomponents.ErrorPage(ec).Render(c.Request().Context(), c.Response())

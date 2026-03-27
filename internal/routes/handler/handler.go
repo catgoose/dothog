@@ -231,39 +231,15 @@ func HandleError(c echo.Context, statusCode int, message string, err error) erro
 // status code so that every error response is a navigable hypermedia state.
 func HandleHypermediaError(c echo.Context, statusCode int, message string, err error, controls ...hypermedia.Control) error {
 	if len(controls) == 0 {
-		requestID := middleware.GetRequestID(c)
-		controls = defaultControls(statusCode, requestID)
+		opts := hypermedia.ErrorControlOpts{HomeURL: "/", LoginURL: "/login"}
+		controls = hypermedia.ErrorControlsForStatus(statusCode, opts)
+		if statusCode >= 500 {
+			requestID := middleware.GetRequestID(c)
+			controls = append(controls, hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID))
+		}
 	}
 	ec := middleware.HypermediaError(c, statusCode, message, err, controls...)
 	return hypermedia.NewHTTPError(ec)
-}
-
-// defaultControls returns recovery controls appropriate for the given HTTP status code.
-// Every error path includes a Report Issue button so users can easily report problems.
-func defaultControls(statusCode int, requestID string) []hypermedia.Control {
-	back := hypermedia.BackButton(hypermedia.LabelGoBack)
-	home := hypermedia.GoHomeButton(hypermedia.LabelGoHome, "/", hypermedia.TargetBody)
-	dismiss := hypermedia.DismissButton(hypermedia.LabelDismiss)
-	report := hypermedia.ReportIssueButton(hypermedia.LabelReportIssue, requestID)
-
-	switch {
-	case statusCode == http.StatusBadRequest || statusCode == http.StatusUnprocessableEntity:
-		return []hypermedia.Control{dismiss, report}
-	case statusCode == http.StatusNotFound:
-		return []hypermedia.Control{back, home, report}
-	case statusCode == http.StatusUnauthorized:
-		return []hypermedia.Control{
-			hypermedia.RedirectLink(hypermedia.LabelLogIn, "/login"),
-			home,
-			report,
-		}
-	case statusCode == http.StatusForbidden:
-		return []hypermedia.Control{back, home, report}
-	case statusCode >= 500:
-		return []hypermedia.Control{dismiss, home, report}
-	default:
-		return []hypermedia.Control{dismiss, report}
-	}
 }
 
 // HandleNotFound renders a full-page 404 within the base layout for direct
