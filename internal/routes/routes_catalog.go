@@ -18,8 +18,6 @@ const catalogBase = "/demo/catalog"
 type catalogRoutes struct{ db *demo.DB }
 
 func (ar *appRoutes) initCatalogRoutes(db *demo.DB) {
-	hypermedia.Link("/demo/catalog", "related", "/demo/bulk", "Bulk Ops")
-
 	cat := &catalogRoutes{db: db}
 	ar.e.GET(catalogBase, cat.handleCatalogPage)
 	ar.e.GET(catalogBase+"/items", cat.handleCatalogItems)

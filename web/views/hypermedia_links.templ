@@ -1,0 +1,110 @@
+// setup:feature:demo
+package views
+
+import "catgoose/dothog/internal/routes/hypermedia"
+
+templ HypermediaLinksPage(links map[string][]hypermedia.LinkRelation) {
+	<div class="p-4 space-y-6 max-w-5xl mx-auto">
+		<div class="flex items-center justify-between mb-4">
+			<h1 class="text-2xl font-bold">Link Relations</h1>
+			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">&larr; Controls</a>
+		</div>
+		<div role="alert" class="alert alert-info text-sm">
+			<span>
+				Composable primitives for declaring
+				<strong>rel=&quot;related&quot;</strong>
+				link relationships between pages. The middleware injects matching links into every response as RFC 8288 Link headers and context-bar data.
+			</span>
+		</div>
+		@linksSection("1. Link (Pairwise)") {
+			<p class="text-sm text-base-content/70 mb-3">
+				The simplest primitive. Registers a symmetric
+				<code class="text-xs bg-base-200 px-1 rounded">rel=&quot;related&quot;</code>
+				relationship between two pages. Both pages see each other in their context bar.
+			</p>
+			<pre class="bg-base-200 rounded-lg p-3 text-xs overflow-x-auto"><code>{ codeLinkExample() }</code></pre>
+		}
+		@linksSection("2. Ring (Full Mesh)") {
+			<p class="text-sm text-base-content/70 mb-3">
+				Registers symmetric
+				<code class="text-xs bg-base-200 px-1 rounded">rel=&quot;related&quot;</code>
+				links between <strong>all</strong> members. Every member links to every other member. Replaces O(n^2) pairwise Link calls.
+			</p>
+			<pre class="bg-base-200 rounded-lg p-3 text-xs overflow-x-auto"><code>{ codeRingExample() }</code></pre>
+			<div class="mt-3 text-sm text-base-content/60">
+				<strong>Use when:</strong> A group of sibling pages should all cross-link (admin pages, component galleries, etc.)
+			</div>
+		}
+		@linksSection("3. Hub (Star Topology)") {
+			<p class="text-sm text-base-content/70 mb-3">
+				Registers a center page that links to all spokes, and each spoke links back to the center only. Spokes do <strong>not</strong> link to each other through this registration.
+			</p>
+			<pre class="bg-base-200 rounded-lg p-3 text-xs overflow-x-auto"><code>{ codeHubExample() }</code></pre>
+			<div class="mt-3 text-sm text-base-content/60">
+				<strong>Use when:</strong> A parent page aggregates child pages (dashboard, index pages).
+			</div>
+		}
+		@linksSection("4. Rel Helper") {
+			<p class="text-sm text-base-content/70 mb-3">
+				<code class="text-xs bg-base-200 px-1 rounded">Rel(path, title)</code> creates a <code class="text-xs bg-base-200 px-1 rounded">RelEntry</code> used by Ring and Hub. Keeps registration calls clean and composable.
+			</p>
+			<pre class="bg-base-200 rounded-lg p-3 text-xs overflow-x-auto"><code>{ codeRelExample() }</code></pre>
+		}
+		@linksSection("5. Deduplication") {
+			<p class="text-sm text-base-content/70 mb-3">
+				Ring and Hub use
+				<code class="text-xs bg-base-200 px-1 rounded">hasLink()</code>
+				to skip duplicates. This means you can safely overlap groups without creating duplicate context-bar entries.
+			</p>
+			<pre class="bg-base-200 rounded-lg p-3 text-xs overflow-x-auto"><code>{ codeDedupExample() }</code></pre>
+		}
+		@linksSection("6. Live Registry") {
+			<p class="text-sm text-base-content/70 mb-3">
+				All link relations currently registered in this running application, via
+				<code class="text-xs bg-base-200 px-1 rounded">hypermedia.AllLinks()</code>.
+			</p>
+			<div class="overflow-x-auto">
+				<table class="table table-xs">
+					<thead>
+						<tr>
+							<th>Source</th>
+							<th>Rel</th>
+							<th>Target</th>
+							<th>Title</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, src := range hypermedia.SortedPaths(links) {
+							for i, link := range links[src] {
+								<tr class={ templ.KV("border-t border-base-300", i == 0) }>
+									if i == 0 {
+										<td class="font-mono text-xs align-top" rowspan={ linksRowspan(links[src]) }>{ src }</td>
+									}
+									<td class="text-xs">
+										<span class="badge badge-sm badge-outline">{ link.Rel }</span>
+									</td>
+									<td class="font-mono text-xs">
+										<a href={ templ.URL(link.Href) } class="link link-hover link-primary">{ link.Href }</a>
+									</td>
+									<td class="text-xs">{ link.Title }</td>
+								</tr>
+							}
+						}
+					</tbody>
+				</table>
+			</div>
+			<div class="mt-2 text-xs text-base-content/50">
+				{ linksCount(links) } total directed links across { pathsCount(links) } source paths.
+			</div>
+		}
+	</div>
+}
+
+templ linksSection(title string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body">
+			<h2 class="card-title text-base">{ title }</h2>
+			{ children... }
+		</div>
+	</div>
+}

@@ -60,13 +60,24 @@ func (ar *appRoutes) initHypermediaRoutes() {
 	hypermedia.Link("/hypermedia/crud", "related", "/hypermedia/state", "State")
 	hypermedia.Link("/hypermedia/crud", "related", "/hypermedia/errors", "Errors")
 
-	hypermedia.Link("/hypermedia/components", "related", "/hypermedia/components2", "Components 2")
-	hypermedia.Link("/hypermedia/components", "related", "/hypermedia/components3", "Components 3")
-	hypermedia.Link("/hypermedia/components2", "related", "/hypermedia/components3", "Components 3")
+	hypermedia.Ring(
+		hypermedia.Rel("/hypermedia/components", "Components"),
+		hypermedia.Rel("/hypermedia/components2", "Components 2"),
+		hypermedia.Rel("/hypermedia/components3", "Components 3"),
+	)
 
 	hypermedia.Link("/hypermedia/realtime", "related", "/hypermedia/controls", "Controls")
 	hypermedia.Link("/hypermedia/realtime", "related", "/hypermedia/state", "State")
 	hypermedia.Link("/hypermedia/realtime", "related", "/hypermedia/components", "Components")
+
+	hypermedia.Link("/hypermedia/links", "related", "/hypermedia/controls", "Controls")
+	hypermedia.Link("/hypermedia/links", "related", "/hypermedia/components", "Components")
+
+	// Links demo page
+	ar.e.GET(hypermediaBase+"/links", func(c echo.Context) error {
+		links := hypermedia.AllLinks()
+		return handler.RenderBaseLayout(c, views.HypermediaLinksPage(links))
+	})
 
 	s := newHypermediaState()
 

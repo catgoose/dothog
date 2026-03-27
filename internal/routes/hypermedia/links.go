@@ -3,6 +3,7 @@ package hypermedia
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -99,6 +100,100 @@ func LinkHeader(links []LinkRelation) string {
 		parts[i] = fmt.Sprintf("<%s>; rel=\"%s\"; title=\"%s\"", l.Href, l.Rel, l.Title)
 	}
 	return strings.Join(parts, ", ")
+}
+
+// RelEntry is a path+title pair for use with Ring and Hub.
+type RelEntry struct {
+	Path  string
+	Title string
+}
+
+// Rel creates a RelEntry for use with Ring and Hub.
+func Rel(path, title string) RelEntry {
+	return RelEntry{Path: path, Title: title}
+}
+
+// Ring registers symmetric rel="related" links between all members.
+// Every member links to every other member.
+func Ring(members ...RelEntry) {
+	linksMu.Lock()
+	defer linksMu.Unlock()
+
+	for i, a := range members {
+		for j, b := range members {
+			if i == j {
+				continue
+			}
+			if !hasLink(linksMap[a.Path], b.Path, "related") {
+				linksMap[a.Path] = append(linksMap[a.Path], LinkRelation{
+					Rel:   "related",
+					Href:  b.Path,
+					Title: b.Title,
+				})
+			}
+		}
+	}
+}
+
+// Hub registers a center page that links to all spokes, and each spoke
+// links back to the center only. Spokes do not link to each other.
+func Hub(centerPath, centerTitle string, spokes ...RelEntry) {
+	linksMu.Lock()
+	defer linksMu.Unlock()
+
+	for _, spoke := range spokes {
+		// Center -> spoke
+		if !hasLink(linksMap[centerPath], spoke.Path, "related") {
+			linksMap[centerPath] = append(linksMap[centerPath], LinkRelation{
+				Rel:   "related",
+				Href:  spoke.Path,
+				Title: spoke.Title,
+			})
+		}
+		// Spoke -> center
+		if !hasLink(linksMap[spoke.Path], centerPath, "related") {
+			linksMap[spoke.Path] = append(linksMap[spoke.Path], LinkRelation{
+				Rel:   "related",
+				Href:  centerPath,
+				Title: centerTitle,
+			})
+		}
+	}
+}
+
+// hasLink checks if a link with the given href and rel already exists.
+func hasLink(links []LinkRelation, href, rel string) bool {
+	for _, l := range links {
+		if l.Href == href && l.Rel == rel {
+			return true
+		}
+	}
+	return false
+}
+
+// AllLinks returns all registered link relations grouped by source path.
+// Used for admin/debug inspection.
+func AllLinks() map[string][]LinkRelation {
+	linksMu.RLock()
+	defer linksMu.RUnlock()
+
+	result := make(map[string][]LinkRelation, len(linksMap))
+	for k, v := range linksMap {
+		copied := make([]LinkRelation, len(v))
+		copy(copied, v)
+		result[k] = copied
+	}
+	return result
+}
+
+// SortedPaths returns all registered source paths in sorted order.
+func SortedPaths(links map[string][]LinkRelation) []string {
+	paths := make([]string, 0, len(links))
+	for k := range links {
+		paths = append(paths, k)
+	}
+	sort.Strings(paths)
+	return paths
 }
 
 // titleFromPath extracts a title from the last segment of a URL path.

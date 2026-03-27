@@ -21,8 +21,11 @@ const inventoryBase = "/demo/inventory"
 type inventoryRoutes struct{ db *demo.DB }
 
 func (ar *appRoutes) initInventoryRoutes(db *demo.DB) {
-	hypermedia.Link("/demo/inventory", "related", "/demo/catalog", "Catalog")
-	hypermedia.Link("/demo/inventory", "related", "/demo/bulk", "Bulk Ops")
+	hypermedia.Ring(
+		hypermedia.Rel("/demo/inventory", "Inventory"),
+		hypermedia.Rel("/demo/catalog", "Catalog"),
+		hypermedia.Rel("/demo/bulk", "Bulk Ops"),
+	)
 	hypermedia.Link("/demo/inventory", "related", "/demo/people", "People")
 	hypermedia.Link("/demo/inventory", "related", "/demo/vendors", "Vendors")
 
