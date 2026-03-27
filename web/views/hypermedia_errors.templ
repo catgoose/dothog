@@ -1,15 +1,8 @@
 // setup:feature:demo
 package views
 
-import components "catgoose/dothog/web/components/core"
-
 // ErrorsPage is the full-page layout for /hypermedia/errors.
 templ ErrorsPage() {
-	@components.ContextBar() {
-		@components.ContextLink("/hypermedia/controls", "Controls", "")
-		@components.ContextLink("/hypermedia/crud", "CRUD", "")
-		@components.ContextLink("/hypermedia/interactions", "Interactions", "")
-	}
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<div class="flex items-center justify-between mb-4">
 			<h1 class="text-2xl font-bold">Error Patterns</h1>

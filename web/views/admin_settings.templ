@@ -5,8 +5,6 @@ package views
 import (
 	"catgoose/dothog/internal/ssebroker"
 	"fmt"
-
-	components "catgoose/dothog/web/components/core"
 )
 
 // AdminPanelData holds all data for the admin control panel.
@@ -33,11 +31,6 @@ type RouteInfo struct {
 
 // AdminSettingsPage renders the full admin control panel.
 templ AdminSettingsPage(data AdminPanelData) {
-	@components.ContextBar() {
-		@components.ContextLink("/admin/health", "Health", "")
-		@components.ContextLink("/admin/error-traces", "Error Traces", "")
-		@components.ContextLink("/admin/sessions", "Sessions", "")
-	}
 	<div class="p-4 space-y-6 max-w-5xl mx-auto">
 		<h1 class="text-2xl font-bold">Control Panel</h1>
 

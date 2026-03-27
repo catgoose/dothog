@@ -9,14 +9,6 @@ import (
 // HypermediaControlsPage is the interactive gallery of every hypermedia control,
 // variant, and component. Each section is fully wired to server endpoints.
 templ HypermediaControlsPage() {
-	@components.ContextBar() {
-		@components.ContextLink("/hypermedia/crud", "CRUD", "")
-		@components.ContextLink("/hypermedia/lists", "Lists", "")
-		@components.ContextLink("/hypermedia/interactions", "Interactions", "")
-		@components.ContextLink("/hypermedia/state", "State", "")
-		@components.ContextLink("/hypermedia/errors", "Errors", "")
-		@components.ContextLink("/hypermedia/components", "Components", "")
-	}
 	<div class="p-4 space-y-6 max-w-5xl mx-auto">
 		<div class="flex items-center justify-between mb-4">
 			<h1 class="text-2xl font-bold">Controls Gallery</h1>

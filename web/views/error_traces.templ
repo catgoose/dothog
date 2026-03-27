@@ -26,11 +26,6 @@ func parseAttrs(attrs string) [][]string {
 
 // ErrorTracesPage is the full page for /admin/error-traces.
 templ ErrorTracesPage(bar hypermedia.FilterBar, tableContainer templ.Component) {
-	@components.ContextBar() {
-		@components.ContextLink("/admin/health", "Health", "")
-		@components.ContextLink("/admin/sessions", "Sessions", "")
-		@components.ContextLink("/admin/settings", "Control Panel", "")
-	}
 	<div class="p-4 space-y-4">
 		<div class="flex items-center justify-between">
 			<h1 class="text-2xl font-bold">Error Traces</h1>

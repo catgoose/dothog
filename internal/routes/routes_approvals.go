@@ -7,6 +7,7 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
+	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/internal/ssebroker"
 	"catgoose/dothog/web/views"
@@ -21,6 +22,8 @@ type approvalRoutes struct {
 }
 
 func (ar *appRoutes) initApprovalRoutes(queue *demo.ApprovalQueue, actLog *demo.ActivityLog, broker *ssebroker.SSEBroker) {
+	hypermedia.Link("/demo/approvals", "related", "/demo/feed", "Feed")
+
 	a := &approvalRoutes{queue: queue, actLog: actLog, broker: broker}
 	ar.e.GET("/demo/approvals", a.handleApprovalsPage)
 	ar.e.POST("/demo/approvals/:id/:action", a.handleApprovalAction)

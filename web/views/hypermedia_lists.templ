@@ -17,11 +17,6 @@ type ListsDemoItem struct {
 
 // ListsPage is a static showcase of list/pagination/filter/sort patterns.
 templ ListsPage(items []ListsDemoItem, info hypermedia.PageInfo) {
-	@components.ContextBar() {
-		@components.ContextLink("/hypermedia/controls", "Controls", "")
-		@components.ContextLink("/hypermedia/crud", "CRUD", "")
-		@components.ContextLink("/hypermedia/interactions", "Interactions", "")
-	}
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<div class="flex items-center justify-between mb-4">
 			<h1 class="text-2xl font-bold">List Patterns</h1>

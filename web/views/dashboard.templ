@@ -6,7 +6,6 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/hypermedia"
-	components "catgoose/dothog/web/components/core"
 )
 
 // dashFromMask is the breadcrumb bitmask for links originating from the dashboard.
@@ -28,14 +27,6 @@ type DashboardStats struct {
 }
 
 templ DashboardPage(s DashboardStats) {
-	@components.ContextBar() {
-		@components.ContextLink("/demo/inventory", "Inventory", "3")
-		@components.ContextLink("/demo/people", "People", "3")
-		@components.ContextLink("/demo/kanban", "Kanban", "3")
-		@components.ContextLink("/demo/approvals", "Approvals", "3")
-		@components.ContextLink("/demo/vendors", "Vendors", "3")
-		@components.ContextLink("/demo/feed", "Feed", "3")
-	}
 	<div class="max-w-7xl mx-auto p-4 space-y-6">
 		<div class="flex items-center justify-between">
 			<div>

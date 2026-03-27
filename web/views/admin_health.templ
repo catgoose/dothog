@@ -1,17 +1,9 @@
 package views
 
-import (
-	"catgoose/dothog/internal/health"
-	components "catgoose/dothog/web/components/core"
-)
+import "catgoose/dothog/internal/health"
 
 // AdminHealthPage renders the /admin/health page with live health status.
 templ AdminHealthPage(h health.Response) {
-	@components.ContextBar() {
-		@components.ContextLink("/admin/error-traces", "Error Traces", "")
-		@components.ContextLink("/admin/sessions", "Sessions", "")
-		@components.ContextLink("/admin/settings", "Control Panel", "")
-	}
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<div class="flex items-center justify-between">
 			<div class="space-y-1">

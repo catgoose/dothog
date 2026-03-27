@@ -1,11 +1,7 @@
 // setup:feature:demo
 package views
 
-import (
-	"fmt"
-
-	components "catgoose/dothog/web/components/core"
-)
+import "fmt"
 
 // CRUDViewItem is the view-layer representation of an in-memory CRUD demo item.
 type CRUDViewItem struct {
@@ -17,11 +13,6 @@ type CRUDViewItem struct {
 
 // CRUDPage is the full-page layout for /hypermedia/crud.
 templ CRUDPage(items []CRUDViewItem) {
-	@components.ContextBar() {
-		@components.ContextLink("/hypermedia/controls", "Controls", "")
-		@components.ContextLink("/hypermedia/lists", "Lists", "")
-		@components.ContextLink("/hypermedia/errors", "Errors", "")
-	}
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<div class="flex items-center justify-between mb-4">
 			<h1 class="text-2xl font-bold">CRUD Patterns</h1>

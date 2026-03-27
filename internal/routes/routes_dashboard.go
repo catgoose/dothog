@@ -5,6 +5,7 @@ package routes
 import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
+	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/web/views"
 
 	"github.com/labstack/echo/v4"
@@ -18,6 +19,13 @@ type dashboardRoutes struct {
 }
 
 func (ar *appRoutes) initDashboardRoutes(db *demo.DB, board *demo.KanbanBoard, queue *demo.ApprovalQueue, actLog *demo.ActivityLog) {
+	hypermedia.Link("/dashboard", "related", "/demo/inventory", "Inventory")
+	hypermedia.Link("/dashboard", "related", "/demo/people", "People")
+	hypermedia.Link("/dashboard", "related", "/demo/kanban", "Kanban")
+	hypermedia.Link("/dashboard", "related", "/demo/approvals", "Approvals")
+	hypermedia.Link("/dashboard", "related", "/demo/vendors", "Vendors")
+	hypermedia.Link("/dashboard", "related", "/demo/feed", "Feed")
+
 	d := &dashboardRoutes{db: db, board: board, queue: queue, actLog: actLog}
 	ar.e.GET("/dashboard", d.handleDashboard)
 }

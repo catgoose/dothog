@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"catgoose/dothog/internal/demo"
-	components "catgoose/dothog/web/components/core"
 )
 
 var feedActionIcons = map[string]string{
@@ -18,10 +17,6 @@ var feedActionIcons = map[string]string{
 }
 
 templ FeedPage(events []demo.ActivityEvent, lastID int) {
-	@components.ContextBar() {
-		@components.ContextLink("/demo/kanban", "Kanban", "")
-		@components.ContextLink("/demo/approvals", "Approvals", "")
-	}
 	<div class="max-w-2xl mx-auto p-4 space-y-4">
 		<div class="flex items-center justify-between">
 			<h1 class="text-2xl font-bold">Activity Feed</h1>

@@ -29,6 +29,8 @@ type peopleRoutes struct {
 }
 
 func (ar *appRoutes) initPeopleRoutes(db *demo.DB, broker *ssebroker.SSEBroker, actLog *demo.ActivityLog) {
+	hypermedia.Link("/demo/people", "related", "/demo/vendors", "Vendors")
+
 	p := &peopleRoutes{db: db, broker: broker, actLog: actLog}
 	ar.e.GET(peopleBase, p.handlePeoplePage)
 	ar.e.GET(peopleBase+"/list", p.handlePeopleList)

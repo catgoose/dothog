@@ -4,17 +4,10 @@ package views
 import (
 	"catgoose/dothog/internal/ssebroker"
 	"fmt"
-
-	components "catgoose/dothog/web/components/core"
 )
 
 // RealtimePage is the full-page layout for /hypermedia/realtime.
 templ RealtimePage(initial ssebroker.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency) {
-	@components.ContextBar() {
-		@components.ContextLink("/hypermedia/controls", "Controls", "")
-		@components.ContextLink("/hypermedia/state", "State", "")
-		@components.ContextLink("/hypermedia/components", "Components", "")
-	}
 	<link rel="stylesheet" href="/public/css/charts.min.css"/>
 	<style>
 		/* Charts.css transition smoothing */

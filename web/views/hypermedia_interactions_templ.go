@@ -10,8 +10,6 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import components "catgoose/dothog/web/components/core"
-
 // InteractionsPage is the full-page layout for /hypermedia/interactions.
 func InteractionsPage(comments []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -34,45 +32,7 @@ func InteractionsPage(comments []string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
-			}
-			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = components.ContextLink("/hypermedia/controls", "Controls", "").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = components.ContextLink("/hypermedia/state", "State", "").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = components.ContextLink("/hypermedia/errors", "Errors", "").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			return nil
-		})
-		templ_7745c5c3_Err = components.ContextBar().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><div class=\"flex items-center justify-between mb-4\"><h1 class=\"text-2xl font-bold\">Interaction Patterns</h1><a href=\"/hypermedia/controls\" class=\"btn btn-sm btn-ghost\">← Overview</a></div><div role=\"alert\" class=\"alert alert-info text-sm\"><span>Demonstrates: <strong>submit</strong>, <strong>cancel</strong>, <strong>modal-open</strong>, <strong>modal-close</strong>, <strong>preview</strong>, <strong>comment</strong>.</span></div><!-- Submit + Cancel --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Submit / Cancel</h2><p class=\"text-sm text-base-content/70 mb-3\">The form posts to the server via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-post</code>. Cancel resets the form using HyperScript.</p><div id=\"interaction-form-result\"><form id=\"interaction-form\" hx-post=\"/hypermedia/interactions/submit\" hx-target=\"#interaction-form-result\" hx-swap=\"outerHTML\" class=\"space-y-3\"><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-name\">Name</label> <input id=\"contact-name\" type=\"text\" name=\"contact-name\" placeholder=\"Your name\" class=\"input input-sm w-full max-w-sm\"></div><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-email\">Email</label> <input id=\"contact-email\" type=\"email\" name=\"contact-email\" placeholder=\"you@example.com\" class=\"input input-sm w-full max-w-sm\"></div><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-message\">Message</label> <textarea id=\"contact-message\" name=\"contact-message\" rows=\"3\" placeholder=\"Say something…\" class=\"textarea textarea-sm w-full max-w-sm\"></textarea></div><div class=\"flex gap-2\"><button type=\"submit\" class=\"btn btn-sm btn-primary\">Submit</button> <button type=\"button\" class=\"btn btn-sm btn-ghost\" _=\"on click\n\t\t\t\t\t\t\t\t\tset #contact-name.value to ''\n\t\t\t\t\t\t\t\t\tset #contact-email.value to ''\n\t\t\t\t\t\t\t\t\tset #contact-message.value to ''\">Cancel</button></div></form></div></div></div><!-- Modal open / close --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Modal Open / Close</h2><p class=\"text-sm text-base-content/70 mb-3\">Button fetches the modal fragment via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-get</code> and injects it into <code class=\"text-xs bg-base-200 px-1 rounded\">#modal-container</code>, then opens the DaisyUI dialog. Close button calls <code class=\"text-xs bg-base-200 px-1 rounded\">dialog.close()</code> via HyperScript.</p><div><button class=\"btn btn-sm btn-secondary\" hx-get=\"/hypermedia/interactions/modal\" hx-target=\"#modal-container\" hx-swap=\"innerHTML transition:false\">Open Modal</button></div><div id=\"modal-container\"></div></div></div><!-- Live Preview --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Live Preview</h2><p class=\"text-sm text-base-content/70 mb-3\">Textarea posts to the server on every keystroke (debounced 500 ms). The server returns rendered preview HTML.</p><div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\"><div><label class=\"label label-text text-sm\" for=\"preview-text\">Write something</label> <textarea id=\"preview-text\" name=\"preview-text\" rows=\"5\" placeholder=\"Type markdown-like text…\" class=\"textarea textarea-sm w-full\" hx-post=\"/hypermedia/interactions/preview\" hx-target=\"#preview-output\" hx-swap=\"innerHTML\" hx-trigger=\"keyup changed delay:500ms\"></textarea></div><div><p class=\"label-text text-sm mb-1\">Preview</p><div id=\"preview-output\" class=\"border border-base-300 rounded p-3 min-h-[7rem] text-sm bg-base-200 text-base-content/70 italic\">Preview appears here…</div></div></div></div></div><!-- Comments --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Append Comment</h2><p class=\"text-sm text-base-content/70 mb-3\">Form posts a comment; server returns only the new <code class=\"text-xs bg-base-200 px-1 rounded\">&lt;li&gt;</code> appended via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-swap=\"beforeend\"</code>.</p><form hx-post=\"/hypermedia/interactions/comment\" hx-target=\"#comment-list\" hx-swap=\"beforeend\" hx-on::after-request=\"this.reset()\" class=\"flex gap-2 mb-3\"><input type=\"text\" name=\"comment-text\" placeholder=\"Add a comment…\" class=\"input input-sm flex-1\"> <button type=\"submit\" class=\"btn btn-sm btn-primary\">Post</button></form><ul id=\"comment-list\" class=\"space-y-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><div class=\"flex items-center justify-between mb-4\"><h1 class=\"text-2xl font-bold\">Interaction Patterns</h1><a href=\"/hypermedia/controls\" class=\"btn btn-sm btn-ghost\">← Overview</a></div><div role=\"alert\" class=\"alert alert-info text-sm\"><span>Demonstrates: <strong>submit</strong>, <strong>cancel</strong>, <strong>modal-open</strong>, <strong>modal-close</strong>, <strong>preview</strong>, <strong>comment</strong>.</span></div><!-- Submit + Cancel --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Submit / Cancel</h2><p class=\"text-sm text-base-content/70 mb-3\">The form posts to the server via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-post</code>. Cancel resets the form using HyperScript.</p><div id=\"interaction-form-result\"><form id=\"interaction-form\" hx-post=\"/hypermedia/interactions/submit\" hx-target=\"#interaction-form-result\" hx-swap=\"outerHTML\" class=\"space-y-3\"><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-name\">Name</label> <input id=\"contact-name\" type=\"text\" name=\"contact-name\" placeholder=\"Your name\" class=\"input input-sm w-full max-w-sm\"></div><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-email\">Email</label> <input id=\"contact-email\" type=\"email\" name=\"contact-email\" placeholder=\"you@example.com\" class=\"input input-sm w-full max-w-sm\"></div><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-message\">Message</label> <textarea id=\"contact-message\" name=\"contact-message\" rows=\"3\" placeholder=\"Say something…\" class=\"textarea textarea-sm w-full max-w-sm\"></textarea></div><div class=\"flex gap-2\"><button type=\"submit\" class=\"btn btn-sm btn-primary\">Submit</button> <button type=\"button\" class=\"btn btn-sm btn-ghost\" _=\"on click\n\t\t\t\t\t\t\t\t\tset #contact-name.value to ''\n\t\t\t\t\t\t\t\t\tset #contact-email.value to ''\n\t\t\t\t\t\t\t\t\tset #contact-message.value to ''\">Cancel</button></div></form></div></div></div><!-- Modal open / close --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Modal Open / Close</h2><p class=\"text-sm text-base-content/70 mb-3\">Button fetches the modal fragment via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-get</code> and injects it into <code class=\"text-xs bg-base-200 px-1 rounded\">#modal-container</code>, then opens the DaisyUI dialog. Close button calls <code class=\"text-xs bg-base-200 px-1 rounded\">dialog.close()</code> via HyperScript.</p><div><button class=\"btn btn-sm btn-secondary\" hx-get=\"/hypermedia/interactions/modal\" hx-target=\"#modal-container\" hx-swap=\"innerHTML transition:false\">Open Modal</button></div><div id=\"modal-container\"></div></div></div><!-- Live Preview --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Live Preview</h2><p class=\"text-sm text-base-content/70 mb-3\">Textarea posts to the server on every keystroke (debounced 500 ms). The server returns rendered preview HTML.</p><div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\"><div><label class=\"label label-text text-sm\" for=\"preview-text\">Write something</label> <textarea id=\"preview-text\" name=\"preview-text\" rows=\"5\" placeholder=\"Type markdown-like text…\" class=\"textarea textarea-sm w-full\" hx-post=\"/hypermedia/interactions/preview\" hx-target=\"#preview-output\" hx-swap=\"innerHTML\" hx-trigger=\"keyup changed delay:500ms\"></textarea></div><div><p class=\"label-text text-sm mb-1\">Preview</p><div id=\"preview-output\" class=\"border border-base-300 rounded p-3 min-h-[7rem] text-sm bg-base-200 text-base-content/70 italic\">Preview appears here…</div></div></div></div></div><!-- Comments --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Append Comment</h2><p class=\"text-sm text-base-content/70 mb-3\">Form posts a comment; server returns only the new <code class=\"text-xs bg-base-200 px-1 rounded\">&lt;li&gt;</code> appended via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-swap=\"beforeend\"</code>.</p><form hx-post=\"/hypermedia/interactions/comment\" hx-target=\"#comment-list\" hx-swap=\"beforeend\" hx-on::after-request=\"this.reset()\" class=\"flex gap-2 mb-3\"><input type=\"text\" name=\"comment-text\" placeholder=\"Add a comment…\" class=\"input input-sm flex-1\"> <button type=\"submit\" class=\"btn btn-sm btn-primary\">Post</button></form><ul id=\"comment-list\" class=\"space-y-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -82,7 +42,7 @@ func InteractionsPage(comments []string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</ul></div></div><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</ul></div></div><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -106,7 +66,7 @@ func InteractionsPage(comments []string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -131,12 +91,12 @@ func InteractionsModalFragment() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var3 == nil {
-			templ_7745c5c3_Var3 = templ.NopComponent
+		templ_7745c5c3_Var2 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var2 == nil {
+			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<dialog id=\"demo-modal\" class=\"modal\" hx-on::load=\"this.showModal()\"><div class=\"modal-box\"><h3 class=\"font-bold text-lg\">Modal Dialog</h3><p class=\"py-4 text-sm text-base-content/70\">This fragment was fetched on demand by HTMX and inserted into <code class=\"text-xs bg-base-200 px-1 rounded\">#modal-container</code>.</p><div class=\"modal-action\"><button class=\"btn btn-sm\" _=\"on click call #demo-modal.close()\">Close</button></div></div><form method=\"dialog\" class=\"modal-backdrop\"><button>close</button></form></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<dialog id=\"demo-modal\" class=\"modal\" hx-on::load=\"this.showModal()\"><div class=\"modal-box\"><h3 class=\"font-bold text-lg\">Modal Dialog</h3><p class=\"py-4 text-sm text-base-content/70\">This fragment was fetched on demand by HTMX and inserted into <code class=\"text-xs bg-base-200 px-1 rounded\">#modal-container</code>.</p><div class=\"modal-action\"><button class=\"btn btn-sm\" _=\"on click call #demo-modal.close()\">Close</button></div></div><form method=\"dialog\" class=\"modal-backdrop\"><button>close</button></form></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -161,51 +121,51 @@ func InteractionsSubmitResult(name, email, msg string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div id=\"interaction-form-result\" class=\"alert alert-success text-sm\"><div><p class=\"font-semibold\">Message received!</p><p>Name: ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"interaction-form-result\" class=\"alert alert-success text-sm\"><div><p class=\"font-semibold\">Message received!</p><p>Name: ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(name)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 150, Col: 18}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</p><p>Email: ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(name)
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 157, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 151, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p><p>Email: ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</p><p>Message: ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(email)
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 158, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 152, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</p><p>Message: ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 159, Col: 20}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p></div><button class=\"btn btn-xs btn-ghost\" hx-get=\"/hypermedia/interactions\" hx-target=\"#base-content\" hx-push-url=\"true\">Reset</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p></div><button class=\"btn btn-xs btn-ghost\" hx-get=\"/hypermedia/interactions\" hx-target=\"#base-content\" hx-push-url=\"true\">Reset</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -230,31 +190,31 @@ func InteractionsPreviewFragment(text string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var8 == nil {
-			templ_7745c5c3_Var8 = templ.NopComponent
+		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var7 == nil {
+			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		if text == "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<span class=\"italic text-base-content/40\">Preview appears here…</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<span class=\"italic text-base-content/40\">Preview appears here…</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(text)
+			var templ_7745c5c3_Var8 string
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 175, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 168, Col: 11}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -280,25 +240,25 @@ func InteractionsCommentItem(comment string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var10 == nil {
-			templ_7745c5c3_Var10 = templ.NopComponent
+		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var9 == nil {
+			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<li class=\"flex items-start gap-2 text-sm py-1 border-b border-base-200 last:border-0\"><span class=\"text-base-content/40\">→</span> <span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<li class=\"flex items-start gap-2 text-sm py-1 border-b border-base-200 last:border-0\"><span class=\"text-base-content/40\">→</span> <span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(comment)
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(comment)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 183, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 176, Col: 17}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</span></li>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span></li>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -322,51 +282,51 @@ func interactionPatternCard(title, method, desc string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var12 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var12 == nil {
-			templ_7745c5c3_Var12 = templ.NopComponent
+		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var11 == nil {
+			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var12 string
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 183, Col: 44}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</h3><code class=\"text-xs text-primary bg-base-200 px-2 py-1 rounded\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 190, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 184, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</h3><code class=\"text-xs text-primary bg-base-200 px-2 py-1 rounded\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</code><p class=\"text-sm text-base-content/70\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(method)
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(desc)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 191, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 185, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</code><p class=\"text-sm text-base-content/70\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(desc)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 192, Col: 49}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</p></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</p></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
