@@ -118,7 +118,13 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:demo:start
 	ar.e.GET("/welcome", handler.HandleComponent(views.WelcomePage()))
 	ar.e.GET("/hypermedia", handler.HandleComponent(views.PatternsIndexPage()))
-	ar.e.GET("/demo", handler.HandleComponent(views.DemoIndexPage()))
+	ar.e.GET("/demo", func(c echo.Context) error {
+		var popular []demo.PageVisit
+		if ar.demoDB != nil {
+			popular, _ = ar.demoDB.PopularPages(c.Request().Context(), 10)
+		}
+		return handler.RenderBaseLayout(c, views.DemoIndexPage(popular))
+	})
 	// setup:feature:demo:end
 
 	// Health check endpoint — returns structured ops metadata.
@@ -185,6 +191,32 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initVendorContactRoutes(db, actLog, broker)
 	ar.initDashboardRoutes(db, board, queue, actLog)
 	ar.initAdminErrorReportsRoutes(db)
+
+	// Build valid routes map and register frecency tracking.
+	validRoutes := make(map[string]bool)
+	for _, r := range ar.e.Routes() {
+		if r.Method == http.MethodGet {
+			validRoutes[r.Path] = true
+		}
+	}
+	ar.e.Use(middleware.FrecencyMiddleware(db, validRoutes))
+
+	frecencyFn := func(ctx context.Context, sessionID string, limit int) ([]hypermedia.LinkRelation, error) {
+		pages, err := db.TopFrecent(ctx, sessionID, limit)
+		if err != nil {
+			return nil, err
+		}
+		links := make([]hypermedia.LinkRelation, len(pages))
+		for i, p := range pages {
+			title := p.Title
+			if title == "" {
+				title = hypermedia.TitleFromPath(p.Path)
+			}
+			links[i] = hypermedia.LinkRelation{Rel: "bookmark", Href: p.Path, Title: title}
+		}
+		return links, nil
+	}
+	hypermedia.RegisterLinkSource(&hypermedia.FrecencySource{Fn: frecencyFn, Limit: 5})
 	// setup:feature:demo:end
 	ar.e.RouteNotFound("/*", handler.HandleNotFound)
 	cfg, err := config.GetConfig()
