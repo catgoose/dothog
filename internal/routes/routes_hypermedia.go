@@ -47,6 +47,27 @@ func newHypermediaState() *hypermediaState {
 }
 
 func (ar *appRoutes) initHypermediaRoutes() {
+	// Register link relations for hypermedia pages
+	hypermedia.Link("/hypermedia/controls", "related", "/hypermedia/crud", "CRUD")
+	hypermedia.Link("/hypermedia/controls", "related", "/hypermedia/lists", "Lists")
+	hypermedia.Link("/hypermedia/controls", "related", "/hypermedia/interactions", "Interactions")
+	hypermedia.Link("/hypermedia/controls", "related", "/hypermedia/state", "State")
+	hypermedia.Link("/hypermedia/controls", "related", "/hypermedia/errors", "Errors")
+	hypermedia.Link("/hypermedia/controls", "related", "/hypermedia/components", "Components")
+
+	hypermedia.Link("/hypermedia/crud", "related", "/hypermedia/lists", "Lists")
+	hypermedia.Link("/hypermedia/crud", "related", "/hypermedia/interactions", "Interactions")
+	hypermedia.Link("/hypermedia/crud", "related", "/hypermedia/state", "State")
+	hypermedia.Link("/hypermedia/crud", "related", "/hypermedia/errors", "Errors")
+
+	hypermedia.Link("/hypermedia/components", "related", "/hypermedia/components2", "Components 2")
+	hypermedia.Link("/hypermedia/components", "related", "/hypermedia/components3", "Components 3")
+	hypermedia.Link("/hypermedia/components2", "related", "/hypermedia/components3", "Components 3")
+
+	hypermedia.Link("/hypermedia/realtime", "related", "/hypermedia/controls", "Controls")
+	hypermedia.Link("/hypermedia/realtime", "related", "/hypermedia/state", "State")
+	hypermedia.Link("/hypermedia/realtime", "related", "/hypermedia/components", "Components")
+
 	s := newHypermediaState()
 
 	// CRUD page

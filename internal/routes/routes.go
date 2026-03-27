@@ -254,6 +254,10 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	}
 	// setup:feature:session_settings:end
 
+	// setup:feature:demo:start
+	e.Use(middleware.LinkRelationsMiddleware())
+	// setup:feature:demo:end
+
 	static := e.Group("/public", func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			c.Response().Header().Set("Cache-Control", "public, max-age=31536000, immutable")

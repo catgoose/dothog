@@ -38,6 +38,10 @@ func HypermediaControlsPage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-5xl mx-auto\"><div class=\"flex items-center justify-between mb-4\"><h1 class=\"text-2xl font-bold\">Controls Gallery</h1><a href=\"/demo/inventory\" class=\"btn btn-sm btn-primary\">Live Demo</a></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -50,73 +54,7 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = components.ContextLink("/hypermedia/crud", "CRUD", "").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = components.ContextLink("/hypermedia/lists", "Lists", "").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = components.ContextLink("/hypermedia/interactions", "Interactions", "").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = components.ContextLink("/hypermedia/state", "State", "").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = components.ContextLink("/hypermedia/errors", "Errors", "").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = components.ContextLink("/hypermedia/components", "Components", "").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			return nil
-		})
-		templ_7745c5c3_Err = components.ContextBar().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"p-4 space-y-6 max-w-5xl mx-auto\"><div class=\"flex items-center justify-between mb-4\"><h1 class=\"text-2xl font-bold\">Controls Gallery</h1><a href=\"/demo/inventory\" class=\"btn btn-sm btn-primary\">Live Demo</a></div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var3 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
-			}
-			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"text-sm text-base-content/70 mb-3\">Click any button — each <code class=\"text-xs bg-base-200 px-1 rounded\">POST</code>s to the server and the response shows which variant was clicked.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-sm text-base-content/70 mb-3\">Click any button — each <code class=\"text-xs bg-base-200 px-1 rounded\">POST</code>s to the server and the response shows which variant was clicked.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -135,13 +73,56 @@ func HypermediaControlsPage() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " <div id=\"variant-result\" class=\"mt-3 text-sm text-base-content/50 italic\">Click a button above…</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " <div id=\"variant-result\" class=\"mt-3 text-sm text-base-content/50 italic\">Click a button above…</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("1. Button Variants").Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("1. Button Variants").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var3 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"text-sm text-base-content/70 mb-3\">Each kind uses a different mechanism: HTMX request, HyperScript, or plain navigation.</p><div class=\"space-y-3\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.Controls([]hypermedia.Control{
+				hypermedia.RetryButton("Retry", hypermedia.HxMethodGet, "/hypermedia/controls/retry", "#kind-result"),
+				hypermedia.HTMXAction("HTMX Action", hypermedia.HxPost("/hypermedia/controls/action", "#kind-result")),
+				hypermedia.BackButton("Go Back"),
+				hypermedia.RedirectLink("Link", "/"),
+			}).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"kind-result\" class=\"text-sm text-base-content/50 italic\">Click Retry or HTMX Action…</div><p class=\"text-xs font-medium text-base-content/60 mt-1\">Dismiss demo:</p><div id=\"dismiss-demo\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = DismissDemoFragment().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><button id=\"dismiss-reset-btn\" class=\"btn btn-sm btn-outline hidden\" hx-get=\"/hypermedia/controls/dismiss-reset\" hx-target=\"#dismiss-demo\" hx-swap=\"innerHTML\">Reset Dismiss Demo</button></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = controlsSection("2. Control Kinds").Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -157,34 +138,21 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<p class=\"text-sm text-base-content/70 mb-3\">Each kind uses a different mechanism: HTMX request, HyperScript, or plain navigation.</p><div class=\"space-y-3\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">ResourceActions()</code> factory. Edit swaps to a form, Delete removes with confirmation, Undo restores.</p><div id=\"resource-demo\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.Controls([]hypermedia.Control{
-				hypermedia.RetryButton("Retry", hypermedia.HxMethodGet, "/hypermedia/controls/retry", "#kind-result"),
-				hypermedia.HTMXAction("HTMX Action", hypermedia.HxPost("/hypermedia/controls/action", "#kind-result")),
-				hypermedia.BackButton("Go Back"),
-				hypermedia.RedirectLink("Link", "/"),
-			}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ResourceViewFragment("Hypermedia Widget", "A server-driven UI component").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div id=\"kind-result\" class=\"text-sm text-base-content/50 italic\">Click Retry or HTMX Action…</div><p class=\"text-xs font-medium text-base-content/60 mt-1\">Dismiss demo:</p><div id=\"dismiss-demo\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = DismissDemoFragment().Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div><button id=\"dismiss-reset-btn\" class=\"btn btn-sm btn-outline hidden\" hx-get=\"/hypermedia/controls/dismiss-reset\" hx-target=\"#dismiss-demo\" hx-swap=\"innerHTML\">Reset Dismiss Demo</button></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("2. Control Kinds").Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("3. Resource Actions").Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -200,21 +168,21 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">ResourceActions()</code> factory. Edit swaps to a form, Delete removes with confirmation, Undo restores.</p><div id=\"resource-demo\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">FormActions()</code> factory. Save submits via the parent form&#39;s <code class=\"text-xs bg-base-200 px-1 rounded\">hx-post</code>. Cancel navigates away.</p><div id=\"form-demo\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ResourceViewFragment("Hypermedia Widget", "A server-driven UI component").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = FormDemoFragment().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("3. Resource Actions").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("4. Form Actions").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -230,21 +198,21 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">FormActions()</code> factory. Save submits via the parent form&#39;s <code class=\"text-xs bg-base-200 px-1 rounded\">hx-post</code>. Cancel navigates away.</p><div id=\"form-demo\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">EmptyStateAction()</code> pattern. Click to create items, Reset clears.</p><div id=\"items-demo\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = FormDemoFragment().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = EmptyStateFragment().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("4. Form Actions").Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("5. Empty State Action").Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -260,37 +228,7 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">EmptyStateAction()</code> pattern. Click to create items, Reset clears.</p><div id=\"items-demo\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = EmptyStateFragment().Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			return nil
-		})
-		templ_7745c5c3_Err = controlsSection("5. Empty State Action").Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
-			}
-			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"space-y-4\"><p class=\"text-sm font-medium text-base-content/60\">404 Not Found (closable):</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"space-y-4\"><p class=\"text-sm font-medium text-base-content/60\">404 Not Found (closable):</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -308,7 +246,7 @@ func HypermediaControlsPage() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<p class=\"text-sm font-medium text-base-content/60 mt-4\">500 Internal Error:</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<p class=\"text-sm font-medium text-base-content/60 mt-4\">500 Internal Error:</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -326,13 +264,54 @@ func HypermediaControlsPage() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("6. Error Status").Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("6. Error Status").Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"space-y-4\"><p class=\"text-sm font-medium text-base-content/60\">404 Not Found controls (Back + Go Home):</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.ErrorControls(hypermedia.NotFoundControls("/")).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<p class=\"text-sm font-medium text-base-content/60 mt-2\">500 Internal Error controls (Retry + Dismiss):</p><div id=\"error-retry-demo\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.ErrorControls(hypermedia.InternalErrorControls(hypermedia.ErrorControlOpts{
+				RetryURL:    "/hypermedia/controls/retry",
+				RetryTarget: "#error-retry-demo",
+			})).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = controlsSection("7. Error Controls").Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -348,48 +327,7 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div class=\"space-y-4\"><p class=\"text-sm font-medium text-base-content/60\">404 Not Found controls (Back + Go Home):</p>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = components.ErrorControls(hypermedia.NotFoundControls("/")).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<p class=\"text-sm font-medium text-base-content/60 mt-2\">500 Internal Error controls (Retry + Dismiss):</p><div id=\"error-retry-demo\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = components.ErrorControls(hypermedia.InternalErrorControls(hypermedia.ErrorControlOpts{
-				RetryURL:    "/hypermedia/controls/retry",
-				RetryTarget: "#error-retry-demo",
-			})).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			return nil
-		})
-		templ_7745c5c3_Err = controlsSection("7. Error Controls").Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var10 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
-			}
-			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<div class=\"space-y-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"space-y-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -416,17 +354,17 @@ func HypermediaControlsPage() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("8. Navigation").Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("8. Navigation").Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var11 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var10 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -438,7 +376,7 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<p class=\"text-sm text-base-content/70 mb-3\">Adjust any filter to see results update live. Each field fires <code class=\"text-xs bg-base-200 px-1 rounded\">hx-get</code> with <code class=\"text-xs bg-base-200 px-1 rounded\">hx-include</code> to send all field values.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<p class=\"text-sm text-base-content/70 mb-3\">Adjust any filter to see results update live. Each field fires <code class=\"text-xs bg-base-200 px-1 rounded\">hx-get</code> with <code class=\"text-xs bg-base-200 px-1 rounded\">hx-include</code> to send all field values.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -458,13 +396,35 @@ func HypermediaControlsPage() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, " <div id=\"filter-results\" hx-get=\"/hypermedia/controls/filter\" hx-trigger=\"load\" class=\"mt-4 text-sm text-base-content/50\"><span class=\"loading loading-spinner loading-xs\"></span> Loading…</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, " <div id=\"filter-results\" hx-get=\"/hypermedia/controls/filter\" hx-trigger=\"load\" class=\"mt-4 text-sm text-base-content/50\"><span class=\"loading loading-spinner loading-xs\"></span> Loading…</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("9. Filter Fields").Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("9. Filter Fields").Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var11 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<div role=\"alert\" class=\"alert alert-info\"><span>The live demo shows FilterBar + Table + PaginationBar with a real SQLite backend.</span> <a href=\"/demo/inventory\" class=\"btn btn-sm btn-primary\">Open Inventory</a></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = controlsSection("10. Live Demo").Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -480,13 +440,21 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<div role=\"alert\" class=\"alert alert-info\"><span>The live demo shows FilterBar + Table + PaginationBar with a real SQLite backend.</span> <a href=\"/demo/inventory\" class=\"btn btn-sm btn-primary\">Open Inventory</a></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">RowActions()</code> factory. Edit swaps the row to an inline form, Delete removes with <code class=\"text-xs bg-base-200 px-1 rounded\">hx-confirm</code>.</p><div class=\"overflow-x-auto\"><table class=\"table table-sm\"><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead> <tbody>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = RowViewFragment(GalleryRowItem{ID: 1, Name: "Example Item", Category: "Electronics", Price: "99.99", Active: true}).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</tbody></table></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("10. Live Demo").Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("11. Row Actions (Edit / Delete)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -502,21 +470,21 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">RowActions()</code> factory. Edit swaps the row to an inline form, Delete removes with <code class=\"text-xs bg-base-200 px-1 rounded\">hx-confirm</code>.</p><div class=\"overflow-x-auto\"><table class=\"table table-sm\"><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead> <tbody>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">RowFormActions()</code> factory. Save sends <code class=\"text-xs bg-base-200 px-1 rounded\">hx-put</code> with <code class=\"text-xs bg-base-200 px-1 rounded\">hx-include=\"closest tr\"</code>. Cancel restores the view row.</p><div class=\"overflow-x-auto\"><table class=\"table table-sm\"><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Active</th><th>Actions</th></tr></thead> <tbody>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = RowViewFragment(GalleryRowItem{ID: 1, Name: "Example Item", Category: "Electronics", Price: "99.99", Active: true}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = RowEditFragment(GalleryRowItem{ID: 2, Name: "Second Item", Category: "Books", Price: "24.50", Active: true}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</tbody></table></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</tbody></table></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("11. Row Actions (Edit / Delete)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("12. Row Form Actions (Save / Cancel)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -532,21 +500,13 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<p class=\"text-sm text-base-content/70 mb-3\"><code class=\"text-xs bg-base-200 px-1 rounded\">RowFormActions()</code> factory. Save sends <code class=\"text-xs bg-base-200 px-1 rounded\">hx-put</code> with <code class=\"text-xs bg-base-200 px-1 rounded\">hx-include=\"closest tr\"</code>. Cancel restores the view row.</p><div class=\"overflow-x-auto\"><table class=\"table table-sm\"><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Active</th><th>Actions</th></tr></thead> <tbody>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = RowEditFragment(GalleryRowItem{ID: 2, Name: "Second Item", Category: "Books", Price: "24.50", Active: true}).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</tbody></table></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<p class=\"text-sm text-base-content/70 mb-3\">Each scenario returns an error panel with <strong>embedded recovery controls</strong> — the server tells the client exactly how to fix each problem. This is the power of HATEOAS: the API response <em>itself</em> contains the next possible actions.</p><div class=\"space-y-4\"><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">A. Transient Failure (500)</h3><p class=\"text-xs text-base-content/60 mb-2\">Odd attempts fail, even attempts succeed. Click Retry inside the error panel to try again.</p><button class=\"btn btn-sm btn-error\" hx-post=\"/hypermedia/controls/errors/transient\" hx-target=\"#transient-result\" hx-swap=\"innerHTML\">Save Record</button><div id=\"transient-result\" class=\"mt-2\"></div></div></div><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">B. Validation Error (422)</h3><p class=\"text-xs text-base-content/60 mb-2\">Bad data triggers 422. The error panel includes a pre-filled <em>fix form</em> so you can correct values and resubmit without leaving the page.</p><form hx-post=\"/hypermedia/controls/errors/validate\" hx-target=\"#validate-result\" hx-swap=\"innerHTML\" class=\"flex items-end gap-2\"><div class=\"fieldset\"><label class=\"label label-text text-xs\">Name</label> <input name=\"name\" class=\"input input-sm w-28\" value=\"ab\"></div><div class=\"fieldset\"><label class=\"label label-text text-xs\">Price</label> <input name=\"price\" type=\"number\" step=\"0.01\" class=\"input input-sm w-24\" value=\"-5\"></div><button type=\"submit\" class=\"btn btn-sm btn-error\">Submit</button></form><div id=\"validate-result\" class=\"mt-2\"></div></div></div><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">C. Conflict (409)</h3><p class=\"text-xs text-base-content/60 mb-2\">Name already exists. The error panel offers two paths: <strong>Update Existing</strong> or <strong>Create as Copy</strong>.</p><button class=\"btn btn-sm btn-error\" hx-post=\"/hypermedia/controls/errors/conflict\" hx-target=\"#conflict-result\" hx-swap=\"innerHTML\">Create \"Widget\"</button><div id=\"conflict-result\" class=\"mt-2\"></div></div></div><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">D. Stale Data (412)</h3><p class=\"text-xs text-base-content/60 mb-2\">Version mismatch — someone else edited the record. The error panel lets you <strong>Refresh</strong> (get latest) or <strong>Force Save</strong> (overwrite).</p><form hx-post=\"/hypermedia/controls/errors/stale\" hx-target=\"#stale-result\" hx-swap=\"innerHTML\" class=\"flex items-end gap-2\"><div class=\"fieldset\"><label class=\"label label-text text-xs\">Name</label> <input name=\"name\" class=\"input input-sm w-40\" value=\"My Widget\"></div><input type=\"hidden\" name=\"version\" value=\"0\"> <button type=\"submit\" class=\"btn btn-sm btn-error\">Save (v0)</button></form><div id=\"stale-result\" class=\"mt-2\"></div></div></div><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">E. Dependency Block (409)</h3><p class=\"text-xs text-base-content/60 mb-2\">Can't delete a category with items. The error panel lists dependent items and offers <strong>Reassign &amp; Delete</strong> or <strong>Force Delete</strong>.</p><button class=\"btn btn-sm btn-error\" hx-delete=\"/hypermedia/controls/errors/cascade\" hx-target=\"#cascade-result\" hx-swap=\"innerHTML\">Delete \"Electronics\"</button><div id=\"cascade-result\" class=\"mt-2\"></div></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("12. Row Form Actions (Save / Cancel)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("13. HATEOAS Error Recovery").Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -562,39 +522,17 @@ func HypermediaControlsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<p class=\"text-sm text-base-content/70 mb-3\">Each scenario returns an error panel with <strong>embedded recovery controls</strong> — the server tells the client exactly how to fix each problem. This is the power of HATEOAS: the API response <em>itself</em> contains the next possible actions.</p><div class=\"space-y-4\"><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">A. Transient Failure (500)</h3><p class=\"text-xs text-base-content/60 mb-2\">Odd attempts fail, even attempts succeed. Click Retry inside the error panel to try again.</p><button class=\"btn btn-sm btn-error\" hx-post=\"/hypermedia/controls/errors/transient\" hx-target=\"#transient-result\" hx-swap=\"innerHTML\">Save Record</button><div id=\"transient-result\" class=\"mt-2\"></div></div></div><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">B. Validation Error (422)</h3><p class=\"text-xs text-base-content/60 mb-2\">Bad data triggers 422. The error panel includes a pre-filled <em>fix form</em> so you can correct values and resubmit without leaving the page.</p><form hx-post=\"/hypermedia/controls/errors/validate\" hx-target=\"#validate-result\" hx-swap=\"innerHTML\" class=\"flex items-end gap-2\"><div class=\"fieldset\"><label class=\"label label-text text-xs\">Name</label> <input name=\"name\" class=\"input input-sm w-28\" value=\"ab\"></div><div class=\"fieldset\"><label class=\"label label-text text-xs\">Price</label> <input name=\"price\" type=\"number\" step=\"0.01\" class=\"input input-sm w-24\" value=\"-5\"></div><button type=\"submit\" class=\"btn btn-sm btn-error\">Submit</button></form><div id=\"validate-result\" class=\"mt-2\"></div></div></div><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">C. Conflict (409)</h3><p class=\"text-xs text-base-content/60 mb-2\">Name already exists. The error panel offers two paths: <strong>Update Existing</strong> or <strong>Create as Copy</strong>.</p><button class=\"btn btn-sm btn-error\" hx-post=\"/hypermedia/controls/errors/conflict\" hx-target=\"#conflict-result\" hx-swap=\"innerHTML\">Create \"Widget\"</button><div id=\"conflict-result\" class=\"mt-2\"></div></div></div><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">D. Stale Data (412)</h3><p class=\"text-xs text-base-content/60 mb-2\">Version mismatch — someone else edited the record. The error panel lets you <strong>Refresh</strong> (get latest) or <strong>Force Save</strong> (overwrite).</p><form hx-post=\"/hypermedia/controls/errors/stale\" hx-target=\"#stale-result\" hx-swap=\"innerHTML\" class=\"flex items-end gap-2\"><div class=\"fieldset\"><label class=\"label label-text text-xs\">Name</label> <input name=\"name\" class=\"input input-sm w-40\" value=\"My Widget\"></div><input type=\"hidden\" name=\"version\" value=\"0\"> <button type=\"submit\" class=\"btn btn-sm btn-error\">Save (v0)</button></form><div id=\"stale-result\" class=\"mt-2\"></div></div></div><div class=\"card bg-base-200\"><div class=\"card-body p-4\"><h3 class=\"font-semibold text-sm\">E. Dependency Block (409)</h3><p class=\"text-xs text-base-content/60 mb-2\">Can't delete a category with items. The error panel lists dependent items and offers <strong>Reassign &amp; Delete</strong> or <strong>Force Delete</strong>.</p><button class=\"btn btn-sm btn-error\" hx-delete=\"/hypermedia/controls/errors/cascade\" hx-target=\"#cascade-result\" hx-swap=\"innerHTML\">Delete \"Electronics\"</button><div id=\"cascade-result\" class=\"mt-2\"></div></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<div class=\"space-y-4\"><p class=\"text-sm text-base-content/70\">Links carry a <code class=\"text-xs bg-base-200 px-1 rounded\">?from=N</code> bitmask that tells the destination page where the user came from. The server resolves the mask to a breadcrumb trail, derives intermediate crumbs from the URL path, and renders the bar between the navbar and content. No client state needed.</p><div class=\"overflow-x-auto\"><table class=\"table table-sm\"><thead><tr><th>Bit</th><th>Value</th><th>Label</th><th>Href</th></tr></thead> <tbody><tr><td>0</td><td>1</td><td>Home</td><td>/</td></tr><tr><td>1</td><td>2</td><td>Dashboard</td><td>/dashboard</td></tr></tbody></table></div><p class=\"text-sm text-base-content/70\"><code class=\"text-xs bg-base-200 px-1 rounded\">from=3</code> = bits 0+1 = <strong>Home + Dashboard</strong>. The destination page appends path-derived crumbs automatically. Click to see real breadcrumbs:</p><div class=\"flex flex-wrap gap-2\"><a href=\"/demo/inventory?from=1\" class=\"btn btn-sm btn-outline\">Inventory (from=1: Home only)</a> <a href=\"/demo/inventory?from=3\" class=\"btn btn-sm btn-outline\">Inventory (from=3: Home + Dashboard)</a> <a href=\"/demo/people?from=3\" class=\"btn btn-sm btn-outline\">People (from=3: Home + Dashboard)</a></div><p class=\"text-sm text-base-content/70\">Use <code class=\"text-xs bg-base-200 px-1 rounded\">FromNav(href, from)</code> to forward the param on outbound links. Use <code class=\"text-xs bg-base-200 px-1 rounded\">SetPageLabel(c, name)</code> to replace the terminal crumb's auto-generated label with a human name (e.g., a person's name instead of their ID).</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = controlsSection("13. HATEOAS Error Recovery").Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = controlsSection("14. Breadcrumb Origin Tracking").Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var16 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
-			}
-			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<div class=\"space-y-4\"><p class=\"text-sm text-base-content/70\">Links carry a <code class=\"text-xs bg-base-200 px-1 rounded\">?from=N</code> bitmask that tells the destination page where the user came from. The server resolves the mask to a breadcrumb trail, derives intermediate crumbs from the URL path, and renders the bar between the navbar and content. No client state needed.</p><div class=\"overflow-x-auto\"><table class=\"table table-sm\"><thead><tr><th>Bit</th><th>Value</th><th>Label</th><th>Href</th></tr></thead> <tbody><tr><td>0</td><td>1</td><td>Home</td><td>/</td></tr><tr><td>1</td><td>2</td><td>Dashboard</td><td>/dashboard</td></tr></tbody></table></div><p class=\"text-sm text-base-content/70\"><code class=\"text-xs bg-base-200 px-1 rounded\">from=3</code> = bits 0+1 = <strong>Home + Dashboard</strong>. The destination page appends path-derived crumbs automatically. Click to see real breadcrumbs:</p><div class=\"flex flex-wrap gap-2\"><a href=\"/demo/inventory?from=1\" class=\"btn btn-sm btn-outline\">Inventory (from=1: Home only)</a> <a href=\"/demo/inventory?from=3\" class=\"btn btn-sm btn-outline\">Inventory (from=3: Home + Dashboard)</a> <a href=\"/demo/people?from=3\" class=\"btn btn-sm btn-outline\">People (from=3: Home + Dashboard)</a></div><p class=\"text-sm text-base-content/70\">Use <code class=\"text-xs bg-base-200 px-1 rounded\">FromNav(href, from)</code> to forward the param on outbound links. Use <code class=\"text-xs bg-base-200 px-1 rounded\">SetPageLabel(c, name)</code> to replace the terminal crumb's auto-generated label with a human name (e.g., a person's name instead of their ID).</p></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			return nil
-		})
-		templ_7745c5c3_Err = controlsSection("14. Breadcrumb Origin Tracking").Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -618,33 +556,33 @@ func controlsSection(title string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var17 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var17 == nil {
-			templ_7745c5c3_Var17 = templ.NopComponent
+		templ_7745c5c3_Var16 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var16 == nil {
+			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-base\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-base\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var18 string
-		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		var templ_7745c5c3_Var17 string
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_controls.templ`, Line: 370, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_controls.templ`, Line: 362, Col: 43}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</h2>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ_7745c5c3_Var17.Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</h2>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</div></div>")
+		templ_7745c5c3_Err = templ_7745c5c3_Var16.Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

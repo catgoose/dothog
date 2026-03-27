@@ -20,6 +20,11 @@ const errorReportsBase = "/admin/error-reports"
 type errorReportRoutes struct{ db *demo.DB }
 
 func (ar *appRoutes) initAdminErrorReportsRoutes(db *demo.DB) {
+	hypermedia.Link("/admin/error-reports", "related", "/admin/health", "Health")
+	hypermedia.Link("/admin/error-reports", "related", "/admin/error-traces", "Error Traces")
+	hypermedia.Link("/admin/error-reports", "related", "/admin/sessions", "Sessions")
+	hypermedia.Link("/admin/error-reports", "related", "/admin/settings", "Control Panel")
+
 	d := &errorReportRoutes{db: db}
 	ar.e.GET(errorReportsBase, d.handleErrorReportsPage)
 	ar.e.GET(errorReportsBase+"/table", d.handleErrorReportsTable)

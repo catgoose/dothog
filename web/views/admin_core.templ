@@ -7,7 +7,6 @@ import (
 
 	"catgoose/dothog/internal/admininfo"
 	"catgoose/dothog/internal/version"
-	components "catgoose/dothog/web/components/core"
 	// setup:feature:demo:end
 )
 
@@ -15,11 +14,6 @@ import (
 
 // AdminSystemPage displays runtime system information.
 templ AdminSystemPage(info admininfo.SystemInfo) {
-	@components.ContextBar() {
-		@components.ContextLink("/admin/health", "Health", "")
-		@components.ContextLink("/admin/config", "Config", "")
-		@components.ContextLink("/admin/error-traces", "Error Traces", "")
-	}
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<h1 class="text-2xl font-bold">System Information</h1>
 
@@ -127,11 +121,6 @@ docker compose up -d</code></pre>
 
 // AdminConfigPage displays application configuration with secrets masked.
 templ AdminConfigPage(entries []admininfo.ConfigEntry) {
-	@components.ContextBar() {
-		@components.ContextLink("/admin/health", "Health", "")
-		@components.ContextLink("/admin/system", "System", "")
-		@components.ContextLink("/admin/error-traces", "Error Traces", "")
-	}
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<h1 class="text-2xl font-bold">Configuration</h1>
 		<p class="text-sm text-base-content/60">

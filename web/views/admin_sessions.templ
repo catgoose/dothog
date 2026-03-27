@@ -6,17 +6,10 @@ import (
 	"catgoose/dothog/internal/domain"
 	"fmt"
 	"time"
-
-	components "catgoose/dothog/web/components/core"
 )
 
 // AdminSessionsPage displays all session settings rows with live SSE updates.
 templ AdminSessionsPage(sessions []domain.SessionSettings) {
-	@components.ContextBar() {
-		@components.ContextLink("/admin/health", "Health", "")
-		@components.ContextLink("/admin/error-traces", "Error Traces", "")
-		@components.ContextLink("/admin/settings", "Control Panel", "")
-	}
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<h1 class="text-2xl font-bold">Session Settings</h1>
 		<p class="text-sm text-base-content/60">

@@ -5,6 +5,7 @@ package routes
 import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
+	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/internal/ssebroker"
 	"catgoose/dothog/web/views"
@@ -19,6 +20,9 @@ type kanbanRoutes struct {
 }
 
 func (ar *appRoutes) initKanbanRoutes(board *demo.KanbanBoard, actLog *demo.ActivityLog, broker *ssebroker.SSEBroker) {
+	hypermedia.Link("/demo/kanban", "related", "/demo/approvals", "Approvals")
+	hypermedia.Link("/demo/kanban", "related", "/demo/feed", "Feed")
+
 	k := &kanbanRoutes{board: board, actLog: actLog, broker: broker}
 	ar.e.GET("/demo/kanban", k.handleKanbanPage)
 	ar.e.PATCH("/demo/kanban/tasks/:id/move", k.handleMoveTask)

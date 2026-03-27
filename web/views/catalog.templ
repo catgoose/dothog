@@ -13,10 +13,6 @@ import (
 // CatalogPage is the full page content for /demo/catalog.
 // The FilterBar lives outside the table container so it is never replaced by HTMX swaps.
 templ CatalogPage(bar hypermedia.FilterBar, tableContainer templ.Component) {
-	@components.ContextBar() {
-		@components.ContextLink("/demo/inventory", "Inventory", "")
-		@components.ContextLink("/demo/bulk", "Bulk Ops", "")
-	}
 	<div class="p-4 space-y-4">
 		<div class="flex items-center justify-between">
 			<h1 class="text-2xl font-bold">📖 Product Catalog</h1>
