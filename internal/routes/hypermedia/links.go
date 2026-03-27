@@ -2,6 +2,7 @@
 package hypermedia
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -37,7 +38,7 @@ func Link(source, rel, target, title string) {
 	if rel == "related" {
 		// Derive the inverse title from the source path
 		// e.g., "/demo/inventory" -> "Inventory"
-		inverseTitle := titleFromPath(source)
+		inverseTitle := TitleFromPath(source)
 		linksMap[target] = append(linksMap[target], LinkRelation{
 			Rel:   "related",
 			Href:  source,
@@ -196,9 +197,9 @@ func SortedPaths(links map[string][]LinkRelation) []string {
 	return paths
 }
 
-// titleFromPath extracts a title from the last segment of a URL path.
+// TitleFromPath extracts a title from the last segment of a URL path.
 // "/demo/inventory" -> "Inventory", "/admin/error-traces" -> "Error Traces"
-func titleFromPath(path string) string {
+func TitleFromPath(path string) string {
 	path = strings.TrimSuffix(path, "/")
 	idx := strings.LastIndex(path, "/")
 	if idx < 0 {
@@ -214,4 +215,78 @@ func titleFromPath(path string) string {
 		}
 	}
 	return strings.Join(words, " ")
+}
+
+// LinkSource provides link relations dynamically for a request.
+type LinkSource interface {
+	Links(ctx context.Context, path string) []LinkRelation
+}
+
+var (
+	sourcesMu sync.RWMutex
+	sources   []LinkSource
+)
+
+// RegisterLinkSource adds a dynamic link source.
+func RegisterLinkSource(src LinkSource) {
+	sourcesMu.Lock()
+	defer sourcesMu.Unlock()
+	sources = append(sources, src)
+}
+
+// AllSourceLinks collects links from all registered sources for a path.
+func AllSourceLinks(ctx context.Context, path string) []LinkRelation {
+	sourcesMu.RLock()
+	defer sourcesMu.RUnlock()
+
+	var all []LinkRelation
+	for _, src := range sources {
+		all = append(all, src.Links(ctx, path)...)
+	}
+	return all
+}
+
+// registrySource wraps the static link registry as a LinkSource.
+type registrySource struct{}
+
+func (registrySource) Links(_ context.Context, path string) []LinkRelation {
+	return LinksFor(path)
+}
+
+func init() {
+	RegisterLinkSource(registrySource{})
+}
+
+// FrecencyFunc returns top frecent pages for a session ID.
+type FrecencyFunc func(ctx context.Context, sessionID string, limit int) ([]LinkRelation, error)
+
+// FrecencySource is a LinkSource backed by session visit history.
+type FrecencySource struct {
+	Fn    FrecencyFunc
+	Limit int
+}
+
+func (f *FrecencySource) Links(ctx context.Context, path string) []LinkRelation {
+	sessionID, ok := ctx.Value(sessionIDKey{}).(string)
+	if !ok || sessionID == "" {
+		return nil
+	}
+	links, err := f.Fn(ctx, sessionID, f.Limit)
+	if err != nil {
+		return nil
+	}
+	var filtered []LinkRelation
+	for _, l := range links {
+		if l.Href != path {
+			filtered = append(filtered, l)
+		}
+	}
+	return filtered
+}
+
+type sessionIDKey struct{}
+
+// WithSessionID adds a session ID to the context for frecency tracking.
+func WithSessionID(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, sessionIDKey{}, id)
 }

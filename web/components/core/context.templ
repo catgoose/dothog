@@ -21,16 +21,26 @@ templ ContextStrip(crumbs []hypermedia.Breadcrumb) {
 	</div>
 }
 
-// ContextBar renders a horizontal strip of related page links.
-// Links are read from <link rel="related"> tags in the document head.
+// ContextBar renders a horizontal strip of frecent and related page links.
+// Links are read from <link rel="bookmark"> and <link rel="related"> tags in the document head.
 templ ContextBar() {
 	<div
 		x-data="contextBar()"
-		x-show="links.length > 0"
+		x-show="frecent.length > 0 || related.length > 0"
 		x-cloak
 		class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm"
 	>
-		<template x-for="link in links" :key="link.href">
+		<template x-for="link in frecent" :key="link.href">
+			<a
+				:href="link.href"
+				x-text="link.title"
+				class="link link-hover text-base-content/40 hover:text-base-content whitespace-nowrap text-xs"
+			></a>
+		</template>
+		<template x-if="frecent.length > 0 && related.length > 0">
+			<div class="w-px h-4 bg-base-300 shrink-0"></div>
+		</template>
+		<template x-for="link in related" :key="link.href">
 			<a
 				:href="link.href"
 				x-text="link.title"
