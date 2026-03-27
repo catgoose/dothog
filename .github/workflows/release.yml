@@ -20,6 +20,7 @@ on:
 permissions:
   contents: write
   packages: write
+  issues: write
 
 jobs:
   check:
@@ -216,3 +217,25 @@ jobs:
             APP_VERSION=${{ needs.release.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  notify-failure:
+    if: ${{ failure() }}
+    needs: [check, release, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue on pipeline failure
+        run: |
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "Pipeline failure: ${{ github.workflow }} (#${{ github.run_number }})" \
+            --label "ci" \
+            --body "$(cat <<EOF
+          **Workflow:** \`${{ github.workflow }}\`
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          **Branch:** \`${{ github.ref_name }}\`
+          **Commit:** \`${{ github.sha }}\`
+          **Triggered by:** ${{ github.actor }}
+          EOF
+          )"
+        env:
+          GH_TOKEN: ${{ github.token }}

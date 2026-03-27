@@ -5,6 +5,10 @@ on:
     branches: [feat/capacitor, feat/ios-demo-build]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 concurrency:
   group: ios-build-${{ github.ref }}
   cancel-in-progress: true
@@ -135,3 +139,25 @@ jobs:
             For physical device builds, code signing certificates are required.
           files: dothog-simulator.zip
           prerelease: true
+
+  notify-failure:
+    if: ${{ failure() }}
+    needs: [build-simulator]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue on pipeline failure
+        run: |
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "Pipeline failure: ${{ github.workflow }} (#${{ github.run_number }})" \
+            --label "ci" \
+            --body "$(cat <<EOF
+          **Workflow:** \`${{ github.workflow }}\`
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          **Branch:** \`${{ github.ref_name }}\`
+          **Commit:** \`${{ github.sha }}\`
+          **Triggered by:** ${{ github.actor }}
+          EOF
+          )"
+        env:
+          GH_TOKEN: ${{ github.token }}
