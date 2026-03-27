@@ -1,6 +1,11 @@
 package routes
 
 import (
+	"encoding/json"
+
+	// setup:feature:demo:start
+	"catgoose/dothog/internal/demo"
+	// setup:feature:demo:end
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/hypermedia"
@@ -34,6 +39,34 @@ func (ar *appRoutes) initReportIssueRoutes() {
 			c.Response().Header().Set("HX-Reswap", "none")
 			return c.String(http.StatusInternalServerError, "")
 		}
+		// setup:feature:demo:start
+		if ar.demoDB != nil {
+			logEntries := "[]"
+			if trace != nil {
+				if b, err := json.Marshal(trace.Entries); err == nil {
+					logEntries = string(b)
+				}
+			}
+			var statusCode int
+			var route string
+			if trace != nil {
+				statusCode = trace.StatusCode
+				route = trace.Route
+			}
+			report := demo.ErrorReport{
+				RequestID:   requestID,
+				Description: description,
+				Route:       route,
+				StatusCode:  statusCode,
+				UserAgent:   c.Request().UserAgent(),
+				LogEntries:  logEntries,
+			}
+			if _, err := ar.demoDB.InsertErrorReport(c.Request().Context(), report); err != nil {
+				logger.WithContext(c.Request().Context()).Error("Failed to store error report",
+					"request_id", requestID, "error", err)
+			}
+		}
+		// setup:feature:demo:end
 		c.Response().Header().Set("HX-Trigger", `{"showAlert":"Issue reported. Thank you for your feedback!"}`)
 		c.Response().Header().Set("HX-Reswap", "none")
 		return c.String(http.StatusOK, "")

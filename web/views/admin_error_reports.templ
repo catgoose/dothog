@@ -1,0 +1,126 @@
+// setup:feature:demo
+package views
+
+import (
+	"fmt"
+
+	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/routes/hypermedia"
+	components "catgoose/dothog/web/components/core"
+)
+
+// AdminErrorReportsPage is the full page for /admin/error-reports.
+templ AdminErrorReportsPage(bar hypermedia.FilterBar, tableContainer templ.Component) {
+	@components.ContextBar() {
+		@components.ContextLink("/admin/health", "Health", "")
+		@components.ContextLink("/admin/error-traces", "Error Traces", "")
+		@components.ContextLink("/admin/sessions", "Sessions", "")
+		@components.ContextLink("/admin/settings", "Control Panel", "")
+	}
+	<div class="p-4 space-y-4">
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl font-bold">Error Reports</h1>
+		</div>
+		<p class="text-sm text-base-content/60">
+			User-submitted error reports with captured context. Resolve or dismiss reports as they are addressed.
+		</p>
+		@components.FilterBar(bar)
+		@tableContainer
+	</div>
+}
+
+// AdminErrorReportsTableContainer is the replaceable HTMX fragment.
+templ AdminErrorReportsTableContainer(cols []hypermedia.TableCol, body templ.Component, info hypermedia.PageInfo) {
+	<div id="error-reports-table-container">
+		@components.Table(cols, body, info)
+	</div>
+}
+
+// AdminErrorReportsBody renders the <tbody> rows for the error reports table.
+templ AdminErrorReportsBody(reports []demo.ErrorReport) {
+	<tbody>
+		for _, report := range reports {
+			@AdminErrorReportRow(report)
+		}
+		if len(reports) == 0 {
+			<tr>
+				<td colspan="8" class="text-center text-base-content/60 py-8">No error reports found</td>
+			</tr>
+		}
+	</tbody>
+}
+
+// AdminErrorReportRow renders a single row for an error report.
+templ AdminErrorReportRow(report demo.ErrorReport) {
+	{{ rowID := fmt.Sprintf("report-row-%d", report.ID) }}
+	{{ resolveURL := fmt.Sprintf("/admin/error-reports/%d/resolve", report.ID) }}
+	{{ dismissURL := fmt.Sprintf("/admin/error-reports/%d/dismiss", report.ID) }}
+	{{ traceURL := "" }}
+	if report.RequestID != "" {
+		{{ traceURL = fmt.Sprintf("/admin/error-traces/%s", report.RequestID) }}
+	}
+	<tr id={ rowID }>
+		<td class="text-xs whitespace-nowrap">{ report.CreatedAtFormatted() }</td>
+		<td class="font-mono text-xs">
+			if traceURL != "" {
+				<a href={ templ.URL(traceURL) } class="link link-hover link-primary">{ report.RequestID }</a>
+			} else {
+				if report.RequestID != "" {
+					{ report.RequestID }
+				} else {
+					<span class="text-base-content/40">-</span>
+				}
+			}
+		</td>
+		<td class="text-xs max-w-[200px] truncate" title={ report.Description }>{ report.DescriptionPreview() }</td>
+		<td class="text-xs font-mono">{ report.Route }</td>
+		<td class="text-xs">
+			if report.StatusCode > 0 {
+				if report.StatusCode >= 500 {
+					<span class="badge badge-error badge-sm">{ fmt.Sprintf("%d", report.StatusCode) }</span>
+				} else if report.StatusCode >= 400 {
+					<span class="badge badge-warning badge-sm">{ fmt.Sprintf("%d", report.StatusCode) }</span>
+				} else {
+					<span class="badge badge-sm">{ fmt.Sprintf("%d", report.StatusCode) }</span>
+				}
+			} else {
+				<span class="text-base-content/40">-</span>
+			}
+		</td>
+		<td class="text-xs max-w-[150px] truncate" title={ report.UserAgent }>{ report.UserAgentSnippet() }</td>
+		<td>
+			@errorReportStatusBadge(report.Status)
+		</td>
+		<td>
+			if report.Status == demo.ErrorReportStatusPending {
+				<div class="flex gap-1">
+					<button
+						class="btn btn-xs btn-success"
+						hx-post={ resolveURL }
+						hx-target="#error-reports-table-container"
+						hx-swap="outerHTML"
+					>Resolve</button>
+					<button
+						class="btn btn-xs btn-ghost"
+						hx-post={ dismissURL }
+						hx-target="#error-reports-table-container"
+						hx-swap="outerHTML"
+					>Dismiss</button>
+				</div>
+			} else {
+				<span class="text-xs text-base-content/40">{ report.ResolvedAtFormatted() }</span>
+			}
+		</td>
+	</tr>
+}
+
+templ errorReportStatusBadge(status demo.ErrorReportStatus) {
+	switch status {
+		case demo.ErrorReportStatusPending:
+			<span class="badge badge-warning badge-sm">Pending</span>
+		case demo.ErrorReportStatusResolved:
+			<span class="badge badge-success badge-sm">Resolved</span>
+		case demo.ErrorReportStatusDismissed:
+			<span class="badge badge-ghost badge-sm">Dismissed</span>
+	}
+}
