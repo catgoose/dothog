@@ -145,13 +145,15 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:session_settings:end
 		// setup:feature:sse:end
 		// setup:feature:offline:start
-		<script>
-			if ('serviceWorker' in navigator) {
-				navigator.serviceWorker.register('/sw.js').catch(function(err) {
-					console.warn('ServiceWorker registration failed:', err);
-				});
-			}
-		</script>
+		if !devMode {
+			<script>
+				if ('serviceWorker' in navigator) {
+					navigator.serviceWorker.register('/sw.js').catch(function(err) {
+						console.warn('ServiceWorker registration failed:', err);
+					});
+				}
+			</script>
+		}
 		// setup:feature:offline:end
 	</head>
 }
