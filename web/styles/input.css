@@ -42,6 +42,27 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
+  /* Performance: skip rendering off-screen table rows and feed items */
+  tbody tr,
+  .feed-item {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 44px;
+  }
+
+  /* Typography: balanced headings, no orphan words in paragraphs */
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Theming: brand all native form controls */
+  :root {
+    accent-color: var(--color-primary);
+  }
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
