@@ -21,14 +21,6 @@ const inventoryBase = "/demo/inventory"
 type inventoryRoutes struct{ db *demo.DB }
 
 func (ar *appRoutes) initInventoryRoutes(db *demo.DB) {
-	hypermedia.Ring("Data",
-		hypermedia.Rel("/demo/inventory", "Inventory"),
-		hypermedia.Rel("/demo/catalog", "Catalog"),
-		hypermedia.Rel("/demo/bulk", "Bulk Ops"),
-		hypermedia.Rel("/demo/people", "People"),
-		hypermedia.Rel("/demo/vendors", "Vendors"),
-	)
-
 	d := &inventoryRoutes{db: db}
 	ar.e.GET(inventoryBase, d.handleInventoryPage)
 	ar.e.GET(inventoryBase+"/items", d.handleInventoryItems)

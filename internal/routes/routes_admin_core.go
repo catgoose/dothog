@@ -14,35 +14,12 @@ import (
 
 	"catgoose/dothog/internal/health"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/web/views"
 
 	"github.com/labstack/echo/v4"
 )
 
 func (ar *appRoutes) initAdminCoreRoutes() {
-	hypermedia.Hub("/admin", "Admin",
-		hypermedia.Rel("/admin/health", "Health"),
-		hypermedia.Rel("/admin/sessions", "Sessions"),
-		hypermedia.Rel("/admin/settings", "Control Panel"),
-		hypermedia.Rel("/admin/error-traces", "Error Traces"),
-		hypermedia.Rel("/admin/error-reports", "Error Reports"),
-		hypermedia.Rel("/admin/system", "System"),
-		hypermedia.Rel("/admin/config", "Config"),
-	)
-	hypermedia.Ring("Admin Ops",
-		hypermedia.Rel("/admin/health", "Health"),
-		hypermedia.Rel("/admin/error-traces", "Error Traces"),
-		hypermedia.Rel("/admin/sessions", "Sessions"),
-		hypermedia.Rel("/admin/settings", "Control Panel"),
-	)
-	hypermedia.Ring("System",
-		hypermedia.Rel("/admin/system", "System"),
-		hypermedia.Rel("/admin/config", "Config"),
-		hypermedia.Rel("/admin/health", "Health"),
-		hypermedia.Rel("/admin/error-traces", "Error Traces"),
-	)
-
 	ar.e.GET("/admin", handler.HandleComponent(views.AdminIndexPage()))
 	ar.e.GET("/admin/health", ar.handleAdminHealth)
 	ar.e.GET("/admin/health/check", ar.handleAdminHealthCheck)

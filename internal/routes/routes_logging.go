@@ -13,7 +13,6 @@ import (
 	"catgoose/dothog/internal/logger"
 	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/internal/shared"
 	"catgoose/dothog/internal/ssebroker"
 	"catgoose/dothog/web/views"
@@ -24,12 +23,6 @@ import (
 const loggingBase = "/demo/logging"
 
 func (ar *appRoutes) initLoggingRoutes() {
-	hypermedia.Ring("Utility",
-		hypermedia.Rel("/demo/logging", "Logging"),
-		hypermedia.Rel("/demo/canvas", "Canvas"),
-		hypermedia.Rel("/demo/settings", "Settings"),
-		hypermedia.Rel("/demo/repository", "Repository"),
-	)
 	// setup:feature:sse:start
 	broker := ssebroker.NewSSEBroker()
 
