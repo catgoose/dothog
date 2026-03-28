@@ -20,7 +20,7 @@ type kanbanRoutes struct {
 }
 
 func (ar *appRoutes) initKanbanRoutes(board *demo.KanbanBoard, actLog *demo.ActivityLog, broker *ssebroker.SSEBroker) {
-	hypermedia.Ring(
+	hypermedia.Ring("Workflow",
 		hypermedia.Rel("/demo/kanban", "Kanban"),
 		hypermedia.Rel("/demo/approvals", "Approvals"),
 		hypermedia.Rel("/demo/feed", "Feed"),

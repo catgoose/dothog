@@ -27,7 +27,7 @@ func (ar *appRoutes) initDashboardRoutes(db *demo.DB, board *demo.KanbanBoard, q
 		hypermedia.Rel("/demo/vendors", "Vendors"),
 		hypermedia.Rel("/demo/feed", "Feed"),
 	)
-	hypermedia.Ring(
+	hypermedia.Ring("Dashboard",
 		hypermedia.Rel("/demo/inventory", "Inventory"),
 		hypermedia.Rel("/demo/people", "People"),
 		hypermedia.Rel("/demo/kanban", "Kanban"),

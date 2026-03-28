@@ -13,6 +13,7 @@ type LinkRelation struct {
 	Rel   string // IANA link relation (e.g., "related", "collection", "up")
 	Href  string // Target URL
 	Title string // Human-readable label
+	Group string // Optional group name (e.g., ring name) for UI grouping
 }
 
 // linkRegistry stores registered link relations keyed by source path.
@@ -114,8 +115,8 @@ func Rel(path, title string) RelEntry {
 }
 
 // Ring registers symmetric rel="related" links between all members.
-// Every member links to every other member.
-func Ring(members ...RelEntry) {
+// Every member links to every other member. The name is used for UI grouping.
+func Ring(name string, members ...RelEntry) {
 	linksMu.Lock()
 	defer linksMu.Unlock()
 
@@ -129,6 +130,7 @@ func Ring(members ...RelEntry) {
 					Rel:   "related",
 					Href:  b.Path,
 					Title: b.Title,
+					Group: name,
 				})
 			}
 		}

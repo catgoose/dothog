@@ -30,13 +30,13 @@ func (ar *appRoutes) initAdminCoreRoutes() {
 		hypermedia.Rel("/admin/system", "System"),
 		hypermedia.Rel("/admin/config", "Config"),
 	)
-	hypermedia.Ring(
+	hypermedia.Ring("Admin Ops",
 		hypermedia.Rel("/admin/health", "Health"),
 		hypermedia.Rel("/admin/error-traces", "Error Traces"),
 		hypermedia.Rel("/admin/sessions", "Sessions"),
 		hypermedia.Rel("/admin/settings", "Control Panel"),
 	)
-	hypermedia.Ring(
+	hypermedia.Ring("System",
 		hypermedia.Rel("/admin/system", "System"),
 		hypermedia.Rel("/admin/config", "Config"),
 		hypermedia.Rel("/admin/health", "Health"),

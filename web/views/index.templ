@@ -90,7 +90,11 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string, 
 		// setup:feature:demo:start
 		<link rel="manifest" href="/public/images/site.webmanifest"/>
 		for _, link := range links {
-			<link rel={ link.Rel } href={ link.Href } title={ link.Title }/>
+			if link.Group != "" {
+				<link rel={ link.Rel } href={ link.Href } title={ link.Title } data-group={ link.Group }/>
+			} else {
+				<link rel={ link.Rel } href={ link.Href } title={ link.Title }/>
+			}
 		}
 		// setup:feature:demo:end
 		<title>{ appName }</title>

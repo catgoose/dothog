@@ -190,74 +190,133 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string, l
 			return templ_7745c5c3_Err
 		}
 		for _, link := range links {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<link rel=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(link.Rel)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 93, Col: 23}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" href=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var8 templ.SafeURL
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinURLErrs(link.Href)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 93, Col: 42}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" title=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(link.Title)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 93, Col: 63}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
+			if link.Group != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<link rel=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var7 string
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(link.Rel)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 94, Col: 24}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var8 templ.SafeURL
+				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinURLErrs(link.Href)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 94, Col: 43}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" title=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var9 string
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(link.Title)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 94, Col: 64}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" data-group=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var10 string
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(link.Group)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 94, Col: 90}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<link rel=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var11 string
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(link.Rel)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 96, Col: 24}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var12 templ.SafeURL
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(link.Href)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 96, Col: 43}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" title=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var13 string
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(link.Title)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 96, Col: 64}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(appName)
+		var templ_7745c5c3_Var14 string
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(appName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 96, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 100, Col: 18}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if devMode {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<script src=\"/public/js/dev-logging.js\"></script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<script src=\"/public/js/dev-logging.js\"></script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<script>\n\t\t\t/**\n\t\t\t * Restore persisted debug toggles from localStorage on every page load.\n\t\t\t * The admin settings page writes { \"htmx-log\": true, ... } to dothog_debug.\n\t\t\t * Waits for DOMContentLoaded so htmx/hyperscript are available.\n\t\t\t */\n\t\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\t\tvar state;\n\t\t\t\ttry { state = JSON.parse(localStorage.getItem('dothog_debug')) || {}; } catch(e) { return; }\n\t\t\t\tif (state['htmx-log'] && typeof htmx !== 'undefined') { htmx.logAll(); }\n\t\t\t\tif (state['htmx-events'] && typeof htmx !== 'undefined') {\n\t\t\t\t\twindow._htmxDbg = function(e) {\n\t\t\t\t\t\tconsole.debug('%c[htmx:' + e.type.replace('htmx:','') + ']', 'color:#38bdf8;font-weight:bold', e.detail);\n\t\t\t\t\t};\n\t\t\t\t\tvar evts = ['htmx:beforeRequest','htmx:afterRequest','htmx:beforeSwap','htmx:afterSwap','htmx:oobErrorNoTarget','htmx:sseMessage','htmx:sseError'];\n\t\t\t\t\tevts.forEach(function(t) { document.body.addEventListener(t, window._htmxDbg); });\n\t\t\t\t\twindow._htmxDbgEvts = evts;\n\t\t\t\t}\n\t\t\t\tif (state['hs-beep']) {\n\t\t\t\t\twindow._hsDbg = function(e) { console.debug('%c[_hs:beep]', 'color:#a78bfa;font-weight:bold', e.detail); };\n\t\t\t\t\tdocument.body.addEventListener('hyperscript:beep', window._hsDbg);\n\t\t\t\t}\n\t\t\t\tif (state['alpine-events']) {\n\t\t\t\t\twindow._alpineDbg = function(e) { console.debug('%c[alpine:' + e.type + ']', 'color:#34d399;font-weight:bold', e.detail); };\n\t\t\t\t\tdocument.addEventListener('alpine:initialized', window._alpineDbg);\n\t\t\t\t\tdocument.addEventListener('alpine:init', window._alpineDbg);\n\t\t\t\t}\n\t\t\t});\n\t\t</script><script defer>\n\t\t\t/**\n\t\t\t * Listen for server-sent theme-change events and apply them to the\n\t\t\t * document so all open browsers stay in sync.\n\t\t\t * @listens theme-change\n\t\t\t */\n\t\t\t(function() {\n\t\t\t\t/** @type {EventSource} */\n\t\t\t\tvar es = new EventSource(\"/sse/theme\");\n\t\t\t\tes.addEventListener(\"theme-change\", function(/** @type {MessageEvent} */ e) {\n\t\t\t\t\tdocument.documentElement.dataset.theme = e.data;\n\t\t\t\t});\n\t\t\t})();\n\t\t</script><script>\n\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\tnavigator.serviceWorker.register('/sw.js').catch(function(err) {\n\t\t\t\t\tconsole.warn('ServiceWorker registration failed:', err);\n\t\t\t\t});\n\t\t\t}\n\t\t</script></head>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<script>\n\t\t\t/**\n\t\t\t * Restore persisted debug toggles from localStorage on every page load.\n\t\t\t * The admin settings page writes { \"htmx-log\": true, ... } to dothog_debug.\n\t\t\t * Waits for DOMContentLoaded so htmx/hyperscript are available.\n\t\t\t */\n\t\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\t\tvar state;\n\t\t\t\ttry { state = JSON.parse(localStorage.getItem('dothog_debug')) || {}; } catch(e) { return; }\n\t\t\t\tif (state['htmx-log'] && typeof htmx !== 'undefined') { htmx.logAll(); }\n\t\t\t\tif (state['htmx-events'] && typeof htmx !== 'undefined') {\n\t\t\t\t\twindow._htmxDbg = function(e) {\n\t\t\t\t\t\tconsole.debug('%c[htmx:' + e.type.replace('htmx:','') + ']', 'color:#38bdf8;font-weight:bold', e.detail);\n\t\t\t\t\t};\n\t\t\t\t\tvar evts = ['htmx:beforeRequest','htmx:afterRequest','htmx:beforeSwap','htmx:afterSwap','htmx:oobErrorNoTarget','htmx:sseMessage','htmx:sseError'];\n\t\t\t\t\tevts.forEach(function(t) { document.body.addEventListener(t, window._htmxDbg); });\n\t\t\t\t\twindow._htmxDbgEvts = evts;\n\t\t\t\t}\n\t\t\t\tif (state['hs-beep']) {\n\t\t\t\t\twindow._hsDbg = function(e) { console.debug('%c[_hs:beep]', 'color:#a78bfa;font-weight:bold', e.detail); };\n\t\t\t\t\tdocument.body.addEventListener('hyperscript:beep', window._hsDbg);\n\t\t\t\t}\n\t\t\t\tif (state['alpine-events']) {\n\t\t\t\t\twindow._alpineDbg = function(e) { console.debug('%c[alpine:' + e.type + ']', 'color:#34d399;font-weight:bold', e.detail); };\n\t\t\t\t\tdocument.addEventListener('alpine:initialized', window._alpineDbg);\n\t\t\t\t\tdocument.addEventListener('alpine:init', window._alpineDbg);\n\t\t\t\t}\n\t\t\t});\n\t\t</script><script defer>\n\t\t\t/**\n\t\t\t * Listen for server-sent theme-change events and apply them to the\n\t\t\t * document so all open browsers stay in sync.\n\t\t\t * @listens theme-change\n\t\t\t */\n\t\t\t(function() {\n\t\t\t\t/** @type {EventSource} */\n\t\t\t\tvar es = new EventSource(\"/sse/theme\");\n\t\t\t\tes.addEventListener(\"theme-change\", function(/** @type {MessageEvent} */ e) {\n\t\t\t\t\tdocument.documentElement.dataset.theme = e.data;\n\t\t\t\t});\n\t\t\t})();\n\t\t</script><script>\n\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\tnavigator.serviceWorker.register('/sw.js').catch(function(err) {\n\t\t\t\t\tconsole.warn('ServiceWorker registration failed:', err);\n\t\t\t\t});\n\t\t\t}\n\t\t</script></head>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -282,12 +341,12 @@ func Layout(content templ.Component) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var11 == nil {
-			templ_7745c5c3_Var11 = templ.NopComponent
+		templ_7745c5c3_Var15 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var15 == nil {
+			templ_7745c5c3_Var15 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<div id=\"base-content\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<div id=\"base-content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -295,7 +354,7 @@ func Layout(content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -320,25 +379,25 @@ func ThemeChanged(theme string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var12 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var12 == nil {
-			templ_7745c5c3_Var12 = templ.NopComponent
+		templ_7745c5c3_Var16 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var16 == nil {
+			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<span class=\"hidden\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<span class=\"hidden\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
+		var templ_7745c5c3_Var17 string
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 170, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 174, Col: 29}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

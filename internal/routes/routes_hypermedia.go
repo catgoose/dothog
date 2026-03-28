@@ -60,7 +60,7 @@ func (ar *appRoutes) initHypermediaRoutes() {
 	hypermedia.Link("/hypermedia/crud", "related", "/hypermedia/state", "State")
 	hypermedia.Link("/hypermedia/crud", "related", "/hypermedia/errors", "Errors")
 
-	hypermedia.Ring(
+	hypermedia.Ring("Components",
 		hypermedia.Rel("/hypermedia/components", "Components"),
 		hypermedia.Rel("/hypermedia/components2", "Components 2"),
 		hypermedia.Rel("/hypermedia/components3", "Components 3"),
