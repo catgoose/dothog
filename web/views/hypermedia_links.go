@@ -4,6 +4,7 @@ package views
 import (
 	"fmt"
 
+	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/hypermedia"
 )
 
@@ -21,6 +22,22 @@ func linksCount(links map[string][]hypermedia.LinkRelation) string {
 
 func pathsCount(links map[string][]hypermedia.LinkRelation) string {
 	return fmt.Sprintf("%d", len(links))
+}
+
+// storedLinkID returns the DB ID of a stored link matching source/rel/target,
+// or 0 if the link is code-declared (not in the DB).
+func storedLinkID(stored []demo.StoredLinkRelation, source, rel, target string) int {
+	for _, s := range stored {
+		if s.Source == source && s.Rel == rel && s.Target == target {
+			return s.ID
+		}
+	}
+	return 0
+}
+
+// linkDeleteURL returns the HTMX delete endpoint for a stored link.
+func linkDeleteURL(id int) string {
+	return fmt.Sprintf("/hypermedia/links/%d", id)
 }
 
 func codeLinkExample() string {

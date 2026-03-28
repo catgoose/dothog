@@ -169,6 +169,16 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.versionChecker = NewSQLVersionChecker(db.RawDB())
 	// setup:feature:sync:end
 	ar.demoDB = db
+	if stored, err := db.ListStoredLinks(); err == nil {
+		for _, s := range stored {
+			hypermedia.LoadStoredLink(s.Source, hypermedia.LinkRelation{
+				Rel:   s.Rel,
+				Href:  s.Target,
+				Title: s.Title,
+				Group: s.GroupName,
+			})
+		}
+	}
 	ar.initInventoryRoutes(db)
 	ar.initCatalogRoutes(db)
 	ar.initBulkRoutes(db)

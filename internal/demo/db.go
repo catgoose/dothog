@@ -190,6 +190,9 @@ func (d *DB) initSchema() error {
 	if err := d.initErrorReports(); err != nil {
 		return fmt.Errorf("init error_reports: %w", err)
 	}
+	if err := d.initLinkRelations(); err != nil {
+		return fmt.Errorf("init link_relations: %w", err)
+	}
 	return nil
 }
 

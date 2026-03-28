@@ -4,10 +4,14 @@ package routes
 
 import (
 	"fmt"
+	"net/http"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 
+	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/web/views"
@@ -48,10 +52,9 @@ func newHypermediaState() *hypermediaState {
 
 func (ar *appRoutes) initHypermediaRoutes() {
 	// Links demo page
-	ar.e.GET(hypermediaBase+"/links", func(c echo.Context) error {
-		links := hypermedia.AllLinks()
-		return handler.RenderBaseLayout(c, views.HypermediaLinksPage(links))
-	})
+	ar.e.GET(hypermediaBase+"/links", ar.handleLinksPage)
+	ar.e.POST(hypermediaBase+"/links", ar.handleLinksCreate)
+	ar.e.DELETE(hypermediaBase+"/links/:id", ar.handleLinksDelete)
 
 	s := newHypermediaState()
 
@@ -371,4 +374,98 @@ func crudItemsToView(items []crudItem) []views.CRUDViewItem {
 
 func (ar *appRoutes) incrementPollCount() int64 {
 	return atomic.AddInt64(&ar.pollCount, 1)
+}
+
+// ─── Links editor handlers ───────────────────────────────────────────────────
+
+func (ar *appRoutes) buildLinksPageData(c echo.Context) views.LinksPageData {
+	data := views.LinksPageData{
+		Links:  hypermedia.AllLinks(),
+		Routes: getRoutesList(c),
+	}
+	if ar.demoDB != nil {
+		stored, _ := ar.demoDB.ListStoredLinks()
+		data.StoredLinks = stored
+	}
+	return data
+}
+
+func (ar *appRoutes) handleLinksPage(c echo.Context) error {
+	return handler.RenderBaseLayout(c, views.HypermediaLinksPage(ar.buildLinksPageData(c)))
+}
+
+func (ar *appRoutes) handleLinksCreate(c echo.Context) error {
+	if ar.demoDB == nil {
+		return handler.HandleHypermediaError(c, http.StatusServiceUnavailable, "Demo DB not available", nil)
+	}
+	source := strings.TrimSpace(c.FormValue("source"))
+	rel := strings.TrimSpace(c.FormValue("rel"))
+	target := strings.TrimSpace(c.FormValue("target"))
+	title := strings.TrimSpace(c.FormValue("title"))
+	groupName := strings.TrimSpace(c.FormValue("group"))
+
+	if source == "" || target == "" || title == "" {
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Source, target, and title are required", nil)
+	}
+	if rel == "" {
+		rel = "related"
+	}
+
+	if err := ar.demoDB.InsertLink(source, rel, target, title, groupName); err != nil {
+		return handler.HandleHypermediaError(c, http.StatusConflict, "Link already exists or insert failed", err)
+	}
+
+	hypermedia.LoadStoredLink(source, hypermedia.LinkRelation{
+		Rel:   rel,
+		Href:  target,
+		Title: title,
+		Group: groupName,
+	})
+
+	return handler.RenderComponent(c, views.LinksRegistryTable(ar.buildLinksPageData(c)))
+}
+
+func (ar *appRoutes) handleLinksDelete(c echo.Context) error {
+	if ar.demoDB == nil {
+		return handler.HandleHypermediaError(c, http.StatusServiceUnavailable, "Demo DB not available", nil)
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id < 1 {
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid link ID", fmt.Errorf("id=%q", c.Param("id")))
+	}
+
+	// Look up the link before deleting so we can remove it from the in-memory registry.
+	stored, err := ar.demoDB.ListStoredLinks()
+	if err != nil {
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to list links", err)
+	}
+	var found *demo.StoredLinkRelation
+	for _, s := range stored {
+		if s.ID == id {
+			found = &s
+			break
+		}
+	}
+
+	if err := ar.demoDB.DeleteLink(id); err != nil {
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Link not found", err)
+	}
+
+	if found != nil {
+		hypermedia.RemoveLink(found.Source, found.Target, found.Rel)
+	}
+
+	return handler.RenderComponent(c, views.LinksRegistryTable(ar.buildLinksPageData(c)))
+}
+
+// getRoutesList returns sorted GET routes suitable for the datalist autocomplete.
+func getRoutesList(c echo.Context) []string {
+	var routes []string
+	for _, r := range c.Echo().Routes() {
+		if r.Method == http.MethodGet && r.Path != "" && r.Path != "/*" && !strings.Contains(r.Path, ":") {
+			routes = append(routes, r.Path)
+		}
+	}
+	sort.Strings(routes)
+	return routes
 }

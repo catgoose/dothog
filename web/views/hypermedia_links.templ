@@ -1,9 +1,19 @@
 // setup:feature:demo
 package views
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import (
+	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/routes/hypermedia"
+)
 
-templ HypermediaLinksPage(links map[string][]hypermedia.LinkRelation) {
+// LinksPageData holds all data needed to render the links page.
+type LinksPageData struct {
+	Links       map[string][]hypermedia.LinkRelation
+	StoredLinks []demo.StoredLinkRelation
+	Routes      []string
+}
+
+templ HypermediaLinksPage(data LinksPageData) {
 	<div class="p-4 space-y-6 max-w-5xl mx-auto">
 		<div class="flex items-center justify-between mb-4">
 			<h1 class="text-2xl font-bold">Link Relations</h1>
@@ -58,45 +68,114 @@ templ HypermediaLinksPage(links map[string][]hypermedia.LinkRelation) {
 			</p>
 			<pre class="bg-base-200 rounded-lg p-3 text-xs overflow-x-auto"><code>{ codeDedupExample() }</code></pre>
 		}
-		@linksSection("6. Live Registry") {
+		@linksSection("6. Relationship Editor") {
+			<p class="text-sm text-base-content/70 mb-3">
+				Add custom link relations between routes. Admin-created links are persisted in SQLite and loaded into the in-memory registry on startup.
+			</p>
+			@linksEditorForm(data.Routes)
+		}
+		@linksSection("7. Live Registry") {
 			<p class="text-sm text-base-content/70 mb-3">
 				All link relations currently registered in this running application, via
 				<code class="text-xs bg-base-200 px-1 rounded">hypermedia.AllLinks()</code>.
 			</p>
-			<div class="overflow-x-auto">
-				<table class="table table-xs">
-					<thead>
-						<tr>
-							<th>Source</th>
-							<th>Rel</th>
-							<th>Target</th>
-							<th>Title</th>
-						</tr>
-					</thead>
-					<tbody>
-						for _, src := range hypermedia.SortedPaths(links) {
-							for i, link := range links[src] {
-								<tr class={ templ.KV("border-t border-base-300", i == 0) }>
-									if i == 0 {
-										<td class="font-mono text-xs align-top" rowspan={ linksRowspan(links[src]) }>{ src }</td>
-									}
-									<td class="text-xs">
-										<span class="badge badge-sm badge-outline">{ link.Rel }</span>
-									</td>
-									<td class="font-mono text-xs">
-										<a href={ templ.URL(link.Href) } class="link link-hover link-primary">{ link.Href }</a>
-									</td>
-									<td class="text-xs">{ link.Title }</td>
-								</tr>
-							}
-						}
-					</tbody>
-				</table>
-			</div>
-			<div class="mt-2 text-xs text-base-content/50">
-				{ linksCount(links) } total directed links across { pathsCount(links) } source paths.
-			</div>
+			@LinksRegistryTable(data)
 		}
+	</div>
+}
+
+templ linksEditorForm(routes []string) {
+	<form
+		hx-post="/hypermedia/links"
+		hx-target="#links-table"
+		hx-swap="outerHTML"
+		class="flex flex-wrap items-end gap-2"
+	>
+		<div class="form-control">
+			<label class="label py-0"><span class="label-text text-xs">Source</span></label>
+			<input name="source" list="link-routes" placeholder="/demo/inventory" required class="input input-bordered input-sm w-44"/>
+		</div>
+		<div class="form-control">
+			<label class="label py-0"><span class="label-text text-xs">Rel</span></label>
+			<select name="rel" class="select select-bordered select-sm w-32">
+				<option value="related">related</option>
+				<option value="up">up</option>
+				<option value="create-form">create-form</option>
+			</select>
+		</div>
+		<div class="form-control">
+			<label class="label py-0"><span class="label-text text-xs">Target</span></label>
+			<input name="target" list="link-routes" placeholder="/demo/catalog" required class="input input-bordered input-sm w-44"/>
+		</div>
+		<div class="form-control">
+			<label class="label py-0"><span class="label-text text-xs">Title</span></label>
+			<input name="title" placeholder="Catalog" required class="input input-bordered input-sm w-32"/>
+		</div>
+		<div class="form-control">
+			<label class="label py-0"><span class="label-text text-xs">Group</span></label>
+			<input name="group" placeholder="(optional)" class="input input-bordered input-sm w-28"/>
+		</div>
+		<button type="submit" class="btn btn-primary btn-sm">Add</button>
+		<datalist id="link-routes">
+			for _, route := range routes {
+				<option value={ route }></option>
+			}
+		</datalist>
+	</form>
+}
+
+templ LinksRegistryTable(data LinksPageData) {
+	<div id="links-table">
+		<div class="overflow-x-auto">
+			<table class="table table-xs">
+				<thead>
+					<tr>
+						<th>Source</th>
+						<th>Rel</th>
+						<th>Target</th>
+						<th>Title</th>
+						<th class="w-8"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, src := range hypermedia.SortedPaths(data.Links) {
+						for i, link := range data.Links[src] {
+							<tr class={ templ.KV("border-t border-base-300", i == 0) }>
+								if i == 0 {
+									<td class="font-mono text-xs align-top" rowspan={ linksRowspan(data.Links[src]) }>{ src }</td>
+								}
+								<td class="text-xs">
+									<span class="badge badge-sm badge-outline">{ link.Rel }</span>
+								</td>
+								<td class="font-mono text-xs">
+									<a href={ templ.URL(link.Href) } class="link link-hover link-primary">{ link.Href }</a>
+								</td>
+								<td class="text-xs">{ link.Title }</td>
+								<td class="text-xs">
+									if id := storedLinkID(data.StoredLinks, src, link.Rel, link.Href); id > 0 {
+										<button
+											hx-delete={ linkDeleteURL(id) }
+											hx-target="#links-table"
+											hx-swap="outerHTML"
+											hx-confirm="Remove this admin link?"
+											class="btn btn-ghost btn-xs text-error"
+											title="Delete admin link"
+										>
+											&#x2715;
+										</button>
+									} else {
+										<span class="text-base-content/30" title="Code-declared (read-only)">&#x1F512;</span>
+									}
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		</div>
+		<div class="mt-2 text-xs text-base-content/50">
+			{ linksCount(data.Links) } total directed links across { pathsCount(data.Links) } source paths.
+		</div>
 	</div>
 }
 

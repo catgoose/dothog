@@ -280,6 +280,34 @@ func BreadcrumbsFromLinks(path string) []Breadcrumb {
 	return crumbs
 }
 
+// LoadStoredLink adds a single link relation from an external source (e.g., database)
+// into the in-memory registry. Skips duplicates.
+func LoadStoredLink(source string, r LinkRelation) {
+	linksMu.Lock()
+	defer linksMu.Unlock()
+	if !hasLink(linksMap[source], r.Href, r.Rel) {
+		linksMap[source] = append(linksMap[source], r)
+	}
+}
+
+// RemoveLink removes a link relation matching source, href, and rel from the
+// in-memory registry. Returns true if a link was removed.
+func RemoveLink(source, href, rel string) bool {
+	linksMu.Lock()
+	defer linksMu.Unlock()
+	links := linksMap[source]
+	for i, l := range links {
+		if l.Href == href && l.Rel == rel {
+			linksMap[source] = append(links[:i], links[i+1:]...)
+			if len(linksMap[source]) == 0 {
+				delete(linksMap, source)
+			}
+			return true
+		}
+	}
+	return false
+}
+
 // TitleFromPath extracts a title from the last segment of a URL path.
 // "/demo/inventory" -> "Inventory", "/admin/error-traces" -> "Error Traces"
 func TitleFromPath(path string) string {
