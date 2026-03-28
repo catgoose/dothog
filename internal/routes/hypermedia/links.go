@@ -139,6 +139,7 @@ func Ring(name string, members ...RelEntry) {
 
 // Hub registers a center page that links to all spokes, and each spoke
 // links back to the center only. Spokes do not link to each other.
+// The centerTitle is used as the group name for all links.
 func Hub(centerPath, centerTitle string, spokes ...RelEntry) {
 	linksMu.Lock()
 	defer linksMu.Unlock()
@@ -150,6 +151,7 @@ func Hub(centerPath, centerTitle string, spokes ...RelEntry) {
 				Rel:   "related",
 				Href:  spoke.Path,
 				Title: spoke.Title,
+				Group: centerTitle,
 			})
 		}
 		// Spoke -> center
@@ -158,6 +160,7 @@ func Hub(centerPath, centerTitle string, spokes ...RelEntry) {
 				Rel:   "related",
 				Href:  centerPath,
 				Title: centerTitle,
+				Group: centerTitle,
 			})
 		}
 	}
