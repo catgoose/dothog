@@ -48,11 +48,11 @@ templ AppSettingsPage(currentTheme string) {
 	</div>
 }
 
-// themeDropdown renders an Alpine.js dropdown for selecting a DaisyUI theme.
+// themeDropdown renders a native popover dropdown for selecting a DaisyUI theme.
 templ themeDropdown(currentTheme string) {
-	<div x-data="{ open: false }" class="relative">
+	<div class="relative">
 		<button
-			x-on:click="open = !open"
+			popovertarget="theme-picker"
 			class="btn btn-ghost gap-2 w-full justify-between"
 			data-theme={ currentTheme }
 		>
@@ -69,16 +69,17 @@ templ themeDropdown(currentTheme string) {
 			</svg>
 		</button>
 		<div
-			x-show="open"
-			x-on:click.outside="open = false"
-			x-transition
-			class="absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-lg border border-base-300 bg-base-100 shadow-lg"
+			id="theme-picker"
+			popover
+			class="max-h-64 overflow-y-auto rounded-lg border border-base-300 bg-base-100 shadow-lg p-0 m-0"
+			style="position-anchor: --theme-btn; inset: unset;"
 		>
 			for _, theme := range DaisyThemes {
 				<button
 					data-theme={ theme }
 					class="btn btn-ghost btn-sm w-full justify-start gap-2 rounded-none"
-					x-on:click={ "document.documentElement.dataset.theme = '" + theme + "'; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=" + theme + "' }); open = false" }
+					popovertarget="theme-picker" popovertargetaction="hide"
+					x-on:click={ "document.documentElement.dataset.theme = '" + theme + "'; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=" + theme + "' })" }
 				>
 					<span class="flex gap-0.5">
 						<span class="w-2 h-4 rounded-sm bg-primary"></span>
