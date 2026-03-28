@@ -168,10 +168,10 @@ templ InventoryEditRow(item demo.Item, isNew bool, saveURL, cancelURL string) {
 			</select>
 		</td>
 		<td>
-			<input type="number" name="price" step="0.01" class="input input-sm w-24" value={ fmt.Sprintf("%.2f", item.Price) }/>
+			<input type="number" name="price" step="0.01" class="input input-sm w-24" value={ fmt.Sprintf("%.2f", item.Price) } inputmode="decimal"/>
 		</td>
 		<td>
-			<input type="number" name="stock" class="input input-sm w-20" value={ strconv.Itoa(item.Stock) }/>
+			<input type="number" name="stock" class="input input-sm w-20" value={ strconv.Itoa(item.Stock) } inputmode="numeric"/>
 		</td>
 		<td>
 			<input type="checkbox" name="active" value="true" class="toggle toggle-sm" checked?={ item.Active }/>

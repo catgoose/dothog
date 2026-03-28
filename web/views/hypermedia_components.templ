@@ -107,7 +107,7 @@ templ ComponentsPage(data ComponentsPageData) {
 					hx-on::after-request="this.reset()"
 					class="flex gap-2 mt-2"
 				>
-					<input type="text" name="chat-msg" placeholder="Type a message…" class="input input-sm flex-1" autocomplete="off"/>
+					<input type="text" name="chat-msg" placeholder="Type a message…" class="input input-sm flex-1" autocomplete="off" enterkeyhint="send"/>
 					<button type="submit" class="btn btn-sm btn-primary">Send</button>
 				</form>
 			</div>
