@@ -46,7 +46,7 @@ func AppSettingsPage(currentTheme string) templ.Component {
 	})
 }
 
-// themeDropdown renders an Alpine.js dropdown for selecting a DaisyUI theme.
+// themeDropdown renders a native popover dropdown for selecting a DaisyUI theme.
 func themeDropdown(currentTheme string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -68,7 +68,7 @@ func themeDropdown(currentTheme string) templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div x-data=\"{ open: false }\" class=\"relative\"><button x-on:click=\"open = !open\" class=\"btn btn-ghost gap-2 w-full justify-between\" data-theme=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"relative\"><button popovertarget=\"theme-picker\" class=\"btn btn-ghost gap-2 w-full justify-between\" data-theme=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -94,7 +94,7 @@ func themeDropdown(currentTheme string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</span></span> <svg class=\"w-4 h-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M19 9l-7 7-7-7\"></path></svg></button><div x-show=\"open\" x-on:click.outside=\"open = false\" x-transition class=\"absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-lg border border-base-300 bg-base-100 shadow-lg\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</span></span> <svg class=\"w-4 h-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M19 9l-7 7-7-7\"></path></svg></button><div id=\"theme-picker\" popover class=\"max-h-64 overflow-y-auto rounded-lg border border-base-300 bg-base-100 shadow-lg p-0 m-0\" style=\"position-anchor: --theme-btn; inset: unset;\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -112,14 +112,14 @@ func themeDropdown(currentTheme string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" class=\"btn btn-ghost btn-sm w-full justify-start gap-2 rounded-none\" x-on:click=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" class=\"btn btn-ghost btn-sm w-full justify-start gap-2 rounded-none\" popovertarget=\"theme-picker\" popovertargetaction=\"hide\" x-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var6 string
-			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("document.documentElement.dataset.theme = '" + theme + "'; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=" + theme + "' }); open = false")
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("document.documentElement.dataset.theme = '" + theme + "'; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=" + theme + "' })")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 81, Col: 326}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 82, Col: 312}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -132,7 +132,7 @@ func themeDropdown(currentTheme string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 88, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 89, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
