@@ -75,8 +75,8 @@ templ themeDropdown(currentTheme string) {
 		<div
 			id="theme-picker"
 			popover
-			class="max-h-64 overflow-y-auto rounded-lg border border-base-300 bg-base-100 shadow-lg p-0 m-0"
-			style="position-anchor: --theme-btn; inset: unset;"
+			class="max-h-64 w-full overflow-y-auto rounded-lg border border-base-300 bg-base-100 shadow-lg p-0 m-0"
+			style="position: absolute; inset: unset; top: 100%; left: 0;"
 		>
 			for _, theme := range DaisyThemes {
 				<button
