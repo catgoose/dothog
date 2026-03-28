@@ -90,8 +90,7 @@ func TestHTTPErrorHandler_EchoHTTPError_NonHTMX(t *testing.T) {
 	body := rec.Body.String()
 	require.Contains(t, body, "bad request", "expected error message in HTML body")
 	require.Contains(t, body, "<!doctype html>", "expected full HTML page for non-HTMX")
-	require.Contains(t, body, "Go Back", "expected Back control in error page")
-	require.Contains(t, body, "Go Home", "expected Home control in error page")
+	require.Contains(t, body, "Close", "expected Dismiss control in error page")
 }
 
 // ---------------------------------------------------------------------------
