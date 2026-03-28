@@ -8,6 +8,7 @@
   - [Uniform Interface](#uniform-interface)
   - [Self-Descriptive Methods](#self-descriptive-methods)
   - [Resource Identification](#resource-identification)
+  - [Parent Routes Are Documents](#parent-routes-are-documents)
   - [Chesterton's Fence](#chestertons-fence)
   - [Server-Side State, Client-Side Rendering](#server-side-state-client-side-rendering)
   - [Content Negotiation](#content-negotiation)
@@ -126,6 +127,35 @@ Sub-resources nest hierarchically. `/people/7/edit` is the edit representation o
 When sub-resources have fixed, known identities — use semantic slugs, not opaque IDs. `/punchlist/2/checklist` is better than `/punchlist/2/step/3`. Numeric IDs are for database-assigned identifiers; named resources get named paths. If you can enumerate the set at development time (sections, phases, categories), those are slugs, not indices.
 
 URLs should be bookmarkable, shareable, and stable. A user should be able to copy the address bar, send it to a colleague, and that colleague should see the same resource. This is a consequence of stateless requests and resource identification working together — the URL contains enough information to reconstruct the view.
+
+## Parent Routes Are Documents
+
+**If a route exists, it must serve a representation.** A parent route that redirects to a child isn't a resource — it's a broken link wearing a URL as a disguise. `/dashboard` should render a document, not bounce you to `/dashboard/overview`.
+
+Redirecting parent routes breaks the hypermedia model in three ways. Breadcrumbs walk the `rel="up"` chain — if clicking "Dashboard" in the breadcrumb trail redirects you somewhere else, the chain points to a moving target instead of a stable document. Hub centers in the link registry declare `rel="related"` links to their children — a Hub that redirects isn't a resource, it's a hole in the navigation graph. And the URL lies — `/dashboard` appears in the address bar during the redirect but has no representation of its own.
+
+A parent route should be one of three things:
+
+- **An aggregate page** — a dashboard showing key metrics pulled from each child section. The parent earns its URL by summarizing what lives beneath it.
+- **A discovery page** — lists and links to child sections, like `/demo` does. The parent is a table of contents for its sub-resources.
+- **An informational page** — context about the section before the user navigates deeper. Useful for workflows with prerequisites or explanatory content.
+
+The link relations system makes this natural. A Hub center with `rel="related"` links to all its children is a discovery page by definition — you declared the relationships, now render them. The breadcrumb system walks `rel="up"` from child to parent. If the parent redirects, `up` points to a redirect, not a document, and the breadcrumb chain breaks.
+
+```go
+// Wrong: the parent route is a redirect, not a document
+r.GET("/dashboard", func(c echo.Context) error {
+	return c.Redirect(http.StatusFound, "/dashboard/overview")
+})
+
+// Right: the parent route renders its own representation
+r.GET("/dashboard", func(c echo.Context) error {
+	// Aggregate data from child sections, render a real page
+	return response.Builder.Component(c, dashboard.Index(metrics))
+})
+```
+
+Parent routes are the backbone of the navigation graph. They must be stable, addressable documents — not trampolines.
 
 ## Chesterton's Fence
 
