@@ -198,7 +198,7 @@ templ ContextStrip(crumbs []hypermedia.Breadcrumb) {
 // ContextBar renders a horizontal strip of related page links grouped by ring name.
 // Server-rendered with a stable ID so it can be updated via hx-swap-oob on navigation.
 templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
-	<div id="context-bar">
+	<div id="context-bar" x-data="{ hidden: localStorage.getItem('dothog_hide_context_bar') === 'true' }" x-show="!hidden" x-cloak>
 		if groups := contextBarGroups(links, currentPath); len(groups) > 0 {
 			<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm">
 				for i, group := range groups {
@@ -207,6 +207,7 @@ templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
 						<div class="w-px h-4 bg-base-300 shrink-0"></div>
 					}
 				}
+				<button @click="hidden = true; localStorage.setItem('dothog_hide_context_bar', 'true')" class="btn btn-ghost btn-xs shrink-0 ml-auto text-base-content/30 hover:text-base-content">&#x2715;</button>
 			</div>
 		}
 	</div>
@@ -215,7 +216,7 @@ templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
 // LocalContextBar renders a compact strip of the current page's immediate
 // ring siblings — the pages in the same ring group(s) as the current page.
 templ LocalContextBar(links []hypermedia.LinkRelation, currentPath string) {
-	<div id="local-context-bar">
+	<div id="local-context-bar" x-data="{ hidden: localStorage.getItem('dothog_hide_local_context_bar') === 'true' }" x-show="!hidden" x-cloak>
 		if groups := localGroups(links, currentPath); len(groups) > 0 {
 			<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1 bg-base-100/50 border-b border-base-300 text-xs">
 				for i, group := range groups {
@@ -229,6 +230,7 @@ templ LocalContextBar(links []hypermedia.LinkRelation, currentPath string) {
 						<div class="w-px h-3 bg-base-300 shrink-0"></div>
 					}
 				}
+				<button @click="hidden = true; localStorage.setItem('dothog_hide_local_context_bar', 'true')" class="btn btn-ghost btn-xs shrink-0 ml-auto text-base-content/30 hover:text-base-content">&#x2715;</button>
 			</div>
 		}
 	</div>

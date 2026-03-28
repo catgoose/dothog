@@ -266,7 +266,7 @@ func ContextBar(links []hypermedia.LinkRelation, currentPath string) templ.Compo
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div id=\"context-bar\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div id=\"context-bar\" x-data=\"{ hidden: localStorage.getItem('dothog_hide_context_bar') === 'true' }\" x-show=\"!hidden\" x-cloak>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -291,7 +291,7 @@ func ContextBar(links []hypermedia.LinkRelation, currentPath string) templ.Compo
 					}
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<button @click=\"hidden = true; localStorage.setItem('dothog_hide_context_bar', 'true')\" class=\"btn btn-ghost btn-xs shrink-0 ml-auto text-base-content/30 hover:text-base-content\">&#x2715;</button></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -327,7 +327,7 @@ func LocalContextBar(links []hypermedia.LinkRelation, currentPath string) templ.
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div id=\"local-context-bar\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div id=\"local-context-bar\" x-data=\"{ hidden: localStorage.getItem('dothog_hide_local_context_bar') === 'true' }\" x-show=\"!hidden\" x-cloak>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -345,7 +345,7 @@ func LocalContextBar(links []hypermedia.LinkRelation, currentPath string) templ.
 					var templ_7745c5c3_Var4 string
 					templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(group.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 223, Col: 83}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 224, Col: 83}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 					if templ_7745c5c3_Err != nil {
@@ -364,7 +364,7 @@ func LocalContextBar(links []hypermedia.LinkRelation, currentPath string) templ.
 					var templ_7745c5c3_Var5 templ.SafeURL
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(item.Href))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 226, Col: 36}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 227, Col: 36}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -377,7 +377,7 @@ func LocalContextBar(links []hypermedia.LinkRelation, currentPath string) templ.
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(item.Title)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 226, Col: 138}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 227, Col: 138}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -399,7 +399,7 @@ func LocalContextBar(links []hypermedia.LinkRelation, currentPath string) templ.
 					}
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<button @click=\"hidden = true; localStorage.setItem('dothog_hide_local_context_bar', 'true')\" class=\"btn btn-ghost btn-xs shrink-0 ml-auto text-base-content/30 hover:text-base-content\">&#x2715;</button></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -471,7 +471,7 @@ func contextBarGroupItems(group contextBarGroup) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(group.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 269, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 271, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -491,7 +491,7 @@ func contextBarGroupItems(group contextBarGroup) templ.Component {
 				var templ_7745c5c3_Var9 templ.SafeURL
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(item.Href))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 273, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 275, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -504,7 +504,7 @@ func contextBarGroupItems(group contextBarGroup) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(item.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 273, Col: 139}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 275, Col: 139}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -522,7 +522,7 @@ func contextBarGroupItems(group contextBarGroup) templ.Component {
 				var templ_7745c5c3_Var11 templ.SafeURL
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(item.Href))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 275, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 277, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -535,7 +535,7 @@ func contextBarGroupItems(group contextBarGroup) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(item.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 275, Col: 135}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 277, Col: 135}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -581,7 +581,7 @@ func ContextLink(href, label, from string) templ.Component {
 		var templ_7745c5c3_Var14 templ.SafeURL
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(hypermedia.FromNav(href, from)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 284, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 286, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -594,7 +594,7 @@ func ContextLink(href, label, from string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 287, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/context.templ`, Line: 289, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
