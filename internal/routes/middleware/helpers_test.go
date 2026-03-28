@@ -35,10 +35,10 @@ func TestBadRequest(t *testing.T) {
 
 	err := BadRequest(c, "invalid input")
 
-	var he *echo.HTTPError
+	var he *hypermedia.HTTPError
 	require.ErrorAs(t, err, &he)
-	require.Equal(t, http.StatusBadRequest, he.Code)
-	require.Equal(t, "invalid input", he.Message)
+	require.Equal(t, http.StatusBadRequest, he.EC.StatusCode)
+	require.Equal(t, "invalid input", he.EC.Message)
 }
 
 func TestUnauthorized(t *testing.T) {
@@ -46,10 +46,10 @@ func TestUnauthorized(t *testing.T) {
 
 	err := Unauthorized(c, "login required")
 
-	var he *echo.HTTPError
+	var he *hypermedia.HTTPError
 	require.ErrorAs(t, err, &he)
-	require.Equal(t, http.StatusUnauthorized, he.Code)
-	require.Equal(t, "login required", he.Message)
+	require.Equal(t, http.StatusUnauthorized, he.EC.StatusCode)
+	require.Equal(t, "login required", he.EC.Message)
 }
 
 func TestForbidden(t *testing.T) {
@@ -57,10 +57,10 @@ func TestForbidden(t *testing.T) {
 
 	err := Forbidden(c, "access denied")
 
-	var he *echo.HTTPError
+	var he *hypermedia.HTTPError
 	require.ErrorAs(t, err, &he)
-	require.Equal(t, http.StatusForbidden, he.Code)
-	require.Equal(t, "access denied", he.Message)
+	require.Equal(t, http.StatusForbidden, he.EC.StatusCode)
+	require.Equal(t, "access denied", he.EC.Message)
 }
 
 func TestNotFound(t *testing.T) {
@@ -68,10 +68,10 @@ func TestNotFound(t *testing.T) {
 
 	err := NotFound(c, "resource missing")
 
-	var he *echo.HTTPError
+	var he *hypermedia.HTTPError
 	require.ErrorAs(t, err, &he)
-	require.Equal(t, http.StatusNotFound, he.Code)
-	require.Equal(t, "resource missing", he.Message)
+	require.Equal(t, http.StatusNotFound, he.EC.StatusCode)
+	require.Equal(t, "resource missing", he.EC.Message)
 }
 
 func TestInternalServerError(t *testing.T) {
@@ -79,10 +79,10 @@ func TestInternalServerError(t *testing.T) {
 
 	err := InternalServerError(c, "something broke")
 
-	var he *echo.HTTPError
+	var he *hypermedia.HTTPError
 	require.ErrorAs(t, err, &he)
-	require.Equal(t, http.StatusInternalServerError, he.Code)
-	require.Equal(t, "something broke", he.Message)
+	require.Equal(t, http.StatusInternalServerError, he.EC.StatusCode)
+	require.Equal(t, "something broke", he.EC.Message)
 }
 
 func TestServiceUnavailable(t *testing.T) {
@@ -90,10 +90,10 @@ func TestServiceUnavailable(t *testing.T) {
 
 	err := ServiceUnavailable(c, "try again later")
 
-	var he *echo.HTTPError
+	var he *hypermedia.HTTPError
 	require.ErrorAs(t, err, &he)
-	require.Equal(t, http.StatusServiceUnavailable, he.Code)
-	require.Equal(t, "try again later", he.Message)
+	require.Equal(t, http.StatusServiceUnavailable, he.EC.StatusCode)
+	require.Equal(t, "try again later", he.EC.Message)
 }
 
 func TestHypermediaError(t *testing.T) {
