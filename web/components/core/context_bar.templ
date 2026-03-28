@@ -292,7 +292,7 @@ templ HistoryBreadcrumbs() {
 						<span class="text-base-content/20">›</span>
 					</div>
 				</template>
-				<span class="text-base-content/60 font-medium whitespace-nowrap" x-text="titleFromPath(window.location.pathname)"></span>
+				<span class="text-base-content/60 font-medium whitespace-nowrap" x-text="(document.querySelector('meta[name=page-title]') || {}).content || titleFromPath(window.location.pathname)"></span>
 			</div>
 			<button @click="dismiss()" class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content">&#x2715;</button>
 		</div>
