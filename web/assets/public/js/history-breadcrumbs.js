@@ -11,7 +11,6 @@ function historyBreadcrumbs() {
 
   return {
     trail: [],
-    hidden: localStorage.getItem('dothog_hide_history_crumbs') === 'true',
     init() {
       var history = JSON.parse(sessionStorage.getItem(KEY) || '[]');
       var current = window.location.pathname;
@@ -44,10 +43,6 @@ function historyBreadcrumbs() {
       }
 
       sessionStorage.setItem(KEY, JSON.stringify(history));
-    },
-    dismiss() {
-      this.hidden = true;
-      localStorage.setItem('dothog_hide_history_crumbs', 'true');
     }
   };
 }

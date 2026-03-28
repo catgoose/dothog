@@ -181,7 +181,9 @@ func hasItem(items []contextBarItem, href string) bool {
 // ContextBar renders a horizontal strip of related page links grouped by ring name.
 // Server-rendered with a stable ID so it can be updated via hx-swap-oob on navigation.
 templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
-	<div id="context-bar" x-data="{ hidden: localStorage.getItem('dothog_hide_context_bar') === 'true' }" x-show="!hidden" x-cloak>
+	<div id="context-bar"
+		_="init if localStorage.getItem('dothog_hide_context_bar') === 'true' then hide me"
+	>
 		if groups := contextBarGroups(links, currentPath); len(groups) > 0 {
 			<div class="relative border-b border-base-300">
 				<div class="flex items-center justify-center gap-3 overflow-x-auto px-8 py-1.5 bg-base-200/50 text-sm">
@@ -192,7 +194,10 @@ templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
 						}
 					}
 				</div>
-				<button @click="hidden = true; localStorage.setItem('dothog_hide_context_bar', 'true')" class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content">&#x2715;</button>
+				<button
+					_="on click set localStorage.dothog_hide_context_bar to 'true' then hide #context-bar"
+					class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content"
+				>&#x2715;</button>
 			</div>
 		}
 	</div>
@@ -201,7 +206,9 @@ templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
 // LocalContextBar renders a compact strip of the current page's immediate
 // ring siblings — the pages in the same ring group(s) as the current page.
 templ LocalContextBar(links []hypermedia.LinkRelation, currentPath string) {
-	<div id="local-context-bar" x-data="{ hidden: localStorage.getItem('dothog_hide_local_context_bar') === 'true' }" x-show="!hidden" x-cloak>
+	<div id="local-context-bar"
+		_="init if localStorage.getItem('dothog_hide_local_context_bar') === 'true' then hide me"
+	>
 		if groups := localGroups(links, currentPath); len(groups) > 0 {
 			<div class="relative border-b border-base-300">
 				<div class="flex items-center justify-center gap-3 overflow-x-auto px-8 py-1 bg-base-100/50 text-xs">
@@ -221,7 +228,10 @@ templ LocalContextBar(links []hypermedia.LinkRelation, currentPath string) {
 						}
 					}
 				</div>
-				<button @click="hidden = true; localStorage.setItem('dothog_hide_local_context_bar', 'true')" class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content">&#x2715;</button>
+				<button
+					_="on click set localStorage.dothog_hide_local_context_bar to 'true' then hide #local-context-bar"
+					class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content"
+				>&#x2715;</button>
 			</div>
 		}
 	</div>
@@ -278,8 +288,9 @@ func localGroups(links []hypermedia.LinkRelation, currentPath string) []contextB
 templ HistoryBreadcrumbs() {
 	<div id="history-breadcrumbs"
 		x-data="historyBreadcrumbs()"
-		x-show="!hidden && trail.length > 0"
+		x-show="trail.length > 0"
 		x-cloak
+		_="init if localStorage.getItem('dothog_hide_history_crumbs') === 'true' then hide me"
 	>
 		<div class="relative border-b border-base-300">
 			<div class="flex items-center gap-2 overflow-x-auto px-8 py-1 bg-base-100/30 text-xs">
@@ -294,7 +305,10 @@ templ HistoryBreadcrumbs() {
 				</template>
 				<span class="text-base-content/60 font-medium whitespace-nowrap" x-text="(document.querySelector('meta[name=page-title]') || {}).content || titleFromPath(window.location.pathname)"></span>
 			</div>
-			<button @click="dismiss()" class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content">&#x2715;</button>
+			<button
+				_="on click set localStorage.dothog_hide_history_crumbs to 'true' then hide #history-breadcrumbs"
+				class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content"
+			>&#x2715;</button>
 		</div>
 	</div>
 }
