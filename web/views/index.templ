@@ -82,6 +82,7 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:demo:start
 		<script defer src="/public/js/beacon.js"></script>
 		<script defer src="/public/js/history-breadcrumbs.js"></script>
+		<script defer src="/public/js/broadcast.js"></script>
 		// setup:feature:demo:end
 		<script defer src="/public/js/alpine.min.js"></script>
 		// setup:feature:sse:start
@@ -147,6 +148,7 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 				var es = new EventSource("/sse/theme");
 				es.addEventListener("theme-change", function(/** @type {MessageEvent} */ e) {
 					document.documentElement.dataset.theme = e.data;
+					if (window.dothogChannel) window.dothogChannel.postMessage({type:'theme-change',theme:e.data});
 				});
 			})();
 		</script>

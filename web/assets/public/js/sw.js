@@ -42,6 +42,7 @@ const PRECACHE_URLS = [
   '/public/js/context-bar.js',
   '/public/js/history-breadcrumbs.js',
   '/public/js/beacon.js',
+  '/public/js/broadcast.js',
 ];
 
 self.addEventListener('install', (event) => {
