@@ -130,4 +130,10 @@ func (ar *appRoutes) initLinkRelations() {
 		hypermedia.Rel("/admin/health", "Health"),
 		hypermedia.Rel("/admin/error-traces", "Error Traces"),
 	)
+
+	// ── Action relations ────────────────────────────────────────────
+
+	// List pages with create forms
+	hypermedia.Link("/demo/inventory", "create-form", "/demo/inventory/items/new", "New Item")
+	hypermedia.Link("/demo/repository", "create-form", "/demo/repository/tasks", "New Task")
 }

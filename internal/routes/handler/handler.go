@@ -97,13 +97,26 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 	// setup:feature:session_settings:end
 
 	var crumbs []hypermedia.Breadcrumb
+	path := c.Request().URL.Path
 	from := c.QueryParam("from")
-	pathCrumbs := buildPathCrumbs(c.Request().URL.Path, from, getRoutes)
 
+	// Priority 1: explicit navigation context via ?from= bitmask
 	if mask := hypermedia.ParseFromParam(from); mask != 0 {
+		pathCrumbs := buildPathCrumbs(path, from, getRoutes)
 		crumbs = append(hypermedia.ResolveFromMask(mask), pathCrumbs...)
-	} else if len(pathCrumbs) > 1 {
-		crumbs = append([]hypermedia.Breadcrumb{{Label: hypermedia.BreadcrumbLabelHome, Href: "/"}}, pathCrumbs...)
+	}
+
+	// Priority 2: declared document hierarchy via rel="up" chain
+	if len(crumbs) == 0 {
+		crumbs = hypermedia.BreadcrumbsFromLinks(path)
+	}
+
+	// Priority 3: derive from URL path segments (last resort)
+	if len(crumbs) == 0 {
+		pathCrumbs := buildPathCrumbs(path, from, getRoutes)
+		if len(pathCrumbs) > 1 {
+			crumbs = append([]hypermedia.Breadcrumb{{Label: hypermedia.BreadcrumbLabelHome, Href: "/"}}, pathCrumbs...)
+		}
 	}
 
 	if label, ok := c.Get(pageLabel).(string); ok && label != "" && len(crumbs) > 0 {

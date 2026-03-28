@@ -244,6 +244,42 @@ func Hubs() []HubEntry {
 	return entries
 }
 
+// BreadcrumbsFromLinks walks the rel="up" chain from path to build a breadcrumb trail.
+// Returns nil if no rel="up" links are registered for the path.
+func BreadcrumbsFromLinks(path string) []Breadcrumb {
+	var crumbs []Breadcrumb
+	visited := map[string]bool{}
+	current := path
+
+	for {
+		if visited[current] {
+			break // prevent cycles
+		}
+		visited[current] = true
+
+		upLinks := LinksFor(current, "up")
+		if len(upLinks) == 0 {
+			break
+		}
+
+		parent := upLinks[0]
+		crumbs = append([]Breadcrumb{{Label: parent.Title, Href: parent.Href}}, crumbs...)
+		current = parent.Href
+	}
+
+	// Add home at the start
+	if len(crumbs) > 0 {
+		crumbs = append([]Breadcrumb{{Label: BreadcrumbLabelHome, Href: "/"}}, crumbs...)
+	}
+
+	// Add current page (no href = current page, not a link)
+	if len(crumbs) > 0 {
+		crumbs = append(crumbs, Breadcrumb{Label: TitleFromPath(path)})
+	}
+
+	return crumbs
+}
+
 // TitleFromPath extracts a title from the last segment of a URL path.
 // "/demo/inventory" -> "Inventory", "/admin/error-traces" -> "Error Traces"
 func TitleFromPath(path string) string {
