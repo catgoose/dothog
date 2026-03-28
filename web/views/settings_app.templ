@@ -98,7 +98,7 @@ templ themeDropdown(currentTheme string) {
 					data-theme={ theme }
 					class="btn btn-ghost btn-sm w-full justify-start gap-2 rounded-none"
 					popovertarget="theme-picker" popovertargetaction="hide"
-					x-on:click={ "current = '" + theme + "'; document.documentElement.dataset.theme = '" + theme + "'; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=" + theme + "' })" }
+					x-on:click={ "current = '" + theme + "'; document.documentElement.dataset.theme = '" + theme + "'; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=" + theme + "' }); if (window.dothogChannel) window.dothogChannel.postMessage({ type: 'theme-change', theme: '" + theme + "' })" }
 				>
 					<span class="flex gap-0.5">
 						<span class="w-2 h-4 rounded-sm bg-primary"></span>

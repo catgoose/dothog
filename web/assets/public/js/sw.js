@@ -41,6 +41,7 @@ const PRECACHE_URLS = [
   '/public/js/htmx.alpine-morph.js',
   '/public/js/context-bar.js',
   '/public/js/history-breadcrumbs.js',
+  '/public/js/broadcast.js',
 ];
 
 self.addEventListener('install', (event) => {
