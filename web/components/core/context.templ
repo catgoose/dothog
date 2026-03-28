@@ -75,16 +75,12 @@ templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
 					if i > 0 {
 						<div class="w-px h-4 bg-base-300 shrink-0"></div>
 					}
-					if group.Name != "" {
-						if group.IsHub {
-							<span class="text-base-content/30 text-xs font-medium whitespace-nowrap">↑ { group.Name }</span>
-						} else {
-							<span class="text-base-content/30 text-xs font-medium whitespace-nowrap">○ { group.Name }</span>
-						}
+					if group.Name != "" && !group.IsHub {
+						<span class="text-base-content/30 text-xs font-medium whitespace-nowrap">{ group.Name }</span>
 					}
 					for _, item := range group.Items {
 						if item.IsUp {
-							<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/40 hover:text-base-content whitespace-nowrap">{ item.Title }</a>
+							<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/40 hover:text-base-content whitespace-nowrap">↑ { item.Title }</a>
 						} else {
 							<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/60 hover:text-base-content whitespace-nowrap">{ item.Title }</a>
 						}
