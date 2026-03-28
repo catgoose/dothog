@@ -30,6 +30,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			// setup:feature:demo:start
 			@components.ContextBar(links, currentPath)
 			@components.LocalContextBar(links, currentPath)
+			@components.HistoryBreadcrumbs()
 			// setup:feature:demo:end
 			if len(crumbs) > 0 {
 				<div class="mx-4 mt-3">
@@ -75,6 +76,9 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:offline:start
 		<script defer src="/public/js/offline-indicator.js"></script>
 		// setup:feature:offline:end
+		// setup:feature:demo:start
+		<script defer src="/public/js/history-breadcrumbs.js"></script>
+		// setup:feature:demo:end
 		<script defer src="/public/js/alpine.min.js"></script>
 		// setup:feature:sse:start
 		<script defer src="/public/js/htmx.ext.sse.js"></script>

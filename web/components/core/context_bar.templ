@@ -273,6 +273,32 @@ func localGroups(links []hypermedia.LinkRelation, currentPath string) []contextB
 	return groups
 }
 
+// HistoryBreadcrumbs renders a trail of recently visited pages.
+// Client-side via Alpine.js reading from sessionStorage.
+templ HistoryBreadcrumbs() {
+	<div id="history-breadcrumbs"
+		x-data="historyBreadcrumbs()"
+		x-show="!hidden && trail.length > 0"
+		x-cloak
+	>
+		<div class="relative border-b border-base-300">
+			<div class="flex items-center gap-2 overflow-x-auto px-8 py-1 bg-base-100/30 text-xs">
+				<template x-for="(item, idx) in trail" :key="item.path">
+					<div class="flex items-center gap-2">
+						<a :href="item.path"
+							x-text="item.title"
+							class="link link-hover text-base-content/40 hover:text-base-content whitespace-nowrap"
+						></a>
+						<span class="text-base-content/20">›</span>
+					</div>
+				</template>
+				<span class="text-base-content/60 font-medium whitespace-nowrap" x-text="document.title"></span>
+			</div>
+			<button @click="dismiss()" class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content">&#x2715;</button>
+		</div>
+	</div>
+}
+
 templ contextBarGroupItems(group contextBarGroup) {
 	if group.Name != "" && !group.IsHub {
 		<span class="text-base-content/30 text-xs font-medium whitespace-nowrap">{ group.Name }</span>

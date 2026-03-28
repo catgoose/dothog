@@ -28,6 +28,7 @@ templ AppNavLayout(content templ.Component, cfg hypermedia.NavConfig, csrfToken 
 				// setup:feature:demo:start
 			@components.ContextBar(links, currentPath)
 			@components.LocalContextBar(links, currentPath)
+			@components.HistoryBreadcrumbs()
 			// setup:feature:demo:end
 				if len(crumbs) > 0 {
 					@components.ContextStrip(crumbs)
