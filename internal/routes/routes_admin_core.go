@@ -21,6 +21,15 @@ import (
 )
 
 func (ar *appRoutes) initAdminCoreRoutes() {
+	hypermedia.Hub("/admin", "Admin",
+		hypermedia.Rel("/admin/health", "Health"),
+		hypermedia.Rel("/admin/sessions", "Sessions"),
+		hypermedia.Rel("/admin/settings", "Control Panel"),
+		hypermedia.Rel("/admin/error-traces", "Error Traces"),
+		hypermedia.Rel("/admin/error-reports", "Error Reports"),
+		hypermedia.Rel("/admin/system", "System"),
+		hypermedia.Rel("/admin/config", "Config"),
+	)
 	hypermedia.Ring(
 		hypermedia.Rel("/admin/health", "Health"),
 		hypermedia.Rel("/admin/error-traces", "Error Traces"),

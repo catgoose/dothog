@@ -116,6 +116,34 @@ func (ar *appRoutes) InitRoutes() error {
 	})
 	// setup:feature:session_settings:end
 	// setup:feature:demo:start
+	hypermedia.Hub("/demo", "Demo",
+		hypermedia.Rel("/demo/inventory", "Inventory"),
+		hypermedia.Rel("/demo/catalog", "Catalog"),
+		hypermedia.Rel("/demo/people", "People"),
+		hypermedia.Rel("/demo/kanban", "Kanban"),
+		hypermedia.Rel("/demo/approvals", "Approvals"),
+		hypermedia.Rel("/demo/vendors", "Vendors"),
+		hypermedia.Rel("/demo/feed", "Feed"),
+		hypermedia.Rel("/demo/canvas", "Canvas"),
+		hypermedia.Rel("/demo/settings", "Settings"),
+		hypermedia.Rel("/demo/bulk", "Bulk"),
+		hypermedia.Rel("/demo/logging", "Logging"),
+		hypermedia.Rel("/demo/repository", "Repository"),
+		hypermedia.Rel("/dashboard", "Dashboard"),
+	)
+	hypermedia.Hub("/hypermedia", "Hypermedia",
+		hypermedia.Rel("/hypermedia/controls", "Controls"),
+		hypermedia.Rel("/hypermedia/crud", "CRUD"),
+		hypermedia.Rel("/hypermedia/lists", "Lists"),
+		hypermedia.Rel("/hypermedia/interactions", "Interactions"),
+		hypermedia.Rel("/hypermedia/state", "State"),
+		hypermedia.Rel("/hypermedia/errors", "Errors"),
+		hypermedia.Rel("/hypermedia/components", "Components"),
+		hypermedia.Rel("/hypermedia/components2", "Components 2"),
+		hypermedia.Rel("/hypermedia/components3", "Components 3"),
+		hypermedia.Rel("/hypermedia/realtime", "Realtime"),
+		hypermedia.Rel("/hypermedia/links", "Links"),
+	)
 	ar.e.GET("/welcome", handler.HandleComponent(views.WelcomePage()))
 	ar.e.GET("/hypermedia", handler.HandleComponent(views.PatternsIndexPage()))
 	ar.e.GET("/demo", func(c echo.Context) error {

@@ -27,6 +27,14 @@ func (ar *appRoutes) initDashboardRoutes(db *demo.DB, board *demo.KanbanBoard, q
 		hypermedia.Rel("/demo/vendors", "Vendors"),
 		hypermedia.Rel("/demo/feed", "Feed"),
 	)
+	hypermedia.Ring(
+		hypermedia.Rel("/demo/inventory", "Inventory"),
+		hypermedia.Rel("/demo/people", "People"),
+		hypermedia.Rel("/demo/kanban", "Kanban"),
+		hypermedia.Rel("/demo/approvals", "Approvals"),
+		hypermedia.Rel("/demo/vendors", "Vendors"),
+		hypermedia.Rel("/demo/feed", "Feed"),
+	)
 
 	d := &dashboardRoutes{db: db, board: board, queue: queue, actLog: actLog}
 	ar.e.GET("/dashboard", d.handleDashboard)

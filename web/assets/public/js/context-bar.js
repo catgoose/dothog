@@ -1,16 +1,18 @@
 // setup:feature:demo
 /**
- * Alpine.js component that populates the context bar from <link> tags.
- * Reads bookmark (frecent) and related link relations from the document head.
+ * Alpine.js component for the composable context bar.
+ * Reads <link> tags from <head> grouped by rel type and renders them as sections.
+ * Each section has a rel type, alignment, and visual style.
  * @returns {AlpineComponent}
  */
 function contextBar() {
   return {
-    frecent: [],
-    related: [],
+    sections: [],
     init() {
-      this.frecent = this.readLinks('bookmark');
-      this.related = this.readLinks('related');
+      this.sections = [
+        { rel: 'bookmark', links: this.readLinks('bookmark'), style: 'frecent' },
+        { rel: 'related',  links: this.readLinks('related'),  style: 'related' },
+      ].filter(function(s) { return s.links.length > 0; });
     },
     readLinks(rel) {
       return Array.from(document.querySelectorAll('head link[rel="' + rel + '"]'))
