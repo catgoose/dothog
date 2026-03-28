@@ -45,3 +45,12 @@
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* View Transitions: animated page navigation for hx-boost */
+@view-transition {
+    navigation: auto;
+}
+
+main {
+    view-transition-name: main-content;
+}

@@ -112,7 +112,7 @@ templ ContactEditForm(c demo.Contact) {
 		<div class="grid grid-cols-2 gap-2">
 			<div>
 				<label class="label label-text text-xs">Name</label>
-				<input type="text" name="name" class="input input-xs w-full" value={ c.Name }/>
+				<input type="text" name="name" class="input input-xs w-full" value={ c.Name } autocomplete="name"/>
 			</div>
 			<div>
 				<label class="label label-text text-xs">Role</label>
@@ -120,11 +120,11 @@ templ ContactEditForm(c demo.Contact) {
 			</div>
 			<div>
 				<label class="label label-text text-xs">Email</label>
-				<input type="email" name="email" class="input input-xs w-full" value={ c.Email }/>
+				<input type="email" name="email" class="input input-xs w-full" value={ c.Email } inputmode="email" autocomplete="email"/>
 			</div>
 			<div>
 				<label class="label label-text text-xs">Phone</label>
-				<input type="text" name="phone" class="input input-xs w-full" value={ c.Phone }/>
+				<input type="text" name="phone" class="input input-xs w-full" value={ c.Phone } inputmode="tel" autocomplete="tel"/>
 			</div>
 		</div>
 		<div class="flex gap-2 mt-2">
