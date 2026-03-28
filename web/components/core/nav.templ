@@ -52,25 +52,22 @@ templ NavBar(items []hypermedia.NavItem) {
 		if groups := navHubGroups(item); len(groups) > 0 {
 			<div
 				id={ navPanelID(item.Href) }
-				popover
-				class="nav-mega-panel border-b border-base-300 shadow-lg bg-base-100"
-				style="position: fixed; inset: unset; left: 0; width: 100vw; margin: 0; padding: 0;"
-				_="on mouseleave call me.hidePopover()"
+				class="nav-mega-panel hidden"
+				style="position: fixed; left: 0; right: 0; z-index: 50;"
+				_="on mouseleave add .hidden to me"
 			>
-				<div class="max-w-6xl mx-auto px-6 py-4">
-					<div class="flex flex-wrap gap-6">
+				<div class="bg-base-100 border-b border-base-300 shadow-lg">
+					<div class="flex flex-wrap gap-x-8 gap-y-3 px-6 py-4 max-w-6xl mx-auto">
 						for _, group := range groups {
-							<div class="min-w-[120px]">
+							<div>
 								if group.Name != "" {
-									<h3 class="text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">{ group.Name }</h3>
+									<span class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{ group.Name }</span>
 								}
-								<ul class="space-y-1">
+								<div class="flex flex-wrap gap-x-4 gap-y-1 mt-1">
 									for _, link := range group.Items {
-										<li>
-											<a href={ templ.URL(link.Href) } class="text-sm link link-hover text-base-content/70 hover:text-base-content whitespace-nowrap">{ link.Title }</a>
-										</li>
+										<a href={ templ.URL(link.Href) } class="text-sm link link-hover text-base-content/70 hover:text-base-content whitespace-nowrap">{ link.Title }</a>
 									}
-								</ul>
+								</div>
 							</div>
 						}
 					</div>
@@ -125,10 +122,10 @@ templ navMenuItem(item hypermedia.NavItem) {
 				_={ "on mouseenter " +
 					"set navRect to #main-nav.getBoundingClientRect() " +
 					"set panel to #" + navPanelID(item.Href) + " " +
-					"call document.querySelectorAll('.nav-mega-panel').forEach(p => { if (p !== panel && p.matches(':popover-open')) p.hidePopover() }) " +
-					"if panel does not match :popover-open call panel.showPopover() " +
+					"call document.querySelectorAll('.nav-mega-panel').forEach(p => { if (p !== panel) add .hidden to p }) " +
+					"remove .hidden from panel " +
 					"set panel.style.top to (navRect.bottom + 'px') " +
-					"on mouseleave wait 300ms if #" + navPanelID(item.Href) + " does not match :hover call #" + navPanelID(item.Href) + ".hidePopover()" }
+					"on mouseleave wait 300ms if not #" + navPanelID(item.Href) + " matches :hover add .hidden to #" + navPanelID(item.Href) }
 			>
 				@heroIcon(item.Icon)
 				{ item.Label }
