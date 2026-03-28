@@ -38,7 +38,7 @@ func AppSettingsPage(currentTheme string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div></div><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\" x-data=\"{ showFull: localStorage.getItem('dothog_hide_context_bar') !== 'true', showLocal: localStorage.getItem('dothog_hide_local_context_bar') !== 'true' }\"><h2 class=\"card-title text-lg\">Context Bars</h2><p class=\"text-sm text-base-content/70\">Toggle visibility of the navigation context bars.</p><div class=\"mt-2 space-y-2\"><label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" x-model=\"showFull\" @change=\"localStorage.setItem('dothog_hide_context_bar', !showFull ? 'true' : 'false')\"> <span class=\"label-text\">Show full context bar</span></label> <label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" x-model=\"showLocal\" @change=\"localStorage.setItem('dothog_hide_local_context_bar', !showLocal ? 'true' : 'false')\"> <span class=\"label-text\">Show local context bar</span></label></div></div></div><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-lg\">Quick Links</h2><ul class=\"menu\"><li><a href=\"/user/settings\">Preferences</a></li><li><a href=\"/admin/config\">Admin Config</a></li></ul></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div></div><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\" x-data=\"{ showFull: localStorage.getItem('dothog_hide_context_bar') !== 'true', showLocal: localStorage.getItem('dothog_hide_local_context_bar') !== 'true', showHistory: localStorage.getItem('dothog_hide_history_crumbs') !== 'true' }\"><h2 class=\"card-title text-lg\">Context Bars</h2><p class=\"text-sm text-base-content/70\">Toggle visibility of the navigation context bars.</p><div class=\"mt-2 space-y-2\"><label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" x-model=\"showFull\" @change=\"localStorage.setItem('dothog_hide_context_bar', !showFull ? 'true' : 'false')\"> <span class=\"label-text\">Show full context bar</span></label> <label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" x-model=\"showLocal\" @change=\"localStorage.setItem('dothog_hide_local_context_bar', !showLocal ? 'true' : 'false')\"> <span class=\"label-text\">Show local context bar</span></label> <label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" x-model=\"showHistory\" @change=\"localStorage.setItem('dothog_hide_history_crumbs', !showHistory ? 'true' : 'false')\"> <span class=\"label-text\">Show history breadcrumbs</span></label></div></div></div><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-lg\">Quick Links</h2><ul class=\"menu\"><li><a href=\"/user/settings\">Preferences</a></li><li><a href=\"/admin/config\">Admin Config</a></li></ul></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -75,7 +75,7 @@ func themeDropdown(currentTheme string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(currentTheme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 52, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 57, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -88,7 +88,7 @@ func themeDropdown(currentTheme string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(currentTheme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 60, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 65, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -106,7 +106,7 @@ func themeDropdown(currentTheme string) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 74, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 79, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -119,7 +119,7 @@ func themeDropdown(currentTheme string) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("document.documentElement.dataset.theme = '" + theme + "'; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=" + theme + "' }); open = false")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 76, Col: 326}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 81, Col: 326}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -132,7 +132,7 @@ func themeDropdown(currentTheme string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 83, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 88, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
