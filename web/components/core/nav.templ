@@ -34,49 +34,50 @@ func navPanelID(href string) string {
 // NavBar renders a DaisyUI horizontal navbar with optional HTMX enhancement.
 // Active state should be set server-side via SetActiveNavItem or SetActiveNavItemPrefix.
 templ NavBar(items []hypermedia.NavItem) {
-	<div>
-		<nav
-			class="navbar bg-base-200 shadow-sm"
-			x-data
-			x-on:click.window="$el.querySelectorAll('details[open]').forEach(d => { if (!d.contains($event.target)) d.open = false })"
-		>
-			<div class="flex-1">
-				<ul class="menu menu-horizontal">
-					for _, item := range items {
-						@navMenuItem(item)
-					}
-				</ul>
-			</div>
-		</nav>
-		for _, item := range items {
-			if groups := navHubGroups(item); len(groups) > 0 {
-				<div
-					id={ navPanelID(item.Href) }
-					class="nav-mega-panel w-full bg-base-100 border-b border-base-300 shadow-lg z-40 hidden"
-					_="on mouseleave hide me"
-				>
-					<div class="max-w-6xl mx-auto px-6 py-4">
-						<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-							for _, group := range groups {
-								<div>
-									if group.Name != "" {
-										<h3 class="text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">{ group.Name }</h3>
+	<nav
+		id="main-nav"
+		class="navbar bg-base-200 shadow-sm"
+		x-data
+		x-on:click.window="$el.querySelectorAll('details[open]').forEach(d => { if (!d.contains($event.target)) d.open = false })"
+	>
+		<div class="flex-1">
+			<ul class="menu menu-horizontal">
+				for _, item := range items {
+					@navMenuItem(item)
+				}
+			</ul>
+		</div>
+	</nav>
+	for _, item := range items {
+		if groups := navHubGroups(item); len(groups) > 0 {
+			<div
+				id={ navPanelID(item.Href) }
+				popover
+				class="nav-mega-panel m-0 w-full border-b border-base-300 shadow-lg bg-base-100"
+				style="position: fixed; top: auto; left: 0; right: 0;"
+				_="on mouseleave call me.hidePopover()"
+			>
+				<div class="max-w-6xl mx-auto px-6 py-4">
+					<div class="flex flex-wrap gap-6">
+						for _, group := range groups {
+							<div class="min-w-[120px]">
+								if group.Name != "" {
+									<h3 class="text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">{ group.Name }</h3>
+								}
+								<ul class="space-y-1">
+									for _, link := range group.Items {
+										<li>
+											<a href={ templ.URL(link.Href) } class="text-sm link link-hover text-base-content/70 hover:text-base-content whitespace-nowrap">{ link.Title }</a>
+										</li>
 									}
-									<ul class="space-y-1">
-										for _, link := range group.Items {
-											<li>
-												<a href={ templ.URL(link.Href) } class="text-sm link link-hover text-base-content/70 hover:text-base-content">{ link.Title }</a>
-											</li>
-										}
-									</ul>
-								</div>
-							}
-						</div>
+								</ul>
+							</div>
+						}
 					</div>
 				</div>
-			}
+			</div>
 		}
-	</div>
+	}
 }
 
 // navHubGroups returns spoke links for a nav item grouped by ring, or nil if not a hub.
@@ -121,7 +122,13 @@ templ navMenuItem(item hypermedia.NavItem) {
 				href={ templ.URL(item.Href) }
 				class={ navActiveClass(item.Active) }
 				{ navHxAttrs(item)... }
-				_={ "on mouseenter hide .nav-mega-panel then show #" + navPanelID(item.Href) + " on mouseleave wait 300ms if #" + navPanelID(item.Href) + " does not match :hover hide #" + navPanelID(item.Href) }
+				_={ "on mouseenter " +
+					"set navRect to #main-nav.getBoundingClientRect() " +
+					"set panel to #" + navPanelID(item.Href) + " " +
+					"call document.querySelectorAll('.nav-mega-panel').forEach(p => { if (p !== panel && p.matches(':popover-open')) p.hidePopover() }) " +
+					"if panel does not match :popover-open call panel.showPopover() " +
+					"set panel.style.top to (navRect.bottom + 'px') " +
+					"on mouseleave wait 300ms if #" + navPanelID(item.Href) + " does not match :hover call #" + navPanelID(item.Href) + ".hidePopover()" }
 			>
 				@heroIcon(item.Icon)
 				{ item.Label }
