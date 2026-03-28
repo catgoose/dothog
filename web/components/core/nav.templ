@@ -34,23 +34,25 @@ func navPanelID(href string) string {
 // NavBar renders a DaisyUI horizontal navbar with optional HTMX enhancement.
 // Active state should be set server-side via SetActiveNavItem or SetActiveNavItemPrefix.
 templ NavBar(items []hypermedia.NavItem) {
-	<nav
-		class="navbar bg-base-200 shadow-sm relative"
-		x-data
-		x-on:click.window="$el.querySelectorAll('details[open]').forEach(d => { if (!d.contains($event.target)) d.open = false })"
-	>
-		<div class="flex-1">
-			<ul class="menu menu-horizontal">
-				for _, item := range items {
-					@navMenuItem(item)
-				}
-			</ul>
-		</div>
+	<div>
+		<nav
+			class="navbar bg-base-200 shadow-sm"
+			x-data
+			x-on:click.window="$el.querySelectorAll('details[open]').forEach(d => { if (!d.contains($event.target)) d.open = false })"
+		>
+			<div class="flex-1">
+				<ul class="menu menu-horizontal">
+					for _, item := range items {
+						@navMenuItem(item)
+					}
+				</ul>
+			</div>
+		</nav>
 		for _, item := range items {
 			if groups := navHubGroups(item); len(groups) > 0 {
 				<div
 					id={ navPanelID(item.Href) }
-					class="nav-mega-panel absolute left-0 right-0 top-full bg-base-100 border-b border-base-300 shadow-lg z-50 hidden"
+					class="nav-mega-panel w-full bg-base-100 border-b border-base-300 shadow-lg z-40 hidden"
 					_="on mouseleave hide me"
 				>
 					<div class="max-w-6xl mx-auto px-6 py-4">
@@ -74,7 +76,7 @@ templ NavBar(items []hypermedia.NavItem) {
 				</div>
 			}
 		}
-	</nav>
+	</div>
 }
 
 // navHubGroups returns spoke links for a nav item grouped by ring, or nil if not a hub.
