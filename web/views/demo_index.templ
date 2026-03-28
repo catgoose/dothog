@@ -2,56 +2,13 @@
 
 package views
 
-import (
-	"catgoose/dothog/internal/demo"
-	"catgoose/dothog/internal/routes/hypermedia"
-	"fmt"
-)
-
-func pageTitle(p demo.PageVisit) string {
-	if p.Title != "" {
-		return p.Title
-	}
-	return hypermedia.TitleFromPath(p.Path)
-}
-
-func clampOpacity(score float64) float64 {
-	// Map score to opacity range [0.5, 1.0]
-	o := 0.5 + (score * 0.1)
-	if o > 1.0 {
-		return 1.0
-	}
-	if o < 0.5 {
-		return 0.5
-	}
-	return o
-}
-
 // DemoIndexPage renders the /demo resource discovery page.
-templ DemoIndexPage(popular []demo.PageVisit) {
+templ DemoIndexPage() {
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<div class="space-y-1">
 			<h1 class="text-2xl font-bold">Demo</h1>
 			<p class="text-sm text-base-content/60">Working examples of common application patterns built on the dothog stack.</p>
 		</div>
-
-		if len(popular) > 0 {
-			<div class="space-y-2">
-				<h2 class="text-sm font-semibold text-base-content/60">Popular Pages</h2>
-				<div class="flex flex-wrap gap-2">
-					for _, p := range popular {
-						<a
-							href={ templ.URL(p.Path) }
-							class="badge badge-outline badge-sm gap-1 hover:badge-primary transition-colors"
-							style={ fmt.Sprintf("opacity: %.2f", clampOpacity(p.Score)) }
-						>
-							{ pageTitle(p) }
-							<span class="text-base-content/40">{ fmt.Sprintf("%d", p.Visits) }</span>
-						</a>
-					}
-				</div>
-			</div>
-		}
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 			@adminResourceCard("/demo/logging", "Logging", "Structured logging with promolog. Request traces, log levels, and context propagation.", "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z")

@@ -190,9 +190,6 @@ func (d *DB) initSchema() error {
 	if err := d.initErrorReports(); err != nil {
 		return fmt.Errorf("init error_reports: %w", err)
 	}
-	if err := d.initFrecency(); err != nil {
-		return fmt.Errorf("init page_visits: %w", err)
-	}
 	return nil
 }
 
