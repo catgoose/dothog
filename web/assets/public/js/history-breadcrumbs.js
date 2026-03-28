@@ -19,6 +19,9 @@ function historyBreadcrumbs() {
       // Remove current page if already in history (prevents duplicates on refresh)
       history = history.filter(function(h) { return h.path !== current; });
 
+      // Fix stale titles from before path-derived titles were implemented
+      history = history.map(function(h) { return { path: h.path, title: titleFromPath(h.path) }; });
+
       // The trail is the history WITHOUT the current page
       this.trail = history.slice(-MAX);
 
