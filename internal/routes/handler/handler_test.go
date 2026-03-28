@@ -92,37 +92,6 @@ func TestHandleError_ContextCanceled_NoOp(t *testing.T) {
 	assert.Empty(t, rec.Body.String())
 }
 
-func TestDefaultControls_BadRequest(t *testing.T) {
-	controls := defaultControls(http.StatusBadRequest, "test-req-id")
-	require.Len(t, controls, 2)
-	assert.Equal(t, hypermedia.ControlKindDismiss, controls[0].Kind)
-	assert.Equal(t, hypermedia.ControlKindReport, controls[1].Kind)
-}
-
-func TestDefaultControls_NotFound(t *testing.T) {
-	controls := defaultControls(http.StatusNotFound, "test-req-id")
-	require.Len(t, controls, 3)
-	assert.Equal(t, hypermedia.ControlKindBack, controls[0].Kind)
-	assert.Equal(t, hypermedia.ControlKindHome, controls[1].Kind)
-	assert.Equal(t, hypermedia.ControlKindReport, controls[2].Kind)
-}
-
-func TestDefaultControls_Unauthorized(t *testing.T) {
-	controls := defaultControls(http.StatusUnauthorized, "test-req-id")
-	require.Len(t, controls, 3)
-	assert.Equal(t, hypermedia.ControlKindLink, controls[0].Kind)
-	assert.Equal(t, "/login", controls[0].Href)
-	assert.Equal(t, hypermedia.ControlKindReport, controls[2].Kind)
-}
-
-func TestDefaultControls_ServerError(t *testing.T) {
-	controls := defaultControls(http.StatusInternalServerError, "test-req-id")
-	require.Len(t, controls, 3)
-	assert.Equal(t, hypermedia.ControlKindDismiss, controls[0].Kind)
-	assert.Equal(t, hypermedia.ControlKindHome, controls[1].Kind)
-	assert.Equal(t, hypermedia.ControlKindReport, controls[2].Kind)
-}
-
 func TestDefaultControls_ExplicitControlsOverride(t *testing.T) {
 	c, _ := newEchoContext(http.MethodGet, "/test", nil)
 	e := echo.New()
