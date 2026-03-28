@@ -32,16 +32,10 @@ function historyBreadcrumbs() {
       this.trail = history.slice(-MAX);
 
       // Push current page onto history for next navigation.
-      // Try to read the page label from the hierarchy breadcrumbs (last crumb is
-      // plain text, not a link — it's the server-set page label like "Linda Davis").
-      var pageTitle = titleFromPath(current);
-      var crumbItems = document.querySelectorAll('.breadcrumbs li:last-child span, .breadcrumbs li:last-child');
-      if (crumbItems.length > 0) {
-        var lastCrumb = crumbItems[crumbItems.length - 1];
-        if (lastCrumb && lastCrumb.textContent && lastCrumb.textContent.trim()) {
-          pageTitle = lastCrumb.textContent.trim();
-        }
-      }
+      // Read the server-set page title from the meta tag (e.g., "Linda Davis"),
+      // fall back to deriving from the URL path.
+      var meta = document.querySelector('meta[name="page-title"]');
+      var pageTitle = (meta && meta.content) ? meta.content : titleFromPath(current);
       history.push({ path: current, title: pageTitle });
 
       // Cap the history

@@ -26,6 +26,9 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			"
 		>
 			<div id="error-status" class="sticky top-0 z-40"></div>
+			if len(crumbs) > 0 {
+				<meta name="page-title" content={ crumbs[len(crumbs)-1].Label }/>
+			}
 			@menuContent
 			// setup:feature:demo:start
 			@components.ContextBar(links, currentPath)
