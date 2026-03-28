@@ -1,6 +1,9 @@
 package components
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import (
+	"catgoose/dothog/internal/routes/hypermedia"
+	"sort"
+)
 
 // navHxAttrs converts a NavItem's HTMXAttrs map to templ.Attributes with "hx-" prefix.
 func navHxAttrs(item hypermedia.NavItem) templ.Attributes {
@@ -37,6 +40,25 @@ templ NavBar(items []hypermedia.NavItem) {
 	</nav>
 }
 
+// navHubGroups returns spoke links for a nav item grouped by ring, or nil if not a hub.
+func navHubGroups(item hypermedia.NavItem) []contextBarGroup {
+	spokes := hypermedia.LinksFor(item.Href, "related")
+	if len(spokes) == 0 {
+		return nil
+	}
+	// Convert to contextBarItem for reuse of resolveIntoRings
+	var items []contextBarItem
+	for _, s := range spokes {
+		items = append(items, contextBarItem{Href: s.Href, Title: s.Title})
+	}
+	groups := resolveIntoRings(items, item.Label, item.Href)
+	// Sort groups alphabetically by name
+	sort.Slice(groups, func(i, j int) bool {
+		return groups[i].Name < groups[j].Name
+	})
+	return groups
+}
+
 templ navMenuItem(item hypermedia.NavItem) {
 	if len(item.Children) > 0 {
 		<li>
@@ -53,6 +75,39 @@ templ navMenuItem(item hypermedia.NavItem) {
 					}
 				</ul>
 			</details>
+		</li>
+	} else if groups := navHubGroups(item); len(groups) > 0 {
+		<li>
+			<div class="dropdown dropdown-hover">
+				<a
+					href={ templ.URL(item.Href) }
+					tabindex="0"
+					role="button"
+					class={ navActiveClass(item.Active) }
+					{ navHxAttrs(item)... }
+				>
+					@heroIcon(item.Icon)
+					{ item.Label }
+				</a>
+				<div tabindex="0" class="dropdown-content bg-base-100 rounded-box shadow-lg border border-base-300 z-50 p-4 w-64 mt-1">
+					<div class="flex flex-col gap-3">
+						for _, group := range groups {
+							<div>
+								if group.Name != "" {
+									<div class="text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-1">{ group.Name }</div>
+								}
+								<ul class="space-y-0.5">
+									for _, link := range group.Items {
+										<li>
+											<a href={ templ.URL(link.Href) } class="text-sm link link-hover text-base-content/70 hover:text-base-content">{ link.Title }</a>
+										</li>
+									}
+								</ul>
+							</div>
+						}
+					</div>
+				</div>
+			</div>
 		</li>
 	} else {
 		<li>
