@@ -1,6 +1,9 @@
 package components
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import (
+	"catgoose/dothog/internal/routes/hypermedia"
+	"sort"
+)
 
 // contextBarItem is a link with its display type.
 type contextBarItem struct {
@@ -15,18 +18,80 @@ type contextBarGroup struct {
 	Items []contextBarItem
 }
 
-// contextBarGroups groups links by their Group field, preserving order.
-// Includes both rel="related" (ring/hub-center) and rel="up" (hub-spoke→parent).
-// For hub centers (all links in one hub group), it resolves each spoke's Ring
-// memberships so the children are displayed in their ring groups.
+// contextBarGroups builds the context bar groups for the current page.
+// It finds the hub this page belongs to (either as center or spoke) and
+// resolves all spokes into their ring groups. Both hub centers and spoke
+// pages see the same grouped view.
 func contextBarGroups(links []hypermedia.LinkRelation, currentPath string) []contextBarGroup {
+	// Determine the hub path: either we ARE the hub (have outgoing related links
+	// with a hub group) or we have a rel="up" pointing to our hub.
+	var hubPath string
+	var hubName string
+	var isHubCenter bool
+
+	for _, l := range links {
+		if l.Rel == "up" {
+			hubPath = l.Href
+			hubName = l.Title
+			break
+		}
+	}
+
+	// No rel="up" — check if we're a hub center (have outgoing related with a group matching our title)
+	if hubPath == "" {
+		for _, l := range links {
+			if l.Rel == "related" && l.Group != "" {
+				hubPath = currentPath
+				hubName = l.Group
+				isHubCenter = true
+				break
+			}
+		}
+	}
+
+	if hubPath == "" {
+		// No hub relationship — fall back to simple grouping
+		return simpleGroups(links, currentPath)
+	}
+
+	// Get the hub's spokes
+	var spokes []contextBarItem
+	if isHubCenter {
+		for _, l := range links {
+			if l.Rel == "related" && l.Href != currentPath {
+				spokes = append(spokes, contextBarItem{Href: l.Href, Title: l.Title})
+			}
+		}
+	} else {
+		hubLinks := hypermedia.LinksFor(hubPath, "related")
+		for _, l := range hubLinks {
+			if l.Href != currentPath {
+				spokes = append(spokes, contextBarItem{Href: l.Href, Title: l.Title})
+			}
+		}
+	}
+
+	// Resolve spokes into ring groups
+	resolved := resolveIntoRings(spokes, hubName, currentPath)
+
+	// For spoke pages, prepend the hub parent link
+	if !isHubCenter && hubPath != "" {
+		upGroup := contextBarGroup{
+			IsHub: true,
+			Items: []contextBarItem{{Href: hubPath, Title: hubName, IsUp: true}},
+		}
+		resolved = append([]contextBarGroup{upGroup}, resolved...)
+	}
+
+	return resolved
+}
+
+// simpleGroups is the fallback grouping when no hub relationship exists.
+func simpleGroups(links []hypermedia.LinkRelation, currentPath string) []contextBarGroup {
 	seen := map[string]int{}
 	var groups []contextBarGroup
 	for _, l := range links {
-		if l.Href == currentPath {
-			continue
-		}
-		if l.Rel != "related" && l.Rel != "up" {
+		if l.Href == currentPath || (l.Rel != "related" && l.Rel != "up") {
 			continue
 		}
 		idx, ok := seen[l.Group]
@@ -40,32 +105,23 @@ func contextBarGroups(links []hypermedia.LinkRelation, currentPath string) []con
 			groups[idx].IsHub = true
 		}
 		groups[idx].Items = append(groups[idx].Items, contextBarItem{
-			Href:  l.Href,
-			Title: l.Title,
-			IsUp:  isUp,
+			Href: l.Href, Title: l.Title, IsUp: isUp,
 		})
-	}
-
-	// If we have exactly one hub group (this is a hub center page),
-	// resolve spokes into their ring groups for richer display.
-	if len(groups) == 1 && groups[0].IsHub {
-		return resolveHubChildGroups(groups[0], currentPath)
 	}
 	return groups
 }
 
-// resolveHubChildGroups takes a hub center's flat spoke list and regroups
-// them by looking up each spoke's ring memberships from the registry.
-func resolveHubChildGroups(hub contextBarGroup, currentPath string) []contextBarGroup {
+// resolveIntoRings takes a flat list of spokes and groups them by their
+// ring memberships from the registry. Used by both hub centers and spoke pages.
+func resolveIntoRings(spokes []contextBarItem, hubName string, currentPath string) []contextBarGroup {
 	seen := map[string]int{}
 	var groups []contextBarGroup
 	placed := map[string]bool{}
 
-	// For each spoke, find its ring group names from the registry
-	for _, item := range hub.Items {
+	for _, item := range spokes {
 		spokeLinks := hypermedia.LinksFor(item.Href, "related")
 		for _, sl := range spokeLinks {
-			if sl.Group != "" && sl.Group != hub.Name && !placed[item.Href+"|"+sl.Group] {
+			if sl.Group != "" && sl.Group != hubName && !placed[item.Href+"|"+sl.Group] {
 				idx, ok := seen[sl.Group]
 				if !ok {
 					idx = len(groups)
@@ -83,9 +139,16 @@ func resolveHubChildGroups(hub contextBarGroup, currentPath string) []contextBar
 		}
 	}
 
-	// Any spokes not in any ring go into an "Other" group
+	// Sort items within each group alphabetically
+	for i := range groups {
+		sort.Slice(groups[i].Items, func(a, b int) bool {
+			return groups[i].Items[a].Title < groups[i].Items[b].Title
+		})
+	}
+
+	// Any spokes not in any ring go into an ungrouped section
 	var ungrouped []contextBarItem
-	for _, item := range hub.Items {
+	for _, item := range spokes {
 		inRing := false
 		for _, g := range groups {
 			if hasItem(g.Items, item.Href) {
@@ -98,13 +161,9 @@ func resolveHubChildGroups(hub contextBarGroup, currentPath string) []contextBar
 		}
 	}
 	if len(ungrouped) > 0 {
-		groups = append(groups, contextBarGroup{Name: "", Items: ungrouped})
+		groups = append(groups, contextBarGroup{Items: ungrouped})
 	}
 
-	if len(groups) == 0 {
-		// Fallback: no rings found, show original hub group
-		return []contextBarGroup{hub}
-	}
 	return groups
 }
 
@@ -141,23 +200,68 @@ templ ContextStrip(crumbs []hypermedia.Breadcrumb) {
 templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
 	<div id="context-bar">
 		if groups := contextBarGroups(links, currentPath); len(groups) > 0 {
-			if len(groups) == 1 {
-				// Single group: one horizontal row
-				<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm">
-					@contextBarGroupItems(groups[0])
-				</div>
-			} else {
-				// Multiple groups: each group on its own row
-				<div class="flex flex-col gap-0 bg-base-200/50 border-b border-base-300 text-sm">
-					for _, group := range groups {
-						<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1">
-							@contextBarGroupItems(group)
-						</div>
+			<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm">
+				for i, group := range groups {
+					@contextBarGroupItems(group)
+					if i < len(groups) - 1 {
+						<div class="w-px h-4 bg-base-300 shrink-0"></div>
 					}
-				</div>
-			}
+				}
+			</div>
 		}
 	</div>
+}
+
+// LocalContextBar renders a compact strip of the current page's immediate
+// ring siblings — the pages in the same ring group(s) as the current page.
+templ LocalContextBar(links []hypermedia.LinkRelation, currentPath string) {
+	<div id="local-context-bar">
+		if groups := localGroups(links, currentPath); len(groups) > 0 {
+			<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1 bg-base-100/50 border-b border-base-300 text-xs">
+				for i, group := range groups {
+					if group.Name != "" {
+						<span class="text-base-content/25 font-medium whitespace-nowrap">{ group.Name }</span>
+					}
+					for _, item := range group.Items {
+						<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/50 hover:text-base-content whitespace-nowrap">{ item.Title }</a>
+					}
+					if i < len(groups) - 1 {
+						<div class="w-px h-3 bg-base-300 shrink-0"></div>
+					}
+				}
+			</div>
+		}
+	</div>
+}
+
+// localGroups returns only the rings the current page directly belongs to.
+func localGroups(links []hypermedia.LinkRelation, currentPath string) []contextBarGroup {
+	seen := map[string]int{}
+	var groups []contextBarGroup
+	for _, l := range links {
+		if l.Href == currentPath || l.Rel != "related" || l.Group == "" {
+			continue
+		}
+		idx, ok := seen[l.Group]
+		if !ok {
+			idx = len(groups)
+			seen[l.Group] = idx
+			groups = append(groups, contextBarGroup{Name: l.Group})
+		}
+		if !hasItem(groups[idx].Items, l.Href) {
+			groups[idx].Items = append(groups[idx].Items, contextBarItem{
+				Href:  l.Href,
+				Title: l.Title,
+			})
+		}
+	}
+	// Sort items within each group
+	for i := range groups {
+		sort.Slice(groups[i].Items, func(a, b int) bool {
+			return groups[i].Items[a].Title < groups[i].Items[b].Title
+		})
+	}
+	return groups
 }
 
 templ contextBarGroupItems(group contextBarGroup) {
@@ -166,7 +270,7 @@ templ contextBarGroupItems(group contextBarGroup) {
 	}
 	for _, item := range group.Items {
 		if item.IsUp {
-			<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/40 hover:text-base-content whitespace-nowrap">↑ { item.Title }</a>
+			<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/60 hover:text-base-content whitespace-nowrap">↑ { item.Title }</a>
 		} else {
 			<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/60 hover:text-base-content whitespace-nowrap">{ item.Title }</a>
 		}
