@@ -47,7 +47,13 @@ function historyBreadcrumbs() {
  */
 function titleFromPath(path) {
   if (path === '/') return 'Home';
-  var segments = path.replace(/\/$/, '').split('/');
+  var segments = path.replace(/\/$/, '').split('/').filter(Boolean);
   var last = segments[segments.length - 1];
+  // Numeric ID: use parent name + ID (e.g., "/demo/people/8" -> "People #8")
+  if (/^\d+$/.test(last) && segments.length > 1) {
+    var parent = segments[segments.length - 2];
+    var name = parent.replace(/-/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+    return name + ' #' + last;
+  }
   return last.replace(/-/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
 }
