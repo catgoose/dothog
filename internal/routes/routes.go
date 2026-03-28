@@ -217,6 +217,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 ) (*echo.Echo, error) {
 	e := echo.New()
 
+	e.Use(middleware.ServerTimingMiddleware())
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
 	e.Use(echoMiddleware.RequestLogger())
 	e.Use(echoMiddleware.Recover())
