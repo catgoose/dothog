@@ -2,6 +2,30 @@ package components
 
 import "catgoose/dothog/internal/routes/hypermedia"
 
+// contextBarGroups groups related links by their Group field, preserving order.
+func contextBarGroups(links []hypermedia.LinkRelation, currentPath string) []contextBarGroup {
+	seen := map[string]int{}
+	var groups []contextBarGroup
+	for _, l := range links {
+		if l.Rel != "related" || l.Href == currentPath {
+			continue
+		}
+		idx, ok := seen[l.Group]
+		if !ok {
+			idx = len(groups)
+			seen[l.Group] = idx
+			groups = append(groups, contextBarGroup{Name: l.Group})
+		}
+		groups[idx].Links = append(groups[idx].Links, l)
+	}
+	return groups
+}
+
+type contextBarGroup struct {
+	Name  string
+	Links []hypermedia.LinkRelation
+}
+
 // ContextStrip renders a unified bar with breadcrumbs on the left and
 // app-provided context links (children) on the right. On mobile, breadcrumbs
 // are hidden and only context links show. If no breadcrumbs or children are
@@ -22,31 +46,24 @@ templ ContextStrip(crumbs []hypermedia.Breadcrumb) {
 }
 
 // ContextBar renders a horizontal strip of related page links grouped by ring name.
-// Links are read from <link rel="related"> tags in the document head.
-templ ContextBar() {
-	<div
-		x-data="contextBar()"
-		x-show="hasLinks()"
-		x-cloak
-		class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm"
-	>
-		<template x-for="(group, idx) in groups" :key="group.name">
-			<div class="contents">
-				<template x-if="idx > 0">
-					<div class="w-px h-4 bg-base-300 shrink-0"></div>
-				</template>
-				<template x-if="group.name">
-					<span class="text-base-content/30 text-xs font-medium whitespace-nowrap" x-text="group.name"></span>
-				</template>
-				<template x-for="link in group.links" :key="link.href">
-					<a
-						:href="link.href"
-						x-text="link.title"
-						class="link link-hover text-base-content/60 hover:text-base-content whitespace-nowrap"
-					></a>
-				</template>
+// Server-rendered with a stable ID so it can be updated via hx-swap-oob on navigation.
+templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
+	<div id="context-bar">
+		if groups := contextBarGroups(links, currentPath); len(groups) > 0 {
+			<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm">
+				for i, group := range groups {
+					if i > 0 {
+						<div class="w-px h-4 bg-base-300 shrink-0"></div>
+					}
+					if group.Name != "" {
+						<span class="text-base-content/30 text-xs font-medium whitespace-nowrap">{ group.Name }</span>
+					}
+					for _, link := range group.Links {
+						<a href={ templ.URL(link.Href) } class="link link-hover text-base-content/60 hover:text-base-content whitespace-nowrap">{ link.Title }</a>
+					}
+				}
 			</div>
-		</template>
+		}
 	</div>
 }
 

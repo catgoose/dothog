@@ -6,10 +6,10 @@ import (
 )
 
 // Root template
-templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, links []hypermedia.LinkRelation, version string, appName string) {
+templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, links []hypermedia.LinkRelation, currentPath string, version string, appName string) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ theme }>
-		@header(csrfToken, devMode, appName, nil, links)
+		@header(csrfToken, devMode, appName, nil)
 		<body
 			hx-history="false"
 			hx-boost="true"
@@ -28,7 +28,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			<div id="error-status" class="sticky top-0 z-40"></div>
 			@menuContent
 			// setup:feature:demo:start
-			@components.ContextBar()
+			@components.ContextBar(links, currentPath)
 			// setup:feature:demo:end
 			if len(crumbs) > 0 {
 				<div class="mx-4 mt-3">
@@ -54,7 +54,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 }
 
 // Header is the header of the HTML document
-templ header(csrfToken string, devMode bool, appName string, extraCSS []string, links []hypermedia.LinkRelation) {
+templ header(csrfToken string, devMode bool, appName string, extraCSS []string) {
 	<head>
 		@components.CsrfMeta(csrfToken)
 		<meta name="htmx-config" content='{"globalViewTransitions":true,"refreshOnHistoryMiss":true,"responseHandling":[{"code":".*","swap":true}]}'/>
@@ -71,9 +71,6 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string, 
 		// setup:feature:offline:start
 		<script defer src="/public/js/offline-indicator.js"></script>
 		// setup:feature:offline:end
-		// setup:feature:demo:start
-		<script defer src="/public/js/context-bar.js"></script>
-		// setup:feature:demo:end
 		<script defer src="/public/js/alpine.min.js"></script>
 		// setup:feature:sse:start
 		<script defer src="/public/js/htmx.ext.sse.js"></script>
@@ -89,13 +86,6 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string, 
 		<link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png"/>
 		// setup:feature:demo:start
 		<link rel="manifest" href="/public/images/site.webmanifest"/>
-		for _, link := range links {
-			if link.Group != "" {
-				<link rel={ link.Rel } href={ link.Href } title={ link.Title } data-group={ link.Group }/>
-			} else {
-				<link rel={ link.Rel } href={ link.Href } title={ link.Title }/>
-			}
-		}
 		// setup:feature:demo:end
 		<title>{ appName }</title>
 		if devMode {

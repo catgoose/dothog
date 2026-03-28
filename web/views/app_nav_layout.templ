@@ -8,10 +8,10 @@ import (
 // AppNavLayout is a responsive page layout with CSS-driven auto-positioning:
 // bottom nav bar on mobile, sticky top bar on desktop. Derived apps opt in
 // via handler.SetLayout(handler.AppNavLayoutFunc(...)).
-templ AppNavLayout(content templ.Component, cfg hypermedia.NavConfig, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, links []hypermedia.LinkRelation, version string) {
+templ AppNavLayout(content templ.Component, cfg hypermedia.NavConfig, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, links []hypermedia.LinkRelation, currentPath string, version string) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ theme }>
-		@header(csrfToken, devMode, cfg.AppName, []string{"/public/css/app-layout.css"}, links)
+		@header(csrfToken, devMode, cfg.AppName, []string{"/public/css/app-layout.css"})
 		<body class="min-h-screen bg-base-200">
 			<div class="app-shell">
 				<div id="error-status" class="sticky top-0 z-40"></div>
@@ -26,7 +26,7 @@ templ AppNavLayout(content templ.Component, cfg hypermedia.NavConfig, csrfToken 
 				<!-- Nav bar (CSS positions: bottom on mobile, top on desktop) -->
 				@appNav(cfg)
 				// setup:feature:demo:start
-			@components.ContextBar()
+			@components.ContextBar(links, currentPath)
 			// setup:feature:demo:end
 				if len(crumbs) > 0 {
 					@components.ContextStrip(crumbs)
