@@ -31,6 +31,13 @@
   - [Structured Observability](#structured-observability)
     - [Promote-on-error](#promote-on-error)
     - [Request and background context](#request-and-background-context)
+  - [Web Standards Over Libraries](#web-standards-over-libraries)
+    - [Link Relations as the Navigation Model](#link-relations-as-the-navigation-model)
+    - [HTTP Headers as the API Surface](#http-headers-as-the-api-surface)
+    - [Native HTML Over JavaScript](#native-html-over-javascript)
+    - [CSS Over JavaScript](#css-over-javascript)
+    - [Browser APIs Over Libraries](#browser-apis-over-libraries)
+    - [The Principle](#the-principle)
   <!--toc:end-->
 
 ## Go
@@ -747,3 +754,72 @@ Dothog builds on top of promolog's trace storage to provide:
 - **Admin UI** at `/admin/error-traces` — sortable, filterable, paginated browser for all persisted error traces
 - **Real-time monitoring** — SSE broadcasts new traces as they're promoted, so the admin dashboard updates live
 - **Cross-layer correlation** — the same context flows from middleware through handlers into repository calls, so a single ID traces the full operation
+
+## Web Standards Over Libraries
+
+**Prefer web standards over JavaScript libraries.** The browser already has the capability. Every library you don't import is a dependency you don't maintain, a bundle you don't ship, and a behavior that works even when JavaScript fails.
+
+### Link Relations as the Navigation Model
+
+The app declares resource relationships using [IANA link relations](https://www.iana.org/assignments/link-relations/link-relations.xhtml) — the same standard that powers `<link rel="stylesheet">` and HTTP `Link` headers. Three composable primitives:
+
+- **Ring** — peers that link to each other (admin pages, data pages)
+- **Hub** — parent with children (discovery pages like `/demo`, `/admin`)
+- **Link** — explicit pairwise relationship
+
+The server registers these at startup. The middleware emits [RFC 8288](https://www.rfc-editor.org/rfc/rfc8288) `Link` HTTP headers on every response. The same registry drives the context bars, breadcrumbs, site map footer, and the live registry inspector — one data source, many views.
+
+Breadcrumbs walk the `rel="up"` chain. Priority: `?from=` (user's journey) → `rel="up"` (declared hierarchy) → URL path segments (fallback). The document structure drives navigation, not URL parsing.
+
+### HTTP Headers as the API Surface
+
+Standard HTTP headers carry meaning that no application-level protocol needs to reinvent:
+
+- `Link` headers (RFC 8288) — machine-readable relationships on every response
+- `Vary: HX-Request` — cache correctness for HTMX partials vs full pages
+- `Server-Timing` — server metrics visible in browser DevTools with zero client code
+- Semantic status codes: `303 See Other` (POST-redirect-GET), `409 Conflict`, `422 Unprocessable Content`
+
+These aren't implementation details. They're contracts that CDNs, crawlers, caches, and `curl` already understand. A `Link` header is useful to any HTTP client, not just your frontend.
+
+### Native HTML Over JavaScript
+
+HTML has interactive elements that most developers reach for libraries to implement:
+
+- `<dialog>` for modals — focus trapping, Escape to close, backdrop styling
+- `popover` for dismissable UI — click-outside dismiss, top-layer rendering
+- `<details name="...">` for exclusive accordions — zero JS
+- `<datalist>` for autocomplete — native, keyboard-friendly
+- `<search>` for semantic search wrappers
+- `<meter>` for gauges, `<progress>` for loading states
+- `formaction`/`formmethod` for multi-action forms
+- `inputmode`/`enterkeyhint` for mobile keyboard control
+- `autocomplete` proper values for auto-fill
+
+Each replaces a JavaScript pattern or adds semantics that screen readers and browsers already understand.
+
+### CSS Over JavaScript
+
+CSS can do what used to require runtime code:
+
+- `content-visibility: auto` — skip rendering off-screen content (performance)
+- `text-wrap: balance` on headings, `text-wrap: pretty` on paragraphs (typography)
+- `accent-color` — brand native form controls in one line
+- View Transitions — animated page navigation via CSS, zero JS
+- `[x-cloak] { display: none }` — hide Alpine elements until initialized
+
+### Browser APIs Over Libraries
+
+The platform ships APIs that replace entire categories of npm packages:
+
+- `navigator.sendBeacon()` — fire-and-forget logging without blocking navigation. Replaces analytics libraries.
+- `BroadcastChannel` — cross-tab sync (theme changes propagate to all tabs). No polling, no extra SSE connections.
+- `sessionStorage` — history breadcrumb trail. Per-tab, ephemeral, no server round-trip.
+- `localStorage` — dismiss state for context bars. Persists across sessions.
+- Service Worker — offline caching for PWA, gated behind production mode.
+
+### The Principle
+
+The web platform is not a thin wrapper around JavaScript. It's a rich runtime with decades of standardized behavior. `<dialog>` handles focus management better than any modal library because the browser team spent years on edge cases. `content-visibility` is faster than any virtual scroll library because it operates at the rendering engine level. `Link` headers are understood by crawlers, CDNs, and `curl` — no client-side code needed.
+
+When you reach for a library, you're saying "the platform can't do this." Usually it can. Check first.
