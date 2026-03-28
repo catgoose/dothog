@@ -76,6 +76,7 @@ type layoutCtx struct {
 	crumbs    []hypermedia.Breadcrumb
 	// setup:feature:demo:start
 	links []hypermedia.LinkRelation
+	hubs  []hypermedia.HubEntry
 	// setup:feature:demo:end
 }
 
@@ -111,16 +112,17 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 
 	// setup:feature:demo:start
 	links := middleware.GetLinkRelations(c)
+	hubs := hypermedia.Hubs()
 	// setup:feature:demo:end
 
-	return layoutCtx{csrfToken: csrfToken, theme: theme, path: c.Request().URL.Path, crumbs: crumbs, links: links}
+	return layoutCtx{csrfToken: csrfToken, theme: theme, path: c.Request().URL.Path, crumbs: crumbs, links: links, hubs: hubs}
 }
 
 // renderDefaultLayout is the standard dothog layout with nav, breadcrumbs, and theme.
 func renderDefaultLayout(c echo.Context, cmp templ.Component) error {
 	nav := appNavComponent(c.Request().URL.Path)
 	lc := getLayoutCtx(c)
-	return RenderComponent(c, views.Index(cmp, nav, lc.csrfToken, dio.Dev(), lc.theme, lc.crumbs, lc.links, lc.path, version.Display(), appName))
+	return RenderComponent(c, views.Index(cmp, nav, lc.csrfToken, dio.Dev(), lc.theme, lc.crumbs, lc.links, lc.path, version.Display(), appName, lc.hubs))
 }
 
 // AppNavLayoutFunc returns a LayoutFunc that uses the responsive app-nav layout.
@@ -140,7 +142,7 @@ func AppNavLayoutFunc(cfg hypermedia.NavConfig) LayoutFunc {
 		return RenderComponent(c, views.AppNavLayout(
 			cmp, navCfg,
 			lc.csrfToken, dio.Dev(), lc.theme,
-			lc.crumbs, lc.links, lc.path, version.Display(),
+			lc.crumbs, lc.links, lc.path, version.Display(), lc.hubs,
 		))
 	}
 }

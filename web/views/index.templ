@@ -6,7 +6,7 @@ import (
 )
 
 // Root template
-templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, links []hypermedia.LinkRelation, currentPath string, version string, appName string) {
+templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, links []hypermedia.LinkRelation, currentPath string, version string, appName string, hubs []hypermedia.HubEntry) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ theme }>
 		@header(csrfToken, devMode, appName, nil)
@@ -42,6 +42,9 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			<main class="flex-1 p-4">
 				@Layout(layoutContent)
 			</main>
+			// setup:feature:demo:start
+			@components.SiteMap(hubs)
+			// setup:feature:demo:end
 			<footer class="text-center text-xs text-base-content/60 py-2">
 				{ version }
 			</footer>

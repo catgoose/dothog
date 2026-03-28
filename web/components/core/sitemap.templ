@@ -1,0 +1,32 @@
+// setup:feature:demo
+package components
+
+import "catgoose/dothog/internal/routes/hypermedia"
+
+// SiteMap renders a footer site map grid from the hub/spoke topology.
+templ SiteMap(hubs []hypermedia.HubEntry) {
+	if len(hubs) > 0 {
+		<div class="border-t border-base-300 bg-base-200/30 px-4 py-6">
+			<div class="max-w-6xl mx-auto">
+				<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 text-sm">
+					for _, hub := range hubs {
+						<div>
+							<a href={ templ.URL(hub.Path) } class="font-semibold text-base-content/70 hover:text-base-content link link-hover">
+								{ hub.Title }
+							</a>
+							<ul class="mt-2 space-y-1">
+								for _, spoke := range hub.Spokes {
+									<li>
+										<a href={ templ.URL(spoke.Href) } class="text-base-content/50 hover:text-base-content link link-hover text-xs">
+											{ spoke.Title }
+										</a>
+									</li>
+								}
+							</ul>
+						</div>
+					}
+				</div>
+			</div>
+		</div>
+	}
+}

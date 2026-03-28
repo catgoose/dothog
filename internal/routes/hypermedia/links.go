@@ -20,6 +20,9 @@ type LinkRelation struct {
 var (
 	linksMu  sync.RWMutex
 	linksMap = make(map[string][]LinkRelation)
+
+	hubsMu  sync.RWMutex
+	hubsMap = make(map[string]string) // path -> title
 )
 
 // Link registers a relationship from a source path to a target.
@@ -141,6 +144,10 @@ func Ring(name string, members ...RelEntry) {
 // links back to the center only. Spokes do not link to each other.
 // The centerTitle is used as the group name for all links.
 func Hub(centerPath, centerTitle string, spokes ...RelEntry) {
+	hubsMu.Lock()
+	hubsMap[centerPath] = centerTitle
+	hubsMu.Unlock()
+
 	linksMu.Lock()
 	defer linksMu.Unlock()
 
@@ -199,6 +206,42 @@ func SortedPaths(links map[string][]LinkRelation) []string {
 	}
 	sort.Strings(paths)
 	return paths
+}
+
+// HubEntry represents a hub center with its spoke links for site map rendering.
+type HubEntry struct {
+	Path   string
+	Title  string
+	Spokes []LinkRelation
+}
+
+// Hubs returns all registered hub centers with their spokes, sorted by path.
+// Spokes within each hub are sorted alphabetically by title.
+func Hubs() []HubEntry {
+	hubsMu.RLock()
+	paths := make([]string, 0, len(hubsMap))
+	titles := make(map[string]string, len(hubsMap))
+	for p, t := range hubsMap {
+		paths = append(paths, p)
+		titles[p] = t
+	}
+	hubsMu.RUnlock()
+
+	sort.Strings(paths)
+
+	entries := make([]HubEntry, 0, len(paths))
+	for _, p := range paths {
+		spokes := LinksFor(p, "related")
+		sort.Slice(spokes, func(i, j int) bool {
+			return spokes[i].Title < spokes[j].Title
+		})
+		entries = append(entries, HubEntry{
+			Path:   p,
+			Title:  titles[p],
+			Spokes: spokes,
+		})
+	}
+	return entries
 }
 
 // TitleFromPath extracts a title from the last segment of a URL path.

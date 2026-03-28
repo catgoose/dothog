@@ -14,7 +14,7 @@ import (
 )
 
 // Root template
-func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, links []hypermedia.LinkRelation, currentPath string, version string, appName string) templ.Component {
+func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken string, devMode bool, theme string, crumbs []hypermedia.Breadcrumb, links []hypermedia.LinkRelation, currentPath string, version string, appName string, hubs []hypermedia.HubEntry) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -94,20 +94,28 @@ func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</main><footer class=\"text-center text-xs text-base-content/60 py-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</main>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.SiteMap(hubs).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<footer class=\"text-center text-xs text-base-content/60 py-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 46, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 49, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</footer><div id=\"report-modal-container\"></div><div id=\"report-email-container\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</footer><div id=\"report-modal-container\"></div><div id=\"report-email-container\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -115,7 +123,7 @@ func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -145,7 +153,7 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string) t
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<head>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<head>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -153,66 +161,66 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string) t
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<meta name=\"htmx-config\" content='{\"globalViewTransitions\":true,\"refreshOnHistoryMiss\":true,\"responseHandling\":[{\"code\":\".*\",\"swap\":true}]}'><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\" content=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<meta name=\"htmx-config\" content='{\"globalViewTransitions\":true,\"refreshOnHistoryMiss\":true,\"responseHandling\":[{\"code\":\".*\",\"swap\":true}]}'><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\" content=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(appName + " - IT operations dashboard for managing infrastructure, inventory, and real-time monitoring")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 64, Col: 140}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 67, Col: 140}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\"><link rel=\"preload\" href=\"/public/css/tailwind.css\" as=\"style\"><link rel=\"preload\" href=\"/public/js/_hyperscript.min.js\" as=\"script\"><link rel=\"preload\" href=\"/public/js/htmx.min.js\" as=\"script\"><script defer src=\"/public/js/htmx.min.js\"></script><script defer src=\"/public/js/_hyperscript.min.js\"></script><script defer src=\"/public/js/htmx.alpine-morph.js\"></script><script defer src=\"/public/js/alpine.morph.min.js\"></script><script defer src=\"/public/js/offline-indicator.js\"></script><script defer src=\"/public/js/alpine.min.js\"></script><script defer src=\"/public/js/htmx.ext.sse.js\"></script><link rel=\"stylesheet\" href=\"/public/css/tailwind.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"/public/css/daisyui.css\" type=\"text/css\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\"><link rel=\"preload\" href=\"/public/css/tailwind.css\" as=\"style\"><link rel=\"preload\" href=\"/public/js/_hyperscript.min.js\" as=\"script\"><link rel=\"preload\" href=\"/public/js/htmx.min.js\" as=\"script\"><script defer src=\"/public/js/htmx.min.js\"></script><script defer src=\"/public/js/_hyperscript.min.js\"></script><script defer src=\"/public/js/htmx.alpine-morph.js\"></script><script defer src=\"/public/js/alpine.morph.min.js\"></script><script defer src=\"/public/js/offline-indicator.js\"></script><script defer src=\"/public/js/alpine.min.js\"></script><script defer src=\"/public/js/htmx.ext.sse.js\"></script><link rel=\"stylesheet\" href=\"/public/css/tailwind.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"/public/css/daisyui.css\" type=\"text/css\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, href := range extraCSS {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<link rel=\"stylesheet\" href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<link rel=\"stylesheet\" href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var6 templ.SafeURL
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 82, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 85, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" type=\"text/css\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" type=\"text/css\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<link rel=\"icon\" type=\"image/svg+xml\" href=\"/public/images/favicon.svg\"><link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/public/images/favicon-32x32.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/public/images/favicon-16x16.png\"><link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/public/images/apple-touch-icon.png\"><link rel=\"manifest\" href=\"/public/images/site.webmanifest\"><title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<link rel=\"icon\" type=\"image/svg+xml\" href=\"/public/images/favicon.svg\"><link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/public/images/favicon-32x32.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/public/images/favicon-16x16.png\"><link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/public/images/apple-touch-icon.png\"><link rel=\"manifest\" href=\"/public/images/site.webmanifest\"><title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(appName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 91, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 94, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if devMode {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<script src=\"/public/js/dev-logging.js\"></script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<script src=\"/public/js/dev-logging.js\"></script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<script>\n\t\t\t/**\n\t\t\t * Restore persisted debug toggles from localStorage on every page load.\n\t\t\t * The admin settings page writes { \"htmx-log\": true, ... } to dothog_debug.\n\t\t\t * Waits for DOMContentLoaded so htmx/hyperscript are available.\n\t\t\t */\n\t\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\t\tvar state;\n\t\t\t\ttry { state = JSON.parse(localStorage.getItem('dothog_debug')) || {}; } catch(e) { return; }\n\t\t\t\tif (state['htmx-log'] && typeof htmx !== 'undefined') { htmx.logAll(); }\n\t\t\t\tif (state['htmx-events'] && typeof htmx !== 'undefined') {\n\t\t\t\t\twindow._htmxDbg = function(e) {\n\t\t\t\t\t\tconsole.debug('%c[htmx:' + e.type.replace('htmx:','') + ']', 'color:#38bdf8;font-weight:bold', e.detail);\n\t\t\t\t\t};\n\t\t\t\t\tvar evts = ['htmx:beforeRequest','htmx:afterRequest','htmx:beforeSwap','htmx:afterSwap','htmx:oobErrorNoTarget','htmx:sseMessage','htmx:sseError'];\n\t\t\t\t\tevts.forEach(function(t) { document.body.addEventListener(t, window._htmxDbg); });\n\t\t\t\t\twindow._htmxDbgEvts = evts;\n\t\t\t\t}\n\t\t\t\tif (state['hs-beep']) {\n\t\t\t\t\twindow._hsDbg = function(e) { console.debug('%c[_hs:beep]', 'color:#a78bfa;font-weight:bold', e.detail); };\n\t\t\t\t\tdocument.body.addEventListener('hyperscript:beep', window._hsDbg);\n\t\t\t\t}\n\t\t\t\tif (state['alpine-events']) {\n\t\t\t\t\twindow._alpineDbg = function(e) { console.debug('%c[alpine:' + e.type + ']', 'color:#34d399;font-weight:bold', e.detail); };\n\t\t\t\t\tdocument.addEventListener('alpine:initialized', window._alpineDbg);\n\t\t\t\t\tdocument.addEventListener('alpine:init', window._alpineDbg);\n\t\t\t\t}\n\t\t\t});\n\t\t</script><script defer>\n\t\t\t/**\n\t\t\t * Listen for server-sent theme-change events and apply them to the\n\t\t\t * document so all open browsers stay in sync.\n\t\t\t * @listens theme-change\n\t\t\t */\n\t\t\t(function() {\n\t\t\t\t/** @type {EventSource} */\n\t\t\t\tvar es = new EventSource(\"/sse/theme\");\n\t\t\t\tes.addEventListener(\"theme-change\", function(/** @type {MessageEvent} */ e) {\n\t\t\t\t\tdocument.documentElement.dataset.theme = e.data;\n\t\t\t\t});\n\t\t\t})();\n\t\t</script><script>\n\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\tnavigator.serviceWorker.register('/sw.js').catch(function(err) {\n\t\t\t\t\tconsole.warn('ServiceWorker registration failed:', err);\n\t\t\t\t});\n\t\t\t}\n\t\t</script></head>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<script>\n\t\t\t/**\n\t\t\t * Restore persisted debug toggles from localStorage on every page load.\n\t\t\t * The admin settings page writes { \"htmx-log\": true, ... } to dothog_debug.\n\t\t\t * Waits for DOMContentLoaded so htmx/hyperscript are available.\n\t\t\t */\n\t\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\t\tvar state;\n\t\t\t\ttry { state = JSON.parse(localStorage.getItem('dothog_debug')) || {}; } catch(e) { return; }\n\t\t\t\tif (state['htmx-log'] && typeof htmx !== 'undefined') { htmx.logAll(); }\n\t\t\t\tif (state['htmx-events'] && typeof htmx !== 'undefined') {\n\t\t\t\t\twindow._htmxDbg = function(e) {\n\t\t\t\t\t\tconsole.debug('%c[htmx:' + e.type.replace('htmx:','') + ']', 'color:#38bdf8;font-weight:bold', e.detail);\n\t\t\t\t\t};\n\t\t\t\t\tvar evts = ['htmx:beforeRequest','htmx:afterRequest','htmx:beforeSwap','htmx:afterSwap','htmx:oobErrorNoTarget','htmx:sseMessage','htmx:sseError'];\n\t\t\t\t\tevts.forEach(function(t) { document.body.addEventListener(t, window._htmxDbg); });\n\t\t\t\t\twindow._htmxDbgEvts = evts;\n\t\t\t\t}\n\t\t\t\tif (state['hs-beep']) {\n\t\t\t\t\twindow._hsDbg = function(e) { console.debug('%c[_hs:beep]', 'color:#a78bfa;font-weight:bold', e.detail); };\n\t\t\t\t\tdocument.body.addEventListener('hyperscript:beep', window._hsDbg);\n\t\t\t\t}\n\t\t\t\tif (state['alpine-events']) {\n\t\t\t\t\twindow._alpineDbg = function(e) { console.debug('%c[alpine:' + e.type + ']', 'color:#34d399;font-weight:bold', e.detail); };\n\t\t\t\t\tdocument.addEventListener('alpine:initialized', window._alpineDbg);\n\t\t\t\t\tdocument.addEventListener('alpine:init', window._alpineDbg);\n\t\t\t\t}\n\t\t\t});\n\t\t</script><script defer>\n\t\t\t/**\n\t\t\t * Listen for server-sent theme-change events and apply them to the\n\t\t\t * document so all open browsers stay in sync.\n\t\t\t * @listens theme-change\n\t\t\t */\n\t\t\t(function() {\n\t\t\t\t/** @type {EventSource} */\n\t\t\t\tvar es = new EventSource(\"/sse/theme\");\n\t\t\t\tes.addEventListener(\"theme-change\", function(/** @type {MessageEvent} */ e) {\n\t\t\t\t\tdocument.documentElement.dataset.theme = e.data;\n\t\t\t\t});\n\t\t\t})();\n\t\t</script><script>\n\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\tnavigator.serviceWorker.register('/sw.js').catch(function(err) {\n\t\t\t\t\tconsole.warn('ServiceWorker registration failed:', err);\n\t\t\t\t});\n\t\t\t}\n\t\t</script></head>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -242,7 +250,7 @@ func Layout(content templ.Component) templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div id=\"base-content\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div id=\"base-content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -250,7 +258,7 @@ func Layout(content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -280,20 +288,20 @@ func ThemeChanged(theme string) templ.Component {
 			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<span class=\"hidden\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<span class=\"hidden\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 165, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 168, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
