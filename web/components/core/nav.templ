@@ -1,10 +1,6 @@
 package components
 
-import (
-	"catgoose/dothog/internal/routes/hypermedia"
-	"sort"
-	"strings"
-)
+import "catgoose/dothog/internal/routes/hypermedia"
 
 // navHxAttrs converts a NavItem's HTMXAttrs map to templ.Attributes with "hx-" prefix.
 func navHxAttrs(item hypermedia.NavItem) templ.Attributes {
@@ -23,19 +19,10 @@ func navActiveClass(active bool) string {
 	return ""
 }
 
-// navPanelID derives a mega-panel DOM id from a nav item href.
-// e.g. "/demo" → "nav-panel-demo", "/admin/settings" → "nav-panel-admin-settings".
-func navPanelID(href string) string {
-	seg := strings.TrimPrefix(href, "/")
-	seg = strings.ReplaceAll(seg, "/", "-")
-	return "nav-panel-" + seg
-}
-
 // NavBar renders a DaisyUI horizontal navbar with optional HTMX enhancement.
 // Active state should be set server-side via SetActiveNavItem or SetActiveNavItemPrefix.
 templ NavBar(items []hypermedia.NavItem) {
 	<nav
-		id="main-nav"
 		class="navbar bg-base-200 shadow-sm"
 		x-data
 		x-on:click.window="$el.querySelectorAll('details[open]').forEach(d => { if (!d.contains($event.target)) d.open = false })"
@@ -48,49 +35,6 @@ templ NavBar(items []hypermedia.NavItem) {
 			</ul>
 		</div>
 	</nav>
-	for _, item := range items {
-		if groups := navHubGroups(item); len(groups) > 0 {
-			<div
-				id={ navPanelID(item.Href) }
-				class="nav-mega-panel hidden bg-base-100 border-b border-base-300 shadow-lg"
-				_="on mouseleave add .hidden to me"
-			>
-				<div class="flex flex-wrap gap-x-8 gap-y-3 px-6 py-4 max-w-6xl mx-auto">
-					for _, group := range groups {
-						<div>
-							if group.Name != "" {
-								<span class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">{ group.Name }</span>
-							}
-							<div class="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-								for _, link := range group.Items {
-									<a href={ templ.URL(link.Href) } class="text-sm link link-hover text-base-content/70 hover:text-base-content whitespace-nowrap">{ link.Title }</a>
-								}
-							</div>
-						</div>
-					}
-				</div>
-			</div>
-		}
-	}
-}
-
-// navHubGroups returns spoke links for a nav item grouped by ring, or nil if not a hub.
-func navHubGroups(item hypermedia.NavItem) []contextBarGroup {
-	spokes := hypermedia.LinksFor(item.Href, "related")
-	if len(spokes) == 0 {
-		return nil
-	}
-	// Convert to contextBarItem for reuse of resolveIntoRings
-	var items []contextBarItem
-	for _, s := range spokes {
-		items = append(items, contextBarItem{Href: s.Href, Title: s.Title})
-	}
-	groups := resolveIntoRings(items, item.Label, item.Href)
-	// Sort groups alphabetically by name
-	sort.Slice(groups, func(i, j int) bool {
-		return groups[i].Name < groups[j].Name
-	})
-	return groups
 }
 
 templ navMenuItem(item hypermedia.NavItem) {
@@ -109,21 +53,6 @@ templ navMenuItem(item hypermedia.NavItem) {
 					}
 				</ul>
 			</details>
-		</li>
-	} else if navHubGroups(item) != nil {
-		<li>
-			<a
-				href={ templ.URL(item.Href) }
-				class={ navActiveClass(item.Active) }
-				{ navHxAttrs(item)... }
-				_={ "on mouseenter " +
-					"add .hidden to .nav-mega-panel " +
-					"remove .hidden from #" + navPanelID(item.Href) + " " +
-					"on mouseleave wait 300ms if not #" + navPanelID(item.Href) + " matches :hover add .hidden to #" + navPanelID(item.Href) }
-			>
-				@heroIcon(item.Icon)
-				{ item.Label }
-			</a>
 		</li>
 	} else {
 		<li>
