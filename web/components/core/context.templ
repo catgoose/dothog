@@ -70,25 +70,36 @@ templ ContextStrip(crumbs []hypermedia.Breadcrumb) {
 templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
 	<div id="context-bar">
 		if groups := contextBarGroups(links, currentPath); len(groups) > 0 {
-			<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm">
-				for i, group := range groups {
-					if i > 0 {
-						<div class="w-px h-4 bg-base-300 shrink-0"></div>
+			if len(groups) == 1 {
+				// Single group: one horizontal row
+				<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1.5 bg-base-200/50 border-b border-base-300 text-sm">
+					@contextBarGroupItems(groups[0])
+				</div>
+			} else {
+				// Multiple groups: each group on its own row
+				<div class="flex flex-col gap-0 bg-base-200/50 border-b border-base-300 text-sm">
+					for _, group := range groups {
+						<div class="flex items-center justify-center gap-3 overflow-x-auto px-4 py-1">
+							@contextBarGroupItems(group)
+						</div>
 					}
-					if group.Name != "" && !group.IsHub {
-						<span class="text-base-content/30 text-xs font-medium whitespace-nowrap">{ group.Name }</span>
-					}
-					for _, item := range group.Items {
-						if item.IsUp {
-							<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/40 hover:text-base-content whitespace-nowrap">↑ { item.Title }</a>
-						} else {
-							<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/60 hover:text-base-content whitespace-nowrap">{ item.Title }</a>
-						}
-					}
-				}
-			</div>
+				</div>
+			}
 		}
 	</div>
+}
+
+templ contextBarGroupItems(group contextBarGroup) {
+	if group.Name != "" && !group.IsHub {
+		<span class="text-base-content/30 text-xs font-medium whitespace-nowrap">{ group.Name }</span>
+	}
+	for _, item := range group.Items {
+		if item.IsUp {
+			<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/40 hover:text-base-content whitespace-nowrap">↑ { item.Title }</a>
+		} else {
+			<a href={ templ.URL(item.Href) } class="link link-hover text-base-content/60 hover:text-base-content whitespace-nowrap">{ item.Title }</a>
+		}
+	}
 }
 
 // ContextLink renders a single link for use inside a ContextStrip or ContextBar.
