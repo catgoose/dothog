@@ -45,19 +45,19 @@ templ AppSettingsPage(currentTheme string, currentLayout string) {
 					<div class="mt-2 space-y-2">
 						<label class="label cursor-pointer justify-start gap-3">
 							<input type="checkbox" class="toggle toggle-sm toggle-primary"
-								_="init set my.checked to localStorage.getItem('dothog_hide_context_bar') !== 'true'
+								_="init set my.checked to localStorage.getItem('dothog_show_context_bar') === 'true'
 								   on change
 								     if my.checked
-								       set localStorage.dothog_hide_context_bar to 'false'
+								       set localStorage.dothog_show_context_bar to 'true'
 								       show #context-bar
 								     else
-								       set localStorage.dothog_hide_context_bar to 'true'
+								       set localStorage.dothog_show_context_bar to 'false'
 								       hide #context-bar
 								     end"/>
 							<div>
 								<span class="label-text">Show full context bar</span>
-								<span class="badge badge-ghost badge-sm ml-1">help</span>
-								<p class="text-xs text-base-content/40">All pages in your section, grouped by rings</p>
+								<button class="badge badge-ghost badge-sm ml-1" _="on click toggle .hidden on next <p/>">help</button>
+								<p class="hidden text-xs text-base-content/40">All pages in your section, grouped by rings</p>
 							</div>
 						</label>
 						<label class="label cursor-pointer justify-start gap-3">
@@ -73,25 +73,25 @@ templ AppSettingsPage(currentTheme string, currentLayout string) {
 								     end"/>
 							<div>
 								<span class="label-text">Show local context bar</span>
-								<span class="badge badge-ghost badge-sm ml-1">help</span>
-								<p class="text-xs text-base-content/40">Your immediate sibling pages in the same ring</p>
+								<button class="badge badge-ghost badge-sm ml-1" _="on click toggle .hidden on next <p/>">help</button>
+								<p class="hidden text-xs text-base-content/40">Your immediate sibling pages in the same ring</p>
 							</div>
 						</label>
 						<label class="label cursor-pointer justify-start gap-3">
 							<input type="checkbox" class="toggle toggle-sm toggle-primary"
-								_="init set my.checked to localStorage.getItem('dothog_hide_history_crumbs') !== 'true'
+								_="init set my.checked to localStorage.getItem('dothog_show_history_crumbs') === 'true'
 								   on change
 								     if my.checked
-								       set localStorage.dothog_hide_history_crumbs to 'false'
+								       set localStorage.dothog_show_history_crumbs to 'true'
 								       show #history-breadcrumbs
 								     else
-								       set localStorage.dothog_hide_history_crumbs to 'true'
+								       set localStorage.dothog_show_history_crumbs to 'false'
 								       hide #history-breadcrumbs
 								     end"/>
 							<div>
 								<span class="label-text">Show history breadcrumbs</span>
-								<span class="badge badge-ghost badge-sm ml-1">help</span>
-								<p class="text-xs text-base-content/40">Trail of the last few pages you visited</p>
+								<button class="badge badge-ghost badge-sm ml-1" _="on click toggle .hidden on next <p/>">help</button>
+								<p class="hidden text-xs text-base-content/40">Trail of the last few pages you visited</p>
 							</div>
 						</label>
 					</div>
