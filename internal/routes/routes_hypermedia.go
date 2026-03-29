@@ -78,6 +78,7 @@ func (ar *appRoutes) initHypermediaRoutes() {
 	ar.e.POST(hypermediaBase+"/interactions/submit", s.handleInteractionsSubmit)
 	ar.e.POST(hypermediaBase+"/interactions/preview", s.handleInteractionsPreview)
 	ar.e.POST(hypermediaBase+"/interactions/comment", s.handleInteractionsComment)
+	ar.e.POST(hypermediaBase+"/interactions/inline-title", handleInteractionsInlineTitle)
 
 	// Standards page
 	ar.e.GET(hypermediaBase+"/standards", handler.HandleComponent(views.HypermediaStandardsPage()))
@@ -299,6 +300,16 @@ func (s *hypermediaState) handleInteractionsComment(c echo.Context) error {
 	comment := text
 	s.mu.Unlock()
 	return handler.RenderComponent(c, views.InteractionsCommentItem(comment))
+}
+
+// ─── Inline editing handler ─────────────────────────────────────────────────────
+
+func handleInteractionsInlineTitle(c echo.Context) error {
+	title := strings.TrimSpace(c.FormValue("title"))
+	if title == "" {
+		title = "Click to edit this title"
+	}
+	return handler.RenderComponent(c, views.InlineTitleFragment(title))
 }
 
 // ─── State handlers ────────────────────────────────────────────────────────────

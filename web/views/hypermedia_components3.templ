@@ -20,7 +20,7 @@ templ Components3Page(data Components3PageData) {
 			<a href="/hypermedia/components2" class="btn btn-sm btn-ghost">← Components 2</a>
 		</div>
 		<div role="alert" class="alert alert-info text-sm">
-			<span>Demonstrates: <strong>infinite scroll</strong>, <strong>optimistic UI</strong>, <strong>undo / soft delete</strong>, <strong>native HTML elements</strong>.</span>
+			<span>Demonstrates: <strong>infinite scroll</strong>, <strong>optimistic UI</strong>, <strong>undo / soft delete</strong>, <strong>native HTML elements</strong>, <strong>locale formatting</strong>.</span>
 		</div>
 		<!-- 1. Infinite Scroll -->
 		<div class="card bg-base-100 shadow border border-base-300">
@@ -164,12 +164,41 @@ templ Components3Page(data Components3PageData) {
 				</p>
 			</div>
 		</div>
+		<!-- 5. Locale Formatting -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Locale Formatting — Intl APIs</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					Browser-native formatting using <code class="text-xs bg-base-200 px-1 rounded">Intl</code> APIs.
+					Server renders raw data, Alpine formats for your locale.
+				</p>
+				<div class="space-y-2 mt-2">
+					<div x-data class="flex justify-between">
+						<span class="text-sm text-base-content/60">Relative time:</span>
+						<span class="text-sm font-mono" x-text="new Intl.RelativeTimeFormat(navigator.language, {numeric:'auto'}).format(-2, 'hour')">2 hours ago</span>
+					</div>
+					<div x-data class="flex justify-between">
+						<span class="text-sm text-base-content/60">Currency:</span>
+						<span class="text-sm font-mono" x-text="new Intl.NumberFormat(navigator.language, {style:'currency', currency:'USD'}).format(1234.56)">$1,234.56</span>
+					</div>
+					<div x-data class="flex justify-between">
+						<span class="text-sm text-base-content/60">List:</span>
+						<span class="text-sm font-mono" x-text="new Intl.ListFormat(navigator.language, {style:'long', type:'conjunction'}).format(['Alice','Bob','Charlie'])">Alice, Bob, and Charlie</span>
+					</div>
+					<div x-data class="flex justify-between">
+						<span class="text-sm text-base-content/60">Date:</span>
+						<span class="text-sm font-mono" x-text="new Intl.DateTimeFormat(navigator.language, {dateStyle:'full'}).format(new Date())">Friday, March 28, 2026</span>
+					</div>
+				</div>
+			</div>
+		</div>
 		<!-- Pattern summary cards -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 			@componentPatternCard3("Infinite Scroll", "GET /feed?page=N", "Sentinel with hx-trigger=\"revealed\" auto-loads the next page as user scrolls.")
 			@componentPatternCard3("Optimistic UI", "POST /favorite/:id", "HyperScript toggles state immediately; server response reconciles after 800ms.")
 			@componentPatternCard3("Undo Delete", "DELETE + POST /restore", "Soft-delete returns an undo toast; restore POST swaps the item back in.")
 			@componentPatternCard3("Native Elements", "(no JS)", "details, datalist, meter, progress, mark — semantic HTML elements that work without JavaScript.")
+			@componentPatternCard3("Locale Formatting", "(client only)", "Intl.RelativeTimeFormat, NumberFormat, ListFormat, DateTimeFormat — browser-native locale-aware formatting via Alpine.")
 		</div>
 	</div>
 }
