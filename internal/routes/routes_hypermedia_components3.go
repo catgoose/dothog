@@ -4,6 +4,7 @@ package routes
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"sync"
 	"time"
@@ -90,6 +91,9 @@ func (ar *appRoutes) initComponents3Routes() {
 
 	// Optimistic UI
 	ar.e.POST(components3Base+"/favorite/:id", s.handleFavoriteToggle)
+
+	// Calculate (output element demo)
+	ar.e.GET(components3Base+"/calculate", handleCalculate)
 
 	// Undo / soft delete
 	ar.e.DELETE(components3Base+"/undo/:id", s.handleUndoDelete)
@@ -237,6 +241,14 @@ func (s *components3State) handleUndoList(c echo.Context) error {
 	s.mu.RUnlock()
 
 	return handler.RenderComponent(c, views.UndoListFragment(items))
+}
+
+// ─── Calculate handler (output element demo) ────────────────────────────────────
+
+func handleCalculate(c echo.Context) error {
+	a := rand.Intn(100) + 1
+	b := rand.Intn(100) + 1
+	return c.HTML(200, fmt.Sprintf("%d + %d = <strong>%d</strong>", a, b, a+b))
 }
 
 // ─── helpers ────────────────────────────────────────────────────────────────────

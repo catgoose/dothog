@@ -121,6 +121,44 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Anchor positioning for tooltips (progressive enhancement) */
+@supports (anchor-name: --x) {
+    [data-tooltip-anchor] {
+        anchor-name: --tooltip-trigger;
+    }
+    [data-tooltip-content] {
+        position: fixed;
+        position-anchor: --tooltip-trigger;
+        top: anchor(bottom);
+        left: anchor(center);
+        translate: -50% 4px;
+    }
+}
+
+/* Scoped styles example — component isolation without Shadow DOM */
+@supports (selector(&)) {
+    @scope (.scoped-card) to (.scoped-card-body) {
+        h3 { font-weight: 700; }
+        p { margin-block: 0.25em; color: color-mix(in oklch, currentColor 70%, transparent); }
+    }
+}
+
+/* Scroll-driven animations (progressive enhancement) */
+@supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .scroll-reveal {
+            animation: scrollReveal linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 100%;
+        }
+
+        @keyframes scrollReveal {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    }
+}
+
 /* View Transitions: animated page navigation for hx-boost */
 @view-transition {
     navigation: auto;

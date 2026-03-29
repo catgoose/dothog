@@ -162,6 +162,13 @@ templ Components3Page(data Components3PageData) {
 					The <mark>hypermedia</mark> approach uses <mark>server-driven</mark> UI instead of client-side routing.
 					Each response contains the full <mark>HTML</mark> needed to render the next state.
 				</p>
+				<!-- output element -->
+				<h3 class="font-semibold text-sm mt-4 mb-1">Accessible Results — <code class="text-xs bg-base-200 px-1 rounded">&lt;output&gt;</code></h3>
+				<p class="text-xs text-base-content/60 mb-2">Implicit aria-live region. Screen readers announce changes automatically.</p>
+				<div class="flex items-center gap-3">
+					<button class="btn btn-sm btn-primary" hx-get="/hypermedia/components3/calculate" hx-target="#calc-result" hx-swap="innerHTML">Calculate</button>
+					<output id="calc-result" class="font-mono text-sm">—</output>
+				</div>
 			</div>
 		</div>
 		<!-- 5. Locale Formatting -->

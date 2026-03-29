@@ -75,6 +75,13 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		<link rel="preload" href="/public/css/tailwind.css" as="style"/>
 		<link rel="preload" href="/public/js/_hyperscript.min.js" as="script"/>
 		<link rel="preload" href="/public/js/htmx.min.js" as="script"/>
+		<script>
+			if (window.trustedTypes) {
+				trustedTypes.createPolicy('default', {
+					createHTML: function(value) { return value; }
+				});
+			}
+		</script>
 		<script defer src="/public/js/htmx.min.js"></script>
 		<script defer src="/public/js/_hyperscript.min.js"></script>
 		<script defer src="/public/js/htmx.alpine-morph.js"></script>
