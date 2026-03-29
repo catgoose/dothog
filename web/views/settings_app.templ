@@ -32,7 +32,10 @@ templ AppSettingsPage(currentTheme string, links []hypermedia.LinkRelation) {
 								       set localStorage.dothog_hide_context_bar to 'true'
 								       hide #context-bar
 								     end"/>
-							<span class="label-text">Show full context bar</span>
+							<div>
+								<span class="label-text">Show full context bar</span>
+								<p class="text-xs text-base-content/40">All pages in your section, grouped by rings</p>
+							</div>
 						</label>
 						<label class="label cursor-pointer justify-start gap-3">
 							<input type="checkbox" class="toggle toggle-sm toggle-primary"
@@ -45,7 +48,10 @@ templ AppSettingsPage(currentTheme string, links []hypermedia.LinkRelation) {
 								       set localStorage.dothog_hide_local_context_bar to 'true'
 								       hide #local-context-bar
 								     end"/>
-							<span class="label-text">Show local context bar</span>
+							<div>
+								<span class="label-text">Show local context bar</span>
+								<p class="text-xs text-base-content/40">Your immediate sibling pages in the same ring</p>
+							</div>
 						</label>
 						<label class="label cursor-pointer justify-start gap-3">
 							<input type="checkbox" class="toggle toggle-sm toggle-primary"
@@ -58,7 +64,10 @@ templ AppSettingsPage(currentTheme string, links []hypermedia.LinkRelation) {
 								       set localStorage.dothog_hide_history_crumbs to 'true'
 								       hide #history-breadcrumbs
 								     end"/>
-							<span class="label-text">Show history breadcrumbs</span>
+							<div>
+								<span class="label-text">Show history breadcrumbs</span>
+								<p class="text-xs text-base-content/40">Trail of the last few pages you visited</p>
+							</div>
 						</label>
 					</div>
 				</details>

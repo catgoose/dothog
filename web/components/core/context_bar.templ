@@ -195,9 +195,16 @@ templ ContextBar(links []hypermedia.LinkRelation, currentPath string) {
 					}
 				</div>
 				<button
+					_="on click toggle .hidden on #context-bar-help"
+					class="absolute left-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content"
+				>?</button>
+				<button
 					_="on click set localStorage.dothog_hide_context_bar to 'true' then hide #context-bar"
 					class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content"
 				>&#x2715;</button>
+				<div id="context-bar-help" class="hidden text-xs text-center text-base-content/40 py-0.5">
+					All pages in your current section, grouped by relationship rings
+				</div>
 			</div>
 		}
 	</div>
@@ -229,9 +236,16 @@ templ LocalContextBar(links []hypermedia.LinkRelation, currentPath string) {
 					}
 				</div>
 				<button
+					_="on click toggle .hidden on #local-context-bar-help"
+					class="absolute left-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content"
+				>?</button>
+				<button
 					_="on click set localStorage.dothog_hide_local_context_bar to 'true' then hide #local-context-bar"
 					class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content"
 				>&#x2715;</button>
+				<div id="local-context-bar-help" class="hidden text-xs text-center text-base-content/40 py-0.5">
+					Your immediate sibling pages in the same ring
+				</div>
 			</div>
 		}
 	</div>
@@ -306,9 +320,16 @@ templ HistoryBreadcrumbs() {
 				<span class="text-base-content/60 font-medium whitespace-nowrap" x-text="(document.querySelector('meta[name=page-title]') || {}).content || titleFromPath(window.location.pathname)"></span>
 			</div>
 			<button
+				_="on click toggle .hidden on #history-crumbs-help"
+				class="absolute left-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content"
+			>?</button>
+			<button
 				_="on click set localStorage.dothog_hide_history_crumbs to 'true' then hide #history-breadcrumbs"
 				class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-base-content/30 hover:text-base-content"
 			>&#x2715;</button>
+			<div id="history-crumbs-help" class="hidden text-xs text-center text-base-content/40 py-0.5">
+				Trail of the last few pages you visited
+			</div>
 		</div>
 	</div>
 }
