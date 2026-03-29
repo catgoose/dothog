@@ -227,6 +227,24 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 ) (*echo.Echo, error) {
 	e := echo.New()
 
+	// 103 Early Hints: preload critical assets before the handler runs.
+	// Uses the raw http.ResponseWriter to send an informational response
+	// before the final 200. Requires HTTP/2+ and a flusher-capable writer.
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			w := c.Response().Writer
+			if flusher, ok := w.(http.Flusher); ok {
+				h := w.Header()
+				h.Add("Link", "</public/css/tailwind.css>; rel=preload; as=style")
+				h.Add("Link", "</public/css/daisyui.css>; rel=preload; as=style")
+				h.Add("Link", "</public/js/htmx.min.js>; rel=preload; as=script")
+				w.WriteHeader(http.StatusEarlyHints) // 103
+				flusher.Flush()
+			}
+			return next(c)
+		}
+	})
+
 	e.Use(middleware.ServerTimingMiddleware())
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
 	e.Use(echoMiddleware.RequestLogger())

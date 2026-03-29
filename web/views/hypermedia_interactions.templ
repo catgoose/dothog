@@ -9,7 +9,7 @@ templ InteractionsPage(comments []string) {
 			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Overview</a>
 		</div>
 		<div role="alert" class="alert alert-info text-sm">
-			<span>Demonstrates: <strong>submit</strong>, <strong>cancel</strong>, <strong>modal-open</strong>, <strong>modal-close</strong>, <strong>preview</strong>, <strong>comment</strong>, <strong>popover</strong>.</span>
+			<span>Demonstrates: <strong>submit</strong>, <strong>cancel</strong>, <strong>modal-open</strong>, <strong>modal-close</strong>, <strong>preview</strong>, <strong>comment</strong>, <strong>inline-edit</strong>, <strong>popover</strong>.</span>
 		</div>
 		<!-- Submit + Cancel -->
 		<div class="card bg-base-100 shadow border border-base-300">
@@ -116,6 +116,23 @@ templ InteractionsPage(comments []string) {
 				</ul>
 			</div>
 		</div>
+		<!-- Inline Editing -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Inline Editing</h2>
+				<p class="text-sm text-base-content/70 mb-3">Click the title below to edit it in place. Changes save on blur.</p>
+				<h2
+					contenteditable="plaintext-only"
+					class="text-xl font-bold border-b border-transparent hover:border-base-300 focus:border-primary focus:outline-none px-1 py-0.5 transition-colors"
+					hx-trigger="blur"
+					hx-post="/hypermedia/interactions/inline-title"
+					hx-swap="outerHTML"
+					hx-vals="js:{title: event.target.textContent}"
+				>
+					Click to edit this title
+				</h2>
+			</div>
+		</div>
 		<!-- Popover: Delete Confirmation -->
 		<div class="card bg-base-100 shadow border border-base-300">
 			<div class="card-body p-4">
@@ -174,6 +191,7 @@ templ InteractionsPage(comments []string) {
 			@interactionPatternCard("Modal Open/Close", "GET /interactions/modal", "Fetch dialog HTML, inject, call showModal(). Close via dialog.close().")
 			@interactionPatternCard("Preview", "POST /interactions/preview", "hx-trigger=\"keyup delay:500ms\" debounces; server renders preview.")
 			@interactionPatternCard("Comment", "POST /interactions/comment", "hx-swap=\"beforeend\" appends only the new comment item.")
+			@interactionPatternCard("Inline Edit", "POST /interactions/inline-title", "contenteditable=\"plaintext-only\" with hx-trigger=\"blur\" saves on focus loss.")
 			@interactionPatternCard("Popover", "(client only)", "Native HTML popover API — click-outside dismiss, Escape to close, top-layer rendering. Zero JavaScript.")
 		</div>
 	</div>
@@ -228,6 +246,20 @@ templ InteractionsCommentItem(comment string) {
 		<span class="text-base-content/40">→</span>
 		<span>{ comment }</span>
 	</li>
+}
+
+// InlineTitleFragment returns the contenteditable title element with updated content.
+templ InlineTitleFragment(title string) {
+	<h2
+		contenteditable="plaintext-only"
+		class="text-xl font-bold border-b border-transparent hover:border-base-300 focus:border-primary focus:outline-none px-1 py-0.5 transition-colors"
+		hx-trigger="blur"
+		hx-post="/hypermedia/interactions/inline-title"
+		hx-swap="outerHTML"
+		hx-vals="js:{title: event.target.textContent}"
+	>
+		{ title }
+	</h2>
 }
 
 templ interactionPatternCard(title, method, desc string) {
