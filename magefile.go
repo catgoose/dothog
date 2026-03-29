@@ -17,9 +17,7 @@ import (
 	"strings"
 	"time"
 
-	// setup:feature:demo:start
 	"catgoose/dothog/internal/setup"
-	// setup:feature:demo:end
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -675,6 +673,8 @@ func SetupTo(dest, appName string) error {
 	return nil
 }
 
+// setup:feature:demo:end
+
 // parseFeatureFlag parses the --features value.
 // "all" → all features, "none" → empty slice, otherwise comma-separated tags.
 func parseFeatureFlag(val string) []string {
@@ -716,8 +716,6 @@ func parseFeatureFlag(val string) []string {
 	}
 	return features
 }
-
-// setup:feature:demo:end
 
 // Lint runs static analysis and style checks on the codebase.
 func Lint() error {
