@@ -34,6 +34,7 @@ _You don't just accidentally create abstractions until you suddenly have a frame
     - [Real-time SSE Dashboard](#real-time-sse-dashboard)
     - [Data Views, Filtering, and Pagination](#data-views-filtering-and-pagination)
     - [State and Interaction Patterns](#state-and-interaction-patterns)
+    - [HAL (Hypertext Application Language)](#hal-hypertext-application-language)
   - [Schema Builder](#schema-builder)
     - [Table Traits](#table-traits)
     - [Table Types](#table-types)
@@ -280,6 +281,20 @@ Additional hypermedia patterns demonstrated:
 - **Append** -- `hx-swap="beforeend"` appends new list items without replacing existing content; form resets via `hx-on::after-request="this.reset()"`
 - **Modal** -- `hx-get` fetches a `<dialog>` fragment, `hx-on::load="this.showModal()"` opens it
 - **Dismiss** -- HyperScript (`_="on click ..."`) handles client-only UI like fade-out and element removal without a server round-trip
+
+### HAL (Hypertext Application Language)
+
+> _"What if instead of guessing URLs, the client just... followed links?" "That is called a browser." "No, I mean for APIs." "That is called a browser for APIs." The student opened a new tab. The student was beginning to understand._
+
+An interactive explorer for [HAL](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal) (`application/hal+json`), the JSON hypermedia format that adds `_links` and `_embedded` to plain resources:
+
+- **`_links`** -- Each resource advertises its relations (`self`, `up`, `author`, `books`) as navigable hrefs. The explorer renders them as clickable HTMX buttons that fetch the target resource and swap the view.
+- **`_embedded`** -- Sub-resources included inline to reduce round-trips. The books collection embeds all book resources; the explorer renders them as expandable detail cards.
+- **Templated URIs** -- RFC 6570 URI templates (`/books?q={query}`) appear with an input field so you can search without constructing URLs.
+- **Curies** -- Compact URI namespaces for custom link relations, with documentation links.
+- **Dual view** -- Every navigation shows the rendered hypermedia card alongside the raw HAL+JSON response, so you can see both the human and machine representations.
+
+The same endpoints serve `application/hal+json` to API clients. The explorer uses HTMX to render them as HTML fragments — content negotiation in action.
 
 ### Breadcrumb Origin Tracking
 
