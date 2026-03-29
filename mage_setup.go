@@ -311,6 +311,7 @@ func runWizard() (*setup.Options, error) {
 					huh.NewOption("Public site — sessions, link relations, web standards, browser APIs", "public"),
 					huh.NewOption("Demo/playground — everything enabled", "demo"),
 					huh.NewOption("Minimal — bare HTMX app", "minimal"),
+					huh.NewOption("Pick from list (flat checklist)", "flat"),
 					huh.NewOption("Let me choose (guided wizard)", "guided"),
 				).
 				Value(&preset),
@@ -324,7 +325,29 @@ func runWizard() (*setup.Options, error) {
 		return nil, err
 	}
 
-	if preset == "guided" {
+	if preset == "flat" {
+		// ── Flat checklist: nothing pre-selected ───────────────────
+		var featureOptions []huh.Option[string]
+		for _, tag := range featureLabelOrder {
+			featureOptions = append(featureOptions, huh.NewOption(featureLabels[tag], tag))
+		}
+		flatForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Features").
+					Description("Dependencies will be auto-included after selection").
+					Options(featureOptions...).
+					Value(&features),
+			).Title("Select Features"),
+		)
+		if err := flatForm.Run(); err != nil {
+			if errors.Is(err, huh.ErrUserAborted) {
+				fmt.Println("Setup cancelled.")
+				return nil, nil
+			}
+			return nil, err
+		}
+	} else if preset == "guided" {
 		// ── Guided wizard: ask about dependencies first ────────────
 
 		guidedForm := huh.NewForm(
