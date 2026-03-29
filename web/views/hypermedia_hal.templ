@@ -1,0 +1,314 @@
+// setup:feature:demo
+package views
+
+import "fmt"
+
+// ─── View models ─────────────────────────────────────────────────────────────
+
+type HALResourceView struct {
+	Props         []HALPropView
+	Links         []HALLinkView
+	EmbeddedBooks []HALResourceView
+}
+
+type HALPropView struct {
+	Key   string
+	Value string
+}
+
+type HALLinkView struct {
+	Rel       string
+	Href      string
+	Title     string
+	Templated bool
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
+templ HALPage(rawJSON string, resource HALResourceView) {
+	<div class="p-4 space-y-6 max-w-5xl mx-auto">
+		<div class="flex items-center justify-between mb-4">
+			<div>
+				<h1 class="text-2xl font-bold">HAL — Hypertext Application Language</h1>
+				<p class="text-sm text-base-content/60 mt-1">RFC draft — <code class="text-xs bg-base-200 px-1 rounded">application/hal+json</code></p>
+			</div>
+			<a href="/hypermedia" class="btn btn-sm btn-ghost">← Hypermedia</a>
+		</div>
+
+		<div role="alert" class="alert alert-info text-sm">
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+			<span>
+				HAL represents resources with <strong>_links</strong> (relations to other resources) and
+				<strong>_embedded</strong> (inline sub-resources). Click any link below to navigate the resource graph — each
+				navigation fetches the HAL+JSON, then renders it as interactive hypermedia.
+			</span>
+		</div>
+
+		<!-- Intro cards -->
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			@halConceptCard("_links", "Relations to other resources by IANA link relation type (self, up, related, etc). Each link has an href and optional title.", "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1")
+			@halConceptCard("_embedded", "Sub-resources included inline to reduce round-trips. The client can render them immediately without following a link.", "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10")
+			@halConceptCard("Curies", "Compact URI templates that namespace custom link relations. Allows APIs to provide documentation links for non-standard rels.", "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z")
+		</div>
+
+		<!-- Explorer -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base flex items-center gap-2">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+					Resource Explorer
+				</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					Navigate the HAL resource graph. Each click follows a <code class="text-xs bg-base-200 px-1 rounded">_link</code> and
+					renders the response as an interactive card. The raw HAL+JSON is shown alongside.
+				</p>
+				<div id="hal-explorer">
+					@HALExploreFragment(rawJSON, resource, "/hypermedia/hal/api/catalog")
+				</div>
+			</div>
+		</div>
+
+		<!-- Pattern summary -->
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			@halPatternCard("Link Navigation",
+				"GET /hal/api/catalog → follow _links",
+				"The client discovers available actions from _links. No URL construction needed — the server provides all hrefs.")
+			@halPatternCard("Embedded Resources",
+				"GET /hal/api/books → _embedded.books[]",
+				"Sub-resources are included inline. The explorer renders them as nested cards that can be individually followed.")
+			@halPatternCard("Templated Links",
+				`"search": {"href": "/books?q={query}", "templated": true}`,
+				"URI Templates (RFC 6570) allow parameterized links. The explorer detects these and shows an input field.")
+			@halPatternCard("Content Negotiation",
+				"Accept: application/hal+json",
+				"The same endpoints serve HAL+JSON to API clients. The explorer uses HTMX to render them as HTML fragments.")
+		</div>
+	</div>
+}
+
+// ─── Explorer fragment (swapped by HTMX) ────────────────────────────────────
+
+templ HALExploreFragment(rawJSON string, resource HALResourceView, currentURL string) {
+	<div id="hal-explorer" class="space-y-4">
+		<!-- Breadcrumb / current URL -->
+		<div class="flex items-center gap-2 text-sm">
+			<span class="badge badge-primary badge-outline font-mono">GET</span>
+			<code class="text-xs bg-base-200 px-2 py-1 rounded flex-1 overflow-x-auto">{ currentURL }</code>
+			<button
+				class="btn btn-xs btn-ghost"
+				hx-get={ fmt.Sprintf("/hypermedia/hal/explore?url=%s", "/hypermedia/hal/api/catalog") }
+				hx-target="#hal-explorer"
+				hx-swap="outerHTML"
+			>⌂ Root</button>
+		</div>
+
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+			<!-- Rendered resource -->
+			<div class="space-y-3">
+				<!-- Properties -->
+				if len(resource.Props) > 0 {
+					<div class="bg-base-200/50 rounded-lg p-3">
+						<h3 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">Properties</h3>
+						<dl class="space-y-1">
+							for _, p := range resource.Props {
+								<div class="flex gap-2 text-sm">
+									<dt class="font-mono text-primary min-w-[100px]">{ p.Key }</dt>
+									<dd class="text-base-content/80">{ p.Value }</dd>
+								</div>
+							}
+						</dl>
+					</div>
+				}
+
+				<!-- Links -->
+				if len(resource.Links) > 0 {
+					<div class="bg-base-200/50 rounded-lg p-3">
+						<h3 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">
+							<span class="text-secondary">_links</span>
+						</h3>
+						<div class="space-y-1">
+							for _, l := range resource.Links {
+								if l.Templated {
+									@halTemplatedLink(l)
+								} else {
+									<div class="flex items-center gap-2 text-sm group">
+										<span class="badge badge-sm badge-outline font-mono min-w-[70px] text-center">{ l.Rel }</span>
+										<button
+											class="btn btn-xs btn-ghost text-left flex-1 justify-start font-mono truncate group-hover:btn-primary group-hover:text-primary-content transition-colors"
+											hx-get={ fmt.Sprintf("/hypermedia/hal/explore?url=%s", l.Href) }
+											hx-target="#hal-explorer"
+											hx-swap="outerHTML"
+											hx-indicator="#hal-loading"
+										>
+											{ l.Href }
+										</button>
+										if l.Title != "" {
+											<span class="text-xs text-base-content/50 hidden sm:inline">{ l.Title }</span>
+										}
+									</div>
+								}
+							}
+						</div>
+					</div>
+				}
+
+				<!-- Embedded -->
+				if len(resource.EmbeddedBooks) > 0 {
+					<div class="bg-base-200/50 rounded-lg p-3">
+						<h3 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">
+							<span class="text-accent">_embedded</span>.books
+							<span class="badge badge-xs badge-accent ml-1">{ fmt.Sprintf("%d", len(resource.EmbeddedBooks)) }</span>
+						</h3>
+						<div class="space-y-2">
+							for _, book := range resource.EmbeddedBooks {
+								@halEmbeddedCard(book)
+							}
+						</div>
+					</div>
+				}
+			</div>
+
+			<!-- Raw JSON -->
+			<div class="bg-base-200/50 rounded-lg p-3">
+				<div class="flex items-center justify-between mb-2">
+					<h3 class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+						HAL+JSON Response
+					</h3>
+					<span class="badge badge-xs badge-ghost font-mono">application/hal+json</span>
+				</div>
+				<pre class="text-xs font-mono overflow-x-auto whitespace-pre bg-base-300/50 p-3 rounded max-h-[500px] overflow-y-auto"><code>{ rawJSON }</code></pre>
+			</div>
+		</div>
+
+		<!-- Loading indicator -->
+		<div id="hal-loading" class="htmx-indicator flex items-center gap-2 text-sm text-base-content/50">
+			<span class="loading loading-spinner loading-xs"></span>
+			Following link…
+		</div>
+	</div>
+}
+
+// ─── Error fragment ──────────────────────────────────────────────────────────
+
+templ HALErrorFragment(url string, errMsg string) {
+	<div id="hal-explorer" class="space-y-4">
+		<div class="flex items-center gap-2 text-sm">
+			<span class="badge badge-error badge-outline font-mono">ERROR</span>
+			<code class="text-xs bg-base-200 px-2 py-1 rounded flex-1">{ url }</code>
+		</div>
+		<div role="alert" class="alert alert-error text-sm">
+			<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+			<span>{ errMsg }</span>
+		</div>
+		<button
+			class="btn btn-sm btn-primary"
+			hx-get={ fmt.Sprintf("/hypermedia/hal/explore?url=%s", "/hypermedia/hal/api/catalog") }
+			hx-target="#hal-explorer"
+			hx-swap="outerHTML"
+		>← Back to Catalog</button>
+	</div>
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+templ halTemplatedLink(l HALLinkView) {
+	<div class="flex items-center gap-2 text-sm flex-wrap">
+		<span class="badge badge-sm badge-outline font-mono min-w-[70px] text-center">{ l.Rel }</span>
+		<span class="badge badge-xs badge-warning">templated</span>
+		<code class="text-xs text-base-content/60">{ l.Href }</code>
+		if l.Rel == "search" {
+			<div class="join ml-auto">
+				<input
+					id="hal-search-input"
+					type="text"
+					class="input input-xs input-bordered join-item w-40"
+					placeholder="Search books…"
+					name="q"
+					hx-get="/hypermedia/hal/explore"
+					hx-target="#hal-explorer"
+					hx-swap="outerHTML"
+					hx-trigger="keyup[keyCode==13]"
+					hx-vals={ fmt.Sprintf(`js:{url: '%s/api/books?q=' + document.getElementById('hal-search-input').value}`, "/hypermedia/hal") }
+				/>
+				<button
+					class="btn btn-xs btn-primary join-item"
+					hx-get="/hypermedia/hal/explore"
+					hx-target="#hal-explorer"
+					hx-swap="outerHTML"
+					hx-vals={ fmt.Sprintf(`js:{url: '%s/api/books?q=' + document.getElementById('hal-search-input').value}`, "/hypermedia/hal") }
+				>Search</button>
+			</div>
+		}
+	</div>
+}
+
+templ halEmbeddedCard(book HALResourceView) {
+	<details class="collapse collapse-arrow bg-base-100 border border-base-300">
+		<summary class="collapse-title text-sm font-medium py-2 min-h-0">
+			for _, p := range book.Props {
+				if p.Key == "title" {
+					{ p.Value }
+				}
+			}
+			for _, p := range book.Props {
+				if p.Key == "year" {
+					<span class="badge badge-xs badge-ghost ml-2">{ p.Value }</span>
+				}
+			}
+		</summary>
+		<div class="collapse-content px-3 pb-3">
+			<!-- Book properties -->
+			<dl class="space-y-1 mb-3">
+				for _, p := range book.Props {
+					<div class="flex gap-2 text-xs">
+						<dt class="font-mono text-primary min-w-[70px]">{ p.Key }</dt>
+						<dd class="text-base-content/80">{ p.Value }</dd>
+					</div>
+				}
+			</dl>
+			<!-- Book links -->
+			if len(book.Links) > 0 {
+				<div class="border-t border-base-300 pt-2 space-y-1">
+					<span class="text-xs font-semibold text-secondary">_links</span>
+					for _, l := range book.Links {
+						<div class="flex items-center gap-2 text-xs">
+							<span class="badge badge-xs badge-outline font-mono">{ l.Rel }</span>
+							<button
+								class="btn btn-xs btn-ghost font-mono truncate text-left"
+								hx-get={ fmt.Sprintf("/hypermedia/hal/explore?url=%s", l.Href) }
+								hx-target="#hal-explorer"
+								hx-swap="outerHTML"
+							>
+								{ l.Href }
+							</button>
+						</div>
+					}
+				</div>
+			}
+		</div>
+	</details>
+}
+
+templ halConceptCard(title, desc, iconPath string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<div class="flex items-center gap-2">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={ iconPath }></path>
+				</svg>
+				<h3 class="font-semibold text-sm">{ title }</h3>
+			</div>
+			<p class="text-xs text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}
+
+templ halPatternCard(title, code, desc string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h3 class="font-semibold text-sm">{ title }</h3>
+			<code class="text-xs text-primary bg-base-200 px-2 py-1 rounded">{ code }</code>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}

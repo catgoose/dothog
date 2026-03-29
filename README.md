@@ -34,6 +34,7 @@ _You don't just accidentally create abstractions until you suddenly have a frame
     - [Real-time SSE Dashboard](#real-time-sse-dashboard)
     - [Data Views, Filtering, and Pagination](#data-views-filtering-and-pagination)
     - [State and Interaction Patterns](#state-and-interaction-patterns)
+    - [HAL (Hypertext Application Language)](#hal-hypertext-application-language)
   - [Schema Builder](#schema-builder)
     - [Table Traits](#table-traits)
     - [Table Types](#table-types)
@@ -280,6 +281,14 @@ Additional hypermedia patterns demonstrated:
 - **Append** -- `hx-swap="beforeend"` appends new list items without replacing existing content; form resets via `hx-on::after-request="this.reset()"`
 - **Modal** -- `hx-get` fetches a `<dialog>` fragment, `hx-on::load="this.showModal()"` opens it
 - **Dismiss** -- HyperScript (`_="on click ..."`) handles client-only UI like fade-out and element removal without a server round-trip
+
+### HAL (Hypertext Application Language)
+
+> _"What if instead of guessing URLs, the client just... followed links?" "That is called a browser." "No, I mean for APIs." "That is called a browser for APIs." The student opened a new tab. The student was beginning to understand._
+
+An interactive explorer for [HAL](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal) (`application/hal+json`) — navigate a bookshop resource graph by following `_links`, expanding `_embedded` sub-resources, and searching via templated URIs. Every navigation shows the rendered hypermedia card alongside the raw HAL+JSON, so you can see both the human and machine representations side by side.
+
+HAL gives JSON what `<a>` tags give HTML: navigable links with semantic relations. It does not give JSON what `<form>` tags give HTML, and that gap is the entire sermon. See [docs/HAL.md](docs/HAL.md) for the Socratic inquiry into what HAL provides, what it doesn't, and why both matter.
 
 ### Breadcrumb Origin Tracking
 

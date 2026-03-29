@@ -12,6 +12,7 @@
   - [Chesterton's Fence](#chestertons-fence)
   - [Server-Side State, Client-Side Rendering](#server-side-state-client-side-rendering)
   - [Content Negotiation](#content-negotiation)
+    - [HAL: Content Negotiation for APIs](#hal-content-negotiation-for-apis)
   - [Mutations Redirect](#mutations-redirect)
   - [Postel's Law](#postels-law-be-conservative-in-what-you-send-liberal-in-what-you-accept)
   - [The Stack](#the-stack)
@@ -190,6 +191,12 @@ When a request carries the `HX-Request: true` header, the server knows the clien
 This is also how error responses work. An HTMX request that fails gets an out-of-band swap to the error banner — the page stays put, the error appears. A non-HTMX request that fails gets a full error page with navigation controls. Both surfaces carry the same information (error message, request ID, recovery actions), but the representation fits the client's rendering model.
 
 The key constraint: every resource must be reachable without JavaScript. Links are `<a>` tags. Forms are `<form>` tags. HTMX enhances them with `hx-get`, `hx-post`, and targeted swaps, but if HTMX fails to load, the page still works — links navigate, forms submit, the server returns full pages. Progressive enhancement isn't a bonus feature. It's the baseline.
+
+### HAL: Content Negotiation for APIs
+
+Content negotiation extends beyond the HTML/fragment split. The same resource graph can serve `application/hal+json` — [HAL](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal) adds `_links` and `_embedded` to JSON, giving API clients navigable relationships without out-of-band URL construction. A browser sees HTML with HTMX controls. A `curl` user sees HAL+JSON with link relations. Same resource, same relationships, different media type.
+
+HAL gives JSON what `<a>` tags give HTML. It does not give JSON what `<form>` tags give HTML — and that gap is where the interesting architectural questions live. The `/hypermedia/hal` demo renders both representations side by side so the gap is visible. See [docs/HAL.md](docs/HAL.md) for the full Socratic inquiry into what HAL provides, what it doesn't, and what Fielding would say about both.
 
 ## Mutations Redirect
 

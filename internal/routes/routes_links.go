@@ -39,6 +39,7 @@ func (ar *appRoutes) initLinkRelations() {
 		hypermedia.Rel("/hypermedia/components3", "Components 3"),
 		hypermedia.Rel("/hypermedia/realtime", "Realtime"),
 		hypermedia.Rel("/hypermedia/links", "Links"),
+		hypermedia.Rel("/hypermedia/hal", "HAL"),
 		hypermedia.Rel("/hypermedia/standards", "Standards"),
 	)
 
@@ -107,6 +108,7 @@ func (ar *appRoutes) initLinkRelations() {
 		hypermedia.Rel("/hypermedia/errors", "Errors"),
 		hypermedia.Rel("/hypermedia/realtime", "Realtime"),
 		hypermedia.Rel("/hypermedia/links", "Links"),
+		hypermedia.Rel("/hypermedia/hal", "HAL"),
 		hypermedia.Rel("/hypermedia/standards", "Standards"),
 	)
 

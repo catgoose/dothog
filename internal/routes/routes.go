@@ -152,6 +152,7 @@ func (ar *appRoutes) InitRoutes() error {
 	broker := ssebroker.NewSSEBroker()
 	// setup:feature:sse:end
 	ar.initHypermediaRoutes()
+	ar.initHALRoutes()
 	ar.initErrorsRoutes()
 	// setup:feature:sse:start
 	ar.initRealtimeRoutes(broker)
