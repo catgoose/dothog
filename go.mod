@@ -8,7 +8,7 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/catgoose/crooner v1.4.2
 	github.com/catgoose/dio v1.0.26
-	github.com/catgoose/fraggle v0.1.10
+	github.com/catgoose/fraggle v0.1.12
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/jmoiron/sqlx v1.4.0
