@@ -24,6 +24,7 @@ func (ar *appRoutes) initLinkRelations() {
 		hypermedia.Rel("/demo/logging", "Logging"),
 		hypermedia.Rel("/demo/repository", "Repository"),
 		hypermedia.Rel("/dashboard", "Dashboard"),
+		hypermedia.Rel("/pwa", "PWA Offline"),
 	)
 
 	hypermedia.Hub("/hypermedia", "Hypermedia",
