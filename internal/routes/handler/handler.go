@@ -2,7 +2,9 @@
 package handler
 
 import (
+	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/domain"
+	// setup:feature:session_settings:end
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/internal/routes/middleware"
@@ -75,10 +77,8 @@ type layoutCtx struct {
 	theme     string
 	path      string
 	crumbs    []hypermedia.Breadcrumb
-	// setup:feature:demo:start
-	links []hypermedia.LinkRelation
-	hubs  []hypermedia.HubEntry
-	// setup:feature:demo:end
+	links     []hypermedia.LinkRelation
+	hubs      []hypermedia.HubEntry
 }
 
 // getLayoutCtx extracts CSRF token, theme, and breadcrumbs from the request.
@@ -108,9 +108,11 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 	}
 
 	// Priority 2: declared document hierarchy via rel="up" chain
+	// setup:feature:demo:start
 	if len(crumbs) == 0 {
 		crumbs = hypermedia.BreadcrumbsFromLinks(path)
 	}
+	// setup:feature:demo:end
 
 	// Priority 3: derive from URL path segments (last resort)
 	if len(crumbs) == 0 {
@@ -129,7 +131,16 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 	hubs := hypermedia.Hubs()
 	// setup:feature:demo:end
 
-	return layoutCtx{csrfToken: csrfToken, theme: theme, path: c.Request().URL.Path, crumbs: crumbs, links: links, hubs: hubs}
+	return layoutCtx{
+		csrfToken: csrfToken,
+		theme:     theme,
+		path:      c.Request().URL.Path,
+		crumbs:    crumbs,
+		// setup:feature:demo:start
+		links: links,
+		hubs:  hubs,
+		// setup:feature:demo:end
+	}
 }
 
 // appNavNavConfig returns a NavConfig with icons for use with the AppNavLayout.
@@ -151,6 +162,7 @@ func appNavNavConfig() hypermedia.NavConfig {
 // renderDefaultLayout is the standard dothog layout with nav, breadcrumbs, and theme.
 func renderDefaultLayout(c echo.Context, cmp templ.Component) error {
 	lc := getLayoutCtx(c)
+	// setup:feature:session_settings:start
 	settings := middleware.GetSessionSettings(c)
 	if settings.Layout == domain.LayoutApp {
 		cfg := appNavNavConfig()
@@ -161,6 +173,7 @@ func renderDefaultLayout(c echo.Context, cmp templ.Component) error {
 			lc.crumbs, lc.links, lc.path, version.Display(), lc.hubs,
 		))
 	}
+	// setup:feature:session_settings:end
 	nav := appNavComponent(c.Request().URL.Path)
 	return RenderComponent(c, views.Index(cmp, nav, lc.csrfToken, dio.Dev(), lc.theme, lc.crumbs, lc.links, lc.path, version.Display(), appName, lc.hubs))
 }
