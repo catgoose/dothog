@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/logger"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/routes/handler"
@@ -21,6 +22,7 @@ import (
 
 func (ar *appRoutes) initThemeRoutes(broker *ssebroker.SSEBroker) {
 	ar.e.POST("/settings/theme", ar.handleTheme(broker))
+	ar.e.POST("/settings/layout", ar.handleLayout())
 	ar.e.GET("/sse/theme", handleSSETheme(broker))
 }
 
@@ -53,6 +55,29 @@ func (ar *appRoutes) handleTheme(broker *ssebroker.SSEBroker) echo.HandlerFunc {
 		}
 
 		return handler.RenderComponent(c, views.ThemeChanged(theme))
+	}
+}
+
+// handleLayout updates the shared layout setting and redirects to reload.
+func (ar *appRoutes) handleLayout() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		layout := c.FormValue("layout")
+		if layout != domain.LayoutApp {
+			layout = domain.DefaultLayout
+		}
+		settings := middleware.GetSessionSettings(c)
+		settings.Layout = layout
+		if ar.settingsRepo != nil {
+			if err := ar.settingsRepo.Upsert(c.Request().Context(), settings); err != nil {
+				logger.WithContext(c.Request().Context()).Error("Failed to save layout setting", "error", err)
+			}
+		}
+		redirect := c.Request().Header.Get("HX-Current-URL")
+		if redirect == "" {
+			redirect = "/settings"
+		}
+		c.Response().Header().Set("HX-Redirect", redirect)
+		return c.NoContent(http.StatusNoContent)
 	}
 }
 

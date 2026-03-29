@@ -29,7 +29,7 @@ func NewSessionSettingsRepository(repo *dbrepoManager.RepoManager) *sessionSetti
 // selectCols lists the columns matching the domain.SessionSettings struct.
 // SessionSettingsTable.SelectColumns() includes CreatedAt which the domain
 // struct omits, so we list them explicitly.
-var selectCols = dbrepo.Columns("Id", "SessionUUID", "Theme", "UpdatedAt")
+var selectCols = dbrepo.Columns("Id", "SessionUUID", "Theme", "Layout", "UpdatedAt")
 
 var tableName = schema.SessionSettingsTable.Name
 
@@ -58,11 +58,12 @@ func (r *sessionSettingsRepository) Upsert(ctx context.Context, s *domain.Sessio
 	if existing != nil {
 		query := fmt.Sprintf("UPDATE %s SET %s WHERE SessionUUID = @SessionUUID",
 			tableName,
-			dbrepo.SetClause("Theme", "UpdatedAt"),
+			dbrepo.SetClause("Theme", "Layout", "UpdatedAt"),
 		)
 		dbrepo.SetUpdateTimestamp(&s.UpdatedAt)
 		_, err = r.repo.GetDB().ExecContext(ctx, query,
 			sql.Named("Theme", s.Theme),
+			sql.Named("Layout", s.Layout),
 			sql.Named("UpdatedAt", s.UpdatedAt),
 			sql.Named("SessionUUID", s.SessionUUID),
 		)
@@ -79,6 +80,7 @@ func (r *sessionSettingsRepository) Upsert(ctx context.Context, s *domain.Sessio
 	_, err = r.repo.GetDB().ExecContext(ctx, query,
 		sql.Named("SessionUUID", s.SessionUUID),
 		sql.Named("Theme", s.Theme),
+		sql.Named("Layout", s.Layout),
 		sql.Named("CreatedAt", createdAt),
 		sql.Named("UpdatedAt", s.UpdatedAt),
 	)

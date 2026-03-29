@@ -112,9 +112,9 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:session_settings:start
 	ar.initUserSettingsRoutes()
 	ar.e.GET("/settings", func(c echo.Context) error {
-		theme := middleware.GetSessionSettings(c).Theme
+		s := middleware.GetSessionSettings(c)
 		links := middleware.GetLinkRelations(c)
-		return handler.RenderBaseLayout(c, views.AppSettingsPage(theme, links))
+		return handler.RenderBaseLayout(c, views.AppSettingsPage(s.Theme, s.Layout, links))
 	})
 	// setup:feature:session_settings:end
 	// setup:feature:demo:start

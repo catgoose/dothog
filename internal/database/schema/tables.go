@@ -45,6 +45,7 @@ var SessionSettingsTable = NewTable("SessionSettings").
 		AutoIncrCol("Id"),
 		Col("SessionUUID", TypeVarchar(36)).NotNull().Unique(),
 		Col("Theme", TypeString(50)).NotNull().Default("'light'"),
+		Col("Layout", TypeString(50)).NotNull().Default("'classic'"),
 	).
 	WithTimestamps()
 

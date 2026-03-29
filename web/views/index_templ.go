@@ -56,7 +56,7 @@ func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<body hx-history=\"false\" hx-boost=\"true\" x-data x-on:show-alert.window=\"\n\t\t\t\tconst t = document.createElement('div');\n\t\t\t\tt.className = 'toast toast-end toast-top z-50';\n\t\t\t\tconst a = document.createElement('div');\n\t\t\t\ta.className = 'alert alert-info shadow-lg';\n\t\t\t\ta.textContent = $event.detail;\n\t\t\t\tt.appendChild(a);\n\t\t\t\tdocument.body.appendChild(t);\n\t\t\t\tsetTimeout(() => { t.style.transition = 'opacity 0.3s ease'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);\n\t\t\t\"><div id=\"error-status\" class=\"sticky top-0 z-40\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<body hx-history=\"false\" hx-boost=\"true\" x-data x-on:show-alert.window=\"\n\t\t\t\tconst t = document.createElement('div');\n\t\t\t\tt.className = 'toast toast-end toast-top z-50';\n\t\t\t\tconst a = document.createElement('div');\n\t\t\t\ta.className = 'alert alert-info shadow-lg';\n\t\t\t\ta.textContent = $event.detail;\n\t\t\t\tt.appendChild(a);\n\t\t\t\tdocument.body.appendChild(t);\n\t\t\t\tsetTimeout(() => { t.style.transition = 'opacity 0.3s ease'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);\n\t\t\t\"><div id=\"error-status\" class=\"sticky top-0 z-40\" aria-live=\"assertive\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -125,14 +125,14 @@ func Index(layoutContent templ.Component, menuContent templ.Component, csrfToken
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<footer class=\"text-center text-xs text-base-content/60 py-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<noscript><div class=\"alert alert-warning m-4\">JavaScript is required for full functionality.</div></noscript><footer class=\"text-center text-xs text-base-content/60 py-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 53, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 56, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -191,7 +191,7 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string) t
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(appName + " - IT operations dashboard for managing infrastructure, inventory, and real-time monitoring")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 71, Col: 140}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 74, Col: 140}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -209,7 +209,7 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string) t
 			var templ_7745c5c3_Var7 templ.SafeURL
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 94, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 97, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -227,7 +227,7 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string) t
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(appName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 103, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 106, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -328,7 +328,7 @@ func ThemeChanged(theme string) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 180, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 183, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
