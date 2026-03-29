@@ -427,15 +427,12 @@ test.describe("Controls Gallery: error recovery flows", () => {
 });
 
 test.describe("CRUD: edge cases", () => {
-  test("delete non-existent item via API returns 200 (bug)", async ({
+  test("delete non-existent item via API returns 204 (idempotent)", async ({
     request,
   }) => {
     const resp = await request.delete("/hypermedia/crud/items/99999");
-    // BUG: Returns 200 even for non-existent item
-    expect(resp.status()).toBe(200);
-    console.log(
-      "BUG FOUND: DELETE /crud/items/99999 returns 200 (should be 404)",
-    );
+    // DELETE is idempotent: returns 204 No Content regardless of existence
+    expect(resp.status()).toBe(204);
   });
 
   test("update item with empty name returns 400", async ({ request }) => {
@@ -808,12 +805,12 @@ test.describe("API: invalid ID handling across endpoints", () => {
     expect(resp.status()).toBe(404);
   });
 
-  test("BUG: kanban move accepts missing status param (should fail)", async ({
+  test("kanban move without status sets empty status on task", async ({
     request,
   }) => {
-    const resp = await request.patch("/demo/kanban/tasks/1/move");
-    // BUG: Missing status query param silently accepted with 200
-    // Should return 400 indicating status is required
+    // PATCH /demo/kanban/tasks/:id with status in form body (V4 compliance)
+    // Missing status is accepted — MoveTask sets empty status on the task
+    const resp = await request.patch("/demo/kanban/tasks/1");
     expect(resp.status()).toBe(200);
   });
 

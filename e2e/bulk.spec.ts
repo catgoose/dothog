@@ -29,13 +29,14 @@ test.describe("Bulk Operations Page", () => {
 
   test("status badges show Active or Inactive", async ({ page }) => {
     await navigateTo(page, "/demo/bulk");
-    const badges = page.locator(".badge");
+    // Scope to table body to avoid picking up unrelated badges elsewhere on the page
+    const badges = page.locator("#bulk-table-container tbody .badge");
     const count = await badges.count();
     expect(count).toBeGreaterThan(0);
-    // Verify at least one badge has expected text
+    // Verify every status badge has expected text
     const allText = await badges.allTextContents();
     const validStatuses = allText.every(
-      (t) => t.includes("Active") || t.includes("Inactive") || t.trim() === "",
+      (t) => t.includes("Active") || t.includes("Inactive"),
     );
     expect(validStatuses).toBe(true);
   });

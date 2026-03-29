@@ -3,7 +3,8 @@ import { navigateTo, waitForHtmx, resetDB } from "./helpers";
 
 // ─── Error Patterns Page (/hypermedia/errors) ────────────────────────────────
 // Tests the error handling philosophy: every error is a navigable state with
-// hypermedia controls, Report Issue on every surface, and proper recovery paths.
+// hypermedia controls and proper recovery paths. Report Issue appears on 5xx
+// errors and inline error panels.
 
 async function clearErrorBanner(page: Page) {
   const close = page.locator('#error-status button:has-text("Close")');
@@ -33,7 +34,7 @@ test.describe("Error Patterns Page", () => {
 
   // ─── Banner Errors ─────────────────────────────────────────────────────────
 
-  test("trigger 404 shows banner with Close and Report Issue controls", async ({
+  test("trigger 404 shows banner with Close control", async ({
     page,
   }) => {
     await navigateTo(page, "/hypermedia/errors");
@@ -46,10 +47,7 @@ test.describe("Error Patterns Page", () => {
     await expect(banner).toContainText("404");
     await expect(banner).toContainText("Request ID");
 
-    // Banner controls: Report Issue (left) + Close (right)
-    await expect(
-      banner.locator('button:has-text("Report Issue")'),
-    ).toBeVisible();
+    // Banner controls: Close (right) — Report Issue only for 5xx errors
     await expect(
       banner.locator('button:has-text("Close")'),
     ).toBeVisible();
@@ -60,7 +58,7 @@ test.describe("Error Patterns Page", () => {
     });
   });
 
-  test("trigger 400 shows banner with Close and Report Issue controls", async ({
+  test("trigger 400 shows banner with Close control", async ({
     page,
   }) => {
     await navigateTo(page, "/hypermedia/errors");
@@ -71,9 +69,7 @@ test.describe("Error Patterns Page", () => {
     await expect(banner).toContainText("Something went wrong");
     await expect(banner).toContainText("Bad request");
     await expect(banner).toContainText("400");
-    await expect(
-      banner.locator('button:has-text("Report Issue")'),
-    ).toBeVisible();
+    // Banner controls: Close — Report Issue only for 5xx errors
     await expect(
       banner.locator('button:has-text("Close")'),
     ).toBeVisible();
@@ -108,7 +104,7 @@ test.describe("Error Patterns Page", () => {
     });
   });
 
-  test("trigger 403 shows banner with Close and Report Issue controls", async ({
+  test("trigger 403 shows banner with Close control", async ({
     page,
   }) => {
     await navigateTo(page, "/hypermedia/errors");
@@ -119,9 +115,7 @@ test.describe("Error Patterns Page", () => {
     await expect(banner).toContainText("Something went wrong");
     await expect(banner).toContainText("Forbidden");
     await expect(banner).toContainText("403");
-    await expect(
-      banner.locator('button:has-text("Report Issue")'),
-    ).toBeVisible();
+    // Banner controls: Close — Report Issue only for 5xx errors
     await expect(
       banner.locator('button:has-text("Close")'),
     ).toBeVisible();
