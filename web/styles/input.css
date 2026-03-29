@@ -69,6 +69,23 @@
     accent-color: var(--color-primary);
   }
 
+  /* Accessibility: disable all motion for users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Progressive enhancement: hide JS-only elements when scripting is unavailable */
+  @media (scripting: none) {
+    .requires-js {
+      display: none !important;
+    }
+  }
+
   /* Entry animations for HTMX-swapped content */
   @media (prefers-reduced-motion: no-preference) {
     /* Cards and content blocks fade in when inserted by HTMX */

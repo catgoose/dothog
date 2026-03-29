@@ -25,7 +25,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 				setTimeout(() => { t.style.transition = 'opacity 0.3s ease'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
 			"
 		>
-			<div id="error-status" class="sticky top-0 z-40"></div>
+			<div id="error-status" class="sticky top-0 z-40" aria-live="assertive"></div>
 			if len(crumbs) > 0 {
 				<meta name="page-title" content={ crumbs[len(crumbs)-1].Label }/>
 			}
@@ -49,6 +49,9 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			// setup:feature:demo:start
 			@components.SiteMap(hubs)
 			// setup:feature:demo:end
+			<noscript>
+				<div class="alert alert-warning m-4">JavaScript is required for full functionality.</div>
+			</noscript>
 			<footer class="text-center text-xs text-base-content/60 py-2">
 				{ version }
 			</footer>
