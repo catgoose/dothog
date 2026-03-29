@@ -119,12 +119,13 @@ type HxRequestConfig struct {
 	URL     string
 	Target  string
 	Include string
+	Vals    string // JSON-encoded hx-vals for form data (e.g. `{"status":"active"}`)
 }
 
 // Attrs converts the config to a map[string]string for interop with NavItem,
 // FilterField, or other consumers that use generic attribute maps.
 func (r HxRequestConfig) Attrs() map[string]string {
-	m := make(map[string]string, 3)
+	m := make(map[string]string, 4)
 	if r.URL != "" {
 		m[string(r.Method)] = r.URL
 	}
@@ -133,6 +134,9 @@ func (r HxRequestConfig) Attrs() map[string]string {
 	}
 	if r.Include != "" {
 		m["include"] = r.Include
+	}
+	if r.Vals != "" {
+		m["vals"] = r.Vals
 	}
 	return m
 }

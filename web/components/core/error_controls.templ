@@ -79,7 +79,7 @@ templ dismissButton(ctrl hypermedia.Control) {
 templ errorBackButton(ctrl hypermedia.Control) {
 	<button
 		class="inline-flex items-center px-3 py-1 text-xs font-medium rounded border border-base-content/20 bg-base-100 text-base-content hover:bg-base-200 focus:outline-none"
-		x-on:click="$dispatch('show-alert', 'Go Back intercepted — this is where navigation would happen')"
+		_="on click send show-alert(detail:'Go Back intercepted — this is where navigation would happen') to window"
 	>
 		{ ctrl.Label }
 	</button>

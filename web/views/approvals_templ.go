@@ -285,9 +285,9 @@ func ApprovalCard(r demo.ApprovalRequest) templ.Component {
 
 func approvalControls(id int, actions []string) []hypermedia.Control {
 	var controls []hypermedia.Control
+	url := fmt.Sprintf("/demo/approvals/%d", id)
+	target := fmt.Sprintf("#approval-%d", id)
 	for _, action := range actions {
-		url := fmt.Sprintf("/demo/approvals/%d/%s", id, action)
-		target := fmt.Sprintf("#approval-%d", id)
 		variant := hypermedia.VariantSecondary
 		switch action {
 		case "approve":
@@ -300,11 +300,16 @@ func approvalControls(id int, actions []string) []hypermedia.Control {
 			variant = hypermedia.VariantPrimary
 		}
 		controls = append(controls, hypermedia.Control{
-			Kind:      hypermedia.ControlKindHTMX,
-			Label:     capitalizeAction(action),
-			Variant:   variant,
-			Swap:      hypermedia.SwapOuterHTML,
-			HxRequest: hypermedia.HxPost(url, target),
+			Kind:    hypermedia.ControlKindHTMX,
+			Label:   capitalizeAction(action),
+			Variant: variant,
+			Swap:    hypermedia.SwapOuterHTML,
+			HxRequest: hypermedia.HxRequestConfig{
+				Method: hypermedia.HxMethodPatch,
+				URL:    url,
+				Target: target,
+				Vals:   `{"action":"` + action + `"}`,
+			},
 		})
 	}
 	return controls

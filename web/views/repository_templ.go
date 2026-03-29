@@ -180,9 +180,7 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 		rowID := fmt.Sprintf("task-row-%d", task.ID)
 		editURL := fmt.Sprintf("/demo/repository/tasks/%d/edit", task.ID)
 		deleteURL := fmt.Sprintf("/demo/repository/tasks/%d", task.ID)
-		archiveURL := fmt.Sprintf("/demo/repository/tasks/%d/archive", task.ID)
-		unarchiveURL := fmt.Sprintf("/demo/repository/tasks/%d/unarchive", task.ID)
-		restoreURL := fmt.Sprintf("/demo/repository/tasks/%d/restore", task.ID)
+		patchURL := fmt.Sprintf("/demo/repository/tasks/%d", task.ID)
 		rowTarget := "#" + rowID
 		_ = rowTarget
 		var templ_7745c5c3_Var5 = []any{templ.KV("opacity-50", task.DeletedAt.Valid || task.ArchivedAt.Valid)}
@@ -197,7 +195,7 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(rowID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 85, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 83, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -223,7 +221,7 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(task.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 87, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 85, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -237,7 +235,7 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(task.Description.String)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 91, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 89, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -272,7 +270,7 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(task.SortOrder))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 104, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 102, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -285,7 +283,7 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(task.Version))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 106, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 104, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -318,7 +316,7 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(task.UpdatedAt.Format("Jan 2 15:04"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 118, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 116, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -332,7 +330,11 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 			templ_7745c5c3_Err = components.Controls([]hypermedia.Control{
 				{
 					Kind: hypermedia.ControlKindHTMX, Label: "Restore", Variant: hypermedia.VariantPrimary,
-					Swap: hypermedia.SwapOuterHTML, HxRequest: hypermedia.HxPost(restoreURL, "#repo-table-container"),
+					Swap: hypermedia.SwapOuterHTML,
+					HxRequest: hypermedia.HxRequestConfig{
+						Method: hypermedia.HxMethodPatch, URL: patchURL, Target: "#repo-table-container",
+						Vals: `{"action":"restore"}`,
+					},
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -342,7 +344,11 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 			templ_7745c5c3_Err = components.Controls([]hypermedia.Control{
 				{
 					Kind: hypermedia.ControlKindHTMX, Label: "Unarchive", Variant: hypermedia.VariantSecondary,
-					Swap: hypermedia.SwapOuterHTML, HxRequest: hypermedia.HxPost(unarchiveURL, "#repo-table-container"),
+					Swap: hypermedia.SwapOuterHTML,
+					HxRequest: hypermedia.HxRequestConfig{
+						Method: hypermedia.HxMethodPatch, URL: patchURL, Target: "#repo-table-container",
+						Vals: `{"action":"unarchive"}`,
+					},
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -352,11 +358,16 @@ func RepositoryTaskRow(task demo.Task) templ.Component {
 			templ_7745c5c3_Err = components.Controls([]hypermedia.Control{
 				{
 					Kind: hypermedia.ControlKindHTMX, Label: "Edit", Variant: hypermedia.VariantGhost,
-					Swap: hypermedia.SwapOuterHTML, HxRequest: hypermedia.HxGet(editURL, rowTarget),
+					Swap:      hypermedia.SwapOuterHTML,
+					HxRequest: hypermedia.HxGet(editURL, rowTarget),
 				},
 				{
 					Kind: hypermedia.ControlKindHTMX, Label: "Archive", Variant: hypermedia.VariantSecondary,
-					Swap: hypermedia.SwapOuterHTML, HxRequest: hypermedia.HxPost(archiveURL, "#repo-table-container"),
+					Swap: hypermedia.SwapOuterHTML,
+					HxRequest: hypermedia.HxRequestConfig{
+						Method: hypermedia.HxMethodPatch, URL: patchURL, Target: "#repo-table-container",
+						Vals: `{"action":"archive"}`,
+					},
 				},
 				{
 					Kind: hypermedia.ControlKindHTMX, Label: "Delete", Variant: hypermedia.VariantDanger,
@@ -454,7 +465,7 @@ func RepositoryEditRow(task demo.Task, isNew bool, saveURL, cancelURL string) te
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(rowID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 184, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 195, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -467,7 +478,7 @@ func RepositoryEditRow(task demo.Task, isNew bool, saveURL, cancelURL string) te
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(task.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 186, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 197, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -480,7 +491,7 @@ func RepositoryEditRow(task demo.Task, isNew bool, saveURL, cancelURL string) te
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(task.Description.String)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 189, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 200, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -498,7 +509,7 @@ func RepositoryEditRow(task demo.Task, isNew bool, saveURL, cancelURL string) te
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 194, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 205, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -521,7 +532,7 @@ func RepositoryEditRow(task demo.Task, isNew bool, saveURL, cancelURL string) te
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 194, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 205, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -539,7 +550,7 @@ func RepositoryEditRow(task demo.Task, isNew bool, saveURL, cancelURL string) te
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(task.SortOrder))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 199, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 210, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -557,7 +568,7 @@ func RepositoryEditRow(task demo.Task, isNew bool, saveURL, cancelURL string) te
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(task.Version))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 203, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 214, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -575,7 +586,7 @@ func RepositoryEditRow(task demo.Task, isNew bool, saveURL, cancelURL string) te
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(task.Notes.String)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 207, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/repository.templ`, Line: 218, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {

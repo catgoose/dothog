@@ -406,7 +406,7 @@ func backButton(ctrl hypermedia.Control) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " x-on:click=\"$dispatch('show-alert', 'Go Back intercepted — this is where navigation would happen')\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " _=\"on click send show-alert(detail:'Go Back intercepted — this is where navigation would happen') to window\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -480,14 +480,14 @@ func homeButton(ctrl hypermedia.Control) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, " x-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, " _=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var18 string
-		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs("$dispatch('show-alert', 'Go Home intercepted — would navigate to " + ctrl.Href + "')")
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs("on click send show-alert(detail:'Go Home intercepted — would navigate to " + ctrl.Href + "') to window")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/controls.templ`, Line: 110, Col: 103}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/controls.templ`, Line: 110, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -634,7 +634,7 @@ func genericDismiss(ctrl hypermedia.Control) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\" x-on:click=\"\n\t\t\tconst el = document.getElementById('error-message-content');\n\t\t\tel.style.transition = 'opacity 0.3s ease';\n\t\t\tel.style.opacity = '0';\n\t\t\tsetTimeout(() => el.remove(), 300);\n\t\t\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\" _=\"on click set el to #error-message-content then set el's style.transition to 'opacity 0.3s ease' then set el's style.opacity to '0' then wait 300ms then remove el\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -645,7 +645,7 @@ func genericDismiss(ctrl hypermedia.Control) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(ctrl.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/controls.templ`, Line: 138, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/controls.templ`, Line: 133, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -695,7 +695,7 @@ func genericReportButton(ctrl hypermedia.Control) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(ctrl.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/controls.templ`, Line: 150, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/controls.templ`, Line: 145, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {

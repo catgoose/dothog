@@ -19,6 +19,9 @@ func hxAttrsFromControl(ctrl hypermedia.Control) templ.Attributes {
 	if req.Include != "" {
 		attrs["hx-include"] = req.Include
 	}
+	if req.Vals != "" {
+		attrs["hx-vals"] = req.Vals
+	}
 	if ctrl.Confirm != "" {
 		attrs["hx-confirm"] = ctrl.Confirm
 	}

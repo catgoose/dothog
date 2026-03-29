@@ -23,7 +23,7 @@ type approvalRoutes struct {
 func (ar *appRoutes) initApprovalRoutes(queue *demo.ApprovalQueue, actLog *demo.ActivityLog, broker *ssebroker.SSEBroker) {
 	a := &approvalRoutes{queue: queue, actLog: actLog, broker: broker}
 	ar.e.GET("/demo/approvals", a.handleApprovalsPage)
-	ar.e.POST("/demo/approvals/:id/:action", a.handleApprovalAction)
+	ar.e.PATCH("/demo/approvals/:id", a.handleApprovalAction)
 }
 
 func (a *approvalRoutes) handleApprovalsPage(c echo.Context) error {
@@ -36,7 +36,7 @@ func (a *approvalRoutes) handleApprovalAction(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid request ID", err)
 	}
-	action := c.Param("action")
+	action := c.FormValue("action")
 	req, ok := a.queue.TransitionRequest(id, action, "Admin")
 	if !ok {
 		return handler.HandleHypermediaError(c, 400, fmt.Sprintf("Cannot %s request %d", action, id), nil)

@@ -93,9 +93,9 @@ templ KanbanCard(t demo.KanbanTask) {
 
 templ kanbanMoveButtons(t demo.KanbanTask) {
 	{{ statusIdx := statusIndex(t.Status) }}
+	{{ taskURL := fmt.Sprintf("/demo/kanban/tasks/%d", t.ID) }}
 	if statusIdx > 0 {
 		{{ prevStatus := demo.KanbanStatuses[statusIdx-1] }}
-		{{ moveURL := fmt.Sprintf("/demo/kanban/tasks/%d/move", t.ID) }}
 		@components.Controls([]hypermedia.Control{
 			{
 				Kind:    hypermedia.ControlKindHTMX,
@@ -104,15 +104,15 @@ templ kanbanMoveButtons(t demo.KanbanTask) {
 				Swap:    hypermedia.SwapOuterHTML,
 				HxRequest: hypermedia.HxRequestConfig{
 					Method: hypermedia.HxMethodPatch,
-					URL:    moveURL + "?status=" + prevStatus,
+					URL:    taskURL,
 					Target: "#kanban-board",
+					Vals:   `{"status":"` + prevStatus + `"}`,
 				},
 			},
 		})
 	}
 	if statusIdx < len(demo.KanbanStatuses)-1 {
 		{{ nextStatus := demo.KanbanStatuses[statusIdx+1] }}
-		{{ moveURL := fmt.Sprintf("/demo/kanban/tasks/%d/move", t.ID) }}
 		@components.Controls([]hypermedia.Control{
 			{
 				Kind:    hypermedia.ControlKindHTMX,
@@ -121,8 +121,9 @@ templ kanbanMoveButtons(t demo.KanbanTask) {
 				Swap:    hypermedia.SwapOuterHTML,
 				HxRequest: hypermedia.HxRequestConfig{
 					Method: hypermedia.HxMethodPatch,
-					URL:    moveURL + "?status=" + nextStatus,
+					URL:    taskURL,
 					Target: "#kanban-board",
+					Vals:   `{"status":"` + nextStatus + `"}`,
 				},
 			},
 		})

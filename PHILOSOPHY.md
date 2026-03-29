@@ -206,6 +206,8 @@ The redirect does three things. First, it prevents double-submission: if the use
 
 This matters more in HTMX than it does in traditional forms because returning a partial from a POST *feels* natural — the swap just works. But the swap doesn't fix the URL, doesn't fix the history stack, and doesn't prevent double-submit. The redirect does. Reach for `response.Builder.Redirect()` after mutations, not `response.Builder.Component()`.
 
+**Exception: inline HTMX partial swaps.** PRG applies to *navigation mutations* — creating a new resource that has its own URL, or submitting a form that should land the user on a new page. Inline partial swaps (editing a table row in-place, moving a kanban card between columns, toggling an approval status) are a different, equally valid hypermedia interaction pattern. The server still controls the next state: it receives the request, decides what changed, and returns the updated representation directly to the target element. The client follows the server's lead — that IS hypermedia. The key constraint is using correct HTTP verbs: PUT for full replacement, PATCH for partial modification, DELETE for removal. The response returns the updated fragment; no redirect is needed because the user never left the page and no new URL was created.
+
 ## Postel's Law: Be Conservative in What You Send, Liberal in What You Accept
 
 [Postel's Law](https://en.wikipedia.org/wiki/Robustness_principle) (the Robustness Principle) was written for TCP but it governs every boundary in this application: **be conservative in what you send, be liberal in what you accept.**

@@ -96,7 +96,7 @@ templ backButton(ctrl hypermedia.Control) {
 	<button
 		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
 		disabled?={ ctrl.Disabled }
-		x-on:click="$dispatch('show-alert', 'Go Back intercepted — this is where navigation would happen')"
+		_="on click send show-alert(detail:'Go Back intercepted — this is where navigation would happen') to window"
 	>
 		@heroIcon(string(ctrl.Icon))
 		{ ctrl.Label }
@@ -107,7 +107,7 @@ templ homeButton(ctrl hypermedia.Control) {
 	<button
 		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
 		disabled?={ ctrl.Disabled }
-		x-on:click={ "$dispatch('show-alert', 'Go Home intercepted — would navigate to " + ctrl.Href + "')" }
+		_={ "on click send show-alert(detail:'Go Home intercepted — would navigate to " + ctrl.Href + "') to window" }
 	>
 		@heroIcon(string(ctrl.Icon))
 		{ ctrl.Label }
@@ -127,12 +127,7 @@ templ genericLink(ctrl hypermedia.Control) {
 templ genericDismiss(ctrl hypermedia.Control) {
 	<button
 		class={ "btn btn-sm " + variantClass(ctrl.Variant) }
-		x-on:click="
-			const el = document.getElementById('error-message-content');
-			el.style.transition = 'opacity 0.3s ease';
-			el.style.opacity = '0';
-			setTimeout(() => el.remove(), 300);
-		"
+		_="on click set el to #error-message-content then set el's style.transition to 'opacity 0.3s ease' then set el's style.opacity to '0' then wait 300ms then remove el"
 	>
 		@heroIcon(string(ctrl.Icon))
 		{ ctrl.Label }

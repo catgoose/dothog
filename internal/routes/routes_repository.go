@@ -35,9 +35,7 @@ func (ar *appRoutes) initRepositoryRoutes(db *demo.DB) {
 	ar.e.GET(repoBase+"/tasks/:id/edit", r.handleEditTaskForm)
 	ar.e.PUT(repoBase+"/tasks/:id", r.handleUpdateTask)
 	ar.e.DELETE(repoBase+"/tasks/:id", r.handleDeleteTask)
-	ar.e.POST(repoBase+"/tasks/:id/restore", r.handleRestoreTask)
-	ar.e.POST(repoBase+"/tasks/:id/archive", r.handleArchiveTask)
-	ar.e.POST(repoBase+"/tasks/:id/unarchive", r.handleUnarchiveTask)
+	ar.e.PATCH(repoBase+"/tasks/:id", r.handlePatchTaskState)
 }
 
 func (r *repositoryRoutes) handlePage(c echo.Context) error {
@@ -157,47 +155,24 @@ func (r *repositoryRoutes) handleDeleteTask(c echo.Context) error {
 	return handler.RenderComponent(c, container)
 }
 
-func (r *repositoryRoutes) handleRestoreTask(c echo.Context) error {
+func (r *repositoryRoutes) handlePatchTaskState(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
 	}
-	if err := r.store.RestoreTask(c.Request().Context(), id); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to restore task", err)
+	action := c.FormValue("action")
+	switch action {
+	case "restore":
+		err = r.store.RestoreTask(c.Request().Context(), id)
+	case "archive":
+		err = r.store.ArchiveTask(c.Request().Context(), id)
+	case "unarchive":
+		err = r.store.UnarchiveTask(c.Request().Context(), id)
+	default:
+		return handler.HandleHypermediaError(c, 400, fmt.Sprintf("Unknown action %q", action), nil)
 	}
-	applyFilterFromCurrentURL(c)
-	_, container, err := r.buildContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
-	}
-	setTableReplaceURL(c, repoBase)
-	return handler.RenderComponent(c, container)
-}
-
-func (r *repositoryRoutes) handleArchiveTask(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
-	}
-	if err := r.store.ArchiveTask(c.Request().Context(), id); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to archive task", err)
-	}
-	applyFilterFromCurrentURL(c)
-	_, container, err := r.buildContent(c)
-	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
-	}
-	setTableReplaceURL(c, repoBase)
-	return handler.RenderComponent(c, container)
-}
-
-func (r *repositoryRoutes) handleUnarchiveTask(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
-	}
-	if err := r.store.UnarchiveTask(c.Request().Context(), id); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to unarchive task", err)
+		return handler.HandleHypermediaError(c, 500, fmt.Sprintf("Failed to %s task", action), err)
 	}
 	applyFilterFromCurrentURL(c)
 	_, container, err := r.buildContent(c)

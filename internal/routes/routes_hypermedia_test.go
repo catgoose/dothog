@@ -86,7 +86,7 @@ func TestHandleCRUDDelete_ExistingID(t *testing.T) {
 
 	err := s.handleCRUDDelete(c)
 	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
 
 	s.mu.RLock()
 	_, found := s.findItem(1)
@@ -102,7 +102,7 @@ func TestHandleCRUDDelete_NonExistingID(t *testing.T) {
 
 	err := s.handleCRUDDelete(c)
 	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
 
 func TestHandleCRUDPatchToggle(t *testing.T) {

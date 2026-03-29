@@ -77,9 +77,7 @@ templ RepositoryTaskRow(task demo.Task) {
 	{{ rowID := fmt.Sprintf("task-row-%d", task.ID) }}
 	{{ editURL := fmt.Sprintf("/demo/repository/tasks/%d/edit", task.ID) }}
 	{{ deleteURL := fmt.Sprintf("/demo/repository/tasks/%d", task.ID) }}
-	{{ archiveURL := fmt.Sprintf("/demo/repository/tasks/%d/archive", task.ID) }}
-	{{ unarchiveURL := fmt.Sprintf("/demo/repository/tasks/%d/unarchive", task.ID) }}
-	{{ restoreURL := fmt.Sprintf("/demo/repository/tasks/%d/restore", task.ID) }}
+	{{ patchURL := fmt.Sprintf("/demo/repository/tasks/%d", task.ID) }}
 	{{ rowTarget := "#" + rowID }}
 	{{ _ = rowTarget }}
 	<tr id={ rowID } class={ templ.KV("opacity-50", task.DeletedAt.Valid || task.ArchivedAt.Valid) }>
@@ -123,25 +121,38 @@ templ RepositoryTaskRow(task demo.Task) {
 					@components.Controls([]hypermedia.Control{
 						{
 							Kind: hypermedia.ControlKindHTMX, Label: "Restore", Variant: hypermedia.VariantPrimary,
-							Swap: hypermedia.SwapOuterHTML,							HxRequest: hypermedia.HxPost(restoreURL, "#repo-table-container"),
+							Swap: hypermedia.SwapOuterHTML,
+							HxRequest: hypermedia.HxRequestConfig{
+								Method: hypermedia.HxMethodPatch, URL: patchURL, Target: "#repo-table-container",
+								Vals: `{"action":"restore"}`,
+							},
 						},
 					})
 				} else if task.ArchivedAt.Valid {
 					@components.Controls([]hypermedia.Control{
 						{
 							Kind: hypermedia.ControlKindHTMX, Label: "Unarchive", Variant: hypermedia.VariantSecondary,
-							Swap: hypermedia.SwapOuterHTML,							HxRequest: hypermedia.HxPost(unarchiveURL, "#repo-table-container"),
+							Swap: hypermedia.SwapOuterHTML,
+							HxRequest: hypermedia.HxRequestConfig{
+								Method: hypermedia.HxMethodPatch, URL: patchURL, Target: "#repo-table-container",
+								Vals: `{"action":"unarchive"}`,
+							},
 						},
 					})
 				} else {
 					@components.Controls([]hypermedia.Control{
 						{
 							Kind: hypermedia.ControlKindHTMX, Label: "Edit", Variant: hypermedia.VariantGhost,
-							Swap: hypermedia.SwapOuterHTML,							HxRequest: hypermedia.HxGet(editURL, rowTarget),
+							Swap: hypermedia.SwapOuterHTML,
+							HxRequest: hypermedia.HxGet(editURL, rowTarget),
 						},
 						{
 							Kind: hypermedia.ControlKindHTMX, Label: "Archive", Variant: hypermedia.VariantSecondary,
-							Swap: hypermedia.SwapOuterHTML,							HxRequest: hypermedia.HxPost(archiveURL, "#repo-table-container"),
+							Swap: hypermedia.SwapOuterHTML,
+							HxRequest: hypermedia.HxRequestConfig{
+								Method: hypermedia.HxMethodPatch, URL: patchURL, Target: "#repo-table-container",
+								Vals: `{"action":"archive"}`,
+							},
 						},
 						{
 							Kind: hypermedia.ControlKindHTMX, Label: "Delete", Variant: hypermedia.VariantDanger,

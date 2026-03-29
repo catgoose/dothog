@@ -331,9 +331,9 @@ func kanbanMoveButtons(t demo.KanbanTask) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		statusIdx := statusIndex(t.Status)
+		taskURL := fmt.Sprintf("/demo/kanban/tasks/%d", t.ID)
 		if statusIdx > 0 {
 			prevStatus := demo.KanbanStatuses[statusIdx-1]
-			moveURL := fmt.Sprintf("/demo/kanban/tasks/%d/move", t.ID)
 			templ_7745c5c3_Err = components.Controls([]hypermedia.Control{
 				{
 					Kind:    hypermedia.ControlKindHTMX,
@@ -342,8 +342,9 @@ func kanbanMoveButtons(t demo.KanbanTask) templ.Component {
 					Swap:    hypermedia.SwapOuterHTML,
 					HxRequest: hypermedia.HxRequestConfig{
 						Method: hypermedia.HxMethodPatch,
-						URL:    moveURL + "?status=" + prevStatus,
+						URL:    taskURL,
 						Target: "#kanban-board",
+						Vals:   `{"status":"` + prevStatus + `"}`,
 					},
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
@@ -353,7 +354,6 @@ func kanbanMoveButtons(t demo.KanbanTask) templ.Component {
 		}
 		if statusIdx < len(demo.KanbanStatuses)-1 {
 			nextStatus := demo.KanbanStatuses[statusIdx+1]
-			moveURL := fmt.Sprintf("/demo/kanban/tasks/%d/move", t.ID)
 			templ_7745c5c3_Err = components.Controls([]hypermedia.Control{
 				{
 					Kind:    hypermedia.ControlKindHTMX,
@@ -362,8 +362,9 @@ func kanbanMoveButtons(t demo.KanbanTask) templ.Component {
 					Swap:    hypermedia.SwapOuterHTML,
 					HxRequest: hypermedia.HxRequestConfig{
 						Method: hypermedia.HxMethodPatch,
-						URL:    moveURL + "?status=" + nextStatus,
+						URL:    taskURL,
 						Target: "#kanban-board",
+						Vals:   `{"status":"` + nextStatus + `"}`,
 					},
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)

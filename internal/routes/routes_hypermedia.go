@@ -205,7 +205,7 @@ func (s *hypermediaState) handleCRUDDelete(c echo.Context) error {
 		s.items = append(s.items[:idx], s.items[idx+1:]...)
 	}
 	s.mu.Unlock()
-	return c.NoContent(200)
+	return c.NoContent(http.StatusNoContent)
 }
 
 // ─── Lists handlers ────────────────────────────────────────────────────────────

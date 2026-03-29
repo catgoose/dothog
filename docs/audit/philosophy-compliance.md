@@ -1,89 +1,79 @@
-# PHILOSOPHY.md Compliance Audit -- Dothog Demo Application
+# PHILOSOPHY.md Compliance Audit
 
-**Date:** 2026-03-29
-**Scope:** Demo application (`internal/demo/`, `internal/routes/`, `web/views/`, `web/components/`)
-**Audited against:** `PHILOSOPHY.md` (22 principles)
+Audit date: 2026-03-29
 
-## Summary
+## V1: Init-time panic in demo seeder
 
-The dothog demo application demonstrates **strong overall compliance** with its philosophy document. The architecture is genuinely hypermedia-driven, the `Control` struct uniform interface is well-implemented, error handling is exemplary, SQL is explicit, and traits/composable helpers replace ORM abstractions effectively. The violations found are relatively minor.
+**File:** `internal/demo/seed.go`
+**Status:** Deferred
+**Rationale:** The panic occurs only during demo data seeding at startup. If seeding
+fails, the application cannot serve demo pages and crashing is the correct behavior.
+This aligns with the Go proverb "Don't panic" exception for truly unrecoverable
+programmer-level errors at init time.
 
-**Compliance score: ~87%** (9 violations across 22 principles, most low-severity)
+## V2: Inline HTMX partial swaps bypass PRG (kanban, approvals, repository)
 
----
+**Status:** Not a violation
+**Rationale:** Inline HTMX partial swaps (editing a row in-place, moving a card
+between columns) are a valid hypermedia interaction pattern distinct from PRG. The
+server controls the next state and returns the updated representation directly to the
+target element. PRG applies to navigation mutations (creating a resource with its own
+URL). Inline swaps are for non-navigation mutations where the user stays on the same
+view. PHILOSOPHY.md updated to document this exception.
 
-## Violations Found
+## V3: Inline HTMX partial swaps in CRUD demo
 
-### V1: `panic` in `must()` helper (Low)
-- **File:** `main.go:47-52`
-- **Principle:** #20 -- No panic for runtime conditions
-- **Description:** `func must(fs fs.FS, err error) fs.FS` panics if embedded filesystem fails. While init-time only, the philosophy draws a hard line on `panic`.
-- **Fix:** Replace with `log.Fatal("failed to sub static FS: ", err)` or document as acceptable init-time invariant.
+**Status:** Not a violation
+**Rationale:** Same as V2. The CRUD demo's inline edit/create/toggle/delete pattern
+uses correct HTTP verbs (POST for create, PUT for full update, PATCH for toggle,
+DELETE for remove) and returns updated representations directly. This is proper
+hypermedia.
 
-### V2: POST handlers return components instead of redirecting (Medium)
-- **File:** `internal/routes/routes_inventory.go:68-75` (`handleCreateItem`), `routes_repository.go` (`handleCreateTask`), `routes_hypermedia.go` (`handleCRUDCreate`)
-- **Principle:** #8 -- Mutations redirect (POST/Redirect/GET)
-- **Description:** POST handlers respond with rendered components (200 OK) rather than `HX-Redirect` + 303. This is idiomatic HTMX for inline table updates but deviates from PRG.
-- **Fix:** Either align code with strict PRG, or clarify in PHILOSOPHY.md that inline HTMX partial updates are an acceptable exception to PRG for non-navigation operations.
+## V4: Verb URL `/demo/kanban/tasks/:id/move`
 
-### V3: PUT handlers return components instead of redirecting (Medium)
-- **File:** `internal/routes/routes_people.go:104` (`handlePersonUpdate`), `routes_inventory.go` (`handleUpdateItem`), `routes_vendors_contacts.go` (`handleContactUpdate`)
-- **Principle:** #8 -- Mutations redirect
-- **Description:** Same pattern as V2 for PUT operations.
-- **Fix:** Same as V2.
+**File:** `internal/routes/routes_kanban.go`, `web/views/kanban.templ`
+**Status:** Resolved
+**Fix:** Route changed from `PATCH /demo/kanban/tasks/:id/move` to
+`PATCH /demo/kanban/tasks/:id`. Status is now read from the request body via
+`FormValue("status")` instead of a query parameter. Templates updated to use
+`hx-vals` to send status in the request body.
 
-### V4: Verb-based URL `/demo/kanban/tasks/:id/move` (Low)
-- **File:** `internal/routes/routes_kanban.go:31`
-- **Principle:** #4 -- Resource identification (no verb-based URLs)
-- **Fix:** Change to `PATCH /demo/kanban/tasks/:id` with target status in request body.
+## V5: Verb URL `/demo/approvals/:id/:action`
 
-### V5: Verb-based URL `/demo/approvals/:id/:action` (Low)
-- **File:** `internal/routes/routes_approvals.go:31`
-- **Principle:** #4 -- Resource identification
-- **Fix:** Change to `PATCH /demo/approvals/:id` with action in request body.
+**File:** `internal/routes/routes_approvals.go`, `web/views/approvals.templ`
+**Status:** Resolved
+**Fix:** Route changed from `POST /demo/approvals/:id/:action` to
+`PATCH /demo/approvals/:id`. Action is now read from the request body via
+`FormValue("action")`. Templates updated to use `hx-patch` with `hx-vals` to send
+the action in the request body.
 
-### V6: Verb-based URLs for repository tasks (Low)
-- **File:** `internal/routes/routes_repository.go:37-39`
-- **URLs:** `POST .../restore`, `POST .../archive`, `POST .../unarchive`
-- **Principle:** #4 -- Resource identification
-- **Fix:** Use `PATCH /demo/repository/tasks/:id` with desired state in body.
+## V6: Verb URLs for repository restore/archive
 
-### V7: POST used for state modifications instead of PATCH (Medium)
-- **File:** `internal/routes/routes_repository.go:37-39`
-- **Principle:** #3 -- Self-descriptive HTTP methods (POST creates, PATCH modifies)
-- **Description:** `POST .../restore`, `POST .../archive`, `POST .../unarchive` use POST for what are semantically partial modifications.
-- **Fix:** Use `PATCH` instead of `POST` for these operations.
+**File:** `internal/routes/routes_repository.go`, `web/views/repository.templ`
+**Status:** Resolved
+**Fix:** Three separate routes (`POST .../restore`, `POST .../archive`,
+`POST .../unarchive`) consolidated into a single `PATCH /demo/repository/tasks/:id`
+endpoint. The action is read from the request body via `FormValue("action")`.
+Templates updated to use `hx-patch` with `hx-vals`.
 
-### V8: Alpine.js used where _hyperscript preferred (Low)
-- **File:** `web/components/core/controls.templ` (`backButton`, `homeButton`, `dismissButton`)
-- **Principle:** #13 -- Locality of behavior (_hyperscript for client behavior)
-- **Description:** Uses `x-on:click` (Alpine) instead of `_hyperscript`. The philosophy allows Alpine for view state but prefers _hyperscript.
-- **Fix:** Migrate to `_hyperscript` or document Alpine as acceptable for simple event handlers.
+## V7: Verb URL for repository unarchive
 
-### V9: DELETE returns 200 instead of 204 (Very Low)
-- **File:** `internal/routes/routes_hypermedia.go:172` (`handleCRUDDelete`)
-- **Principle:** #3 -- Self-descriptive HTTP methods
-- **Description:** `c.NoContent(200)` should be `c.NoContent(http.StatusNoContent)` (204).
-- **Fix:** Change to 204. Verify HTMX handles 204 correctly with `hx-swap="delete"`.
+**Status:** Resolved (merged with V6)
 
----
+## V8: Alpine `x-on:click` in control buttons
 
-## Areas of Strong Compliance
+**File:** `web/components/core/controls.templ`, `web/components/core/error_controls.templ`
+**Status:** Resolved
+**Fix:** Converted `backButton`, `homeButton`, and `genericDismiss` in `controls.templ`
+from Alpine `x-on:click` to _hyperscript `_="on click ..."`. Also converted
+`errorBackButton` in `error_controls.templ`. The `dismissButton` in
+`error_controls.templ` already used _hyperscript and was not changed.
 
-| Principle | Assessment |
-|-----------|------------|
-| #1 Hypermedia-driven (HTMX, not SPA) | **Excellent** -- Zero SPA patterns, all server-rendered |
-| #2 Uniform interface (`hypermedia.Control`) | **Excellent** -- `Control` struct with factory functions used everywhere |
-| #5 Parent routes are documents | **Good** -- `/demo`, `/hypermedia`, `/dashboard` all serve documents |
-| #6 Server-side state | **Excellent** -- All state server-side (SQLite, in-memory stores, SSE) |
-| #7 Content negotiation (HX-Request) | **Good** -- `Vary: HX-Request` set globally, partials vs full pages |
-| #9 Postel's Law (server validates) | **Good** -- No client-side validation, inline error panels |
-| #10 Explicit SQL, composable helpers | **Excellent** -- `SelectBuilder`, `WhereBuilder`, `Columns()`, no ORM |
-| #11 Schema as code with traits | **Excellent** -- `NewTable().WithStatus().WithSortOrder().WithVersion()...` |
-| #12 Domain patterns as primitives | **Good** -- Standalone functions, no base classes |
-| #14 Errors are hypermedia | **Excellent** -- `ErrorContext` with controls, request ID, report button |
-| #15 Structured observability | **Good** -- Request IDs, `promolog.Store`, promote-on-error |
-| #16 DaisyUI semantic classes | **Excellent** -- `btn btn-primary`, `alert alert-error`, no raw colors |
-| #17 Native HTML over JS | **Good** -- `<dialog>`, native `<select>`, `<input>` elements |
-| #19 Link relations | **Excellent** -- `rel="up"` chains, `BreadcrumbsFromLinks()`, link registry |
-| #22 Go principles | **Good** -- Clear code, small interfaces, error wrapping |
+## V9: DELETE handler returns 200 instead of 204
+
+**File:** `internal/routes/routes_hypermedia.go`
+**Status:** Resolved
+**Fix:** Changed `c.NoContent(200)` to `c.NoContent(http.StatusNoContent)` (204) in
+`handleCRUDDelete`. Updated the delete button's swap strategy from
+`hx-swap="outerHTML"` to `hx-swap="delete"` so the row is removed from the DOM when
+the server returns 204 with no body. Tests updated to expect 204.

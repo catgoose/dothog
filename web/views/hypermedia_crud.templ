@@ -104,7 +104,7 @@ templ CRUDItemRow(item CRUDViewItem) {
 					class="btn btn-xs btn-error"
 					hx-delete={ deleteURL }
 					hx-target={ "#" + rowID }
-					hx-swap="outerHTML"
+					hx-swap="delete"
 					hx-confirm="Delete this item?"
 				>Delete</button>
 			</div>
