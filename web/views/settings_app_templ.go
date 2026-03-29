@@ -8,10 +8,10 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import "catgoose/dothog/internal/version"
 
-// AppSettingsPage renders the /settings page with an inline theme picker.
-func AppSettingsPage(currentTheme string, currentLayout string, links []hypermedia.LinkRelation) templ.Component {
+// AppSettingsPage renders the /settings page organized into collapsible sections.
+func AppSettingsPage(currentTheme string, currentLayout string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -32,7 +32,7 @@ func AppSettingsPage(currentTheme string, currentLayout string, links []hypermed
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto space-y-6\"><h1 class=\"text-2xl font-bold\">Settings</h1><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-lg\">Theme</h2><p class=\"text-sm text-base-content/70\">Choose a color theme for the application.</p><div class=\"mt-2 max-w-xs\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto space-y-6\"><h1 class=\"text-2xl font-bold\">Settings</h1><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\"><details open><summary class=\"font-semibold text-lg cursor-pointer\">Appearance</summary><div class=\"mt-3 space-y-4\"><div><h3 class=\"text-sm font-medium\">Theme</h3><p class=\"text-sm text-base-content/70\">Choose a color theme for the application.</p><div class=\"mt-2 max-w-xs\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -40,7 +40,7 @@ func AppSettingsPage(currentTheme string, currentLayout string, links []hypermed
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div></div><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-lg\">Layout</h2><p class=\"text-sm text-base-content/70\">Switch between the classic top nav and a mobile-first bottom nav.</p><div class=\"mt-2 max-w-xs\"><select class=\"select select-bordered select-sm w-full\" name=\"layout\" hx-post=\"/settings/layout\" hx-swap=\"none\"><option value=\"classic\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div><div><h3 class=\"text-sm font-medium\">Layout</h3><p class=\"text-sm text-base-content/70\">Switch between the classic top nav and a mobile-first bottom nav.</p><div class=\"mt-2 max-w-xs\"><select class=\"select select-bordered select-sm w-full\" name=\"layout\" hx-post=\"/settings/layout\" hx-swap=\"none\"><option value=\"classic\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -60,71 +60,20 @@ func AppSettingsPage(currentTheme string, currentLayout string, links []hypermed
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, ">App Nav (mobile-first)</option></select></div></div></div><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\"><details open><summary class=\"font-semibold text-lg cursor-pointer\">Context Bars</summary><p class=\"text-sm text-base-content/70 mt-1\">Toggle visibility of the navigation context bars.</p><div class=\"mt-2 space-y-2\"><label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" _=\"init set my.checked to localStorage.getItem('dothog_hide_context_bar') !== 'true'\n\t\t\t\t\t\t\t\t   on change\n\t\t\t\t\t\t\t\t     if my.checked\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_context_bar to 'false'\n\t\t\t\t\t\t\t\t       show #context-bar\n\t\t\t\t\t\t\t\t     else\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_context_bar to 'true'\n\t\t\t\t\t\t\t\t       hide #context-bar\n\t\t\t\t\t\t\t\t     end\"><div><span class=\"label-text\">Show full context bar</span><p class=\"text-xs text-base-content/40\">All pages in your section, grouped by rings</p></div></label> <label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" _=\"init set my.checked to localStorage.getItem('dothog_hide_local_context_bar') !== 'true'\n\t\t\t\t\t\t\t\t   on change\n\t\t\t\t\t\t\t\t     if my.checked\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_local_context_bar to 'false'\n\t\t\t\t\t\t\t\t       show #local-context-bar\n\t\t\t\t\t\t\t\t     else\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_local_context_bar to 'true'\n\t\t\t\t\t\t\t\t       hide #local-context-bar\n\t\t\t\t\t\t\t\t     end\"><div><span class=\"label-text\">Show local context bar</span><p class=\"text-xs text-base-content/40\">Your immediate sibling pages in the same ring</p></div></label> <label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" _=\"init set my.checked to localStorage.getItem('dothog_hide_history_crumbs') !== 'true'\n\t\t\t\t\t\t\t\t   on change\n\t\t\t\t\t\t\t\t     if my.checked\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_history_crumbs to 'false'\n\t\t\t\t\t\t\t\t       show #history-breadcrumbs\n\t\t\t\t\t\t\t\t     else\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_history_crumbs to 'true'\n\t\t\t\t\t\t\t\t       hide #history-breadcrumbs\n\t\t\t\t\t\t\t\t     end\"><div><span class=\"label-text\">Show history breadcrumbs</span><p class=\"text-xs text-base-content/40\">Trail of the last few pages you visited</p></div></label></div></details></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, ">App Nav (mobile-first)</option></select></div></div></div></details></div></div><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\"><details><summary class=\"font-semibold text-lg cursor-pointer\">Navigation</summary><p class=\"text-sm text-base-content/70 mt-1\">Toggle visibility of the navigation context bars.</p><div class=\"mt-2 space-y-2\"><label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" _=\"init set my.checked to localStorage.getItem('dothog_hide_context_bar') !== 'true'\n\t\t\t\t\t\t\t\t   on change\n\t\t\t\t\t\t\t\t     if my.checked\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_context_bar to 'false'\n\t\t\t\t\t\t\t\t       show #context-bar\n\t\t\t\t\t\t\t\t     else\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_context_bar to 'true'\n\t\t\t\t\t\t\t\t       hide #context-bar\n\t\t\t\t\t\t\t\t     end\"><div><span class=\"label-text\">Show full context bar</span> <span class=\"badge badge-ghost badge-sm ml-1\">help</span><p class=\"text-xs text-base-content/40\">All pages in your section, grouped by rings</p></div></label> <label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" _=\"init set my.checked to localStorage.getItem('dothog_hide_local_context_bar') !== 'true'\n\t\t\t\t\t\t\t\t   on change\n\t\t\t\t\t\t\t\t     if my.checked\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_local_context_bar to 'false'\n\t\t\t\t\t\t\t\t       show #local-context-bar\n\t\t\t\t\t\t\t\t     else\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_local_context_bar to 'true'\n\t\t\t\t\t\t\t\t       hide #local-context-bar\n\t\t\t\t\t\t\t\t     end\"><div><span class=\"label-text\">Show local context bar</span> <span class=\"badge badge-ghost badge-sm ml-1\">help</span><p class=\"text-xs text-base-content/40\">Your immediate sibling pages in the same ring</p></div></label> <label class=\"label cursor-pointer justify-start gap-3\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" _=\"init set my.checked to localStorage.getItem('dothog_hide_history_crumbs') !== 'true'\n\t\t\t\t\t\t\t\t   on change\n\t\t\t\t\t\t\t\t     if my.checked\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_history_crumbs to 'false'\n\t\t\t\t\t\t\t\t       show #history-breadcrumbs\n\t\t\t\t\t\t\t\t     else\n\t\t\t\t\t\t\t\t       set localStorage.dothog_hide_history_crumbs to 'true'\n\t\t\t\t\t\t\t\t       hide #history-breadcrumbs\n\t\t\t\t\t\t\t\t     end\"><div><span class=\"label-text\">Show history breadcrumbs</span> <span class=\"badge badge-ghost badge-sm ml-1\">help</span><p class=\"text-xs text-base-content/40\">Trail of the last few pages you visited</p></div></label></div></details></div></div><div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\"><details><summary class=\"font-semibold text-lg cursor-pointer\">About</summary><div class=\"mt-3 space-y-2\"><p class=\"text-sm text-base-content/70\"><span class=\"font-medium text-base-content\">Version:</span> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if len(links) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"card bg-base-100 shadow-sm border border-base-300\"><div class=\"card-body\"><details open><summary class=\"font-semibold text-lg cursor-pointer\">Related</summary><ul class=\"menu mt-1\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			for _, link := range links {
-				if link.Rel == "related" || link.Rel == "up" {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<li><a href=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var2 templ.SafeURL
-					templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(link.Href))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 102, Col: 40}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					if link.Rel == "up" {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "↑ ")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var3 string
-						templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(link.Title)
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 104, Col: 28}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					} else {
-						var templ_7745c5c3_Var4 string
-						templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(link.Title)
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 106, Col: 24}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</a></li>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</ul></details></div></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(version.Display())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 107, Col: 86}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</p><ul class=\"menu menu-sm\"><li><a href=\"/\">Architecture</a></li><li><a href=\"/hypermedia\">Web Standards Showcase</a></li></ul></div></details></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -149,84 +98,84 @@ func themeDropdown(currentTheme string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var5 == nil {
-			templ_7745c5c3_Var5 = templ.NopComponent
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div x-data=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div x-data=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("{ current: '" + currentTheme + "' }")
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("{ current: '" + currentTheme + "' }")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 122, Col: 52}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\"><div class=\"flex items-center gap-3\"><div :data-theme=\"current\" class=\"flex gap-0.5 shrink-0\"><span class=\"w-2 h-4 rounded-sm bg-primary\"></span> <span class=\"w-2 h-4 rounded-sm bg-secondary\"></span> <span class=\"w-2 h-4 rounded-sm bg-accent\"></span></div><select class=\"select select-bordered select-sm w-full max-w-xs capitalize\" x-model=\"current\" x-on:change=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"><div class=\"flex items-center gap-3\"><div :data-theme=\"current\" class=\"flex gap-0.5 shrink-0\"><span class=\"w-2 h-4 rounded-sm bg-primary\"></span> <span class=\"w-2 h-4 rounded-sm bg-secondary\"></span> <span class=\"w-2 h-4 rounded-sm bg-accent\"></span></div><select class=\"select select-bordered select-sm w-full max-w-xs capitalize\" x-model=\"current\" x-on:change=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs("document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.dothogChannel) window.dothogChannel.postMessage({type:'theme-change',theme:current})")
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs("document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.dothogChannel) window.dothogChannel.postMessage({type:'theme-change',theme:current})")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 132, Col: 398}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, theme := range DaisyThemes {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<option value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<option value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
+			var templ_7745c5c3_Var6 string
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 136, Col: 19}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if theme == currentTheme {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " selected")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " selected")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, ">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, ">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
+			var templ_7745c5c3_Var7 string
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 139, Col: 13}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</option>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</option>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</select></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</select></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

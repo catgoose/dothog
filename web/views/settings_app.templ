@@ -1,41 +1,46 @@
 package views
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import "catgoose/dothog/internal/version"
 
-// AppSettingsPage renders the /settings page with an inline theme picker.
-templ AppSettingsPage(currentTheme string, currentLayout string, links []hypermedia.LinkRelation) {
+// AppSettingsPage renders the /settings page organized into collapsible sections.
+templ AppSettingsPage(currentTheme string, currentLayout string) {
 	<div class="max-w-2xl mx-auto space-y-6">
 		<h1 class="text-2xl font-bold">Settings</h1>
 		<div class="card bg-base-100 shadow-sm border border-base-300">
 			<div class="card-body">
-				<h2 class="card-title text-lg">Theme</h2>
-				<p class="text-sm text-base-content/70">Choose a color theme for the application.</p>
-				<div class="mt-2 max-w-xs">
-					@themeDropdown(currentTheme)
-				</div>
-			</div>
-		</div>
-		<div class="card bg-base-100 shadow-sm border border-base-300">
-			<div class="card-body">
-				<h2 class="card-title text-lg">Layout</h2>
-				<p class="text-sm text-base-content/70">Switch between the classic top nav and a mobile-first bottom nav.</p>
-				<div class="mt-2 max-w-xs">
-					<select
-						class="select select-bordered select-sm w-full"
-						name="layout"
-						hx-post="/settings/layout"
-						hx-swap="none"
-					>
-						<option value="classic" selected?={ currentLayout == "classic" }>Classic (top nav)</option>
-						<option value="app" selected?={ currentLayout == "app" }>App Nav (mobile-first)</option>
-					</select>
-				</div>
-			</div>
-		</div>
-		<div class="card bg-base-100 shadow-sm border border-base-300">
-			<div class="card-body">
 				<details open>
-					<summary class="font-semibold text-lg cursor-pointer">Context Bars</summary>
+					<summary class="font-semibold text-lg cursor-pointer">Appearance</summary>
+					<div class="mt-3 space-y-4">
+						<div>
+							<h3 class="text-sm font-medium">Theme</h3>
+							<p class="text-sm text-base-content/70">Choose a color theme for the application.</p>
+							<div class="mt-2 max-w-xs">
+								@themeDropdown(currentTheme)
+							</div>
+						</div>
+						<div>
+							<h3 class="text-sm font-medium">Layout</h3>
+							<p class="text-sm text-base-content/70">Switch between the classic top nav and a mobile-first bottom nav.</p>
+							<div class="mt-2 max-w-xs">
+								<select
+									class="select select-bordered select-sm w-full"
+									name="layout"
+									hx-post="/settings/layout"
+									hx-swap="none"
+								>
+									<option value="classic" selected?={ currentLayout == "classic" }>Classic (top nav)</option>
+									<option value="app" selected?={ currentLayout == "app" }>App Nav (mobile-first)</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</details>
+			</div>
+		</div>
+		<div class="card bg-base-100 shadow-sm border border-base-300">
+			<div class="card-body">
+				<details>
+					<summary class="font-semibold text-lg cursor-pointer">Navigation</summary>
 					<p class="text-sm text-base-content/70 mt-1">Toggle visibility of the navigation context bars.</p>
 					<div class="mt-2 space-y-2">
 						<label class="label cursor-pointer justify-start gap-3">
@@ -51,6 +56,7 @@ templ AppSettingsPage(currentTheme string, currentLayout string, links []hyperme
 								     end"/>
 							<div>
 								<span class="label-text">Show full context bar</span>
+								<span class="badge badge-ghost badge-sm ml-1">help</span>
 								<p class="text-xs text-base-content/40">All pages in your section, grouped by rings</p>
 							</div>
 						</label>
@@ -67,6 +73,7 @@ templ AppSettingsPage(currentTheme string, currentLayout string, links []hyperme
 								     end"/>
 							<div>
 								<span class="label-text">Show local context bar</span>
+								<span class="badge badge-ghost badge-sm ml-1">help</span>
 								<p class="text-xs text-base-content/40">Your immediate sibling pages in the same ring</p>
 							</div>
 						</label>
@@ -83,6 +90,7 @@ templ AppSettingsPage(currentTheme string, currentLayout string, links []hyperme
 								     end"/>
 							<div>
 								<span class="label-text">Show history breadcrumbs</span>
+								<span class="badge badge-ghost badge-sm ml-1">help</span>
 								<p class="text-xs text-base-content/40">Trail of the last few pages you visited</p>
 							</div>
 						</label>
@@ -90,30 +98,22 @@ templ AppSettingsPage(currentTheme string, currentLayout string, links []hyperme
 				</details>
 			</div>
 		</div>
-		if len(links) > 0 {
-			<div class="card bg-base-100 shadow-sm border border-base-300">
-				<div class="card-body">
-					<details open>
-						<summary class="font-semibold text-lg cursor-pointer">Related</summary>
-						<ul class="menu mt-1">
-							for _, link := range links {
-								if link.Rel == "related" || link.Rel == "up" {
-									<li>
-										<a href={ templ.URL(link.Href) }>
-											if link.Rel == "up" {
-												↑ { link.Title }
-											} else {
-												{ link.Title }
-											}
-										</a>
-									</li>
-								}
-							}
+		<div class="card bg-base-100 shadow-sm border border-base-300">
+			<div class="card-body">
+				<details>
+					<summary class="font-semibold text-lg cursor-pointer">About</summary>
+					<div class="mt-3 space-y-2">
+						<p class="text-sm text-base-content/70">
+							<span class="font-medium text-base-content">Version:</span> { version.Display() }
+						</p>
+						<ul class="menu menu-sm">
+							<li><a href="/">Architecture</a></li>
+							<li><a href="/hypermedia">Web Standards Showcase</a></li>
 						</ul>
-					</details>
-				</div>
+					</div>
+				</details>
 			</div>
-		}
+		</div>
 	</div>
 }
 
