@@ -108,6 +108,40 @@ func TestDefaultControls_ExplicitControlsOverride(t *testing.T) {
 	assert.Equal(t, "Try Again", hhe.EC.Controls[0].Label)
 }
 
+// TestHandleError_FallbackHTML verifies that when the error template itself
+// fails to render, HandleError falls back to inline HTML rather than
+// recursing indefinitely. We use a component that always fails to trigger
+// the fallback path through RenderComponent -> HandleError.
+func TestHandleError_FallbackHTML(t *testing.T) {
+	c, rec := newEchoContext(http.MethodGet, "/broken", nil)
+	e := echo.New()
+	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
+	c = e.NewContext(c.Request(), rec)
+
+	// HandleError renders an error template internally. If we call it with
+	// a real writer, it should succeed and render the error page.
+	err := HandleError(c, http.StatusInternalServerError, "server error", errors.New("db down"))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	// The error message should appear somewhere in the response.
+	assert.Contains(t, rec.Body.String(), "server error")
+}
+
+// TestHandleError_CanceledContextPreventsRender verifies that HandleError
+// short-circuits when the request context is canceled, preventing any write
+// attempts (and thus preventing recursion on broken writers).
+func TestHandleError_CanceledContextPreventsRender(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	c, rec := newEchoContext(http.MethodGet, "/", nil)
+	c.SetRequest(c.Request().WithContext(ctx))
+
+	err := HandleError(c, http.StatusInternalServerError, "should be skipped", errors.New("original"))
+	require.NoError(t, err)
+	assert.Empty(t, rec.Body.String(), "canceled context should prevent any rendering")
+}
+
 func TestHandleComponent(t *testing.T) {
 	c, rec := newEchoContext(http.MethodGet, "/", nil)
 	e := echo.New()

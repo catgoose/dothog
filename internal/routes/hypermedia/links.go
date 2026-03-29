@@ -308,6 +308,16 @@ func RemoveLink(source, href, rel string) bool {
 	return false
 }
 
+// ResetForTesting clears the global link registry. Test use only.
+func ResetForTesting() {
+	linksMu.Lock()
+	linksMap = make(map[string][]LinkRelation)
+	linksMu.Unlock()
+	hubsMu.Lock()
+	hubsMap = make(map[string]string)
+	hubsMu.Unlock()
+}
+
 // TitleFromPath extracts a title from the last segment of a URL path.
 // "/demo/inventory" -> "Inventory", "/admin/error-traces" -> "Error Traces"
 func TitleFromPath(path string) string {
