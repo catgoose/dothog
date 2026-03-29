@@ -315,6 +315,59 @@ hypermedia.Ring("Data",
 
 Context bars, breadcrumbs, and the site map footer update automatically based on the link registry. No template changes needed for navigation.
 
+## Page Composition Patterns
+
+For page-level layout, use DaisyUI classes directly. These patterns appear across multiple apps and are the idiomatic way to compose pages.
+
+### Card wrapper
+
+Wrap content sections in a DaisyUI card with a title:
+
+```templ
+<div class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+        <h2 class="card-title text-base">Settings</h2>
+        <!-- card content -->
+    </div>
+</div>
+```
+
+### Stacked layout
+
+Stack cards or sections vertically with consistent spacing:
+
+```templ
+<div class="space-y-6">
+    <!-- cards, forms, or any block content -->
+</div>
+```
+
+### Composed example
+
+A typical settings or detail page:
+
+```templ
+templ MySettingsPage() {
+    <div class="max-w-2xl mx-auto space-y-6">
+        <h1 class="text-2xl font-bold">Settings</h1>
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h2 class="card-title text-base">Appearance</h2>
+                <!-- theme picker, layout toggle -->
+            </div>
+        </div>
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h2 class="card-title text-base">Navigation</h2>
+                <!-- context bar toggles -->
+            </div>
+        </div>
+    </div>
+}
+```
+
+These are too thin to warrant a reusable component — the HTML is self-explanatory and hiding it behind `Card(title)` or `StackedLayout()` adds indirection without reducing complexity. Write the markup directly.
+
 ## Adding a New Component
 
 ### 1. Create the component
