@@ -23,26 +23,62 @@ const templateModulePath = "catgoose/dothog"
 
 // featureLabels maps feature tags to human-readable labels.
 var featureLabels = map[string]string{
+	// Core
+	setup.FeatureSessionSettings: "Session Settings (SQLite)",
+	setup.FeatureCSRF:            "CSRF Protection",
+	// Auth
 	setup.FeatureAuth:            "Auth (Crooner)",
 	setup.FeatureGraph:           "Graph API",
-	setup.FeatureDatabase:        "Database (MSSQL)",
+	setup.FeatureAvatar:          "Avatar Photos (requires Graph)",
+	// Data
+	setup.FeatureDatabase:        "Database (fraggle repository layer)",
+	setup.FeatureMSSQL:           "MSSQL dialect",
+	setup.FeaturePostgres:        "PostgreSQL dialect",
+	// Real-time
 	setup.FeatureSSE:             "SSE (requires Caddy)",
 	setup.FeatureCaddy:           "Caddy (HTTPS)",
-	setup.FeatureAvatar:          "Avatar Photos (requires Graph)",
+	// Navigation
+	setup.FeatureLinkRelations:   "Link Relations (context bars, breadcrumbs, site map)",
+	// Performance & Security
+	setup.FeatureWebStandards:    "Web Standards (Server-Timing, Vary, Permissions-Policy, Early Hints)",
+	setup.FeatureBrowserAPIs:     "Browser APIs (sendBeacon, BroadcastChannel)",
+	// Mobile & Offline
+	setup.FeatureCapacitor:       "Capacitor (mobile wrapper)",
+	setup.FeatureOffline:         "Offline Mode (service worker, write queue)",
+	setup.FeatureSync:            "Sync (offline data synchronization)",
+	setup.FeaturePWA:             "PWA (Progressive Web App — offline + sync + mobile)",
+	// Demo
 	setup.FeatureDemo:            "Demo Content",
-	setup.FeatureSessionSettings: "Session Settings (SQLite)",
 }
 
 // featureLabelOrder is the display order for the feature multi-select.
 var featureLabelOrder = []string{
+	// Core
+	setup.FeatureSessionSettings,
+	setup.FeatureCSRF,
+	// Auth
 	setup.FeatureAuth,
 	setup.FeatureGraph,
 	setup.FeatureAvatar,
+	// Data
 	setup.FeatureDatabase,
+	setup.FeatureMSSQL,
+	setup.FeaturePostgres,
+	// Real-time
 	setup.FeatureSSE,
 	setup.FeatureCaddy,
+	// Navigation
+	setup.FeatureLinkRelations,
+	// Performance & Security
+	setup.FeatureWebStandards,
+	setup.FeatureBrowserAPIs,
+	// Mobile & Offline
+	setup.FeatureCapacitor,
+	setup.FeatureOffline,
+	setup.FeatureSync,
+	setup.FeaturePWA,
+	// Demo
 	setup.FeatureDemo,
-	setup.FeatureSessionSettings,
 }
 
 func init() {
@@ -186,6 +222,14 @@ func Setup() error {
 	return nil
 }
 
+// presets maps preset names to their default feature sets.
+var presets = map[string][]string{
+	"internal": {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureDatabase, setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
+	"public":   {setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs},
+	"demo":     setup.AllFeatures,
+	"minimal":  {},
+}
+
 func runWizard() (*setup.Options, error) {
 	var (
 		appName    string
@@ -194,27 +238,32 @@ func runWizard() (*setup.Options, error) {
 		features   []string
 		force      bool
 		confirm    = true
+		preset     string
+		customize  bool
+		// Guided wizard answers
+		dbDialect    string // "sqlite", "mssql", "postgres", "sqlite+mssql", "sqlite+postgres"
+		wantSessions bool
+		wantAuth     bool
+		wantGraph    bool
+		wantAvatar   bool
+		wantSSE      bool
+		wantLinks    bool
+		wantStandards bool
+		wantAPIs     bool
+		wantCapacitor bool
+		wantOffline  bool
+		wantSync     bool
+		wantPWA      bool
+		wantDemo     bool
 	)
 
 	currentModule := goModulePath()
 	defaultPort := fmt.Sprintf("%d", randomBasePort())
-
-	// Build feature options with preselection
-	var featureOptions []huh.Option[string]
-	for _, tag := range featureLabelOrder {
-		label := featureLabels[tag]
-		opt := huh.NewOption(label, tag)
-		// Demo and Alpine are opt-in: not preselected by default
-		if tag != setup.FeatureDemo && tag != setup.FeatureAlpine {
-			opt = opt.Selected(true)
-		}
-		featureOptions = append(featureOptions, opt)
-	}
-
 	needsForce := currentModule != "" && currentModule != templateModulePath
 
-	form := huh.NewForm(
-		// Group 1: Basic app info
+	// ── Step 1: App configuration ──────────────────────────────────
+
+	appForm := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
 				Title("App name").
@@ -226,7 +275,6 @@ func runWizard() (*setup.Options, error) {
 					}
 					return nil
 				}),
-
 			huh.NewInput().
 				Title("Module path").
 				PlaceholderFunc(func() string {
@@ -237,55 +285,14 @@ func runWizard() (*setup.Options, error) {
 					return fmt.Sprintf("github.com/you/%s", binaryNameFromApp(name))
 				}, &appName).
 				Value(&modulePath),
-
 			huh.NewInput().
 				Title("Base port").
 				Placeholder("5-digit port < 60000").
 				Description(fmt.Sprintf("APP_TLS_PORT=BASE, TEMPL_HTTP=BASE+1, CADDY_TLS=BASE+2 (default: %s)", defaultPort)).
 				Value(&basePort),
 		).Title("App Configuration"),
-
-		// Group 2: Feature selection with dynamic descriptions
-		huh.NewGroup(
-			huh.NewMultiSelect[string]().
-				Title("Features").
-				Description("SSE requires Caddy; Avatar requires Graph (auto-included if missing)").
-				Options(featureOptions...).
-				Value(&features),
-		).Title("Feature Selection"),
-
-		// Group 3: Force confirm — only shown when module is already customized
-		huh.NewGroup(
-			huh.NewConfirm().
-				TitleFunc(func() string {
-					return fmt.Sprintf("Module already customized (go.mod: %s). Run setup again with --force?", currentModule)
-				}, &appName).
-				Value(&force),
-		).WithHideFunc(func() bool {
-			return !needsForce
-		}),
-
-		// Group 4: Final confirmation with dynamic summary
-		huh.NewGroup(
-			huh.NewConfirm().
-				TitleFunc(func() string {
-					resolvedModule := resolveModulePath(appName, modulePath, currentModule)
-					resolvedPort := basePort
-					if resolvedPort == "" {
-						resolvedPort = defaultPort
-					}
-					featureDesc := describeFeatures(features)
-					return fmt.Sprintf("Proceed with app %q, module %s, port %s, features: %s?",
-						strings.TrimSpace(appName), resolvedModule, resolvedPort, featureDesc)
-				}, &appName).
-				Value(&confirm),
-		).WithHideFunc(func() bool {
-			return needsForce && !force
-		}),
 	)
-
-	err := form.Run()
-	if err != nil {
+	if err := appForm.Run(); err != nil {
 		if errors.Is(err, huh.ErrUserAborted) {
 			fmt.Println("Setup cancelled.")
 			return nil, nil
@@ -293,14 +300,252 @@ func runWizard() (*setup.Options, error) {
 		return nil, err
 	}
 
-	if needsForce && !force {
-		fmt.Println("Setup cancelled.")
-		return nil, nil
+	// ── Step 2: Preset or guided ───────────────────────────────────
+
+	presetForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("What are you building?").
+				Options(
+					huh.NewOption("Internal tool — auth, database, sessions, SSE, link relations, web standards", "internal"),
+					huh.NewOption("Public site — sessions, link relations, web standards, browser APIs", "public"),
+					huh.NewOption("Demo/playground — everything enabled", "demo"),
+					huh.NewOption("Minimal — bare HTMX app", "minimal"),
+					huh.NewOption("Pick from list (flat checklist)", "flat"),
+					huh.NewOption("Let me choose (guided wizard)", "guided"),
+				).
+				Value(&preset),
+		).Title("Feature Preset"),
+	)
+	if err := presetForm.Run(); err != nil {
+		if errors.Is(err, huh.ErrUserAborted) {
+			fmt.Println("Setup cancelled.")
+			return nil, nil
+		}
+		return nil, err
 	}
-	if !confirm {
-		fmt.Println("Setup cancelled.")
-		return nil, nil
+
+	if preset == "flat" {
+		// ── Flat checklist: sensible defaults pre-selected ─────────
+		flatDefaults := map[string]bool{
+			setup.FeatureSessionSettings: true,
+			setup.FeatureCSRF:            true,
+			setup.FeatureSSE:             true,
+			setup.FeatureCaddy:           true,
+			setup.FeatureLinkRelations:   true,
+			setup.FeatureWebStandards:    true,
+		}
+		var featureOptions []huh.Option[string]
+		for _, tag := range featureLabelOrder {
+			opt := huh.NewOption(featureLabels[tag], tag)
+			if flatDefaults[tag] {
+				opt = opt.Selected(true)
+			}
+			featureOptions = append(featureOptions, opt)
+		}
+		flatForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Features").
+					Description("Dependencies will be auto-included after selection").
+					Options(featureOptions...).
+					Value(&features),
+			).Title("Select Features"),
+		)
+		if err := flatForm.Run(); err != nil {
+			if errors.Is(err, huh.ErrUserAborted) {
+				fmt.Println("Setup cancelled.")
+				return nil, nil
+			}
+			return nil, err
+		}
+	} else if preset == "guided" {
+		// ── Guided wizard: ask about dependencies first ────────────
+
+		guidedForm := huh.NewForm(
+			// Database
+			huh.NewGroup(
+				huh.NewSelect[string]().
+					Title("Database dialect").
+					Description("SQLite is always included for dev/demo. Pick a production dialect if needed.").
+					Options(
+						huh.NewOption("SQLite only (dev/demo)", "sqlite"),
+						huh.NewOption("SQLite + MSSQL (dev locally, deploy to SQL Server)", "sqlite+mssql"),
+						huh.NewOption("SQLite + PostgreSQL (dev locally, deploy to Postgres)", "sqlite+postgres"),
+						huh.NewOption("MSSQL only", "mssql"),
+						huh.NewOption("PostgreSQL only", "postgres"),
+					).
+					Value(&dbDialect),
+			).Title("Database"),
+
+			// Navigation — ask first, auto-includes sessions
+			huh.NewGroup(
+				huh.NewConfirm().Title("Want link relations? (context bars, breadcrumbs, site map)\n  Session settings will be auto-included").Value(&wantLinks),
+			).Title("Navigation"),
+
+			// Sessions — only ask if link relations didn't already include it
+			huh.NewGroup(
+				huh.NewConfirm().Title("Need user sessions? (theme persistence, settings)").Value(&wantSessions),
+			).Title("Sessions").WithHideFunc(func() bool { return wantLinks }),
+
+			// Auth
+			huh.NewGroup(
+				huh.NewConfirm().Title("Need authentication? (Crooner)\n  CSRF protection will be auto-included").Value(&wantAuth),
+			).Title("Authentication"),
+
+			huh.NewGroup(
+				huh.NewConfirm().Title("Need Microsoft Graph API?").Value(&wantGraph),
+			).Title("Graph API").WithHideFunc(func() bool { return !wantAuth }),
+
+			huh.NewGroup(
+				huh.NewConfirm().Title("Need user photos from Graph?").Value(&wantAvatar),
+			).Title("Avatar Photos").WithHideFunc(func() bool { return !wantGraph }),
+
+			// Real-time
+			huh.NewGroup(
+				huh.NewConfirm().Title("Need real-time updates (SSE)?\n  Caddy HTTPS will be auto-included for HTTP/2").Value(&wantSSE),
+			).Title("Real-time"),
+
+			// Performance & Security
+			huh.NewGroup(
+				huh.NewConfirm().Title("Want web standards headers?\n  Server-Timing, Vary, Permissions-Policy, 103 Early Hints").Value(&wantStandards),
+				huh.NewConfirm().Title("Want browser APIs?\n  sendBeacon analytics, BroadcastChannel cross-tab sync\n  SSE will be auto-included").Value(&wantAPIs),
+			).Title("Performance & Security"),
+
+			// Mobile & Offline
+			huh.NewGroup(
+				huh.NewConfirm().Title("Need mobile app wrapper (Capacitor)?").Value(&wantCapacitor),
+				huh.NewConfirm().Title("Need offline support? (service worker, write queue)\n  Capacitor will be auto-included").Value(&wantOffline),
+				huh.NewConfirm().Title("Need data sync?\n  Offline will be auto-included").Value(&wantSync),
+				huh.NewConfirm().Title("Want full PWA?\n  Includes offline + sync + capacitor").Value(&wantPWA),
+			).Title("Mobile & Offline"),
+
+			// Demo
+			huh.NewGroup(
+				huh.NewConfirm().Title("Include demo content?").Value(&wantDemo),
+			).Title("Demo"),
+		)
+		if err := guidedForm.Run(); err != nil {
+			if errors.Is(err, huh.ErrUserAborted) {
+				fmt.Println("Setup cancelled.")
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		// Build features from guided answers
+		switch dbDialect {
+		case "mssql":
+			features = append(features, setup.FeatureDatabase, setup.FeatureMSSQL)
+		case "postgres":
+			features = append(features, setup.FeatureDatabase, setup.FeaturePostgres)
+		case "sqlite+mssql":
+			features = append(features, setup.FeatureDatabase, setup.FeatureMSSQL)
+		case "sqlite+postgres":
+			features = append(features, setup.FeatureDatabase, setup.FeaturePostgres)
+		// "sqlite" — database is implicit, nothing extra needed
+		}
+		if wantSessions { features = append(features, setup.FeatureSessionSettings) }
+		if wantAuth { features = append(features, setup.FeatureAuth, setup.FeatureCSRF) }
+		if wantGraph { features = append(features, setup.FeatureGraph) }
+		if wantAvatar { features = append(features, setup.FeatureAvatar) }
+		if wantSSE { features = append(features, setup.FeatureSSE, setup.FeatureCaddy) }
+		if wantLinks { features = append(features, setup.FeatureLinkRelations, setup.FeatureSessionSettings) }
+		if wantStandards { features = append(features, setup.FeatureWebStandards) }
+		if wantAPIs { features = append(features, setup.FeatureBrowserAPIs, setup.FeatureSSE, setup.FeatureCaddy) }
+		if wantCapacitor { features = append(features, setup.FeatureCapacitor) }
+		if wantOffline { features = append(features, setup.FeatureOffline, setup.FeatureCapacitor) }
+		if wantSync { features = append(features, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor) }
+		if wantPWA { features = append(features, setup.FeaturePWA, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor) }
+		if wantDemo { features = append(features, setup.FeatureDemo) }
+
+	} else {
+		// ── Preset selected: offer to customize ────────────────────
+
+		features = make([]string, len(presets[preset]))
+		copy(features, presets[preset])
+
+		customizeForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					TitleFunc(func() string {
+						return fmt.Sprintf("%q preset includes: %s\n\nCustomize these selections?",
+							preset, describeFeatures(features))
+					}, &preset).
+					Value(&customize),
+			).Title("Review Preset"),
+		)
+		if err := customizeForm.Run(); err != nil {
+			if errors.Is(err, huh.ErrUserAborted) {
+				fmt.Println("Setup cancelled.")
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		if customize {
+			// Show flat checklist with preset pre-checked
+			preSelected := make(map[string]bool, len(features))
+			for _, f := range features {
+				preSelected[f] = true
+			}
+			var featureOptions []huh.Option[string]
+			for _, tag := range featureLabelOrder {
+				label := featureLabels[tag]
+				opt := huh.NewOption(label, tag)
+				if preSelected[tag] {
+					opt = opt.Selected(true)
+				}
+				featureOptions = append(featureOptions, opt)
+			}
+
+			features = nil // reset — multiselect will populate
+			flatForm := huh.NewForm(
+				huh.NewGroup(
+					huh.NewMultiSelect[string]().
+						Title("Features").
+						Description("Dependencies will be auto-included after selection").
+						Options(featureOptions...).
+						Value(&features),
+				).Title("Customize Features"),
+			)
+			if err := flatForm.Run(); err != nil {
+				if errors.Is(err, huh.ErrUserAborted) {
+					fmt.Println("Setup cancelled.")
+					return nil, nil
+				}
+				return nil, err
+			}
+		}
 	}
+
+	// ── Force confirm (if module already customized) ───────────────
+
+	if needsForce {
+		forceForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					Title(fmt.Sprintf("Module already customized (go.mod: %s). Run setup again with --force?", currentModule)).
+					Value(&force),
+			),
+		)
+		if err := forceForm.Run(); err != nil {
+			if errors.Is(err, huh.ErrUserAborted) {
+				fmt.Println("Setup cancelled.")
+				return nil, nil
+			}
+			return nil, err
+		}
+		if !force {
+			fmt.Println("Setup cancelled.")
+			return nil, nil
+		}
+	}
+
+	// ── Final confirmation ─────────────────────────────────────────
+
+	// Enforce feature dependencies
+	features = enforceFeatureDeps(features)
 
 	appName = strings.TrimSpace(appName)
 	resolvedModule := resolveModulePath(appName, modulePath, currentModule)
@@ -317,8 +562,25 @@ func runWizard() (*setup.Options, error) {
 		return nil, fmt.Errorf("BASE_PORT must be < 60000, got: %s", resolvedPort)
 	}
 
-	// Enforce feature dependencies
-	features = enforceFeatureDeps(features)
+	confirmForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title(fmt.Sprintf("Proceed with app %q, module %s, port %s, features: %s?",
+					appName, resolvedModule, resolvedPort, describeFeatures(features))).
+				Value(&confirm),
+		),
+	)
+	if err := confirmForm.Run(); err != nil {
+		if errors.Is(err, huh.ErrUserAborted) {
+			fmt.Println("Setup cancelled.")
+			return nil, nil
+		}
+		return nil, err
+	}
+	if !confirm {
+		fmt.Println("Setup cancelled.")
+		return nil, nil
+	}
 
 	return &setup.Options{
 		AppName:     appName,

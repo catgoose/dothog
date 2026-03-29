@@ -40,11 +40,16 @@ const (
 	FeatureCapacitor        = "capacitor"
 	FeatureOffline          = "offline"
 	FeatureSync             = "sync"
+	FeatureCSRF             = "csrf"
+	FeatureLinkRelations    = "link_relations"
+	FeatureWebStandards     = "web_standards"
+	FeatureBrowserAPIs      = "browser_apis"
+	FeaturePWA              = "pwa"
 )
 
 // AllFeatures lists every selectable feature tag.
 // "database" is always included (implied by the base template) and is not user-selectable.
-var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureOffline, FeatureSync}
+var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureOffline, FeatureSync, FeatureCSRF, FeatureLinkRelations, FeatureWebStandards, FeatureBrowserAPIs, FeaturePWA}
 
 // ImplicitFeatures are always selected and not presented to the user.
 // "database" is implicit because SQLite is the base database engine.
@@ -54,8 +59,12 @@ var ImplicitFeatures = []string{FeatureDatabase, FeatureAlpine}
 // featureDeps maps a feature to the features it implies.
 // sync -> offline -> capacitor.
 var featureDeps = map[string][]string{
-	FeatureSync:    {FeatureOffline},
-	FeatureOffline: {FeatureCapacitor},
+	FeatureSync:           {FeatureOffline},
+	FeatureOffline:        {FeatureCapacitor},
+	FeaturePWA:            {FeatureOffline, FeatureSync, FeatureCapacitor},
+	FeatureLinkRelations:  {FeatureSessionSettings},
+	FeatureBrowserAPIs:    {FeatureSSE},
+	FeatureWebStandards:   {FeatureSessionSettings},
 }
 
 // ExpandFeatureDeps adds any transitive dependencies implied by the
