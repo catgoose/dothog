@@ -68,6 +68,35 @@
   :root {
     accent-color: var(--color-primary);
   }
+
+  /* Entry animations for HTMX-swapped content */
+  @media (prefers-reduced-motion: no-preference) {
+    /* Cards and content blocks fade in when inserted by HTMX */
+    .card, [id*="base-content"] > * {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    @starting-style {
+      .card, [id*="base-content"] > * {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+    }
+
+    /* Popover open/close animations */
+    [popover]:popover-open {
+      opacity: 1;
+      transform: scale(1);
+      transition: opacity 0.2s ease, transform 0.2s ease, display 0.2s allow-discrete;
+    }
+
+    @starting-style {
+      [popover]:popover-open {
+        opacity: 0;
+        transform: scale(0.97);
+      }
+    }
+  }
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
