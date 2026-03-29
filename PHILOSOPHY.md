@@ -37,6 +37,7 @@
     - [Native HTML Over JavaScript](#native-html-over-javascript)
     - [CSS Over JavaScript](#css-over-javascript)
     - [Browser APIs Over Libraries](#browser-apis-over-libraries)
+    - [Speculative Loading](#speculative-loading)
     - [The Principle](#the-principle)
   <!--toc:end-->
 
@@ -817,6 +818,10 @@ The platform ships APIs that replace entire categories of npm packages:
 - `sessionStorage` — history breadcrumb trail. Per-tab, ephemeral, no server round-trip.
 - `localStorage` — dismiss state for context bars. Persists across sessions.
 - Service Worker — offline caching for PWA, gated behind production mode.
+
+### Speculative Loading
+
+Prefetch on hover, not on page load. The browser's [Speculation Rules API](https://developer.mozilla.org/en-US/docs/Web/API/Speculation_Rules_API) prefetches navigation targets when the user signals intent by hovering a link — spending bandwidth only on pages the user is likely to visit, not every link on the page. This fits hypermedia naturally: the server declares which pages exist, the browser speculatively loads them based on observed user behavior. Progressive enhancement keeps it safe — Chrome gets near-instant navigation, other browsers get normal speed with zero degradation. HTMX-enhanced elements are excluded from speculation because they perform partial swaps within the current document, not full-page navigations. This composes with the service worker precache: the SW handles offline essentials (static assets, critical routes), while Speculation Rules prefetches navigation targets on demand. Two layers, no overlap, no coordination needed.
 
 ### The Principle
 
