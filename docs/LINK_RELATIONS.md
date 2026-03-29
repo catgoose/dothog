@@ -173,3 +173,91 @@ Every UI element that currently hardcodes a URL could potentially read it from t
 | Search bar target | Template hardcodes search URL | Reads `rel="search"` |
 
 The principle: **the server declares what's possible, the client discovers it from the response.** This is HATEOAS applied to every UI control, not just navigation.
+
+## Cookbook
+
+### Adding a New Section
+
+End-to-end example: adding a new page to the Demo hub with ring membership.
+
+```go
+// 1. Add Hub spoke in routes_links.go
+hypermedia.Hub("/demo", "Demo",
+    // ... existing spokes ...
+    hypermedia.Rel("/demo/newpage", "New Page"),
+)
+
+// 2. Add to a Ring (or create a new one)
+hypermedia.Ring("MyGroup",
+    hypermedia.Rel("/demo/newpage", "New Page"),
+    hypermedia.Rel("/demo/otherpage", "Other Page"),
+)
+
+// 3. Register routes
+ar.e.GET("/demo/newpage", handler.HandleComponent(views.NewPage()))
+
+// 4. Done — context bars, breadcrumbs, and site map update automatically
+```
+
+What happens:
+- `/demo/newpage` gets `rel="up"` to `/demo` (from the Hub)
+- `/demo/newpage` gets `rel="related"` to `/demo/otherpage` (from the Ring)
+- `/demo` context bar shows "New Page" grouped under its ring
+- Breadcrumbs on `/demo/newpage`: Home > Demo > New Page
+- Site map footer includes "New Page" under the Demo hub
+
+### Understanding Context Bar Resolution
+
+The context bar resolution logic (`web/components/core/context_bar.templ`) follows these rules:
+
+**Hub center pages** (e.g., `/demo`):
+- Have outgoing `rel="related"` links to all spokes
+- Context bar groups spokes by their ring membership
+- Each ring becomes a named section
+
+**Spoke pages** (e.g., `/demo/inventory`):
+- Have `rel="up"` pointing to the hub center
+- Fetch the hub's related links to find all sibling spokes
+- Group siblings by ring membership (same as hub center view)
+- Prepend a `↑ Demo` parent link at the top
+
+**Ring-only pages** (no hub):
+- Have `rel="related"` links but no `rel="up"`
+- Fall back to simple grouping by the `Group` field on each link
+- Show ring siblings without a parent link
+
+### Creating a New Ring
+
+Rings are symmetric peer groups. Every member links to every other member.
+
+```go
+hypermedia.Ring("Monitoring",
+    hypermedia.Rel("/admin/health", "Health"),
+    hypermedia.Rel("/admin/error-traces", "Error Traces"),
+    hypermedia.Rel("/admin/sessions", "Sessions"),
+)
+```
+
+A page can belong to multiple rings. On `/admin/health`, the context bar shows:
+- Links from the "Monitoring" ring (Error Traces, Sessions)
+- Links from any other rings `/admin/health` belongs to (e.g., "System")
+
+### Pairwise Links
+
+For one-off relationships that don't fit a ring or hub:
+
+```go
+hypermedia.Link("/settings", "related", "/admin/config", "Admin Config")
+```
+
+`rel="related"` auto-creates the inverse: `/admin/config` also links to `/settings`.
+
+### Action Relations
+
+Register semantic relationships between list pages and their create forms:
+
+```go
+hypermedia.Link("/demo/inventory", "create-form", "/demo/inventory/items/new", "New Item")
+```
+
+These are registered but not yet auto-rendered. Templates currently hardcode the "New" button, but the registry enables future auto-discovery.
