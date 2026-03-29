@@ -58,7 +58,11 @@ func (ar *appRoutes) handleTheme(broker *ssebroker.SSEBroker) echo.HandlerFunc {
 	}
 }
 
-// handleLayout updates the shared layout setting and redirects to reload.
+// handleLayout updates the shared layout setting and refreshes the page.
+// Uses HX-Refresh instead of HX-Redirect so the browser reloads the current
+// page with the new layout regardless of which page the toggle lives on.
+// Returns 200 (not 204) because HTMX 2.0 responseHandling sets swap:false for
+// 204, which can prevent response headers from being processed reliably.
 func (ar *appRoutes) handleLayout() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		layout := c.FormValue("layout")
@@ -72,12 +76,8 @@ func (ar *appRoutes) handleLayout() echo.HandlerFunc {
 				logger.WithContext(c.Request().Context()).Error("Failed to save layout setting", "error", err)
 			}
 		}
-		redirect := c.Request().Header.Get("HX-Current-URL")
-		if redirect == "" {
-			redirect = "/settings"
-		}
-		c.Response().Header().Set("HX-Redirect", redirect)
-		return c.NoContent(http.StatusNoContent)
+		c.Response().Header().Set("HX-Refresh", "true")
+		return c.String(http.StatusOK, "")
 	}
 }
 
