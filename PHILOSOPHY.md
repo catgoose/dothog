@@ -5,14 +5,17 @@
 - [Design Philosophy](#design-philosophy)
   - [Go](#go)
   - [Hypermedia-Driven Architecture](#hypermedia-driven-architecture)
+  - [Code-on-Demand](#code-on-demand)
   - [Uniform Interface](#uniform-interface)
   - [Self-Descriptive Methods](#self-descriptive-methods)
+    - [The Form Method Gap](#the-form-method-gap)
   - [Resource Identification](#resource-identification)
   - [Parent Routes Are Documents](#parent-routes-are-documents)
   - [Chesterton's Fence](#chestertons-fence)
   - [Server-Side State, Client-Side Rendering](#server-side-state-client-side-rendering)
   - [Content Negotiation](#content-negotiation)
     - [HAL: Content Negotiation for APIs](#hal-content-negotiation-for-apis)
+    - [Accept Header: The Full Negotiation Mechanism](#accept-header-the-full-negotiation-mechanism)
   - [Mutations Redirect](#mutations-redirect)
   - [Postel's Law](#postels-law-be-conservative-in-what-you-send-liberal-in-what-you-accept)
   - [The Stack](#the-stack)
@@ -22,6 +25,8 @@
   - [Domain Patterns as Primitives](#domain-patterns-as-primitives)
   - [The Document Is the Resource](#the-document-is-the-resource)
   - [Cacheability](#cacheability)
+    - [Conditional Requests](#conditional-requests)
+  - [Layered System](#layered-system)
   - [Locality of Behavior](#locality-of-behavior)
     - [The reach-up model](#the-reach-up-model)
     - [When client-side state is necessary](#when-client-side-state-is-necessary)
@@ -39,7 +44,13 @@
     - [CSS Over JavaScript](#css-over-javascript)
     - [Browser APIs Over Libraries](#browser-apis-over-libraries)
     - [Speculative Loading](#speculative-loading)
+    - [Machine-Readable Metadata](#machine-readable-metadata)
     - [The Principle](#the-principle)
+  - [Accessibility as a Constraint](#accessibility-as-a-constraint)
+    - [Semantic Landmarks](#semantic-landmarks)
+    - [ARIA Live Regions and HTMX](#aria-live-regions-and-htmx)
+    - [Keyboard Navigation](#keyboard-navigation)
+    - [The Accessibility Advantage of Hypermedia](#the-accessibility-advantage-of-hypermedia)
   <!--toc:end-->
 
 ## Go
@@ -71,6 +82,20 @@ The server returns HTML with embedded hypermedia controls that tell the client w
 **You do not need a single-page application.** The browser is already a hypermedia client. HTMX extends it to handle the cases where a full page reload is wasteful. The result is a simpler, more maintainable architecture that leverages what the web was designed to do.
 
 This also preserves the [Principle of Least Astonishment](https://en.wikipedia.org/wiki/Principle_of_least_astonishment). Hypermedia respects the web's native interaction model: links navigate, forms submit, the back button goes back, the URL reflects where you are, refresh shows the current state. These aren't features — they're expectations that browsers have trained into users over three decades. SPAs break these expectations by default and then spend engineering effort rebuilding them (client-side routing, history management, scroll restoration, form state preservation). A hypermedia architecture gets them for free because it never took them away.
+
+## Code-on-Demand
+
+[Code-on-demand](https://roy.gbiv.com/pubs/dissertation/fielding_dissertation.pdf) is Fielding's only **optional** REST constraint. The server can extend client functionality by transferring executable code. The browser downloads JavaScript, and suddenly it can do things that plain HTML cannot. The key word is *extend* — the code enhances the client's capabilities without replacing the baseline interaction model.
+
+Every tool in this project's interactivity stack is code-on-demand. HTMX is JavaScript the server references via a `<script>` tag — it extends the browser's hypermedia vocabulary with `hx-get`, `hx-swap`, `hx-target`. \_hyperscript adds declarative client-side behavior. Alpine.js adds reactive view state. Each one is code sent by the server that makes the client more capable.
+
+This reframes the [reach-up model](#the-reach-up-model) in Fielding's terms. HTML is the base representation — no code-on-demand required. HTMX is the first code-on-demand layer: the server sends a script that teaches the browser new hypermedia verbs. \_hyperscript is the second: the server sends a script that teaches the browser declarative DOM manipulation. Each layer is progressively more code-on-demand, each one optional, each one building on the layer below.
+
+The constraint is optional because **the system works without it.** That's progressive enhancement stated as an architectural constraint. Strip the JavaScript and the links still navigate, the forms still submit, the server still returns full pages. Code-on-demand makes the experience better — partial swaps are faster, transitions are smoother, inline edits are more fluid — but the system degrades gracefully when it's absent.
+
+The critical distinction: code-on-demand should enhance, not replace, the hypermedia interaction model. HTMX extends HTML's vocabulary. \_hyperscript adds declarative behavior. Neither replaces the server as the authority over state and transitions. The server sends the code, the code extends the client, and the client still follows the server's lead.
+
+Contrast this with SPAs, where code-on-demand becomes **code-instead-of**. The client-side JavaScript doesn't enhance the hypermedia — it replaces it entirely. The HTML document is an empty shell (`<div id="root"></div>`), and the JavaScript constructs the entire UI, manages its own routing, maintains its own state, and communicates with the server via JSON APIs. The browser's native hypermedia capabilities — links, forms, navigation, history — are discarded and rebuilt in JavaScript. Fielding's optional constraint became the entire architecture, and the result is a system that cannot function without it.
 
 ## Uniform Interface
 
@@ -122,6 +147,29 @@ HTTP methods carry semantics. They're not just verbs to put on a request — the
 **DELETE removes.** It's idempotent — deleting an already-deleted resource is a no-op, not an error.
 
 The CSRF middleware encodes this distinction directly: safe methods (GET, HEAD, OPTIONS, TRACE) bypass token validation because they cannot change state. Unsafe methods require a valid token. This isn't an implementation detail — it's the HTTP specification applied as architecture.
+
+### The Form Method Gap
+
+There's a tension in the HTML spec that this architecture must name honestly: **HTML `<form>` only supports GET and POST.** The spec never added `method="PUT"`, `method="PATCH"`, or `method="DELETE"`. This means the progressive enhancement promise has a real limit — without JavaScript (or HTMX), you cannot express the full HTTP vocabulary through native HTML forms.
+
+HTMX bridges this gap with `hx-put`, `hx-patch`, `hx-delete`. The browser's built-in hypermedia client is incomplete. That's why HTMX exists — not to replace HTML, but to finish what the spec left unfinished.
+
+The pragmatic approach: forms that must work without JavaScript use POST with a semantic action URL and server-side dispatch. HTMX-enhanced forms use the correct HTTP method. This isn't a contradiction — it's progressive enhancement applied to the method vocabulary. The POST fallback works. The HTMX version is more correct. Both are hypermedia.
+
+```html
+<!-- Without HTMX: POST with semantic action, server interprets intent -->
+<form method="POST" action="/tasks/42/delete">
+  <button type="submit">Delete</button>
+</form>
+
+<!-- With HTMX: correct HTTP method, targeted swap -->
+<button hx-delete="/tasks/42" hx-target="#task-list" hx-swap="outerHTML"
+        hx-confirm="Delete this task?">
+  Delete
+</button>
+```
+
+The browser vendors had [proposals to extend form methods](https://www.w3.org/Bugs/Public/show_bug.cgi?id=10671) but never shipped them. The gap has existed since HTML 4. HTMX closes it by extending the browser's hypermedia vocabulary rather than replacing the browser as a hypermedia client.
 
 ## Resource Identification
 
@@ -197,6 +245,18 @@ The key constraint: every resource must be reachable without JavaScript. Links a
 Content negotiation extends beyond the HTML/fragment split. The same resource graph can serve `application/hal+json` — [HAL](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal) adds `_links` and `_embedded` to JSON, giving API clients navigable relationships without out-of-band URL construction. A browser sees HTML with HTMX controls. A `curl` user sees HAL+JSON with link relations. Same resource, same relationships, different media type.
 
 HAL gives JSON what `<a>` tags give HTML. It does not give JSON what `<form>` tags give HTML — and that gap is where the interesting architectural questions live. The `/hypermedia/hal` demo renders both representations side by side so the gap is visible. See [docs/HAL.md](docs/HAL.md) for the full Socratic inquiry into what HAL provides, what it doesn't, and what Fielding would say about both.
+
+### Accept Header: The Full Negotiation Mechanism
+
+The current architecture keys content negotiation off the `HX-Request` header (HTMX partials vs. full pages) and explicit `Accept: application/hal+json` (HAL responses). But the HTTP spec defines a richer negotiation vocabulary that the same pattern extends to naturally.
+
+The `Accept` header supports quality factors: `Accept: text/html, application/hal+json;q=0.9, application/json;q=0.8` tells the server the client prefers HTML, will accept HAL, and will settle for plain JSON. The server picks the best match from what it can produce. This is how content negotiation was designed to work — the client declares capabilities, the server selects the optimal representation.
+
+`Accept-Language` is how the web was designed to handle internationalization. The browser sends `Accept-Language: en-US, en;q=0.9, es;q=0.8` and the server responds in the best language it supports. No i18n library needed to detect the user's locale — the browser already told you. The server reads the header and selects the representation, the same way it reads `HX-Request` and selects between partial and full page.
+
+`Accept-Encoding` handles compression negotiation — `gzip`, `br` (Brotli), `zstd`. The server picks the best encoding the client supports. This is content negotiation that most developers never think about because reverse proxies handle it transparently — which is the layered system constraint at work.
+
+The architecture already does content negotiation. Naming the full `Accept` header mechanism acknowledges that the same pattern — client declares capabilities, server selects representation — extends to languages, encodings, and any future media type. The infrastructure is the same; only the dimension of negotiation changes.
 
 ## Mutations Redirect
 
@@ -415,6 +475,78 @@ Static assets — JavaScript, CSS, images, fonts — are fingerprinted by the bu
 Dynamic HTML representations are the opposite. They reflect current resource state, and current means *right now*. Caching a list page means a user might not see the item they just created. Caching a detail page means a user might see data that another user just updated. Dynamic responses carry no cache headers — every request goes to the server, and the server returns the truth. SSE handles the case where the truth changes while the client is watching.
 
 SSE streams themselves explicitly disable caching (`Cache-Control: no-cache`) because the entire point of an event stream is that it's live. Caching an event stream is caching a contradiction.
+
+### Conditional Requests
+
+Between "cache forever" (fingerprinted statics) and "never cache" (dynamic HTML) sits a middle ground: **conditional requests.** The server generates an `ETag` — a fingerprint of the response content — and the client sends it back on subsequent requests via `If-None-Match`. If the resource hasn't changed, the server returns `304 Not Modified` with no body. The client reuses its cached copy. Same correctness guarantee as no-cache, but without retransmitting identical content.
+
+```
+# First request — server sends the full response with an ETag
+GET /tasks/42 HTTP/1.1
+
+HTTP/1.1 200 OK
+ETag: "a1b2c3d4"
+Content-Type: text/html
+
+<article>...</article>
+
+# Subsequent request — client sends the ETag back
+GET /tasks/42 HTTP/1.1
+If-None-Match: "a1b2c3d4"
+
+HTTP/1.1 304 Not Modified
+```
+
+This is especially relevant for HTMX partials. A conditional GET on a fragment that hasn't changed saves bandwidth and server rendering time. The server already knows whether the resource changed — it owns the state — so generating an ETag is natural, not an additional burden.
+
+Conditional requests compose with SSE rather than competing with it. They handle the question "has it changed since I last asked?" (pull). SSE handles "tell me when it changes" (push). A client that reconnects after a network interruption can send `If-None-Match` to avoid re-rendering content that hasn't changed during the gap, then resume its SSE subscription for future updates.
+
+`If-Modified-Since` is the timestamp-based cousin of `If-None-Match`. ETags are more precise — they detect content changes regardless of when they happened — but both mechanisms serve the same purpose: letting the server say "you already have the current version" without repeating itself.
+
+```go
+// ETag middleware — hash the response body and check against If-None-Match
+func ETagMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+    return func(c echo.Context) error {
+        // Record the response
+        rec := httptest.NewRecorder()
+        c.Response().Writer = rec
+        if err := next(c); err != nil {
+            return err
+        }
+        body := rec.Body.Bytes()
+        etag := fmt.Sprintf(`"%x"`, sha256.Sum256(body))
+        c.Response().Header().Set("ETag", etag)
+        if match := c.Request().Header.Get("If-None-Match"); match == etag {
+            return c.NoContent(http.StatusNotModified)
+        }
+        // Write the recorded response
+        for k, v := range rec.Header() {
+            c.Response().Header()[k] = v
+        }
+        c.Response().WriteHeader(rec.Code)
+        c.Response().Write(body)
+        return nil
+    }
+}
+```
+
+## Layered System
+
+[Layered system](https://roy.gbiv.com/pubs/dissertation/fielding_dissertation.pdf) is one of Fielding's six REST constraints, and it's the one most often satisfied without being named. The constraint: a client cannot tell whether it's connected directly to the origin server or to an intermediary — a CDN, a reverse proxy, a load balancer, an API gateway. Each layer sees only the layer it's talking to. The architecture is transparent to intermediaries by design.
+
+This project already satisfies the constraint. The evidence is in the headers.
+
+`Vary: HX-Request` tells caches that the same URL produces different responses depending on whether the client sent the `HX-Request` header. Without this, a CDN that caches the full-page response for `/tasks` would serve that full page to an HTMX request expecting a partial. The `Vary` header is a layered system concern — it's information for intermediaries, not the application.
+
+`Link` headers (RFC 8288) are useful to any HTTP-aware tool in the chain. A CDN can use `rel="preload"` hints. A crawler can follow `rel="canonical"`. A monitoring tool can parse `rel="up"` to understand resource hierarchy. These headers aren't just for the frontend — they're for every node in the request path.
+
+`Server-Timing` is visible in browser DevTools, but also in any proxy or monitoring layer that inspects response headers. It turns timing data into a standardized, machine-readable header that intermediaries can aggregate without parsing response bodies.
+
+Why does this work? Because of statelessness. If every request is self-contained — carrying its own authentication, its own cache-control directives, its own content negotiation headers — then any node in the chain can handle it. A load balancer can route to any backend. A CDN edge node can serve a cached response. A reverse proxy can add security headers. No node needs to know what happened on the previous request because no request depends on a previous request.
+
+Security headers are layered system concerns too. `Content-Security-Policy` tells the browser what it's allowed to load — but it also tells any intermediary that inspects response headers what the origin server's security policy is. `Strict-Transport-Security` instructs browsers and proxies to enforce HTTPS. `X-Content-Type-Options` prevents MIME sniffing at every layer. These are instructions to intermediaries, not application logic.
+
+The layered system constraint is what makes deployment flexible. Put Cloudflare in front. Add a reverse proxy for TLS termination. Stick a load balancer between the proxy and the app servers. The application doesn't change. The headers it sends — `Vary`, `Cache-Control`, `Link`, `Content-Security-Policy` — are the contract between layers. Each layer reads the headers it cares about, passes the rest through, and the client never knows the difference.
 
 ## Locality of Behavior
 
@@ -794,6 +926,16 @@ Standard HTTP headers carry meaning that no application-level protocol needs to 
 
 These aren't implementation details. They're contracts that CDNs, crawlers, caches, and `curl` already understand. A `Link` header is useful to any HTTP client, not just your frontend.
 
+Security headers are part of this surface too — standardized contracts that browsers and intermediaries enforce:
+
+- `Content-Security-Policy` — declares what the browser is allowed to load and execute. In a hypermedia app with minimal client-side JavaScript, the CSP can be extremely restrictive: no `unsafe-eval`, no `unsafe-inline` (except for HTMX and \_hyperscript's known patterns), no third-party script sources. This is a security advantage over SPAs, where the CSP must be permissive enough to allow the framework's runtime, dynamic imports, and often `eval`-based template compilation.
+- `Strict-Transport-Security` — tells browsers to always use HTTPS. Once set, the browser refuses to connect over plain HTTP for the specified duration. A single header replaces redirect chains and mixed-content debugging.
+- `X-Content-Type-Options: nosniff` — prevents MIME type sniffing. The browser trusts the `Content-Type` header and doesn't try to guess. This prevents a text file from being reinterpreted as executable script.
+- `Referrer-Policy` — controls what referrer information is sent with outbound requests. `strict-origin-when-cross-origin` is the sensible default: same-origin requests get full referrer, cross-origin requests get only the origin.
+- `Permissions-Policy` — controls browser features like camera, geolocation, microphone, and payment. A data-centric CRUD application has no business requesting camera access. Declaring `Permissions-Policy: camera=(), geolocation=(), microphone=()` makes that explicit.
+
+The point: these are not application logic. They're HTTP-level contracts between the server and every client in the chain. A hypermedia architecture benefits from tight security headers because there's less client-side code to allow — and less code to allow means a smaller attack surface.
+
 ### Native HTML Over JavaScript
 
 HTML has interactive elements that most developers reach for libraries to implement:
@@ -809,6 +951,15 @@ HTML has interactive elements that most developers reach for libraries to implem
 - `autocomplete` proper values for auto-fill
 
 Each replaces a JavaScript pattern or adds semantics that screen readers and browsers already understand.
+
+Beyond interactive elements, the HTML spec provides structural semantics that make documents self-describing — which IS Fielding's "self-descriptive messages" constraint applied to document structure:
+
+- `<article>`, `<section>`, `<nav>`, `<aside>`, `<main>`, `<header>`, `<footer>` — these aren't accessibility aids you add for compliance. They're the spec's way of encoding document structure into the markup itself. A `<nav>` inside a `<header>` is a self-descriptive message about page structure that crawlers, screen readers, and browser reader modes all understand without parsing CSS classes or JavaScript.
+- `<time datetime="2024-03-15">` — machine-readable dates. The visible text can say "last Tuesday" while the attribute carries the ISO 8601 value that scripts and search engines can parse.
+- `<address>` — contact information for the nearest `<article>` or `<body>`. Not a street address element — a semantic marker for "how to reach the author of this content."
+- `<figure>` / `<figcaption>` — referenced content with a caption. An image, a code block, a diagram — anything the text refers to that needs a label.
+
+The principle connects directly to "the document is the resource." If the document IS the resource, then the document should describe itself. A page built with `<div class="nav">` requires external knowledge to interpret. A page built with `<nav>` carries its own interpretation. The markup is the metadata.
 
 ### CSS Over JavaScript
 
@@ -834,8 +985,106 @@ The platform ships APIs that replace entire categories of npm packages:
 
 Prefetch on hover, not on page load. The browser's [Speculation Rules API](https://developer.mozilla.org/en-US/docs/Web/API/Speculation_Rules_API) prefetches navigation targets when the user signals intent by hovering a link — spending bandwidth only on pages the user is likely to visit, not every link on the page. This fits hypermedia naturally: the server declares which pages exist, the browser speculatively loads them based on observed user behavior. Progressive enhancement keeps it safe — Chrome gets near-instant navigation, other browsers get normal speed with zero degradation. HTMX-enhanced elements are excluded from speculation because they perform partial swaps within the current document, not full-page navigations. This composes with the service worker precache: the SW handles offline essentials (static assets, critical routes), while Speculation Rules prefetches navigation targets on demand. Two layers, no overlap, no coordination needed.
 
+### Machine-Readable Metadata
+
+A self-descriptive message carries metadata that machines can consume without parsing visible content. This is REST's self-descriptive messages constraint taken to its conclusion: the message contains everything needed to process it, including metadata about the message itself.
+
+**Open Graph and social cards.** When someone shares a URL, the preview IS the resource's representation in that context. `<meta property="og:title">`, `og:description`, `og:image` — these tell link unfurlers how to represent the resource in a social feed, a chat message, a search result. The resource has multiple representations, and the `<meta>` tags are one of them.
+
+**`rel="canonical"`** tells search engines which URL is the authoritative identifier for this content. If the same resource is reachable via `/tasks/42` and `/tasks/42?ref=email`, the canonical link declares which one is the resource and which one is a referral-tracked alias. This is resource identification applied to SEO.
+
+**`lang` and `dir` attributes** declare the document's language and text direction. These are i18n as a web standard, not a library feature. A screen reader uses `lang` to select the correct speech synthesis voice. A browser uses `dir` to render right-to-left text correctly. These are not optional attributes for internationalized apps — they're structural metadata that every HTML document should carry.
+
+```html
+<html lang="en" dir="ltr">
+<head>
+  <meta property="og:title" content="Task: Quarterly Review" />
+  <meta property="og:description" content="Status: In Progress" />
+  <link rel="canonical" href="https://app.example.com/tasks/42" />
+</head>
+```
+
+**JSON-LD for structured data** embeds machine-readable descriptions that search engines consume without parsing the visible HTML. The same resource that serves a human-readable task detail page can embed a JSON-LD block describing the task in [Schema.org](https://schema.org/) vocabulary. This is content negotiation at the document level — one response, multiple consumers, each finding the representation it needs.
+
+**`Accept-Language`** is how the web was designed to handle language negotiation — the browser tells the server what languages the user prefers, and the server responds accordingly. This connects directly to content negotiation: the same resource, different representation based on client capabilities.
+
+The principle: a well-formed HTML document is a self-descriptive message not just for browsers, but for every machine that encounters it — search engines, social platforms, screen readers, crawlers, and link unfurlers. The metadata is part of the resource's representation.
+
 ### The Principle
 
 The web platform is not a thin wrapper around JavaScript. It's a rich runtime with decades of standardized behavior. `<dialog>` handles focus management better than any modal library because the browser team spent years on edge cases. `content-visibility` is faster than any virtual scroll library because it operates at the rendering engine level. `Link` headers are understood by crawlers, CDNs, and `curl` — no client-side code needed.
 
 When you reach for a library, you're saying "the platform can't do this." Usually it can. Check first.
+
+## Accessibility as a Constraint
+
+Accessibility is not a feature. It is an architectural constraint — the same way cacheability, statelessness, and uniform interface are constraints. Fielding's constraints aren't optional enhancements you bolt on after launch; they're properties the system must have or it isn't REST. [WCAG 2.2](https://www.w3.org/TR/WCAG22/) is a web standard with the same authority as HTTP/1.1 or the HTML spec. Treating it as "nice to have" is like treating cache headers as "nice to have" — technically the system works without them, but it violates the architecture's contract with its clients.
+
+The philosophical alignment is direct. This document already states: "every resource must be reachable without JavaScript." That principle extends naturally: **every resource must be reachable without a mouse, without vision, without hearing.** The URL is the resource. The representation must be consumable by any conforming client — and screen readers, braille displays, and keyboard-only users are conforming clients.
+
+### Semantic Landmarks
+
+The HTML spec defines structural landmarks — `<nav>`, `<main>`, `<header>`, `<footer>`, `<aside>` — that serve as the document's table of contents for assistive technology. These aren't optional divs with ARIA roles stapled on. They're first-class elements that screen readers use to build a navigation model of the page. A screen reader user pressing a landmark shortcut key can jump directly to `<main>`, skip repetitive navigation, or find the page footer — but only if the landmarks are there.
+
+```html
+<!-- The document describes itself structurally -->
+<body>
+  <header>
+    <nav aria-label="Primary">...</nav>
+  </header>
+  <main id="main">
+    <article>...</article>
+  </main>
+  <aside aria-label="Related resources">...</aside>
+  <footer>...</footer>
+</body>
+```
+
+This is self-descriptive messages applied to document structure. A `<nav>` inside a `<header>` tells the screen reader — and the crawler, and the browser's reader mode — what role that content plays. No JavaScript required. No ARIA role patching. The HTML spec did the work.
+
+### ARIA Live Regions and HTMX
+
+Here is where a hypermedia architecture has a specific accessibility gap that must be addressed explicitly. HTMX partial swaps change content without a full page navigation. The browser doesn't announce "new page loaded" because no new page loaded — a fragment was swapped in place. Screen readers have no way to know that content changed unless you tell them.
+
+The solution is [ARIA live regions](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-live). An element with `aria-live="polite"` tells the screen reader: "when this element's content changes, announce the new content after the user finishes their current task." For swap targets that receive dynamic content — search results, form validation feedback, notification banners — this attribute is essential.
+
+```html
+<!-- HTMX swaps content here; aria-live ensures screen readers announce it -->
+<div id="search-results" aria-live="polite" aria-atomic="false">
+  <!-- results swapped in by hx-get="/search?q=..." -->
+</div>
+
+<!-- Error banners need assertive announcement -->
+<div id="error-status" aria-live="assertive" role="alert">
+  <!-- OOB swap target for error responses -->
+</div>
+```
+
+`aria-live="polite"` for informational updates (search results, list refreshes). `aria-live="assertive"` with `role="alert"` for errors and time-sensitive notifications. The distinction matters: assertive interrupts whatever the screen reader is currently saying; polite waits its turn.
+
+HTMX's approach — real HTML, real links, real forms — gives you baseline accessibility for free compared to SPAs that rebuild the browser's native accessibility from scratch with ARIA roles, focus management, and route-change announcements. But "better than SPAs" is not the bar. The bar is the standard.
+
+### Keyboard Navigation
+
+`<dialog>` traps focus automatically — the HTML spec handles that. But HTMX-driven interfaces need more:
+
+- **Tab order** must remain logical after swaps. Content injected into the middle of the page should be reachable by tab in the expected order. This generally works if the DOM order matches the visual order — which it should, because CSS `order` and absolute positioning that breaks tab flow are accessibility violations.
+- **Focus management after swaps.** When HTMX swaps in new content after a user action — submitting a form, clicking a control — focus should move to a sensible place. If the user submitted a create form and the response is a success message, focus should land on that message or the new resource. HTMX's `htmx:afterSwap` event is where focus management belongs.
+- **Skip links.** A "Skip to main content" link at the top of the page lets keyboard users bypass repetitive navigation. It's one `<a href="#main">` that targets the `<main>` element. Every multi-page site needs one.
+
+```html
+<!-- First focusable element in the document -->
+<a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2">
+  Skip to main content
+</a>
+```
+
+### The Accessibility Advantage of Hypermedia
+
+SPAs start from zero. The browser's built-in accessibility — focus management on navigation, form submission behavior, link activation, history traversal — is thrown away when you replace it with a client-side router and virtual DOM. Then the SPA rebuilds it: `aria-live` regions for route changes, manual focus management, `role="navigation"` on divs that should have been `<nav>`, keyboard event handlers that reimplement what `<a>` and `<button>` do natively. Every accessibility feature is an afterthought because the architecture made it one.
+
+A hypermedia architecture starts from the browser's baseline. Links are `<a>` tags. Forms are `<form>` tags. Buttons are `<button>` tags. The browser already knows how to make these accessible. HTMX enhances them without replacing them — `hx-get` on an `<a>` tag doesn't remove the link's native behavior, it augments it. Progressive enhancement means the accessible version is the default, not a fallback.
+
+The one area that requires explicit attention is partial swaps — and that's what `aria-live` regions solve. Name the gap, address it with a standard, and move on. The rest is free.
+
+References: [WAI-ARIA 1.2](https://www.w3.org/TR/wai-aria-1.2/), [WCAG 2.2](https://www.w3.org/TR/WCAG22/), [HTML Accessibility API Mappings](https://www.w3.org/TR/html-aam-1.0/).
