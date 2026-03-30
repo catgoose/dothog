@@ -108,7 +108,10 @@ func (ar *appRoutes) InitRoutes() error {
 	hypermedia.RegisterFrom(hypermedia.FromDashboard, hypermedia.Breadcrumb{Label: "Dashboard", Href: "/dashboard"})
 	// setup:feature:demo:end
 
+	ar.e.GET("/", handler.HandleComponent(views.HomePage()))
+	// setup:feature:demo:start
 	ar.e.GET("/", handler.HandleComponent(views.ArchitecturePage()))
+	// setup:feature:demo:end
 	// setup:feature:demo:start
 	ar.initUserSettingsRoutes()
 	// setup:feature:demo:end
