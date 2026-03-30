@@ -232,26 +232,26 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	e := echo.New()
 
 	// 103 Early Hints: preload critical assets before the handler runs.
-	// Uses the raw http.ResponseWriter to send an informational response
-	// before the final 200. Requires HTTP/2+ and a flusher-capable writer.
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// Only send 103 Early Hints on HTTP/2+ connections.
-			// httptest.ResponseRecorder mishandles 1xx status codes.
-			if c.Request().ProtoMajor >= 2 {
-				w := c.Response().Writer
-				if flusher, ok := w.(http.Flusher); ok {
-					h := w.Header()
-					h.Add("Link", "</public/css/tailwind.css>; rel=preload; as=style")
-					h.Add("Link", "</public/css/daisyui.css>; rel=preload; as=style")
-					h.Add("Link", "</public/js/htmx.min.js>; rel=preload; as=script")
-					w.WriteHeader(http.StatusEarlyHints) // 103
-					flusher.Flush()
+	// Skipped behind the templ proxy (mage watch) where the dev proxy chain
+	// (Go → templ proxy → Caddy) mishandles 1xx responses.
+	if os.Getenv("TEMPL_PROXY") == "" {
+		e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				if c.Request().ProtoMajor >= 2 {
+					w := c.Response().Writer
+					if flusher, ok := w.(http.Flusher); ok {
+						h := w.Header()
+						h.Add("Link", "</public/css/tailwind.css>; rel=preload; as=style")
+						h.Add("Link", "</public/css/daisyui.css>; rel=preload; as=style")
+						h.Add("Link", "</public/js/htmx.min.js>; rel=preload; as=script")
+						w.WriteHeader(http.StatusEarlyHints) // 103
+						flusher.Flush()
+					}
 				}
+				return next(c)
 			}
-			return next(c)
-		}
-	})
+		})
+	}
 
 	e.Use(middleware.ServerTimingMiddleware())
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
