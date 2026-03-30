@@ -226,6 +226,7 @@ func Setup() error {
 var presets = map[string][]string{
 	"internal": {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureDatabase, setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
 	"public":   {setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs},
+	"microsoft-full-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs, setup.FeatureOffline, setup.FeatureSync, setup.FeaturePWA},
 	"demo":     setup.AllFeatures,
 	"minimal":  {},
 }
@@ -308,6 +309,7 @@ func runWizard() (*setup.Options, error) {
 				Title("What are you building?").
 				Options(
 					huh.NewOption("Internal tool — auth, database, sessions, SSE, link relations, web standards", "internal"),
+					huh.NewOption("Microsoft Full Internal — auth, Graph, MSSQL, SSE, offline + sync + PWA", "microsoft-full-internal"),
 					huh.NewOption("Public site — sessions, link relations, web standards, browser APIs", "public"),
 					huh.NewOption("Demo/playground — everything enabled", "demo"),
 					huh.NewOption("Minimal — bare HTMX app", "minimal"),
