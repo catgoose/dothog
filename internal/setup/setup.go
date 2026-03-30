@@ -439,14 +439,13 @@ func removeOptionalContent(dir string, opts Options) error {
 		removeTags[FeatureDemo] = true
 	}
 
-	// Hardcoded binary/non-text files — remove runtime DBs so derived apps
-	// start clean. Only seed.db and demo.db are tracked in git; the others
-	// are gitignored but CopyRepoTo copies the full directory tree.
-	_ = os.Remove(filepath.Join(dir, "db", "demo.db"))
-	for _, dbFile := range []string{"error_traces.db", "session_settings.db", "app.db", "waitlist.db", "promolog.db"} {
-		_ = os.Remove(filepath.Join(dir, "db", dbFile))
-		_ = os.Remove(filepath.Join(dir, "db", dbFile+"-shm"))
-		_ = os.Remove(filepath.Join(dir, "db", dbFile+"-wal"))
+	// Remove all .db files (and WAL/SHM) so derived apps start clean.
+	// The app auto-creates databases on first start via os.MkdirAll + EnsureSchema.
+	// seed.db and demo.db are tracked in git but not needed in derived apps.
+	if matches, err := filepath.Glob(filepath.Join(dir, "db", "*.db*")); err == nil {
+		for _, m := range matches {
+			_ = os.Remove(m)
+		}
 	}
 	if removeTags[FeatureSSE] {
 		_ = os.Remove(filepath.Join(dir, "web", "assets", "public", "js", "htmx.ext.sse.js"))
