@@ -675,6 +675,8 @@ func SetupTo(dest, appName string) error {
 
 // setup:feature:demo:end
 
+// setup:feature:demo:start
+
 // parseFeatureFlag parses the --features value.
 // "all" → all features, "none" → empty slice, otherwise comma-separated tags.
 func parseFeatureFlag(val string) []string {
@@ -716,6 +718,8 @@ func parseFeatureFlag(val string) []string {
 	}
 	return features
 }
+
+// setup:feature:demo:end
 
 // Lint runs static analysis and style checks on the codebase.
 func Lint() error {
