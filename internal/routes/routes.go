@@ -147,18 +147,19 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initComponents3Routes()
 	// setup:feature:demo:end
 
-	// setup:feature:demo:start
 	// setup:feature:sse:start
 	broker := ssebroker.NewSSEBroker()
 	// setup:feature:sse:end
+	// setup:feature:session_settings:start
+	ar.initThemeRoutes(broker)
+	// setup:feature:session_settings:end
+
+	// setup:feature:demo:start
 	ar.initHypermediaRoutes()
 	ar.initHALRoutes()
 	ar.initErrorsRoutes()
 	// setup:feature:sse:start
 	ar.initRealtimeRoutes(broker)
-	// setup:feature:session_settings:start
-	ar.initThemeRoutes(broker)
-	// setup:feature:session_settings:end
 	// setup:feature:sse:end
 
 	db, err := demo.Open("db/demo.db")
