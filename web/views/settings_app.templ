@@ -121,7 +121,7 @@ templ themeDropdown(currentTheme string) {
 			<select
 				class="select select-bordered select-sm w-full max-w-xs capitalize"
 				x-model="current"
-				x-on:change={ "document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.dothogChannel) window.dothogChannel.postMessage({type:'theme-change',theme:current})" }
+				x-on:change={ "document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.appChannel) window.appChannel.postMessage({type:'theme-change',theme:current})" }
 			>
 				for _, cat := range ThemeCategories {
 					<optgroup label={ cat.Label }>
@@ -143,7 +143,7 @@ templ themeDropdown(currentTheme string) {
 								type="button"
 								:class={ "current === '" + theme + "' ? 'ring-2 ring-primary ring-offset-1' : ''" }
 								class="rounded-md overflow-hidden cursor-pointer"
-								x-on:click={ "current = '" + theme + "'; document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.dothogChannel) window.dothogChannel.postMessage({type:'theme-change',theme:current})" }
+								x-on:click={ "current = '" + theme + "'; document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.appChannel) window.appChannel.postMessage({type:'theme-change',theme:current})" }
 								title={ theme }
 							>
 								<div data-theme={ theme } class="flex gap-0.5 p-1 bg-base-100">

@@ -5,7 +5,7 @@
  * and regular browsers without Capacitor.
  */
 
-const DB_NAME = 'dothog_sync';
+const DB_NAME = '{{BINARY_NAME}}_sync';
 const QUEUE_STORE = 'sync_queue';
 
 /** @type {IDBDatabase|null} */

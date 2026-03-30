@@ -344,6 +344,26 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		}
 	}
 
+	// Replace {{BINARY_NAME}} placeholder in JS and Go source files so that
+	// derived apps get unique cache names, IndexedDB databases, cookie names,
+	// and BroadcastChannel identifiers.
+	for _, f := range []string{
+		filepath.Join("web", "assets", "public", "js", "sw.js"),
+		filepath.Join("web", "assets", "public", "js", "sync.js"),
+		filepath.Join("web", "assets", "public", "js", "broadcast.js"),
+		filepath.Join("internal", "routes", "middleware", "session_settings.go"),
+	} {
+		p := filepath.Join(dir, f)
+		data, err := os.ReadFile(p)
+		if err != nil {
+			continue
+		}
+		content := strings.ReplaceAll(string(data), "{{BINARY_NAME}}", binaryName)
+		if err := os.WriteFile(p, []byte(content), 0644); err != nil {
+			return err
+		}
+	}
+
 	_ = os.Remove(filepath.Join(dir, ".golangci.yml"))
 
 	if err := removeOptionalContent(dir, opts); err != nil {

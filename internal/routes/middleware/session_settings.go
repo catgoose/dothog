@@ -30,7 +30,7 @@ type SessionIDFunc func(c echo.Context) string
 
 const (
 	settingsContextKey = "sessionSettings"
-	sessionCookieName  = "dothog_session_id"
+	sessionCookieName  = "{{BINARY_NAME}}_session_id"
 	// setup:feature:demo:start
 	// sharedSessionUUID is used for all visitors so the demo behaves as a
 	// single-user application — every browser reads/writes the same row.

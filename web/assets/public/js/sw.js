@@ -10,7 +10,7 @@
 
 importScripts('/public/js/sync.js');
 
-const CACHE_NAME = 'dothog-v1';
+const CACHE_NAME = '{{BINARY_NAME}}-v1';
 
 // Connectivity state — updated by the main thread via postMessage
 self._isOnline = true;

@@ -6,7 +6,7 @@
 (function() {
   if (!('BroadcastChannel' in window)) return;
 
-  var channel = new BroadcastChannel('dothog');
+  var channel = new BroadcastChannel('{{BINARY_NAME}}');
 
   channel.onmessage = function(event) {
     var msg = event.data;
@@ -15,5 +15,5 @@
     }
   };
 
-  window.dothogChannel = channel;
+  window.appChannel = channel;
 })();
