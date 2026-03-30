@@ -34,7 +34,7 @@ func SiteMap(hubs []hypermedia.HubEntry) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if len(hubs) > 0 {
+		if len(hubs) > 1 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"border-t border-base-300 bg-base-200/30 px-4 py-6\"><div class=\"max-w-6xl mx-auto\"><div class=\"grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
