@@ -241,6 +241,22 @@ When validation fails, the server returns the form with errors rendered inline:
 
 HTMX makes this seamless — `hx-post` submits the form, the server validates, and the response swaps in either the success state or the form with errors. No JavaScript validation library. No `useState` for error messages. No client-side schema that drifts from the server's rules. One source of truth for validation, one rendering path for errors.
 
+### Dirty checking is not validation
+
+Disabling a submit button until a form value differs from its default is not client-side validation. Validation duplicates server business logic and inevitably diverges from it; dirty checking is a stateless observation — the client knows the original value because it rendered it in `defaultValue`, and comparing the current value to that default involves zero business rules. It cannot be wrong, and nothing breaks if it's bypassed because the server handles no-op submissions gracefully anyway.
+
+This is a textbook reach-up behavior: hyperscript on the form element, no external state, no business logic:
+
+```html
+<form _="on input from <[name=quantity]/>
+         if its value == its defaultValue
+            add @disabled to the first <button[type=submit]/> in me
+         else
+            remove @disabled from the first <button[type=submit]/> in me">
+```
+
+The rule stays simple: **validation belongs to the server; stateless UX hints belong to the element.**
+
 ### Responses: send exactly what the client needs
 
 The server should be conservative — precise, minimal, correct — in what it sends. Every response is a complete, valid representation. No partial states that require the client to assemble meaning. No ambiguous status codes. No silent failures.
