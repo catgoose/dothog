@@ -1,6 +1,8 @@
 package views
 
+// setup:feature:demo:start
 import "catgoose/dothog/internal/version"
+// setup:feature:demo:end
 
 // AppSettingsPage renders the /settings page organized into collapsible sections.
 templ AppSettingsPage(currentTheme string, currentLayout string) {
@@ -98,6 +100,7 @@ templ AppSettingsPage(currentTheme string, currentLayout string) {
 				</details>
 			</div>
 		</div>
+		// setup:feature:demo:start
 		<div class="card bg-base-100 shadow-sm border border-base-300">
 			<div class="card-body">
 				<details>
@@ -114,6 +117,7 @@ templ AppSettingsPage(currentTheme string, currentLayout string) {
 				</details>
 			</div>
 		</div>
+		// setup:feature:demo:end
 	</div>
 }
 
