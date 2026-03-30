@@ -313,7 +313,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 
 	// setup:feature:session_settings:start
 	if settingsRepo != nil {
-		e.Use(middleware.SessionSettingsMiddleware(settingsRepo))
+		e.Use(middleware.SessionSettingsMiddleware(settingsRepo, nil))
 	}
 	// setup:feature:session_settings:end
 
