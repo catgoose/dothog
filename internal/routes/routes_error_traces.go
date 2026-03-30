@@ -197,6 +197,8 @@ func traceStripParams(u *url.URL, params ...string) string {
 	return cp.String()
 }
 
+// setup:feature:demo:start
+
 // SeedErrorTraces inserts 1000 demo error traces spread over the past 90 days.
 func SeedErrorTraces(store *promolog.Store) {
 	// Check if already seeded
@@ -397,3 +399,5 @@ func SeedErrorTraces(store *promolog.Store) {
 		}, createdAt)
 	}
 }
+
+// setup:feature:demo:end
