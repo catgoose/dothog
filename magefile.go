@@ -37,10 +37,14 @@ var (
 	// - CADDY_TLS_PORT: Caddy TLS termination port
 	proxyURL               = fmt.Sprintf("https://%s:{{APP_TLS_PORT}}", proxyHost)
 	proxyPort              = "{{TEMPL_HTTP_PORT}}"
+	// setup:feature:caddy:start
 	caddyTLSPort           = "{{CADDY_TLS_PORT}}"
+	// setup:feature:caddy:end
 	htmxURL                = "https://unpkg.com/htmx.org"
 	htmxResponseTargetsURL = "https://unpkg.com/htmx-ext-response-targets"
+	// setup:feature:sse:start
 	htmxSSEURL             = "https://unpkg.com/htmx-ext-sse"
+	// setup:feature:sse:end
 	hyperscriptURL         = "https://unpkg.com/hyperscript.org"
 	alpineURL              = "https://unpkg.com/alpinejs@3/dist/cdn.min.js"
 	alpineMorphURL         = "https://unpkg.com/@alpinejs/morph@3/dist/cdn.min.js"
@@ -276,7 +280,12 @@ func HtmxUpdate() error {
 	if err := downloadFile(htmxResponseTargetsURL, filepath.Join(publicJSDir, "htmx.response-targets.js")); err != nil {
 		return err
 	}
-	return downloadFile(htmxSSEURL, filepath.Join(publicJSDir, "htmx.ext.sse.js"))
+	// setup:feature:sse:start
+	if err := downloadFile(htmxSSEURL, filepath.Join(publicJSDir, "htmx.ext.sse.js")); err != nil {
+		return err
+	}
+	// setup:feature:sse:end
+	return nil
 }
 
 // HyperscriptUpdate updates Hyperscript file
@@ -449,38 +458,46 @@ func EnvCheck() error {
 
 // Watch runs Tailwind, Templ, Air, and Caddy in watch mode
 func Watch() error {
+	type task struct {
+		name string
+		fn   func() error
+	}
+	tasks := []task{
+		{"tailwind", TailwindWatch},
+		{"templ", TemplWatch},
+		{"air", Air},
+		// setup:feature:caddy:start
+		{"caddy", CaddyStart},
+		// setup:feature:caddy:end
+	}
+
+	// setup:feature:caddy:start
 	// Signal to the Go server that it's behind the templ proxy chain.
 	// Echo skips gzip middleware when this is set — Caddy handles compression.
 	os.Setenv("TEMPL_PROXY", "true")
-	errc := make(chan error, 4)
+	// setup:feature:caddy:end
 
-	go func() {
-		errc <- TailwindWatch()
-	}()
-
-	go func() {
-		errc <- TemplWatch()
-	}()
-
-	go func() {
-		errc <- Air()
-	}()
-
-	go func() {
-		errc <- CaddyStart()
-	}()
+	errc := make(chan error, len(tasks))
+	for _, t := range tasks {
+		go func() {
+			errc <- t.fn()
+		}()
+	}
 
 	if os.Getenv("OPEN_BROWSER") != "false" {
 		go func() {
 			time.Sleep(2 * time.Second)
-			url := "https://localhost:" + resolvePort(caddyTLSPort, 2)
+			url := "http://localhost:" + resolvePort(proxyPort, 1)
+			// setup:feature:caddy:start
+			url = "https://localhost:" + resolvePort(caddyTLSPort, 2)
+			// setup:feature:caddy:end
 			fmt.Println("Opening browser at:", url)
 			openBrowserURL(url)
 		}()
 	}
 
-	// Wait for all commands to complete or error
-	for range 4 {
+	// Wait for all tasks to complete or error
+	for range len(tasks) {
 		if err := <-errc; err != nil {
 			return err
 		}
@@ -851,6 +868,8 @@ func TestWatch() error {
 	return sh.Run(filepath.Join(binPath, "testwatcher"))
 }
 
+// setup:feature:caddy:start
+
 // CaddyInstall installs Caddy for local development
 func CaddyInstall() error {
 	fmt.Println("Installing Caddy...")
@@ -892,6 +911,8 @@ func CaddyStart() error {
 
 	return sh.Run("caddy", "run", "--config", tmpCaddyfile)
 }
+
+// setup:feature:caddy:end
 
 // setup:feature:capacitor:start
 
