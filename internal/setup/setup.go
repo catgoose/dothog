@@ -439,8 +439,14 @@ func removeOptionalContent(dir string, opts Options) error {
 		removeTags[FeatureDemo] = true
 	}
 
-	// Hardcoded binary/non-text files
-	_ = os.Remove(filepath.Join(dir, "db", "demo.db"))
+	// Remove all .db files (and WAL/SHM) so derived apps start clean.
+	// The app auto-creates databases on first start via os.MkdirAll + EnsureSchema.
+	// seed.db and demo.db are tracked in git but not needed in derived apps.
+	if matches, err := filepath.Glob(filepath.Join(dir, "db", "*.db*")); err == nil {
+		for _, m := range matches {
+			_ = os.Remove(m)
+		}
+	}
 	if removeTags[FeatureSSE] {
 		_ = os.Remove(filepath.Join(dir, "web", "assets", "public", "js", "htmx.ext.sse.js"))
 	}

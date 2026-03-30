@@ -126,9 +126,12 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:demo:end
 
 	// Health check endpoint — returns structured ops metadata.
-	ar.e.GET("/health", func(c echo.Context) error {
+	// HEAD is used by the offline indicator to poll connectivity.
+	healthHandler := func(c echo.Context) error {
 		return c.JSON(http.StatusOK, health.Check(c.Request().Context(), ar.healthCfg))
-	})
+	}
+	ar.e.GET("/health", healthHandler)
+	ar.e.HEAD("/health", healthHandler)
 
 	ar.initReportIssueRoutes()
 
@@ -313,7 +316,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 
 	// setup:feature:session_settings:start
 	if settingsRepo != nil {
-		e.Use(middleware.SessionSettingsMiddleware(settingsRepo))
+		e.Use(middleware.SessionSettingsMiddleware(settingsRepo, nil))
 	}
 	// setup:feature:session_settings:end
 
