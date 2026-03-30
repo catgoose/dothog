@@ -1,79 +1,122 @@
-# PHILOSOPHY.md Compliance Audit
+# PHILOSOPHY.md Compliance Audit — dothog Demo App
 
-Audit date: 2026-03-29
+**Date:** 2026-03-30
+**Scope:** `internal/demo/`, `internal/routes/`, `web/views/`, `main.go`
 
-## V1: Init-time panic in demo seeder
+---
 
-**File:** `internal/demo/seed.go`
-**Status:** Deferred
-**Rationale:** The panic occurs only during demo data seeding at startup. If seeding
-fails, the application cannot serve demo pages and crashing is the correct behavior.
-This aligns with the Go proverb "Don't panic" exception for truly unrecoverable
-programmer-level errors at init time.
+## Summary
 
-## V2: Inline HTMX partial swaps bypass PRG (kanban, approvals, repository)
+| Severity | Count | Principle Area |
+|----------|-------|----------------|
+| Medium | 2 | Resource Identification (verb-based URLs) |
+| Medium | 1 | HTTP Method Semantics (POST vs PATCH) |
+| Medium | 8 | Mutations Redirect (missing HX-Request guard) |
+| Medium | 5 | Schema as Code (raw DDL vs builder) |
+| Low | 1 | Content Negotiation (dashboard) |
+| Low | 1 | Postel's Law / Security (unparameterized table names) |
 
-**Status:** Not a violation
-**Rationale:** Inline HTMX partial swaps (editing a row in-place, moving a card
-between columns) are a valid hypermedia interaction pattern distinct from PRG. The
-server controls the next state and returns the updated representation directly to the
-target element. PRG applies to navigation mutations (creating a resource with its own
-URL). Inline swaps are for non-navigation mutations where the user stays on the same
-view. PHILOSOPHY.md updated to document this exception.
+---
 
-## V3: Inline HTMX partial swaps in CRUD demo
+## Violations
 
-**Status:** Not a violation
-**Rationale:** Same as V2. The CRUD demo's inline edit/create/toggle/delete pattern
-uses correct HTTP verbs (POST for create, PUT for full update, PATCH for toggle,
-DELETE for remove) and returns updated representations directly. This is proper
-hypermedia.
+### 1. Verb-based URLs — Resource Identification
 
-## V4: Verb URL `/demo/kanban/tasks/:id/move`
+**File:** `internal/routes/routes_canvas.go`
+**Routes:** `POST /demo/canvas/place`, `POST /demo/canvas/reset`
 
-**File:** `internal/routes/routes_kanban.go`, `web/views/kanban.templ`
-**Status:** Resolved
-**Fix:** Route changed from `PATCH /demo/kanban/tasks/:id/move` to
-`PATCH /demo/kanban/tasks/:id`. Status is now read from the request body via
-`FormValue("status")` instead of a query parameter. Templates updated to use
-`hx-vals` to send status in the request body.
+Both `/place` and `/reset` are verbs describing actions rather than resources. The philosophy states: "URLs identify resources, not actions."
 
-## V5: Verb URL `/demo/approvals/:id/:action`
+**Suggested fix:**
+- `POST /demo/canvas/place` → `POST /demo/canvas/pixels` or `PUT /demo/canvas/pixels/:x/:y`
+- `POST /demo/canvas/reset` → `DELETE /demo/canvas` or `PUT /demo/canvas` with empty body
 
-**File:** `internal/routes/routes_approvals.go`, `web/views/approvals.templ`
-**Status:** Resolved
-**Fix:** Route changed from `POST /demo/approvals/:id/:action` to
-`PATCH /demo/approvals/:id`. Action is now read from the request body via
-`FormValue("action")`. Templates updated to use `hx-patch` with `hx-vals` to send
-the action in the request body.
+---
 
-## V6: Verb URLs for repository restore/archive
+### 2. Verb-based URLs — Error Report Status Transitions
 
-**File:** `internal/routes/routes_repository.go`, `web/views/repository.templ`
-**Status:** Resolved
-**Fix:** Three separate routes (`POST .../restore`, `POST .../archive`,
-`POST .../unarchive`) consolidated into a single `PATCH /demo/repository/tasks/:id`
-endpoint. The action is read from the request body via `FormValue("action")`.
-Templates updated to use `hx-patch` with `hx-vals`.
+**File:** `internal/routes/routes_admin_error_reports.go`
+**Routes:** `POST /admin/error-reports/:id/resolve`, `POST /admin/error-reports/:id/dismiss`
 
-## V7: Verb URL for repository unarchive
+The `/resolve` and `/dismiss` suffixes are verbs. These represent state transitions, not resources. Compare with approvals (`PATCH /demo/approvals/:id` with `action` form value) and kanban (`PATCH /demo/kanban/tasks/:id` with `status` form value) which correctly model this.
 
-**Status:** Resolved (merged with V6)
+**Suggested fix:** `PATCH /admin/error-reports/:id` with a `status` form field (`status=resolved` or `status=dismissed`).
 
-## V8: Alpine `x-on:click` in control buttons
+---
 
-**File:** `web/components/core/controls.templ`, `web/components/core/error_controls.templ`
-**Status:** Resolved
-**Fix:** Converted `backButton`, `homeButton`, and `genericDismiss` in `controls.templ`
-from Alpine `x-on:click` to _hyperscript `_="on click ..."`. Also converted
-`errorBackButton` in `error_controls.templ`. The `dismissButton` in
-`error_controls.templ` already used _hyperscript and was not changed.
+### 3. POST for Status Transitions Should Use PATCH
 
-## V9: DELETE handler returns 200 instead of 204
+**File:** `internal/routes/routes_admin_error_reports.go`
+**Routes:** `POST /admin/error-reports/:id/resolve`, `POST /admin/error-reports/:id/dismiss`
 
-**File:** `internal/routes/routes_hypermedia.go`
-**Status:** Resolved
-**Fix:** Changed `c.NoContent(200)` to `c.NoContent(http.StatusNoContent)` (204) in
-`handleCRUDDelete`. Updated the delete button's swap strategy from
-`hx-swap="outerHTML"` to `hx-swap="delete"` so the row is removed from the DOM when
-the server returns 204 with no body. Tests updated to expect 204.
+POST is defined as "creates a new resource." The philosophy explicitly reserves PATCH for partial modifications. The approvals and kanban routes correctly use PATCH for the same kind of operation.
+
+**Suggested fix:** Change to `PATCH /admin/error-reports/:id` with a status field in the form body.
+
+---
+
+### 4. Missing HX-Request Guards on Mutation Handlers — Mutations Redirect
+
+Multiple PUT/POST/DELETE handlers return inline partial swaps without checking `HX-Request`. A non-HTMX client (e.g., `curl`, standard form submission) would receive a bare HTML fragment instead of a proper redirect.
+
+**Affected handlers:**
+
+| File | Handler | Route |
+|------|---------|-------|
+| `routes_people.go` | `handlePersonUpdate` | `PUT /demo/people/:id` |
+| `routes_inventory.go` | `handleCreateItem` | `POST /demo/inventory/items` |
+| `routes_inventory.go` | `handleUpdateItem` | `PUT /demo/inventory/items/:id` |
+| `routes_vendors_contacts.go` | `handleContactUpdate` | `PUT /demo/vendors/contacts/:id` |
+| `routes_settings.go` | `handleSettingsSave` | `PUT /demo/settings/:id` |
+| `routes_canvas.go` | `handlePlace` | `POST /demo/canvas/place` |
+| `routes_hypermedia.go` | `handleInteractionsSubmit` | `POST /demo/hypermedia/interactions/submit` |
+| `routes_hypermedia.go` | `handleInteractionsComment` | `POST /demo/hypermedia/interactions/comment` |
+| `routes_hypermedia.go` | `handleLinksCreate` | `POST /hypermedia/links` |
+| `routes_hypermedia.go` | `handleLinksDelete` | `DELETE /hypermedia/links/:id` |
+
+**Suggested fix:** Add content negotiation — for HTMX requests, the inline partial swap is acceptable under the stated exception. For non-HTMX requests, respond with `303 See Other` redirecting to the parent resource.
+
+---
+
+### 5. Raw DDL Instead of Schema-as-Code — Schema as Code
+
+**File:** `internal/demo/db.go`, `internal/demo/people.go`, `internal/demo/vendor_contact.go`, `internal/demo/error_reports.go`, `internal/demo/link_relations.go`
+
+The items, people, vendors, contacts, error_reports, and link_relations tables are all defined using raw `CREATE TABLE IF NOT EXISTS` DDL strings. In contrast, the tasks table (`internal/demo/tasks.go`) correctly uses the schema-as-code pattern with `schema.NewTable("Tasks").Columns(...)` and traits like `WithTimestamps()`, `WithSoftDelete()`, etc.
+
+**Suggested fix:** Migrate the remaining table definitions to use the `schema.NewTable()` builder pattern with appropriate traits, matching the tasks table.
+
+---
+
+### 6. Dashboard Content Negotiation (Low)
+
+**File:** `internal/routes/routes_dashboard.go`
+
+The `/dashboard` route always renders a full base layout. It does not check the `HX-Request` header to return a partial when navigating via HTMX boosted links. Compare with `routes_inventory.go` which correctly checks `hx.IsBoosted(c)`.
+
+**Suggested fix:** If boosted links target `/dashboard`, add a partial response path. Otherwise, this is acceptable.
+
+---
+
+### 7. Unparameterized Table Names in Seed Code (Low)
+
+**File:** `internal/demo/seed.go` — `CopyTable`, `DropMainTable`, `ExecSQL`, `listTableNames`
+
+Table names are interpolated into SQL via `fmt.Sprintf`. While these names come from `sqlite_master` (not user input), the `ExecSQL` function exposes raw SQL execution.
+
+**Suggested fix:** Validate table names against `^[a-zA-Z_][a-zA-Z0-9_]*$` pattern. Consider whether `ExecSQL` needs to exist.
+
+---
+
+## What Is Done Well
+
+- Kanban and approvals correctly use `PATCH` for state transitions with resource-oriented URLs
+- Explicit SQL throughout with named parameters — no ORM
+- Tasks table uses schema-as-code with traits, serving as a good reference
+- Error handling consistently uses `HandleHypermediaError` with controls and recovery options
+- Structured observability with request IDs, slog, and promote-on-error trace store
+- Static assets served with `Cache-Control: public, max-age=31536000, immutable`; SSE streams set `Cache-Control: no-cache`
+- `Vary: HX-Request` header set globally in middleware
+- Hypermedia controls use uniform `Control` struct with factory functions
+- Server-side state throughout; no client-side state management
+- Web standards preferred (SSE over WebSockets, native form submissions, HTML semantics)
