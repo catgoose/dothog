@@ -14,6 +14,7 @@ func (ar *appRoutes) initPwaRoutes() {
 	ar.e.GET("/pwa/inspection", handler.HandleComponent(views.PwaSiteInspectionForm()))
 	ar.e.GET("/pwa/report", handler.HandleComponent(views.PwaFieldReportForm()))
 	ar.e.GET("/pwa/notes", handler.HandleComponent(views.PwaNotesForm()))
+	ar.e.GET("/pwa/info", handler.HandleComponent(views.PwaInfoPage()))
 
 	ar.e.POST("/pwa/inspection", func(c echo.Context) error {
 		return handler.RenderComponent(c, views.PwaFormSuccess("Site inspection saved."))
