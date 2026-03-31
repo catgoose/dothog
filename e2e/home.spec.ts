@@ -35,7 +35,7 @@ test.describe("Home Page", () => {
 
   test("navbar is present", async ({ page }) => {
     await navigateTo(page, "/");
-    await expect(page.locator("nav.navbar")).toBeVisible();
+    await expect(page.locator("nav.app-nav")).toBeVisible();
   });
 
   test("health endpoint returns OK", async ({ request }) => {
