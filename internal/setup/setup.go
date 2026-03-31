@@ -577,6 +577,14 @@ func removeOptionalContent(dir string, opts Options) error {
 			_ = os.Remove(m)
 		}
 	}
+	// Remove root-level demo.db (and WAL/SHM) when demo feature is not selected.
+	if removeTags[FeatureDemo] {
+		if matches, err := filepath.Glob(filepath.Join(dir, "demo.db*")); err == nil {
+			for _, m := range matches {
+				_ = os.Remove(m)
+			}
+		}
+	}
 
 	// Seed data generation is only relevant when the demo feature is selected.
 	if removeTags[FeatureDemo] {
