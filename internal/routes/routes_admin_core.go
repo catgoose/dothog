@@ -29,10 +29,10 @@ func (ar *appRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin/system/check-update", ar.handleCheckUpdate)
 	ar.e.GET("/admin/config", ar.handleConfigInfo)
 	// setup:feature:demo:end
-	// setup:feature:demo:start
+	// setup:feature:session_settings:start
 	ar.e.GET("/admin/sessions", ar.handleSessionsPage)
 	ar.e.GET("/admin/sessions/table", ar.handleSessionsTable)
-	// setup:feature:demo:end
+	// setup:feature:session_settings:end
 }
 
 
@@ -118,7 +118,7 @@ func (ar *appRoutes) handleConfigInfo(c echo.Context) error {
 
 // setup:feature:demo:end
 
-// setup:feature:demo:start
+// setup:feature:session_settings:start
 
 func (ar *appRoutes) handleSessionsPage(c echo.Context) error {
 	if ar.settingsRepo == nil {
@@ -142,7 +142,7 @@ func (ar *appRoutes) handleSessionsTable(c echo.Context) error {
 	return handler.RenderComponent(c, views.AdminSessionsTable(sessions))
 }
 
-// setup:feature:demo:end
+// setup:feature:session_settings:end
 
 // setup:feature:demo:start
 

@@ -1,4 +1,4 @@
-// setup:feature:demo
+// setup:feature:session_settings
 
 package views
 
@@ -14,9 +14,9 @@ templ AdminSessionsPage(sessions []porter.SessionSettings) {
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<h1 class="text-2xl font-bold">Session Settings</h1>
 		<p class="text-sm text-base-content/60">
-			// setup:feature:demo:start
-			All visitors share a single session.
-			// setup:feature:demo:end
+			Each session is identified by a UUID stored in a browser cookie.
+			This lets the server manage per-session settings like theme and layout.
+			The table below shows all active session settings entries.
 		</p>
 		<div hx-ext="sse" sse-connect="/sse/theme">
 			<div id="admin-sessions-table" hx-get="/admin/sessions/table" hx-trigger="sse:theme-change" hx-swap="innerHTML">
