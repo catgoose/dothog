@@ -82,8 +82,8 @@ github.com/catgoose/porter v0.3.1 h1:cA2upps8+bYYKfrMvW4V2TDZIBTIJ25AAhrkZ0ULAwE
 github.com/catgoose/porter v0.3.1/go.mod h1:2E7Kl6X8ayPkN78AddS00NfNShF68yaEnYMb0IZIEBk=
 github.com/catgoose/promolog v0.2.5 h1:AIf1tG9rPMfyTgGepplcSS9ih6EsCCh5y6EWe9J7wx0=
 github.com/catgoose/promolog v0.2.5/go.mod h1:GbcuVryWlVefxM2jbOSyBd4R7mxoMky0i5eV+cAAfJk=
-github.com/catgoose/tavern v0.3.1 h1:HEDr9fYpuqpeJMqZ6sFr06l7g50ThFYdSdwxuPvrRyA=
-github.com/catgoose/tavern v0.3.1/go.mod h1:DhiRI7tzfzB+pNwV8JeFjNI5Qx+PFZE1Wfy2dmavs1M=
+github.com/catgoose/tavern v0.4.1 h1:UZ47lxOeqkZXTTGGj8GOQNFzyU7Ros4EafZWIQb5GOI=
+github.com/catgoose/tavern v0.4.1/go.mod h1:NjoDF0b+T3UAl0qdyI5v/W2O2HI3IkqmsjHk5op4ymc=
 github.com/catppuccin/go v0.3.0 h1:d+0/YicIq+hSTo5oPuRi5kOpqkVA5tAsU6dNhvRu+aY=
 github.com/catppuccin/go v0.3.0/go.mod h1:8IHJuMGaUUjQM82qBrGNBv7LFq6JI3NnQCF6MOlZjpc=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=
