@@ -336,10 +336,14 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		content = strings.ReplaceAll(content, "{{TEMPL_HTTP_PORT}}", templHTTPPort)
 		content = strings.ReplaceAll(content, "{{CADDY_TLS_PORT}}", caddyTLSPort)
 		content = strings.ReplaceAll(content, "{{APP_NAME}}", opts.AppName)
+		content = strings.ReplaceAll(content, "{{BINARY_NAME}}", binaryName)
 		content = strings.ReplaceAll(content, "{{MODULE_PATH}}", modulePath)
 		content = strings.ReplaceAll(content, "{{TEMPLATE_REF}}", "the template")
 		content = strings.ReplaceAll(content, "{{FEATURE_TABLE}}", buildFeatureTable(opts.Features))
 		content = strings.ReplaceAll(content, "{{FEATURE_SECTIONS}}", buildFeatureSections(opts.Features))
+		content = strings.ReplaceAll(content, "{{TECH_STACK}}", buildTechStack(opts.Features))
+		content = strings.ReplaceAll(content, "{{QUICK_START}}", buildQuickStart(binaryName, appTLSPort))
+		content = strings.ReplaceAll(content, "{{ENV_TABLE}}", buildEnvTable(opts.Features, opts.AppName, appTLSPort))
 		if err := os.WriteFile(filepath.Join(dir, "README.md"), []byte(content), 0644); err != nil {
 			return err
 		}
@@ -1233,6 +1237,131 @@ Capacitor wraps the web app for native iOS/Android deployment. Configuration is 
 		} else {
 			sb.WriteString("Offline mode is enabled with service worker caching and a write queue.\n\n")
 		}
+	}
+
+	return sb.String()
+}
+
+// buildTechStack generates a markdown table of technologies used by the app.
+// Core entries are always included; conditional entries depend on selected features.
+func buildTechStack(features []string) string {
+	expanded := ExpandFeatureDeps(features)
+	keep := make(map[string]bool)
+	for _, f := range expanded {
+		keep[f] = true
+	}
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
+
+	var sb strings.Builder
+	sb.WriteString("| Component | Purpose |\n")
+	sb.WriteString("| --- | --- |\n")
+
+	// Core (always included)
+	sb.WriteString("| [Go](https://go.dev/) | Application server, single binary output |\n")
+	sb.WriteString("| [Echo](https://echo.labstack.com/) | HTTP routing and middleware |\n")
+	sb.WriteString("| [HTMX](https://htmx.org/) | Hypermedia interactions |\n")
+	sb.WriteString("| [templ](https://templ.guide/) | Type-safe HTML templating |\n")
+	sb.WriteString("| [Tailwind CSS](https://tailwindcss.com/) | Utility-first styling |\n")
+	sb.WriteString("| [DaisyUI](https://daisyui.com/) | Semantic component classes with 30+ themes |\n")
+	sb.WriteString("| [Hyperscript](https://hyperscript.org/) | Client-side DOM interactions |\n")
+	sb.WriteString("| [SQLite](https://www.sqlite.org/) | Embedded database (dev), session storage |\n")
+
+	// Conditional
+	if keep[FeatureMSSQL] {
+		sb.WriteString("| [SQL Server](https://www.microsoft.com/sql-server) | Production database |\n")
+	}
+	if keep[FeaturePostgres] {
+		sb.WriteString("| [PostgreSQL](https://www.postgresql.org/) | Production database |\n")
+	}
+	if keep[FeatureCaddy] {
+		sb.WriteString("| [Caddy](https://caddyserver.com/) | HTTPS reverse proxy |\n")
+	}
+	if keep[FeatureAlpine] {
+		sb.WriteString("| [Alpine.js](https://alpinejs.dev/) | Client-side state management |\n")
+	}
+
+	// Always included (dev tools)
+	sb.WriteString("| [Air](https://github.com/air-verse/air) | Live reload for development |\n")
+	sb.WriteString("| [Mage](https://magefile.org/) | Build automation (Go-based) |\n")
+
+	return sb.String()
+}
+
+// buildQuickStart generates the Quick Start section with binary name and port.
+func buildQuickStart(binaryName, appTLSPort string) string {
+	var sb strings.Builder
+
+	sb.WriteString("### From Source\n\n")
+	sb.WriteString("```bash\n")
+	sb.WriteString("go build -o " + binaryName + " .\n")
+	sb.WriteString("./" + binaryName + "\n")
+	sb.WriteString("```\n\n")
+
+	sb.WriteString("### From Docker\n\n")
+	sb.WriteString("```bash\n")
+	sb.WriteString("docker build -t " + binaryName + " .\n")
+	sb.WriteString("docker run -p " + appTLSPort + ":" + appTLSPort + " " + binaryName + "\n")
+	sb.WriteString("```\n\n")
+
+	sb.WriteString("### From Release Binary\n\n")
+	sb.WriteString("Download the latest release for your platform from the [Releases](../../releases) page:\n\n")
+	sb.WriteString("```bash\n")
+	sb.WriteString("# Linux\n")
+	sb.WriteString("chmod +x " + binaryName + "-linux-amd64\n")
+	sb.WriteString("./" + binaryName + "-linux-amd64\n")
+	sb.WriteString("\n")
+	sb.WriteString("# Windows\n")
+	sb.WriteString(binaryName + "-windows-amd64.exe\n")
+	sb.WriteString("```\n\n")
+
+	sb.WriteString("Override the default port:\n\n")
+	sb.WriteString("```bash\n")
+	sb.WriteString("SERVER_LISTEN_PORT=8080 ./" + binaryName + "-linux-amd64\n")
+	sb.WriteString("```")
+
+	return sb.String()
+}
+
+// buildEnvTable generates a markdown table of environment variables based on features.
+func buildEnvTable(features []string, appName, appTLSPort string) string {
+	expanded := ExpandFeatureDeps(features)
+	keep := make(map[string]bool)
+	for _, f := range expanded {
+		keep[f] = true
+	}
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
+
+	var sb strings.Builder
+	sb.WriteString("| Variable | Description | Default |\n")
+	sb.WriteString("| --- | --- | --- |\n")
+
+	// Always included
+	sb.WriteString("| `SERVER_LISTEN_PORT` | Echo server port | " + appTLSPort + " |\n")
+	sb.WriteString("| `APP_NAME` | Application name | " + appName + " |\n")
+	sb.WriteString("| `LOG_LEVEL` | DEBUG, INFO, WARN, ERROR | INFO |\n")
+	sb.WriteString("| `ENABLE_DATABASE` | Enable SQL backend | false |\n")
+	sb.WriteString("| `DATABASE_URL` | Database connection string | sqlite:///db/app.db |\n")
+
+	// Auth
+	if keep[FeatureAuth] {
+		sb.WriteString("| `SESSION_SECRET` | Session encryption key | (required with auth) |\n")
+		sb.WriteString("| `OIDC_ISSUER_URL` | OIDC provider issuer URL | -- |\n")
+		sb.WriteString("| `OIDC_CLIENT_ID` | OIDC client ID | -- |\n")
+		sb.WriteString("| `OIDC_CLIENT_SECRET` | OIDC client secret | -- |\n")
+	}
+
+	// CSRF
+	if keep[FeatureCSRF] {
+		sb.WriteString("| `CSRF_ROTATE_PER_REQUEST` | Rotate CSRF token per request | false |\n")
+	}
+
+	// Graph
+	if keep[FeatureGraph] {
+		sb.WriteString("| `ENABLE_PHOTO_DOWNLOAD` | Download user photos from Graph | false |\n")
 	}
 
 	return sb.String()
