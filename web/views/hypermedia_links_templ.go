@@ -359,7 +359,7 @@ func LinksRegistryTable(data LinksPageData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, src := range linkwell.SortedPaths(data.Links) {
+		for _, src := range sortedLinkPaths(data.Links) {
 			for i, link := range data.Links[src] {
 				var templ_7745c5c3_Var17 = []any{templ.KV("border-t border-base-300", i == 0)}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var17...)

@@ -3,6 +3,7 @@ package views
 
 import (
 	"fmt"
+	"sort"
 
 	"catgoose/dothog/internal/demo"
 	"github.com/catgoose/linkwell"
@@ -38,6 +39,16 @@ func storedLinkID(stored []demo.StoredLinkRelation, source, rel, target string) 
 // linkDeleteURL returns the HTMX delete endpoint for a stored link.
 func linkDeleteURL(id int) string {
 	return fmt.Sprintf("/hypermedia/links/%d", id)
+}
+
+// sortedLinkPaths returns the keys of a link map in alphabetical order.
+func sortedLinkPaths(links map[string][]linkwell.LinkRelation) []string {
+	paths := make([]string, 0, len(links))
+	for k := range links {
+		paths = append(paths, k)
+	}
+	sort.Strings(paths)
+	return paths
 }
 
 func codeLinkExample() string {

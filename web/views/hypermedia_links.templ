@@ -138,7 +138,7 @@ templ LinksRegistryTable(data LinksPageData) {
 					</tr>
 				</thead>
 				<tbody>
-					for _, src := range linkwell.SortedPaths(data.Links) {
+					for _, src := range sortedLinkPaths(data.Links) {
 						for i, link := range data.Links[src] {
 							<tr class={ templ.KV("border-t border-base-300", i == 0) }>
 								if i == 0 {
