@@ -100,7 +100,7 @@ Harmony is designed to be used as a project template. After cloning:
 
    Supports flags for non-interactive use: `go tool mage setup -n "My App" -m "github.com/you/my-app" -p 5124`
 
-2. Review `.env.dev` (generated from `.env.sample`) and adjust as needed.
+2. Review `.env.development` (generated from `.env.sample`) and adjust as needed.
 
 4. Start development:
 
