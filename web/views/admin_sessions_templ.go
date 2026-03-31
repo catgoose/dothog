@@ -11,13 +11,14 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"catgoose/dothog/internal/domain"
 	"fmt"
 	"time"
+
+	"github.com/catgoose/porter"
 )
 
 // AdminSessionsPage displays all session settings rows with live SSE updates.
-func AdminSessionsPage(sessions []domain.SessionSettings) templ.Component {
+func AdminSessionsPage(sessions []porter.SessionSettings) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -55,7 +56,7 @@ func AdminSessionsPage(sessions []domain.SessionSettings) templ.Component {
 }
 
 // AdminSessionsTable renders just the sessions table for HTMX fragment swaps.
-func AdminSessionsTable(sessions []domain.SessionSettings) templ.Component {
+func AdminSessionsTable(sessions []porter.SessionSettings) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

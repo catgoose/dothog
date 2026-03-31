@@ -15,11 +15,11 @@ import (
 	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/handler"
 	hypermedia "github.com/catgoose/linkwell"
-	// setup:feature:session_settings:start
-	"catgoose/dothog/internal/domain"
-	// setup:feature:session_settings:end
 	"catgoose/dothog/web/views"
 	"catgoose/dothog/internal/routes/middleware"
+	// setup:feature:session_settings:start
+	"github.com/catgoose/porter"
+	// setup:feature:session_settings:end
 	"context"
 	"fmt"
 	"io/fs"
@@ -47,8 +47,8 @@ type AppRoutes interface {
 // SessionSettingsStore is the subset of session-settings operations that route
 // handlers need: listing all rows and upserting a single row.
 type SessionSettingsStore interface {
-	ListAll(ctx context.Context) ([]domain.SessionSettings, error)
-	Upsert(ctx context.Context, s *domain.SessionSettings) error
+	ListAll(ctx context.Context) ([]porter.SessionSettings, error)
+	Upsert(ctx context.Context, s *porter.SessionSettings) error
 }
 
 // setup:feature:session_settings:end
@@ -124,7 +124,7 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:demo:end
 	// setup:feature:session_settings:start
 	ar.e.GET("/settings", func(c echo.Context) error {
-		s := middleware.GetSessionSettings(c)
+		s := porter.GetSessionSettings(c)
 		return handler.RenderBaseLayout(c, views.AppSettingsPage(s.Theme))
 	})
 	// setup:feature:session_settings:end
@@ -233,7 +233,7 @@ func (ar *appRoutes) SetHealthStats(fn health.StatsFunc) {
 // InitEcho initializes Echo with global configurations
 func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
-	settingsRepo middleware.SessionSettingsProvider,
+	settingsRepo porter.SessionSettingsProvider,
 	// setup:feature:session_settings:end
 	reqLogStore *promolog.Store,
 ) (*echo.Echo, error) {
@@ -307,7 +307,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		}
 		// setup:feature:csrf:start
 		if cfg.SessionMgr != nil {
-			e.Use(middleware.CSRF(cfg.SessionMgr, middleware.CSRFConfig{
+			e.Use(porter.CSRF(cfg.SessionMgr, porter.CSRFConfig{
 				RotatePerRequest: cfg.CSRFRotatePerRequest,
 				PerRequestPaths:  cfg.CSRFPerRequestPaths,
 				ExemptPaths:      cfg.CSRFExemptPaths,
@@ -321,7 +321,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 
 	// setup:feature:session_settings:start
 	if settingsRepo != nil {
-		e.Use(middleware.SessionSettingsMiddleware(settingsRepo, nil))
+		e.Use(porter.SessionSettingsMiddleware(settingsRepo, nil))
 	}
 	// setup:feature:session_settings:end
 

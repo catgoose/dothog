@@ -12,6 +12,7 @@ require (
 	github.com/catgoose/flighty v0.1.1
 	github.com/catgoose/fraggle v0.1.12
 	github.com/catgoose/linkwell v0.1.0
+	github.com/catgoose/porter v0.0.0-20260331020153-fe7a239323da
 	github.com/catgoose/tavern v0.2.0
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0

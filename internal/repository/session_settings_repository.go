@@ -9,9 +9,9 @@ import (
 
 	dbrepoManager "catgoose/dothog/internal/database/repository"
 	"catgoose/dothog/internal/database/schema"
-	"catgoose/dothog/internal/domain"
 
 	"github.com/catgoose/fraggle/dbrepo"
+	"github.com/catgoose/porter"
 )
 
 // sessionSettingsRepository provides session settings data access.
@@ -20,13 +20,13 @@ type sessionSettingsRepository struct {
 }
 
 // NewSessionSettingsRepository creates a new session settings repository.
-// The returned value satisfies both middleware.SessionSettingsProvider and
+// The returned value satisfies both porter.SessionSettingsProvider and
 // routes.SessionSettingsStore via Go's implicit interface satisfaction.
 func NewSessionSettingsRepository(repo *dbrepoManager.RepoManager) *sessionSettingsRepository {
 	return &sessionSettingsRepository{repo: repo}
 }
 
-// selectCols lists the columns matching the domain.SessionSettings struct.
+// selectCols lists the columns matching the porter.SessionSettings struct.
 // SessionSettingsTable.SelectColumns() includes CreatedAt which the domain
 // struct omits, so we list them explicitly.
 var selectCols = dbrepo.Columns("Id", "SessionUUID", "Theme", "Layout", "UpdatedAt")
@@ -34,11 +34,11 @@ var selectCols = dbrepo.Columns("Id", "SessionUUID", "Theme", "Layout", "Updated
 var tableName = schema.SessionSettingsTable.Name
 
 // GetByUUID returns settings for the given session UUID, or nil if not found.
-func (r *sessionSettingsRepository) GetByUUID(ctx context.Context, uuid string) (*domain.SessionSettings, error) {
+func (r *sessionSettingsRepository) GetByUUID(ctx context.Context, uuid string) (*porter.SessionSettings, error) {
 	w := dbrepo.NewWhere().And("SessionUUID = @SessionUUID", sql.Named("SessionUUID", uuid))
 	query, args := dbrepo.NewSelect(tableName, selectCols).Where(w).Build()
 
-	var s domain.SessionSettings
+	var s porter.SessionSettings
 	err := r.repo.GetDB().GetContext(ctx, &s, query, args...)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -50,7 +50,7 @@ func (r *sessionSettingsRepository) GetByUUID(ctx context.Context, uuid string) 
 }
 
 // Upsert inserts or updates session settings by SessionUUID.
-func (r *sessionSettingsRepository) Upsert(ctx context.Context, s *domain.SessionSettings) error {
+func (r *sessionSettingsRepository) Upsert(ctx context.Context, s *porter.SessionSettings) error {
 	existing, err := r.GetByUUID(ctx, s.SessionUUID)
 	if err != nil {
 		return fmt.Errorf("lookup existing session settings: %w", err)
@@ -108,9 +108,9 @@ func (r *sessionSettingsRepository) Touch(ctx context.Context, uuid string) erro
 }
 
 // ListAll returns all session settings rows ordered by most recently updated.
-func (r *sessionSettingsRepository) ListAll(ctx context.Context) ([]domain.SessionSettings, error) {
+func (r *sessionSettingsRepository) ListAll(ctx context.Context) ([]porter.SessionSettings, error) {
 	query, args := dbrepo.NewSelect(tableName, selectCols).OrderBy("UpdatedAt DESC").Build()
-	var rows []domain.SessionSettings
+	var rows []porter.SessionSettings
 	err := r.repo.GetDB().SelectContext(ctx, &rows, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list session settings: %w", err)

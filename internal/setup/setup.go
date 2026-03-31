@@ -63,6 +63,7 @@ var featureDeps = map[string][]string{
 	FeatureOffline:        {FeatureCapacitor},
 	FeaturePWA:            {FeatureOffline, FeatureSync, FeatureCapacitor},
 	FeatureDemo:            {FeatureSessionSettings},
+	FeatureCSRF:           {FeatureSessionSettings},
 	FeatureLinkRelations:  {FeatureSessionSettings},
 	FeatureBrowserAPIs:    {FeatureSSE},
 	FeatureWebStandards:   {FeatureSessionSettings},

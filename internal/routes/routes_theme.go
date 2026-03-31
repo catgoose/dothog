@@ -6,15 +6,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/logger"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/middleware"
 	"catgoose/dothog/web/views"
 	// setup:feature:session_settings:end
 	ssebroker "github.com/catgoose/tavern"
 
+	// setup:feature:session_settings:start
+	"github.com/catgoose/porter"
+	// setup:feature:session_settings:end
 	"github.com/labstack/echo/v4"
 )
 
@@ -40,7 +41,7 @@ func (ar *appRoutes) handleTheme(broker *ssebroker.SSEBroker) echo.HandlerFunc {
 		if !valid {
 			theme = "light"
 		}
-		settings := middleware.GetSessionSettings(c)
+		settings := porter.GetSessionSettings(c)
 		settings.Theme = theme
 		if ar.settingsRepo != nil {
 			if err := ar.settingsRepo.Upsert(c.Request().Context(), settings); err != nil {
@@ -66,10 +67,10 @@ func (ar *appRoutes) handleTheme(broker *ssebroker.SSEBroker) echo.HandlerFunc {
 func (ar *appRoutes) handleLayout() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		layout := c.FormValue("layout")
-		if layout != domain.LayoutApp {
-			layout = domain.DefaultLayout
+		if layout != porter.LayoutApp {
+			layout = porter.DefaultLayout
 		}
-		settings := middleware.GetSessionSettings(c)
+		settings := porter.GetSessionSettings(c)
 		settings.Layout = layout
 		if ar.settingsRepo != nil {
 			if err := ar.settingsRepo.Upsert(c.Request().Context(), settings); err != nil {
