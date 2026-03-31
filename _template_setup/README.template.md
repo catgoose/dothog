@@ -1,127 +1,83 @@
 # {{APP_NAME}}
 
-{{APP_NAME}} is a Go + HTMX application built on the reach-up architecture pattern.
+A server-driven hypermedia web application built with Go, HTMX, and templ. Generated from [dothog](https://github.com/catgoose/dothog) using `mage setup`.
 
-It uses:
+{{APP_NAME}} runs as a single binary with all assets embedded. No external runtime dependencies are required, though environment files (`.env.development`, `.env.sample`) are used to configure the application.
 
-- Go + Echo (web framework)
-- HTMX + templ (type-safe HTML templating)
-- Tailwind CSS + DaisyUI (styling, 30+ themes)
-- Air (live reload)
-- Mage (build automation)
-- Playwright (E2E testing)
+See [PHILOSOPHY.md](PHILOSOPHY.md) for the architectural principles behind the project.
 
-## Features
+## Setup Configuration
+
+This project was generated with the following features enabled:
 
 {{FEATURE_TABLE}}
 
-## Getting Started
+For documentation on each configuration option, see [docs/SETUP.md](docs/SETUP.md).
 
-### Prerequisites
+## Tech Stack
 
-- Go 1.24+
-- Node.js 18+ (for Tailwind, Playwright)
+{{TECH_STACK}}
 
-### Setup
+## Quick Start
 
-```bash
-# Install dependencies
-npm ci
-
-# Start development (live reload)
-go tool mage watch
-```
-
-This will:
-
-- Start templ in watch mode, proxying to `https://localhost:{{APP_TLS_PORT}}` with a local HTTP proxy on `{{TEMPL_HTTP_PORT}}`
-- Run Air to rebuild and restart the Go app
-- Run Tailwind in watch mode
-
-Access {{APP_NAME}} at: `https://localhost:{{APP_TLS_PORT}}`
-
-### Ports
-
-| Service | Port | URL |
-| --- | --- | --- |
-| Echo app (TLS) | {{APP_TLS_PORT}} | `https://localhost:{{APP_TLS_PORT}}` |
-| templ HTTP proxy | {{TEMPL_HTTP_PORT}} | `http://localhost:{{TEMPL_HTTP_PORT}}` |
-| Caddy TLS front | {{CADDY_TLS_PORT}} | `https://localhost:{{CADDY_TLS_PORT}}` |
-
-### Environment Variables
-
-Copy `.env.development` and adjust as needed. Key variables:
-
-| Variable | Description | Default |
-| --- | --- | --- |
-| `SERVER_LISTEN_PORT` | Echo server port | {{APP_TLS_PORT}} |
-| `LOG_LEVEL` | DEBUG, INFO, WARN, ERROR | INFO |
-| `ENABLE_DATABASE` | Enable SQL backend | false |
-| `APP_NAME` | Application display name | {{APP_NAME}} |
+{{QUICK_START}}
 
 ## Architecture
 
-{{APP_NAME}} follows the **reach-up model** -- each layer reaches up to the layer above it rather than importing downward:
+{{APP_NAME}} follows a **reach-up model**: start at HTML and only reach for higher-abstraction tools when the current layer cannot express the intent.
 
 ```
-Behavior    (Alpine.js, Hyperscript)     -- client-side interactivity
-    ^
-Presentation (templ + DaisyUI)            -- type-safe HTML rendering
-    ^
-HTTP        (Echo + HTMX)                 -- routing, hypermedia exchanges
-    ^
-Data        (Go + SQL)                    -- repositories, schema DSL
+                  State               Behavior              Presentation
+           +------------------+----------------------+----------------------+
+  Server   |  Go + SQL        |  HTTP + HTMX         |  templ + DaisyUI     |
+           |  source of truth |  hypermedia controls |  semantic components |
+           +------------------+----------------------+----------------------+
+  Client   |  Alpine.js       |  _hyperscript        |  Tailwind + CSS      |
+           |  view state      |  DOM interactions    |  layout, spacing     |
+           +------------------+----------------------+----------------------+
 ```
 
-Key patterns:
+## Project Structure
 
-- **HATEOAS** -- hypermedia as the engine of application state; navigation and actions are link-driven
-- **Server-rendered** -- templ components produce HTML; HTMX handles partial page updates
-- **Feature-gated** -- code is organized by feature with clean separation for easy extension
-
-{{FEATURE_SECTIONS}}
+```
+.
+├── cmd/                    # CLI entry points
+├── internal/
+│   ├── config/             # Application configuration
+│   ├── database/           # Database connections, schema, repository
+│   ├── domain/             # Domain models
+│   ├── routes/
+│   │   ├── handler/        # Render helpers, error handling
+│   │   ├── middleware/     # Correlation IDs, error handler
+│   │   └── *.go            # Route handlers
+│   └── service/            # Business logic, Graph client
+├── web/
+│   ├── assets/public/      # Static assets (CSS, JS, images)
+│   ├── components/core/    # Reusable templ components
+│   └── views/              # Page-level templ templates
+├── e2e/                    # Playwright E2E tests
+├── docs/                   # Documentation and MkDocs config
+└── .github/workflows/      # CI/CD workflows
+```
 
 ## Development
 
-### Testing
+### Prerequisites
+
+- Go 1.26+ (latest)
+- Node.js 22+ (for Playwright E2E tests)
+
+### Running the Dev Server
 
 ```bash
-go tool mage test             # Run all Go tests
-go tool mage teste2e          # Run Playwright E2E tests
-go tool mage testcoverage     # Coverage report
+go tool mage watch
 ```
 
-### Linting
+This starts templ in watch mode, Air for live reload, and Tailwind in watch mode.
 
-```bash
-go tool mage lint              # Run golangci-lint
-go tool mage fixfieldalignment # Auto-fix struct field alignment
-```
+Access the application at: `https://localhost:{{APP_TLS_PORT}}`
 
-### Building
-
-```bash
-go tool mage build    # Full production build
-go tool mage compile  # Compile Go binary only
-```
-
-### Mage Targets
-
-All targets are run with `go tool mage <target>`:
-
-| Target | Description |
-| --- | --- |
-| `watch` | Start dev mode with live reload |
-| `build` | Full production build |
-| `compile` | Compile Go binary |
-| `test` / `testverbose` / `testcoverage` | Go tests |
-| `teste2e` / `teste2eheaded` / `teste2eui` | Playwright E2E tests |
-| `lint` / `lintwatch` | Lint |
-| `updateassets` | Update frontend assets |
-| `clean` | Remove build artifacts |
-| `setup` | Run the template setup wizard |
-
-## HTTPS Development Setup
+### HTTPS Development Setup
 
 When Caddy is configured, the app uses self-signed certificates for local HTTPS.
 
@@ -142,6 +98,54 @@ sudo update-ca-certificates
 
 1. Right-click `localhost.crt` > Install Certificate
 2. Choose Local Machine > Trusted Root Certification Authorities
+
+## Testing
+
+```bash
+# Go tests
+go tool mage test              # Run all tests
+go tool mage testverbose       # Verbose output
+go tool mage testcoverage      # Coverage report
+go tool mage testrace          # Race condition detection
+go tool mage testwatch         # Auto-run on file changes
+
+# E2E tests (Playwright)
+npm ci                          # Install dependencies
+npx playwright install chromium # Install browser
+go tool mage teste2e            # Run headless
+go tool mage teste2eheaded      # Run with visible browser
+go tool mage teste2eui          # Run with Playwright UI
+
+# Linting
+go tool mage lint              # Run golangci-lint
+go tool mage lintwatch         # Lint on file changes
+```
+
+## Mage Targets
+
+All targets are run with `go tool mage <target>`:
+
+| Target | Description |
+| --- | --- |
+| `watch` | Start dev mode with live reload (Tailwind, templ, Air) |
+| `build` | Full production build |
+| `compile` | Compile Go binary |
+| `templ` / `templwatch` | Run templ / templ in watch mode |
+| `tailwind` / `tailwindwatch` | Build / watch Tailwind CSS |
+| `air` | Start Air live reload |
+| `test*` | Test targets (see Testing section) |
+| `teste2e` / `teste2eheaded` / `teste2eui` | Playwright E2E tests |
+| `lint` / `lintwatch` | Lint / lint on file changes |
+| `updateassets` | Update all frontend assets |
+| `envcheck` | Validate required environment variables |
+
+## Environment Variables
+
+See `.env.sample` for the full list. Key variables:
+
+{{ENV_TABLE}}
+
+{{FEATURE_SECTIONS}}
 
 ## Module
 
