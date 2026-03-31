@@ -9,6 +9,7 @@ require (
 	github.com/catgoose/cheddar v0.1.1
 	github.com/catgoose/crooner v1.4.2
 	github.com/catgoose/dio v1.0.26
+	github.com/catgoose/flighty v0.0.0-20260331020114-20746d00308e
 	github.com/catgoose/fraggle v0.1.12
 	github.com/catgoose/linkwell v0.0.0-20260331012812-fb08f09a4a04
 	github.com/catgoose/tavern v0.2.0

@@ -13,9 +13,10 @@ import (
 	"catgoose/dothog/internal/routes/handler"
 	hypermedia "github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/middleware"
-	"catgoose/dothog/internal/routes/response"
+	corecomponents "catgoose/dothog/web/components/core"
 	"catgoose/dothog/web/views"
 
+	response "github.com/catgoose/flighty"
 	"github.com/labstack/echo/v4"
 )
 
@@ -111,7 +112,7 @@ func (ar *appRoutes) initErrorsRoutes() {
 		}
 		return response.New(c).
 			Component(views.ErrorsOOBSuccess()).
-			OOBErrorStatus(ec).
+			OOB(corecomponents.ErrorStatusFromContext(ec)).
 			Send()
 	})
 

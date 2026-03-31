@@ -12,7 +12,7 @@ import (
 	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/handler"
 	hypermedia "github.com/catgoose/linkwell"
-	"catgoose/dothog/internal/routes/response"
+	response "github.com/catgoose/flighty"
 	"catgoose/dothog/web/views"
 
 	hx "github.com/catgoose/cheddar"

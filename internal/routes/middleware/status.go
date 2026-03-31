@@ -5,7 +5,7 @@ import (
 
 	htmxpkg "github.com/catgoose/cheddar"
 	hypermedia "github.com/catgoose/linkwell"
-	"catgoose/dothog/internal/routes/response"
+	response "github.com/catgoose/flighty"
 	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"

@@ -8,7 +8,7 @@ import (
 	"catgoose/dothog/internal/logger"
 	"github.com/catgoose/promolog"
 	hypermedia "github.com/catgoose/linkwell"
-	"catgoose/dothog/internal/routes/response"
+	response "github.com/catgoose/flighty"
 	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"
@@ -47,10 +47,16 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 			Closable:   true,
 			Controls:   controls,
 		}
+		if ec.OOBTarget == "" {
+			ec.OOBTarget = hypermedia.DefaultErrorStatusTarget
+		}
+		if ec.OOBSwap == "" {
+			ec.OOBSwap = "innerHTML"
+		}
 		return response.New(c).
 			Status(statusCode).
 			Component(templ.NopComponent).
-			OOBErrorStatus(ec).
+			OOB(corecomponents.ErrorStatusFromContext(ec)).
 			Send()
 	}
 
@@ -92,10 +98,16 @@ func handleErrorWithContext(c echo.Context, ec hypermedia.ErrorContext) error {
 	}
 
 	// HTMX: deliver error banner via OOB swap
+	if ec.OOBTarget == "" {
+		ec.OOBTarget = hypermedia.DefaultErrorStatusTarget
+	}
+	if ec.OOBSwap == "" {
+		ec.OOBSwap = "innerHTML"
+	}
 	return response.New(c).
 		Status(ec.StatusCode).
 		Component(templ.NopComponent).
-		OOBErrorStatus(ec).
+		OOB(corecomponents.ErrorStatusFromContext(ec)).
 		Send()
 }
 
