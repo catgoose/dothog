@@ -105,9 +105,9 @@ func themeDropdown(currentTheme string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs("document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.dothogChannel) window.dothogChannel.postMessage({type:'theme-change',theme:current})")
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs("document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.appChannel) window.appChannel.postMessage({type:'theme-change',theme:current})")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 124, Col: 398}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 124, Col: 392}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -223,9 +223,9 @@ func themeDropdown(currentTheme string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var11 string
-				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs("current = '" + theme + "'; document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.dothogChannel) window.dothogChannel.postMessage({type:'theme-change',theme:current})")
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs("current = '" + theme + "'; document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.appChannel) window.appChannel.postMessage({type:'theme-change',theme:current})")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 146, Col: 428}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 146, Col: 422}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
