@@ -132,7 +132,7 @@ func (p *peopleRoutes) handlePersonUpdate(c echo.Context) error {
 }
 
 func (p *peopleRoutes) broadcastPersonUpdate(person demo.Person) {
-	topic := fmt.Sprintf("%s-%d", tavern.TopicPeopleUpdate, person.ID)
+	topic := fmt.Sprintf("%s-%d", TopicPeopleUpdate, person.ID)
 	if !p.broker.HasSubscribers(topic) {
 		return
 	}
@@ -152,7 +152,7 @@ func (p *peopleRoutes) handlePersonSSE(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 400, "Invalid person ID", err)
 	}
-	topic := fmt.Sprintf("%s-%d", tavern.TopicPeopleUpdate, id)
+	topic := fmt.Sprintf("%s-%d", TopicPeopleUpdate, id)
 
 	c.Response().Header().Set("Content-Type", "text/event-stream")
 	c.Response().Header().Set("Cache-Control", "no-cache")

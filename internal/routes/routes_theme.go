@@ -50,9 +50,9 @@ func (ar *appRoutes) handleTheme(broker *tavern.SSEBroker) echo.HandlerFunc {
 		}
 
 		// Broadcast theme change to all connected browsers.
-		if broker.HasSubscribers(tavern.TopicThemeChange) {
+		if broker.HasSubscribers(TopicThemeChange) {
 			msg := tavern.NewSSEMessage("theme-change", theme).String()
-			broker.Publish(tavern.TopicThemeChange, msg)
+			broker.Publish(TopicThemeChange, msg)
 		}
 
 		return handler.RenderComponent(c, views.ThemeChanged(theme))
@@ -97,7 +97,7 @@ func handleSSETheme(broker *tavern.SSEBroker) echo.HandlerFunc {
 			return fmt.Errorf("streaming unsupported")
 		}
 
-		ch, unsub := broker.Subscribe(tavern.TopicThemeChange)
+		ch, unsub := broker.Subscribe(TopicThemeChange)
 		defer unsub()
 
 		ctx := c.Request().Context()

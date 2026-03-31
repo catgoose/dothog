@@ -166,7 +166,7 @@ func handleErrorTracesSSE(broker *tavern.SSEBroker) echo.HandlerFunc {
 		c.Response().WriteHeader(http.StatusOK)
 
 		flusher := c.Response().Writer.(http.Flusher)
-		ch, unsub := broker.Subscribe(tavern.TopicErrorTraces)
+		ch, unsub := broker.Subscribe(TopicErrorTraces)
 		defer unsub()
 
 		ctx := c.Request().Context()
@@ -186,7 +186,7 @@ func handleErrorTracesSSE(broker *tavern.SSEBroker) echo.HandlerFunc {
 }
 
 func broadcastErrorTrace(broker *tavern.SSEBroker, summary promolog.TraceSummary) {
-	if !broker.HasSubscribers(tavern.TopicErrorTraces) {
+	if !broker.HasSubscribers(TopicErrorTraces) {
 		return
 	}
 	buf := new(bytes.Buffer)
@@ -195,7 +195,7 @@ func broadcastErrorTrace(broker *tavern.SSEBroker, summary promolog.TraceSummary
 		return
 	}
 	msg := tavern.NewSSEMessage("error-trace", buf.String()).String()
-	broker.Publish(tavern.TopicErrorTraces, msg)
+	broker.Publish(TopicErrorTraces, msg)
 }
 
 // setup:feature:sse:end
