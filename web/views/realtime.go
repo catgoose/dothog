@@ -7,7 +7,7 @@ import (
 	"math"
 	"time"
 
-	"catgoose/dothog/internal/ssebroker"
+	ssebroker "github.com/catgoose/tavern"
 )
 
 // --- Dashboard data types ---

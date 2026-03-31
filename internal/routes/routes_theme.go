@@ -13,7 +13,7 @@ import (
 	"catgoose/dothog/internal/routes/middleware"
 	"catgoose/dothog/web/views"
 	// setup:feature:session_settings:end
-	"catgoose/dothog/internal/ssebroker"
+	ssebroker "github.com/catgoose/tavern"
 
 	"github.com/labstack/echo/v4"
 )

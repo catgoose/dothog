@@ -74,6 +74,8 @@ github.com/catgoose/fraggle v0.1.12 h1:0yL8VmOWBcQKJL5RFt19Natgb9RUMIF4AC9WGS9Nx
 github.com/catgoose/fraggle v0.1.12/go.mod h1:cH5k1/se9azQqMj6aBgjR0iu5knl52ZxVu6wlPer+6s=
 github.com/catgoose/promolog v0.2.5 h1:AIf1tG9rPMfyTgGepplcSS9ih6EsCCh5y6EWe9J7wx0=
 github.com/catgoose/promolog v0.2.5/go.mod h1:GbcuVryWlVefxM2jbOSyBd4R7mxoMky0i5eV+cAAfJk=
+github.com/catgoose/tavern v0.0.0-20260331012746-b125ca2995ac h1:CgiRswQwYpTKxanATEyYZio+yC6QN5SQDQw9kPpWLFE=
+github.com/catgoose/tavern v0.0.0-20260331012746-b125ca2995ac/go.mod h1:DhiRI7tzfzB+pNwV8JeFjNI5Qx+PFZE1Wfy2dmavs1M=
 github.com/catppuccin/go v0.3.0 h1:d+0/YicIq+hSTo5oPuRi5kOpqkVA5tAsU6dNhvRu+aY=
 github.com/catppuccin/go v0.3.0/go.mod h1:8IHJuMGaUUjQM82qBrGNBv7LFq6JI3NnQCF6MOlZjpc=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=

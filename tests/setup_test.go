@@ -408,7 +408,6 @@ func TestSetup_FeaturesAll(t *testing.T) {
 
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
-	assertDirExists(t, filepath.Join(dest, "internal", "ssebroker"))
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 	assertDirExists(t, filepath.Join(dest, "internal", "service", "graph"))
 	assertDirExists(t, filepath.Join(dest, "internal", "demo"))
@@ -435,7 +434,6 @@ func TestSetup_FeaturesNone(t *testing.T) {
 
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
-	assertDirRemoved(t, filepath.Join(dest, "internal", "ssebroker"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))          // database is implicit (always kept)
 	assertDirRemoved(t, filepath.Join(dest, "internal", "repository"))
@@ -473,7 +471,6 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 	assertBuildSucceeds(t, dest)
 	assertDirExists(t, filepath.Join(dest, "internal", "database")) // database is implicit
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
-	assertDirRemoved(t, filepath.Join(dest, "internal", "ssebroker"))
 
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
 	require.True(t, os.IsNotExist(err), "Caddyfile should be removed when caddy not selected")
@@ -510,7 +507,6 @@ func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
 
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
-	assertDirRemoved(t, filepath.Join(dest, "internal", "ssebroker"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 
@@ -565,7 +561,6 @@ func TestSetup_FeaturesSSECaddy(t *testing.T) {
 
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
-	assertDirExists(t, filepath.Join(dest, "internal", "ssebroker"))
 
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
 	require.NoError(t, err, "Caddyfile should exist when caddy is selected")

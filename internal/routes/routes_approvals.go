@@ -8,7 +8,7 @@ import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/params"
-	"catgoose/dothog/internal/ssebroker"
+	ssebroker "github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
 
 	"github.com/labstack/echo/v4"
