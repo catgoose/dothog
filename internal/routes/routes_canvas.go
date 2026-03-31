@@ -82,9 +82,9 @@ func (cr *canvasRoutes) handlePlace(c echo.Context) error {
 
 func (cr *canvasRoutes) handleReset(c echo.Context) error {
 	cr.canvas.Reset()
-	if cr.broker.HasSubscribers(tavern.TopicCanvasUpdate) {
+	if cr.broker.HasSubscribers(TopicCanvasUpdate) {
 		msg := tavern.NewSSEMessage("canvas-reset", "").String()
-		cr.broker.Publish(tavern.TopicCanvasUpdate, msg)
+		cr.broker.Publish(TopicCanvasUpdate, msg)
 	}
 	return c.NoContent(http.StatusOK)
 }
@@ -107,7 +107,7 @@ func (cr *canvasRoutes) handleCanvasSSE(c echo.Context) error {
 		return fmt.Errorf("streaming unsupported")
 	}
 
-	ch, unsub := cr.broker.Subscribe(tavern.TopicCanvasUpdate)
+	ch, unsub := cr.broker.Subscribe(TopicCanvasUpdate)
 	defer unsub()
 
 	heartbeat := time.NewTicker(10 * time.Second)
@@ -146,7 +146,7 @@ func (cr *canvasRoutes) runTicker() {
 }
 
 func (cr *canvasRoutes) broadcastPixel(x, y int, color string) {
-	if !cr.broker.HasSubscribers(tavern.TopicCanvasUpdate) {
+	if !cr.broker.HasSubscribers(TopicCanvasUpdate) {
 		return
 	}
 	data, err := json.Marshal(map[string]any{"x": x, "y": y, "color": color})
@@ -155,11 +155,11 @@ func (cr *canvasRoutes) broadcastPixel(x, y int, color string) {
 		return
 	}
 	msg := tavern.NewSSEMessage("pixel-update", string(data)).String()
-	cr.broker.Publish(tavern.TopicCanvasUpdate, msg)
+	cr.broker.Publish(TopicCanvasUpdate, msg)
 }
 
 func (cr *canvasRoutes) broadcastClients() {
-	if !cr.broker.HasSubscribers(tavern.TopicCanvasUpdate) {
+	if !cr.broker.HasSubscribers(TopicCanvasUpdate) {
 		return
 	}
 	clients := cr.canvas.ActiveClients()
@@ -169,7 +169,7 @@ func (cr *canvasRoutes) broadcastClients() {
 		return
 	}
 	msg := tavern.NewSSEMessage("clients-update", string(data)).String()
-	cr.broker.Publish(tavern.TopicCanvasUpdate, msg)
+	cr.broker.Publish(TopicCanvasUpdate, msg)
 }
 
 func getOrCreateClientID(c echo.Context) string {

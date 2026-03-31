@@ -79,7 +79,7 @@ func (f *feedRoutes) handleActivitySSE(c echo.Context) error {
 		return fmt.Errorf("streaming unsupported")
 	}
 
-	ch, unsub := f.broker.Subscribe(tavern.TopicActivityFeed)
+	ch, unsub := f.broker.Subscribe(TopicActivityFeed)
 	defer unsub()
 
 	ctx := c.Request().Context()
@@ -99,7 +99,7 @@ func (f *feedRoutes) handleActivitySSE(c echo.Context) error {
 
 // BroadcastActivity publishes an activity event to the SSE feed.
 func BroadcastActivity(broker *tavern.SSEBroker, e demo.ActivityEvent) {
-	if !broker.HasSubscribers(tavern.TopicActivityFeed) {
+	if !broker.HasSubscribers(TopicActivityFeed) {
 		return
 	}
 	buf := statsBufPool.Get().(*bytes.Buffer)
@@ -110,7 +110,7 @@ func BroadcastActivity(broker *tavern.SSEBroker, e demo.ActivityEvent) {
 	}
 	msg := tavern.NewSSEMessage("activity-event", buf.String()).String()
 	statsBufPool.Put(buf)
-	broker.Publish(tavern.TopicActivityFeed, msg)
+	broker.Publish(TopicActivityFeed, msg)
 }
 
 // --- Simulated activity ---
@@ -148,7 +148,7 @@ func (ar *appRoutes) publishActivityEvents(actLog *demo.ActivityLog, broker *tav
 		case <-ar.ctx.Done():
 			return
 		case <-time.After(delay):
-			if !broker.HasSubscribers(tavern.TopicActivityFeed) {
+			if !broker.HasSubscribers(TopicActivityFeed) {
 				continue
 			}
 			tmpl := activityTemplates[rand.IntN(len(activityTemplates))]
