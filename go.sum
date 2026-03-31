@@ -72,8 +72,8 @@ github.com/catgoose/crooner v1.4.2 h1:U8efhD24MkYaXR+ZPf+pK4QbKL/WmP4PaghfIFdSIu
 github.com/catgoose/crooner v1.4.2/go.mod h1:XG7CntqYjfjWqLDwNUoLugoxbxmZlwiqkUxj5FV0r7U=
 github.com/catgoose/dio v1.0.26 h1:Yy5N9tjZMS3BIWgLZTuf354pyZ5ZtFWNkPngzx9uW0M=
 github.com/catgoose/dio v1.0.26/go.mod h1:+9RVLE5n6ku7n74XffvwoS9m0XQ6nmKoiPrlgBpzMsM=
-github.com/catgoose/flighty v0.1.1 h1:2oY3EgR8ntPb6rwOyKIkvNXd4lbDFG1FHVg4IHaQUac=
-github.com/catgoose/flighty v0.1.1/go.mod h1:dgyt0TUDjFGnctMuHOUU/FXbYO49NJ4T60rKiCqgXuU=
+github.com/catgoose/flighty v0.2.0 h1:3cWM4XflKGitdgvEdbCvMKUv699tA1gD27x4hINZtkk=
+github.com/catgoose/flighty v0.2.0/go.mod h1:Uqt8qbVh7hFHuMJ5wElUp0ziX0mNxKyVMWsr379t6Tg=
 github.com/catgoose/fraggle v0.1.12 h1:0yL8VmOWBcQKJL5RFt19Natgb9RUMIF4AC9WGS9NxvU=
 github.com/catgoose/fraggle v0.1.12/go.mod h1:cH5k1/se9azQqMj6aBgjR0iu5knl52ZxVu6wlPer+6s=
 github.com/catgoose/linkwell v0.1.0 h1:aCZogCAQD8fZ5pzx+LMRbyRHY0g3iu24PVmPTL18pOs=
