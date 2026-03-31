@@ -15,7 +15,7 @@ import (
 	"catgoose/dothog/internal/routes/response"
 	"catgoose/dothog/web/views"
 
-	hx "catgoose/dothog/internal/routes/htmx"
+	hx "github.com/catgoose/cheddar"
 	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"

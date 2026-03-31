@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"catgoose/dothog/internal/routes/htmx"
+	htmx "github.com/catgoose/cheddar"
 	"catgoose/dothog/internal/routes/hypermedia"
 	corecomponents "catgoose/dothog/web/components/core"
 
