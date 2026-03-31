@@ -411,6 +411,25 @@ func TestSetup_FeaturesAll(t *testing.T) {
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 	assertDirExists(t, filepath.Join(dest, "internal", "service", "graph"))
 	assertDirExists(t, filepath.Join(dest, "internal", "demo"))
+
+	// docs/screenshots/ should exist (#355)
+	assertDirExists(t, filepath.Join(dest, "docs", "screenshots"))
+
+	// e2e smoke test should exist (#356)
+	_, err = os.Stat(filepath.Join(dest, "e2e", "smoke.spec.ts"))
+	require.NoError(t, err, "smoke.spec.ts should exist after setup")
+	// Demo spec files should be removed
+	_, err = os.Stat(filepath.Join(dest, "e2e", "dashboard.spec.ts"))
+	require.True(t, os.IsNotExist(err), "demo e2e tests should be removed after setup")
+
+	// README should list all features (#360)
+	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
+	require.NoError(t, err)
+	readmeContent := string(readmeBytes)
+	require.Contains(t, readmeContent, "Auth (Crooner)")
+	require.Contains(t, readmeContent, "SSE")
+	require.Contains(t, readmeContent, "## Features")
+	require.Contains(t, readmeContent, "## Architecture")
 }
 
 func TestSetup_FeaturesNone(t *testing.T) {
@@ -466,6 +485,46 @@ func TestSetup_FeaturesNone(t *testing.T) {
 		require.True(t, os.IsNotExist(err), "%s should be removed when capacitor not selected", f)
 	}
 	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
+
+	// docs/screenshots/ should be created with .gitkeep (#355)
+	assertDirExists(t, filepath.Join(dest, "docs", "screenshots"))
+	_, err = os.Stat(filepath.Join(dest, "docs", "screenshots", ".gitkeep"))
+	require.NoError(t, err, "docs/screenshots/.gitkeep should exist")
+
+	// Dothog-specific docs should be removed (#355)
+	for _, f := range []string{"HAL.md", "COMPONENTS.md", "LINK_RELATIONS.md", "ARCHITECTURE.md", "index.md", "mkdocs.yml"} {
+		_, err = os.Stat(filepath.Join(dest, "docs", f))
+		require.True(t, os.IsNotExist(err), "docs/%s should be removed during setup", f)
+	}
+	assertDirRemoved(t, filepath.Join(dest, "docs", "audit"))
+
+	// e2e should contain only smoke test, helpers, and config (#356)
+	e2eEntries, err := os.ReadDir(filepath.Join(dest, "e2e"))
+	require.NoError(t, err)
+	var e2eNames []string
+	for _, e := range e2eEntries {
+		e2eNames = append(e2eNames, e.Name())
+	}
+	require.Contains(t, e2eNames, "smoke.spec.ts", "e2e should have smoke.spec.ts")
+	require.Contains(t, e2eNames, "helpers.ts", "e2e should have helpers.ts")
+	require.Contains(t, e2eNames, "playwright.config.ts", "e2e should have playwright.config.ts")
+	require.NotContains(t, e2eNames, "dashboard.spec.ts", "demo e2e tests should be removed")
+	require.NotContains(t, e2eNames, "inventory.spec.ts", "demo e2e tests should be removed")
+	require.NotContains(t, e2eNames, "home.spec.ts", "demo e2e tests should be removed")
+
+	// Smoke test should reference the app's binary name (#356)
+	smokeBytes, err := os.ReadFile(filepath.Join(dest, "e2e", "smoke.spec.ts"))
+	require.NoError(t, err)
+	require.Contains(t, string(smokeBytes), "no-features-app", "smoke test should use the app binary name")
+
+	// README should contain a feature table (#360)
+	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
+	require.NoError(t, err)
+	readmeContent := string(readmeBytes)
+	require.Contains(t, readmeContent, "No Features App")
+	require.Contains(t, readmeContent, "## Features")
+	// Minimal config should still have implicit features (database, alpine)
+	require.Contains(t, readmeContent, "Database (fraggle)")
 }
 
 func TestSetup_FeaturesAuthOnly(t *testing.T) {
