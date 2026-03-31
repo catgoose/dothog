@@ -19,6 +19,10 @@ const (
 	TemplateSetupDir = "_template_setup"
 )
 
+// templateName is the last path segment of TemplateModule (e.g. "dothog" or "harmony").
+// Used as the default binary/app name that setup replaces with the user's chosen name.
+var templateName = filepath.Base(TemplateModule)
+
 // setupEnvPrefix marks comment lines in .env.development that carry template
 // variables for setup.  During setup the prefix is stripped (activating the
 // template line) and the following literal-value line is removed.
@@ -158,12 +162,14 @@ func replaceInFile(path string, old, new string) error {
 	return os.WriteFile(path, []byte(content), 0644)
 }
 
-// replaceDothogNames walks all text files under dir and replaces standalone
-// dothog/Dothog/DOTHOG references with the derived app's binary name and app
-// name. This runs after the module-path replacement (catgoose/dothog → new
-// module) so only standalone references remain.
-func replaceDothogNames(dir, binaryName, appName string) error {
+// replaceTemplateNames walks all text files under dir and replaces standalone
+// template name references (e.g. dothog/Dothog/DOTHOG) with the derived app's
+// binary name and app name. This runs after the module-path replacement
+// (catgoose/dothog → new module) so only standalone references remain.
+func replaceTemplateNames(dir, binaryName, appName string) error {
 	upperName := strings.ToUpper(binaryName)
+	titleTemplateName := strings.ToUpper(templateName[:1]) + templateName[1:]
+	upperTemplateName := strings.ToUpper(templateName)
 
 	return filepath.Walk(dir, func(path string, info os.FileInfo, errWalk error) error {
 		if errWalk != nil {
@@ -174,8 +180,8 @@ func replaceDothogNames(dir, binaryName, appName string) error {
 			if name == ".git" || name == ".claude" || name == TemplateSetupDir || name == "log" || name == "node_modules" || name == "tests" {
 				return filepath.SkipDir
 			}
-			// Skip setup package — it contains "dothog" in replacement
-			// logic and function names that must not be rewritten.
+			// Skip setup package — it contains the template name in
+			// replacement logic and function names that must not be rewritten.
 			rel, _ := filepath.Rel(dir, path)
 			if rel == filepath.Join("internal", "setup") {
 				return filepath.SkipDir
@@ -198,12 +204,12 @@ func replaceDothogNames(dir, binaryName, appName string) error {
 			return nil
 		}
 		content := string(data)
-		if !strings.Contains(content, "dothog") && !strings.Contains(content, "Dothog") && !strings.Contains(content, "DOTHOG") {
+		if !strings.Contains(content, templateName) && !strings.Contains(content, titleTemplateName) && !strings.Contains(content, upperTemplateName) {
 			return nil
 		}
-		content = strings.ReplaceAll(content, "DOTHOG", upperName)
-		content = strings.ReplaceAll(content, "Dothog", appName)
-		content = strings.ReplaceAll(content, "dothog", binaryName)
+		content = strings.ReplaceAll(content, upperTemplateName, upperName)
+		content = strings.ReplaceAll(content, titleTemplateName, appName)
+		content = strings.ReplaceAll(content, templateName, binaryName)
 		return os.WriteFile(path, []byte(content), info.Mode())
 	})
 }
@@ -293,7 +299,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		return fmt.Errorf("replacing module path: %w", err)
 	}
 
-	binaryNameRe := regexp.MustCompile(`binaryName\s*=\s*"dothog"`)
+	binaryNameRe := regexp.MustCompile(`binaryName\s*=\s*"` + regexp.QuoteMeta(templateName) + `"`)
 	magePath := filepath.Join(dir, "magefile.go")
 	mageData, err := os.ReadFile(magePath)
 	if err != nil {
@@ -369,10 +375,10 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	dockerfilePath := filepath.Join(dir, "Dockerfile")
 	if data, err := os.ReadFile(dockerfilePath); err == nil {
 		content := string(data)
-		content = strings.ReplaceAll(content, "-o /dothog", "-o /"+binaryName)
-		content = strings.ReplaceAll(content, "build /dothog", "build /"+binaryName)
-		content = strings.ReplaceAll(content, "/usr/local/bin/dothog", "/usr/local/bin/"+binaryName)
-		content = strings.ReplaceAll(content, `ENTRYPOINT ["dothog"]`, `ENTRYPOINT ["`+binaryName+`"]`)
+		content = strings.ReplaceAll(content, "-o /"+templateName, "-o /"+binaryName)
+		content = strings.ReplaceAll(content, "build /"+templateName, "build /"+binaryName)
+		content = strings.ReplaceAll(content, "/usr/local/bin/"+templateName, "/usr/local/bin/"+binaryName)
+		content = strings.ReplaceAll(content, `ENTRYPOINT ["`+templateName+`"]`, `ENTRYPOINT ["`+binaryName+`"]`)
 		content = strings.ReplaceAll(content, "SERVER_LISTEN_PORT=3000", "SERVER_LISTEN_PORT="+appTLSPort)
 		content = strings.ReplaceAll(content, "EXPOSE 3000", "EXPOSE "+appTLSPort)
 		if err := os.WriteFile(dockerfilePath, []byte(content), 0644); err != nil {
@@ -381,8 +387,8 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	}
 
 	if data, err := os.ReadFile(filepath.Join(dir, "package-lock.json")); err == nil {
-		content := strings.ReplaceAll(string(data), `"name": "dothog"`, `"name": "`+binaryName+`"`)
-		content = regexp.MustCompile(`"name":\s*"dothog"`).ReplaceAllString(content, `"name": "`+binaryName+`"`)
+		content := strings.ReplaceAll(string(data), `"name": "`+templateName+`"`, `"name": "`+binaryName+`"`)
+		content = regexp.MustCompile(`"name":\s*"` + regexp.QuoteMeta(templateName) + `"`).ReplaceAllString(content, `"name": "`+binaryName+`"`)
 		if err := os.WriteFile(filepath.Join(dir, "package-lock.json"), []byte(content), 0644); err != nil {
 			return err
 		}
@@ -392,7 +398,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 
 	loggerPath := filepath.Join(dir, "internal", "logger", "logger.go")
 	if data, err := os.ReadFile(loggerPath); err == nil {
-		content := strings.ReplaceAll(string(data), `appLogFile = "dothog.log"`, `appLogFile = "`+binaryName+`.log"`)
+		content := strings.ReplaceAll(string(data), `appLogFile = "`+templateName+`.log"`, `appLogFile = "`+binaryName+`.log"`)
 		if err := os.WriteFile(loggerPath, []byte(content), 0644); err != nil {
 			return err
 		}
@@ -420,11 +426,11 @@ func Run(ctx context.Context, dir string, opts Options) error {
 
 	_ = os.Remove(filepath.Join(dir, ".golangci.yml"))
 
-	// Broad replacement of standalone dothog/Dothog/DOTHOG references that
-	// survive the module-path replacement above (app names, binary names,
-	// HTML titles, test assertions, doc references, CI workflows, etc.).
-	if err := replaceDothogNames(dir, binaryName, opts.AppName); err != nil {
-		return fmt.Errorf("replacing dothog names: %w", err)
+	// Broad replacement of standalone template name references that survive
+	// the module-path replacement above (app names, binary names, HTML
+	// titles, test assertions, doc references, CI workflows, etc.).
+	if err := replaceTemplateNames(dir, binaryName, opts.AppName); err != nil {
+		return fmt.Errorf("replacing template names: %w", err)
 	}
 
 	if err := removeOptionalContent(dir, opts); err != nil {

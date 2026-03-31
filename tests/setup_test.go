@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -739,8 +740,9 @@ func TestSetup_NoDothogReferences(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// --- Scan all files for residual dothog references ---
-	dothogRE := regexp.MustCompile(`(?i)dothog`)
+	// --- Scan all files for residual template name references ---
+	templateName := path.Base(setup.TemplateModule)
+	templateRE := regexp.MustCompile(`(?i)` + regexp.QuoteMeta(templateName))
 
 	// Directories and file extensions to skip.
 	skipDirs := map[string]bool{
@@ -784,7 +786,7 @@ func TestSetup_NoDothogReferences(t *testing.T) {
 		}
 		rel, _ := filepath.Rel(dest, path)
 		for i, line := range strings.Split(string(data), "\n") {
-			if dothogRE.MatchString(line) {
+			if templateRE.MatchString(line) {
 				violations = append(violations, fmt.Sprintf("  %s:%d: %s", rel, i+1, strings.TrimSpace(line)))
 			}
 		}
@@ -793,7 +795,7 @@ func TestSetup_NoDothogReferences(t *testing.T) {
 	require.NoError(t, err)
 
 	if len(violations) > 0 {
-		t.Errorf("found %d residual dothog reference(s) in derived app:\n%s",
+		t.Errorf("found %d residual template name reference(s) in derived app:\n%s",
 			len(violations), strings.Join(violations, "\n"))
 	}
 
