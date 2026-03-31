@@ -332,6 +332,8 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		content = strings.ReplaceAll(content, "{{APP_NAME}}", opts.AppName)
 		content = strings.ReplaceAll(content, "{{MODULE_PATH}}", modulePath)
 		content = strings.ReplaceAll(content, "{{TEMPLATE_REF}}", "the template")
+		content = strings.ReplaceAll(content, "{{FEATURE_TABLE}}", buildFeatureTable(opts.Features))
+		content = strings.ReplaceAll(content, "{{FEATURE_SECTIONS}}", buildFeatureSections(opts.Features))
 		if err := os.WriteFile(filepath.Join(dir, "README.md"), []byte(content), 0644); err != nil {
 			return err
 		}
@@ -527,6 +529,27 @@ func removeOptionalContent(dir string, opts Options) error {
 	_ = os.RemoveAll(filepath.Join(dir, "scripts"))
 	_ = os.Remove(filepath.Join(dir, ".github", "workflows", "screenshots.yml"))
 	_ = os.Remove(filepath.Join(dir, ".github", "workflows", "docs.yml"))
+
+	// Create docs/screenshots/ for derived app documentation assets (#355).
+	screenshotsDir := filepath.Join(dir, "docs", "screenshots")
+	_ = os.MkdirAll(screenshotsDir, 0755)
+	_ = os.WriteFile(filepath.Join(screenshotsDir, ".gitkeep"), []byte(""), 0644)
+
+	// Remove dothog-specific docs that are not relevant to derived apps (#355).
+	// Keep SETUP.md (universal); remove docs that describe dothog's demo architecture.
+	_ = os.Remove(filepath.Join(dir, "docs", "HAL.md"))
+	_ = os.Remove(filepath.Join(dir, "docs", "COMPONENTS.md"))
+	_ = os.Remove(filepath.Join(dir, "docs", "LINK_RELATIONS.md"))
+	_ = os.Remove(filepath.Join(dir, "docs", "ARCHITECTURE.md"))
+	_ = os.Remove(filepath.Join(dir, "docs", "index.md"))
+	_ = os.Remove(filepath.Join(dir, "docs", "mkdocs.yml"))
+	_ = os.RemoveAll(filepath.Join(dir, "docs", "audit"))
+
+	// Replace demo-specific e2e tests with a minimal smoke suite (#356).
+	// Keep helpers.ts and playwright.config.ts (they contain general utilities
+	// and the binary-name aware config). Remove all demo page spec files and
+	// generate a smoke test that verifies the app loads.
+	replaceE2EWithSmoke(dir, opts.AppName)
 
 	// Remove all .db files (and WAL/SHM) so derived apps start clean.
 	// The app auto-creates databases on first start via os.MkdirAll + EnsureSchema.
@@ -1052,6 +1075,158 @@ func goPkgName(importPath string) string {
 }
 
 // ---------------------------------------------------------------------------
+// README feature generation (#360)
+// ---------------------------------------------------------------------------
+
+// featureDescriptions maps feature tags to human-readable descriptions
+// for the generated README.
+var featureDescriptions = map[string]struct{ label, desc string }{
+	FeatureAuth:            {"Auth (Crooner)", "Azure AD / OIDC authentication via crooner"},
+	FeatureGraph:           {"Graph API", "Microsoft Graph API integration for user data"},
+	FeatureAvatar:          {"Avatar Photos", "User profile photo download and caching from Graph"},
+	FeatureDatabase:        {"Database (fraggle)", "Repository layer with schema DSL (SQLite base)"},
+	FeatureMSSQL:           {"MSSQL", "Microsoft SQL Server dialect support"},
+	FeaturePostgres:        {"PostgreSQL", "PostgreSQL dialect support"},
+	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration"},
+	FeatureCaddy:           {"Caddy (HTTPS)", "Caddy reverse proxy with TLS termination"},
+	FeatureDemo:            {"Demo Content", "Demo pages, seed data, and example routes"},
+	FeatureSessionSettings: {"Session Settings", "Per-session theme and layout preferences"},
+	FeatureAlpine:          {"Alpine.js", "Client-side state management"},
+	FeatureCapacitor:       {"Capacitor", "Native mobile wrapper (iOS/Android)"},
+	FeatureOffline:         {"Offline Mode", "Service worker and write queue for offline use"},
+	FeatureSync:            {"Sync", "SQLite data synchronization between client and server"},
+	FeatureCSRF:            {"CSRF Protection", "Token-based CSRF with optional per-request rotation"},
+	FeatureLinkRelations:   {"Link Relations", "Context bars, breadcrumbs, and site map"},
+	FeatureWebStandards:    {"Web Standards", "Server-Timing, Vary, Permissions-Policy, Early Hints"},
+	FeatureBrowserAPIs:     {"Browser APIs", "sendBeacon, BroadcastChannel integration"},
+	FeaturePWA:             {"PWA", "Progressive Web App with offline + sync support"},
+}
+
+// buildFeatureTable generates a markdown table of enabled features for the README.
+func buildFeatureTable(features []string) string {
+	if features == nil {
+		return "_No feature configuration provided._"
+	}
+
+	expanded := ExpandFeatureDeps(features)
+	keep := make(map[string]bool)
+	for _, f := range expanded {
+		keep[f] = true
+	}
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
+
+	var sb strings.Builder
+	sb.WriteString("| Feature | Description |\n")
+	sb.WriteString("| --- | --- |\n")
+
+	count := 0
+	for _, tag := range AllFeatures {
+		if !keep[tag] {
+			continue
+		}
+		info, ok := featureDescriptions[tag]
+		if !ok {
+			continue
+		}
+		sb.WriteString("| ")
+		sb.WriteString(info.label)
+		sb.WriteString(" | ")
+		sb.WriteString(info.desc)
+		sb.WriteString(" |\n")
+		count++
+	}
+
+	if count == 0 {
+		return "_Minimal configuration (no optional features)._"
+	}
+	return sb.String()
+}
+
+// buildFeatureSections generates per-feature documentation sections for the README.
+func buildFeatureSections(features []string) string {
+	if features == nil {
+		return ""
+	}
+
+	expanded := ExpandFeatureDeps(features)
+	keep := make(map[string]bool)
+	for _, f := range expanded {
+		keep[f] = true
+	}
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
+
+	var sb strings.Builder
+
+	if keep[FeatureAuth] {
+		sb.WriteString(`### Authentication (Crooner)
+
+This app uses [crooner](https://github.com/catgoose/crooner) for Azure AD / Entra ID authentication. Configure via environment variables:
+
+- ` + "`AZURE_CLIENT_ID`" + `, ` + "`AZURE_CLIENT_SECRET`" + `, ` + "`AZURE_TENANT_ID`" + ` -- Azure app registration
+- ` + "`AZURE_REDIRECT_URL`" + `, ` + "`AZURE_LOGIN_REDIRECT_URL`" + `, ` + "`AZURE_LOGOUT_REDIRECT_URL`" + ` -- OAuth flow URLs
+- ` + "`SESSION_SECRET`" + ` -- session encryption key
+
+Auth is disabled by default (` + "`CroonerDisabled = true`" + ` in config). Set it to ` + "`false`" + ` to enable.
+
+`)
+	}
+
+	if keep[FeatureGraph] {
+		sb.WriteString(`### Microsoft Graph API
+
+Graph API integration is included for user data queries. Set the same Azure credentials as auth, plus:
+
+- ` + "`AZURE_USER_REFRESH_HOUR`" + ` -- hour (0-23) for daily user cache sync
+- ` + "`ENABLE_PHOTO_DOWNLOAD`" + ` -- download user photos from Graph
+
+`)
+	}
+
+	if keep[FeatureSSE] {
+		sb.WriteString(`### Server-Sent Events (SSE)
+
+Real-time event broker with topic-based publish/subscribe. HTMX SSE extension is included for declarative event binding. Caddy is configured for SSE streaming support.
+
+`)
+	}
+
+	if keep[FeatureCaddy] {
+		sb.WriteString(`### Caddy (HTTPS)
+
+Caddy provides TLS termination for local development. Certificates are generated during setup or can be provided manually. See the HTTPS Development Setup section for trust store installation.
+
+`)
+	}
+
+	if keep[FeatureCapacitor] {
+		sb.WriteString(`### Capacitor (Mobile)
+
+Capacitor wraps the web app for native iOS/Android deployment. Configuration is in ` + "`capacitor.config.ts`" + `.
+
+`)
+	}
+
+	if keep[FeatureOffline] || keep[FeatureSync] || keep[FeaturePWA] {
+		sb.WriteString(`### Offline & Sync
+
+`)
+		if keep[FeaturePWA] {
+			sb.WriteString("This app is configured as a **Progressive Web App** with offline support and data synchronization.\n\n")
+		} else if keep[FeatureSync] {
+			sb.WriteString("Data synchronization is enabled between client SQLite and server.\n\n")
+		} else {
+			sb.WriteString("Offline mode is enabled with service worker caching and a write queue.\n\n")
+		}
+	}
+
+	return sb.String()
+}
+
+// ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 
@@ -1075,6 +1250,75 @@ func composeSetupEnv(content string) string {
 		out = append(out, line)
 	}
 	return strings.Join(out, "\n")
+}
+
+// replaceE2EWithSmoke removes all demo-specific e2e spec files and generates a
+// minimal smoke test that verifies the home page loads and the health endpoint
+// returns the configured app name (#356).
+func replaceE2EWithSmoke(dir, appName string) {
+	e2eDir := filepath.Join(dir, "e2e")
+	entries, err := os.ReadDir(e2eDir)
+	if err != nil {
+		return // no e2e directory — nothing to do
+	}
+
+	// Remove all *.spec.ts files (demo-specific tests).
+	for _, e := range entries {
+		if strings.HasSuffix(e.Name(), ".spec.ts") {
+			_ = os.Remove(filepath.Join(e2eDir, e.Name()))
+		}
+	}
+
+	binaryName := binaryNameFromApp(appName)
+
+	// Generate a minimal smoke test.
+	smoke := `import { test, expect } from "@playwright/test";
+import { navigateTo } from "./helpers";
+
+test.describe("` + appName + ` Smoke Tests", () => {
+  test("home page loads", async ({ page }) => {
+    await navigateTo(page, "/");
+    await expect(page).toHaveTitle(/.+/);
+  });
+
+  test("health endpoint returns OK with correct app name", async ({ request }) => {
+    const resp = await request.get("/health");
+    expect(resp.ok()).toBe(true);
+    const body = await resp.json();
+    expect(body.status).toBe("healthy");
+    expect(body.name).toBe("` + binaryName + `");
+  });
+
+  test("navbar is present", async ({ page }) => {
+    await navigateTo(page, "/");
+    await expect(page.locator("nav")).toBeVisible();
+  });
+});
+`
+	_ = os.WriteFile(filepath.Join(e2eDir, "smoke.spec.ts"), []byte(smoke), 0644)
+
+	// Rewrite helpers.ts to remove demo-specific resetDB helper.
+	helpers := `import { type Page, expect } from "@playwright/test";
+
+/** Wait for HTMX to finish all pending requests. */
+export async function waitForHtmx(page: Page) {
+  await page.waitForFunction(
+    () =>
+      typeof (window as any).htmx !== "undefined" &&
+      (document.querySelectorAll(".htmx-request").length === 0),
+    { timeout: 10_000 },
+  );
+}
+
+/** Navigate to a page and assert it loaded (no server error). */
+export async function navigateTo(page: Page, path: string) {
+  const resp = await page.goto(path);
+  expect(resp?.ok(), ` + "`" + `Expected 2xx for ${path}, got ${resp?.status()}` + "`" + `).toBe(
+    true,
+  );
+}
+`
+	_ = os.WriteFile(filepath.Join(e2eDir, "helpers.ts"), []byte(helpers), 0644)
 }
 
 // replaceDefaultFavicons copies the generic favicons from images/default/ over
