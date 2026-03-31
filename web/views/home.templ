@@ -2,9 +2,9 @@ package views
 
 // HomePage renders the default home page for derived apps.
 // The demo overrides this with ArchitecturePage.
-templ HomePage() {
+templ HomePage(name string) {
 	<div class="flex items-center justify-center min-h-[60vh]">
-		<h1 class="text-4xl font-bold text-base-content/80">Welcome</h1>
+		<h1 class="text-4xl font-bold text-base-content/80">{ name }</h1>
 	</div>
 }
 

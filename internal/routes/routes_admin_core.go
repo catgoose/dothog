@@ -23,6 +23,7 @@ func (ar *appRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin", handler.HandleComponent(views.AdminIndexPage()))
 	ar.e.GET("/admin/health", ar.handleAdminHealth)
 	ar.e.GET("/admin/health/check", ar.handleAdminHealthCheck)
+	ar.e.GET("/admin/debug", handler.HandleComponent(views.AdminDebugPage()))
 	// setup:feature:demo:start
 	ar.e.GET("/admin/system", ar.handleSystemInfo)
 	ar.e.GET("/admin/system/check-update", ar.handleCheckUpdate)

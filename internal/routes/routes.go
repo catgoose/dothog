@@ -108,7 +108,11 @@ func (ar *appRoutes) InitRoutes() error {
 	hypermedia.RegisterFrom(hypermedia.FromDashboard, hypermedia.Breadcrumb{Label: "Dashboard", Href: "/dashboard"})
 	// setup:feature:demo:end
 
-	ar.e.GET("/", handler.HandleComponent(views.HomePage()))
+	cfg, err := config.GetConfig()
+	if err != nil {
+		return fmt.Errorf("handler init: %w", err)
+	}
+	ar.e.GET("/", handler.HandleComponent(views.HomePage(cfg.AppName)))
 	// setup:feature:demo:start
 	ar.e.GET("/", handler.HandleComponent(views.ArchitecturePage()))
 	// setup:feature:demo:end
@@ -211,10 +215,6 @@ func (ar *appRoutes) InitRoutes() error {
 
 	// setup:feature:demo:end
 	ar.e.RouteNotFound("/*", handler.HandleNotFound)
-	cfg, err := config.GetConfig()
-	if err != nil {
-		return fmt.Errorf("handler init: %w", err)
-	}
 	handler.InitRouteSet(ar.e, cfg.AppName)
 	ar.healthCfg.Name = cfg.AppName
 	return nil

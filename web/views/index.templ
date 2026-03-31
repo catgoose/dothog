@@ -132,16 +132,15 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		if devMode {
 			<script src="/public/js/dev-logging.js"></script>
 		}
-		// setup:feature:demo:start
 		<script>
 			/**
 			 * Restore persisted debug toggles from localStorage on every page load.
-			 * The admin settings page writes { "htmx-log": true, ... } to dothog_debug.
+			 * The admin debug page writes { "htmx-log": true, ... } to app_debug.
 			 * Waits for DOMContentLoaded so htmx/hyperscript are available.
 			 */
 			document.addEventListener('DOMContentLoaded', function() {
 				var state;
-				try { state = JSON.parse(localStorage.getItem('dothog_debug')) || {}; } catch(e) { return; }
+				try { state = JSON.parse(localStorage.getItem('app_debug')) || {}; } catch(e) { return; }
 				if (state['htmx-log'] && typeof htmx !== 'undefined') { htmx.logAll(); }
 				if (state['htmx-events'] && typeof htmx !== 'undefined') {
 					window._htmxDbg = function(e) {
@@ -162,7 +161,6 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 				}
 			});
 		</script>
-		// setup:feature:demo:end
 		// setup:feature:sse:start
 		// setup:feature:session_settings:start
 		<script defer>

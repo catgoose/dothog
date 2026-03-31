@@ -3,10 +3,7 @@
 package views
 
 import (
-	"fmt"
 	"sort"
-
-	"github.com/a-h/templ"
 )
 
 func adminStatusBadge(status string) string {
@@ -40,12 +37,6 @@ func sseCountBadge(count int) string {
 		return "badge-success"
 	}
 	return "badge-ghost"
-}
-
-func debugOnChange(key string) templ.Attributes {
-	return templ.Attributes{
-		"onchange": fmt.Sprintf("window._dbg.toggle('%s', this.checked)", key),
-	}
 }
 
 func sortedTopics(counts map[string]int) []string {
