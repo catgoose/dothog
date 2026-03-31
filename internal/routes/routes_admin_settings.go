@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/ssebroker"
+	ssebroker "github.com/catgoose/tavern"
 	"catgoose/dothog/internal/version"
 	"catgoose/dothog/web/views"
 

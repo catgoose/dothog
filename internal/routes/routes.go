@@ -6,10 +6,10 @@ import (
 	"catgoose/dothog/internal/logger"
 	// setup:feature:demo:start
 	"catgoose/dothog/internal/demo"
-	// setup:feature:sse:start
-	"catgoose/dothog/internal/ssebroker"
-	// setup:feature:sse:end
 	// setup:feature:demo:end
+	// setup:feature:sse:start
+	ssebroker "github.com/catgoose/tavern"
+	// setup:feature:sse:end
 	"catgoose/dothog/internal/health"
 	"catgoose/dothog/internal/version"
 	"github.com/catgoose/promolog"
@@ -71,6 +71,9 @@ type appRoutes struct {
 	// setup:feature:demo:start
 	demoDB *demo.DB
 	// setup:feature:demo:end
+	// setup:feature:sse:start
+	broker *ssebroker.SSEBroker
+	// setup:feature:sse:end
 }
 
 // NewAppRoutes initializes routes.
@@ -161,16 +164,16 @@ func (ar *appRoutes) InitRoutes() error {
 
 	// setup:feature:demo:start
 	// setup:feature:sse:start
-	broker := ssebroker.NewSSEBroker()
+	ar.broker = ssebroker.NewSSEBroker()
 	// setup:feature:sse:end
 	// setup:feature:session_settings:start
-	ar.initThemeRoutes(broker)
+	ar.initThemeRoutes(ar.broker)
 	// setup:feature:session_settings:end
 	ar.initHypermediaRoutes()
 	ar.initHALRoutes()
 	ar.initErrorsRoutes()
 	// setup:feature:sse:start
-	ar.initRealtimeRoutes(broker)
+	ar.initRealtimeRoutes(ar.broker)
 	// setup:feature:sse:end
 
 	db, err := demo.Open("db/demo.db")
@@ -200,15 +203,15 @@ func (ar *appRoutes) InitRoutes() error {
 	actLog := demo.NewActivityLog(200)
 	board := demo.NewKanbanBoard()
 	queue := demo.NewApprovalQueue()
-	ar.initAdminSettingsRoutes(broker)
-	ar.initAdminRoutes(db, actLog, broker)
-	ar.initPeopleRoutes(db, broker, actLog)
-	ar.initKanbanRoutes(board, actLog, broker)
-	ar.initApprovalRoutes(queue, actLog, broker)
-	ar.initFeedRoutes(actLog, broker)
-	ar.initCanvasRoutes(demo.NewPixelCanvas(), broker)
+	ar.initAdminSettingsRoutes(ar.broker)
+	ar.initAdminRoutes(db, actLog, ar.broker)
+	ar.initPeopleRoutes(db, ar.broker, actLog)
+	ar.initKanbanRoutes(board, actLog, ar.broker)
+	ar.initApprovalRoutes(queue, actLog, ar.broker)
+	ar.initFeedRoutes(actLog, ar.broker)
+	ar.initCanvasRoutes(demo.NewPixelCanvas(), ar.broker)
 	ar.initSettingsRoutes(demo.NewSettingsStore())
-	ar.initVendorContactRoutes(db, actLog, broker)
+	ar.initVendorContactRoutes(db, actLog, ar.broker)
 	ar.initDashboardRoutes(db, board, queue, actLog)
 	ar.initAdminErrorReportsRoutes(db)
 

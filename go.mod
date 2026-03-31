@@ -10,6 +10,7 @@ require (
 	github.com/catgoose/crooner v1.4.2
 	github.com/catgoose/dio v1.0.26
 	github.com/catgoose/fraggle v0.1.12
+	github.com/catgoose/tavern v0.0.0-20260331012746-b125ca2995ac
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/jmoiron/sqlx v1.4.0
