@@ -27,7 +27,7 @@ go.work.sum
 
 # env files (.env.sample is tracked)
 .env
-.env.dev
+.env.development
 .env.local
 
 # Editor/IDE
