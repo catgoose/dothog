@@ -26,7 +26,6 @@ func (ar *appRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin/debug", handler.HandleComponent(views.AdminDebugPage()))
 	// setup:feature:demo:start
 	ar.e.GET("/admin/system", ar.handleSystemInfo)
-	ar.e.GET("/admin/system/check-update", ar.handleCheckUpdate)
 	ar.e.GET("/admin/config", ar.handleConfigInfo)
 	// setup:feature:demo:end
 	// setup:feature:session_settings:start
@@ -71,16 +70,6 @@ func (ar *appRoutes) handleSystemInfo(c echo.Context) error {
 	}
 
 	return handler.RenderBaseLayout(c, views.AdminSystemPage(info))
-}
-
-func (ar *appRoutes) handleCheckUpdate(c echo.Context) error {
-	info, err := version.CheckLatest(c.Request().Context())
-	if err != nil {
-		return handler.RenderComponent(c, views.UpdateCheckResult(version.UpdateInfo{
-			Current: version.Version,
-		}, err))
-	}
-	return handler.RenderComponent(c, views.UpdateCheckResult(info, nil))
 }
 
 func (ar *appRoutes) handleConfigInfo(c echo.Context) error {

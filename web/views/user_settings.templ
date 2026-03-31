@@ -2,10 +2,9 @@
 
 package views
 
-import "catgoose/dothog/internal/admininfo"
 
 // UserSettingsPage renders the user preferences dashboard.
-templ UserSettingsPage(prefs admininfo.UserPreferences) {
+templ UserSettingsPage(prefs UserPreferences) {
 	<div class="p-4 space-y-6 max-w-3xl mx-auto">
 		<h1 class="text-2xl font-bold">Preferences</h1>
 		<p class="text-sm text-base-content/60">

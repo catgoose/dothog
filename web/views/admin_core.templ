@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"catgoose/dothog/internal/admininfo"
-	"catgoose/dothog/internal/version"
 	// setup:feature:demo:end
 )
 
@@ -21,21 +20,7 @@ templ AdminSystemPage(info admininfo.SystemInfo) {
 		<div class="card bg-base-100 shadow border border-base-300">
 			<div class="card-body p-4">
 				<h2 class="card-title text-base">Version</h2>
-				<div class="flex items-center gap-4">
-					@systemStat("Current", info.Version)
-					<div id="update-check-result">
-						<button
-							class="btn btn-sm btn-outline"
-							hx-get="/admin/system/check-update"
-							hx-target="#update-check-result"
-							hx-swap="innerHTML"
-							hx-indicator="this"
-						>
-							<span class="htmx-indicator loading loading-spinner loading-xs"></span>
-							Check for Updates
-						</button>
-					</div>
-				</div>
+				@systemStat("Current", info.Version)
 			</div>
 		</div>
 
@@ -74,7 +59,7 @@ templ AdminSystemPage(info admininfo.SystemInfo) {
 				<h2 class="card-title text-base">GC & Allocator</h2>
 				<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 					@systemStat("GC Cycles", fmt.Sprintf("%d", info.GCCycles))
-					@systemStat("Last Pause", fmt.Sprintf("%d \u00b5s", info.LastPauseMicros))
+					@systemStat("Last Pause", fmt.Sprintf("%d µs", info.LastPauseMicros))
 					@systemStat("Next GC At", info.NextGCMB)
 					@systemStat("Heap Objects", fmt.Sprintf("%d", info.HeapObjects))
 					@systemStat("Live Objects", fmt.Sprintf("%d", info.LiveObjects))
@@ -89,34 +74,6 @@ templ systemStat(label, value string) {
 		<div class="stat-title text-xs">{ label }</div>
 		<div class="stat-value text-sm font-mono">{ value }</div>
 	</div>
-}
-
-// UpdateCheckResult renders the HTMX fragment returned by the update check endpoint.
-templ UpdateCheckResult(info version.UpdateInfo, err error) {
-	if err != nil {
-		<div class="alert alert-warning text-sm py-2">
-			<span>Failed to check for updates: { err.Error() }</span>
-		</div>
-	} else if info.NewerAvail {
-		<div class="alert alert-info text-sm py-2">
-			<div class="flex flex-col gap-1">
-				<span>
-					Update available: <strong>{ info.Latest }</strong> (current: { info.Current })
-				</span>
-				<a href={ templ.SafeURL(info.ReleaseURL) } target="_blank" rel="noopener" class="link link-primary text-xs">
-					View release notes
-				</a>
-				<div class="mockup-code text-xs mt-1">
-					<pre><code>docker pull ghcr.io/catgoose/dothog:latest
-docker compose up -d</code></pre>
-				</div>
-			</div>
-		</div>
-	} else {
-		<div class="alert alert-success text-sm py-2">
-			<span>You're running the latest version ({ info.Current }).</span>
-		</div>
-	}
 }
 
 // AdminConfigPage displays application configuration with secrets masked.

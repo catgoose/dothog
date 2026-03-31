@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"sync"
 
-	"catgoose/dothog/internal/admininfo"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 
@@ -18,8 +17,8 @@ import (
 // Applications should replace this with their own persistence.
 var prefsStore = struct {
 	sync.RWMutex
-	m map[string]admininfo.UserPreferences
-}{m: make(map[string]admininfo.UserPreferences)}
+	m map[string]views.UserPreferences
+}{m: make(map[string]views.UserPreferences)}
 
 func (ar *appRoutes) initUserSettingsRoutes() {
 	ar.e.GET("/user/settings", ar.handleUserSettings)
@@ -37,7 +36,7 @@ func (ar *appRoutes) handleUserSettingsSave(c echo.Context) error {
 		pageSize = 20
 	}
 
-	prefs := admininfo.UserPreferences{
+	prefs := views.UserPreferences{
 		PageSize:             pageSize,
 		DateFormat:           c.FormValue("date_format"),
 		CompactTables:        c.FormValue("compact_tables") == "true",
@@ -58,13 +57,13 @@ func (ar *appRoutes) handleUserSettingsSave(c echo.Context) error {
 	return handler.RenderComponent(c, views.UserSettingsSaved())
 }
 
-func getUserPrefs(c echo.Context) admininfo.UserPreferences {
+func getUserPrefs(c echo.Context) views.UserPreferences {
 	sessionID := porter.GetSessionSettings(c).SessionUUID
 	prefsStore.RLock()
 	prefs, ok := prefsStore.m[sessionID]
 	prefsStore.RUnlock()
 	if !ok {
-		return admininfo.DefaultUserPreferences()
+		return views.DefaultUserPreferences()
 	}
 	return prefs
 }
