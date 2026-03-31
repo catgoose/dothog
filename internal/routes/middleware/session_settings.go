@@ -55,9 +55,9 @@ func SessionSettingsMiddleware(repo SessionSettingsProvider, idFunc SessionIDFun
 				// setup:feature:demo:start
 				sessionID = sharedSessionUUID
 				// setup:feature:demo:end
-				// setup:feature:!demo — when demo is stripped, the line above
-				// is removed, leaving sessionID empty. The fallback below
-				// generates a random cookie-based session ID.
+				// When demo is stripped, the line above is removed, leaving
+				// sessionID empty. The fallback below generates a random
+				// cookie-based session ID.
 			}
 			if sessionID == "" {
 				sessionID = getOrCreateSessionCookie(c)
