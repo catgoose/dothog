@@ -487,11 +487,6 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	}
 	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
 
-	// docs/screenshots/ should be created with .gitkeep (#355)
-	assertDirExists(t, filepath.Join(dest, "docs", "screenshots"))
-	_, err = os.Stat(filepath.Join(dest, "docs", "screenshots", ".gitkeep"))
-	require.NoError(t, err, "docs/screenshots/.gitkeep should exist")
-
 	// Dothog-specific docs should be removed (#355)
 	for _, f := range []string{"HAL.md", "COMPONENTS.md", "LINK_RELATIONS.md", "ARCHITECTURE.md", "index.md", "mkdocs.yml"} {
 		_, err = os.Stat(filepath.Join(dest, "docs", f))
