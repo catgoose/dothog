@@ -548,6 +548,15 @@ func removeOptionalContent(dir string, opts Options) error {
 	_ = os.Remove(filepath.Join(dir, "docs", "mkdocs.yml"))
 	_ = os.RemoveAll(filepath.Join(dir, "docs", "audit"))
 
+	// Remove auto-generated package docs and demo screenshots (#377).
+	// Derived apps can regenerate their own if needed.
+	_ = os.RemoveAll(filepath.Join(dir, "docs", "packages"))
+	_ = os.RemoveAll(filepath.Join(dir, "docs", "screenshots"))
+
+	// Remove the setup package itself — it only exists for template setup (#377).
+	_ = os.RemoveAll(filepath.Join(dir, "internal", "setup"))
+	_ = os.Remove(filepath.Join(dir, "tests", "setup_test.go"))
+
 	// Replace demo-specific e2e tests with a minimal smoke suite (#356).
 	// Keep helpers.ts and playwright.config.ts (they contain general utilities
 	// and the binary-name aware config). Remove all demo page spec files and

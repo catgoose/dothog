@@ -494,6 +494,15 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	}
 	assertDirRemoved(t, filepath.Join(dest, "docs", "audit"))
 
+	// Auto-generated package docs and screenshots should be removed (#377)
+	assertDirRemoved(t, filepath.Join(dest, "docs", "packages"))
+	assertDirRemoved(t, filepath.Join(dest, "docs", "screenshots"))
+
+	// Setup package and setup tests should be removed (#377)
+	assertDirRemoved(t, filepath.Join(dest, "internal", "setup"))
+	_, err = os.Stat(filepath.Join(dest, "tests", "setup_test.go"))
+	require.True(t, os.IsNotExist(err), "tests/setup_test.go should be removed during setup")
+
 	// e2e should contain only smoke test, helpers, and config (#356)
 	e2eEntries, err := os.ReadDir(filepath.Join(dest, "e2e"))
 	require.NoError(t, err)
