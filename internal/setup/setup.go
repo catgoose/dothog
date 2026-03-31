@@ -545,20 +545,10 @@ func removeOptionalContent(dir string, opts Options) error {
 	_ = os.Remove(filepath.Join(dir, ".github", "workflows", "pipeline.yml"))
 	_ = os.RemoveAll(filepath.Join(dir, ".github", "harmony"))
 
-	// Remove dothog-specific docs that are not relevant to derived apps (#355).
-	// Keep SETUP.md (universal); remove docs that describe dothog's demo architecture.
-	_ = os.Remove(filepath.Join(dir, "docs", "HAL.md"))
-	_ = os.Remove(filepath.Join(dir, "docs", "COMPONENTS.md"))
-	_ = os.Remove(filepath.Join(dir, "docs", "LINK_RELATIONS.md"))
-	_ = os.Remove(filepath.Join(dir, "docs", "ARCHITECTURE.md"))
-	_ = os.Remove(filepath.Join(dir, "docs", "index.md"))
-	_ = os.Remove(filepath.Join(dir, "docs", "mkdocs.yml"))
-	_ = os.RemoveAll(filepath.Join(dir, "docs", "audit"))
-
-	// Remove auto-generated package docs and demo screenshots (#377).
-	// Derived apps can regenerate their own if needed.
-	_ = os.RemoveAll(filepath.Join(dir, "docs", "packages"))
-	_ = os.RemoveAll(filepath.Join(dir, "docs", "screenshots"))
+	// Remove the entire docs/ directory — it contains only dothog-specific
+	// documentation (ARCHITECTURE.md, HAL.md, etc.) that isn't useful in
+	// derived apps.  The generated README is sufficient.
+	_ = os.RemoveAll(filepath.Join(dir, "docs"))
 
 	// Remove the setup package itself — it only exists for template setup (#377).
 	_ = os.RemoveAll(filepath.Join(dir, "internal", "setup"))

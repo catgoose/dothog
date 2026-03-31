@@ -494,16 +494,8 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	}
 	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
 
-	// Dothog-specific docs should be removed (#355)
-	for _, f := range []string{"HAL.md", "COMPONENTS.md", "LINK_RELATIONS.md", "ARCHITECTURE.md", "index.md", "mkdocs.yml"} {
-		_, err = os.Stat(filepath.Join(dest, "docs", f))
-		require.True(t, os.IsNotExist(err), "docs/%s should be removed during setup", f)
-	}
-	assertDirRemoved(t, filepath.Join(dest, "docs", "audit"))
-
-	// Auto-generated package docs and screenshots should be removed (#377)
-	assertDirRemoved(t, filepath.Join(dest, "docs", "packages"))
-	assertDirRemoved(t, filepath.Join(dest, "docs", "screenshots"))
+	// Entire docs/ directory should be removed — it's all dothog-specific.
+	assertDirRemoved(t, filepath.Join(dest, "docs"))
 
 	// Setup package and setup tests should be removed (#377)
 	assertDirRemoved(t, filepath.Join(dest, "internal", "setup"))
