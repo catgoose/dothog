@@ -11,6 +11,7 @@ import (
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 	// setup:feature:session_settings:end
+	"catgoose/dothog/internal/ssetopics"
 	"github.com/catgoose/tavern"
 
 	// setup:feature:session_settings:start
@@ -50,9 +51,9 @@ func (ar *appRoutes) handleTheme(broker *tavern.SSEBroker) echo.HandlerFunc {
 		}
 
 		// Broadcast theme change to all connected browsers.
-		if broker.HasSubscribers(tavern.TopicThemeChange) {
+		if broker.HasSubscribers(ssetopics.TopicThemeChange) {
 			msg := tavern.NewSSEMessage("theme-change", theme).String()
-			broker.Publish(tavern.TopicThemeChange, msg)
+			broker.Publish(ssetopics.TopicThemeChange, msg)
 		}
 
 		return handler.RenderComponent(c, views.ThemeChanged(theme))
@@ -97,7 +98,7 @@ func handleSSETheme(broker *tavern.SSEBroker) echo.HandlerFunc {
 			return fmt.Errorf("streaming unsupported")
 		}
 
-		ch, unsub := broker.Subscribe(tavern.TopicThemeChange)
+		ch, unsub := broker.Subscribe(ssetopics.TopicThemeChange)
 		defer unsub()
 
 		ctx := c.Request().Context()

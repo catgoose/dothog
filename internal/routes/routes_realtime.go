@@ -15,6 +15,7 @@ import (
 
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/shared"
+	"catgoose/dothog/internal/ssetopics"
 	"github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
 
@@ -72,7 +73,7 @@ func handleSSESystem(broker *tavern.SSEBroker) echo.HandlerFunc {
 			return fmt.Errorf("streaming unsupported")
 		}
 
-		ch, unsub := broker.Subscribe(tavern.TopicSystemStats)
+		ch, unsub := broker.Subscribe(ssetopics.TopicSystemStats)
 		defer unsub()
 
 		ctx := c.Request().Context()
@@ -115,11 +116,11 @@ func handleSSEDashboard(broker *tavern.SSEBroker) echo.HandlerFunc {
 			return fmt.Errorf("streaming unsupported")
 		}
 
-		chMetrics, unsubMetrics := broker.Subscribe(tavern.TopicDashMetrics)
+		chMetrics, unsubMetrics := broker.Subscribe(ssetopics.TopicDashMetrics)
 		defer unsubMetrics()
-		chServices, unsubServices := broker.Subscribe(tavern.TopicDashServices)
+		chServices, unsubServices := broker.Subscribe(ssetopics.TopicDashServices)
 		defer unsubServices()
-		chEvents, unsubEvents := broker.Subscribe(tavern.TopicDashEvents)
+		chEvents, unsubEvents := broker.Subscribe(ssetopics.TopicDashEvents)
 		defer unsubEvents()
 
 		lastSent := make(map[string]time.Time)
@@ -169,7 +170,7 @@ func (ar *appRoutes) publishSystemStats(broker *tavern.SSEBroker) {
 		case <-ar.ctx.Done():
 			return
 		case <-ticker.C:
-			if !broker.HasSubscribers(tavern.TopicSystemStats) {
+			if !broker.HasSubscribers(ssetopics.TopicSystemStats) {
 				continue
 			}
 			stats := tavern.CollectRuntimeStats(start)
@@ -181,7 +182,7 @@ func (ar *appRoutes) publishSystemStats(broker *tavern.SSEBroker) {
 			}
 			msg := tavern.NewSSEMessage("system-stats", buf.String()).String()
 			statsBufPool.Put(buf)
-			broker.Publish(tavern.TopicSystemStats, msg)
+			broker.Publish(ssetopics.TopicSystemStats, msg)
 		}
 	}
 }
@@ -240,7 +241,7 @@ func (ar *appRoutes) publishMetrics(broker *tavern.SSEBroker) {
 		case <-ar.ctx.Done():
 			return
 		case <-ticker.C:
-			if !broker.HasSubscribers(tavern.TopicDashMetrics) {
+			if !broker.HasSubscribers(ssetopics.TopicDashMetrics) {
 				continue
 			}
 
@@ -395,7 +396,7 @@ func (ar *appRoutes) publishMetrics(broker *tavern.SSEBroker) {
 			}
 			msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
 			statsBufPool.Put(buf)
-			broker.Publish(tavern.TopicDashMetrics, msg)
+			broker.Publish(ssetopics.TopicDashMetrics, msg)
 		}
 	}
 }
@@ -451,7 +452,7 @@ func (ar *appRoutes) publishServices(broker *tavern.SSEBroker) {
 		case <-ar.ctx.Done():
 			return
 		case <-ticker.C:
-			if !broker.HasSubscribers(tavern.TopicDashServices) {
+			if !broker.HasSubscribers(ssetopics.TopicDashServices) {
 				continue
 			}
 
@@ -486,7 +487,7 @@ func (ar *appRoutes) publishServices(broker *tavern.SSEBroker) {
 			}
 			msg := tavern.NewSSEMessage("dashboard-services", buf.String()).String()
 			statsBufPool.Put(buf)
-			broker.Publish(tavern.TopicDashServices, msg)
+			broker.Publish(ssetopics.TopicDashServices, msg)
 		}
 	}
 }
@@ -534,7 +535,7 @@ func (ar *appRoutes) publishEvents(broker *tavern.SSEBroker) {
 		case <-ar.ctx.Done():
 			return
 		case <-time.After(delay):
-			if !broker.HasSubscribers(tavern.TopicDashEvents) {
+			if !broker.HasSubscribers(ssetopics.TopicDashEvents) {
 				continue
 			}
 
@@ -553,7 +554,7 @@ func (ar *appRoutes) publishEvents(broker *tavern.SSEBroker) {
 			}
 			msg := tavern.NewSSEMessage("dashboard-events", buf.String()).String()
 			statsBufPool.Put(buf)
-			broker.Publish(tavern.TopicDashEvents, msg)
+			broker.Publish(ssetopics.TopicDashEvents, msg)
 		}
 	}
 }
