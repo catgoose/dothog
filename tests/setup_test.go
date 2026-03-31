@@ -426,7 +426,7 @@ func TestSetup_FeaturesAll(t *testing.T) {
 	readmeContent := string(readmeBytes)
 	require.Contains(t, readmeContent, "Auth (Crooner)")
 	require.Contains(t, readmeContent, "SSE")
-	require.Contains(t, readmeContent, "## Features")
+	require.Contains(t, readmeContent, "## Setup Configuration")
 	require.Contains(t, readmeContent, "## Architecture")
 }
 
@@ -527,7 +527,7 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	require.NoError(t, err)
 	readmeContent := string(readmeBytes)
 	require.Contains(t, readmeContent, "No Features App")
-	require.Contains(t, readmeContent, "## Features")
+	require.Contains(t, readmeContent, "## Setup Configuration")
 	// Minimal config should still have implicit features (database, alpine)
 	require.Contains(t, readmeContent, "Database (fraggle)")
 }
