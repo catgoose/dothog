@@ -119,7 +119,7 @@ Harmony is designed to be used as a project template. After cloning:
 - **Optimistic UI** -- Immediate visual feedback via HyperScript with server reconciliation
 - **Undo / Soft Delete** -- Delete with OOB undo toast, auto-dismiss timer, and one-click restore
 - **Hypermedia Controls Gallery** -- Buttons, modals, dismiss, confirmation dialogs, and form patterns
-- **Schema Builder** -- Composable DDL API with traits, query builder, and multi-dialect support (SQLite/MSSQL)
+- **Schema Builder** -- Composable DDL API with traits, query builder, and multi-dialect support (SQLite/MSSQL/Postgres)
 
 ## Tech Stack
 
@@ -394,7 +394,7 @@ settings := NewConfigTable("Settings", "Key", "Value").
 
 ### Prerequisites
 
-- Go 1.24+ (latest)
+- Go 1.26+ (latest)
 - Node.js 22+ (for Playwright E2E tests)
 - [Mage](https://magefile.org/) (`go install github.com/magefile/mage@latest`)
 
@@ -468,12 +468,8 @@ All targets are run with `go tool mage <target>`:
 
 ## CI/CD Workflows
 
-- **CI** (`ci.yml`) -- Build, vet, and race-condition tests on push/PR
-- **E2E** (`e2e.yml`) -- Playwright end-to-end tests on push/PR
-- **Docs** (`docs.yml`) -- Generate API docs and publish to GitHub Pages
-- **Dependency Updates** (`main.yml`) -- Weekly `go get -u`, verify build/tests
+- **Pipeline** (`pipeline.yml`) -- Build, test, vet, race detection, E2E tests, docs, and weekly dependency updates
 - **Release** (`release.yml`) -- Semantic versioning with cross-compiled binaries (Linux/Windows)
-- **Screenshots** (`screenshots.yml`) -- Automated Playwright screenshot capture
 
 ## Environment Variables
 
@@ -481,14 +477,16 @@ See `.env.sample` for the full list. Key variables:
 
 | Variable | Description | Default |
 | --- | --- | --- |
+| `APP_NAME` | Application name | (required) |
 | `SERVER_LISTEN_PORT` | Echo server port | (required) |
 | `LOG_LEVEL` | DEBUG, INFO, WARN, ERROR | INFO |
 | `ENABLE_DATABASE` | Enable SQL backend | false |
-| `DB_ENGINE` | sqlite or sqlserver | -- |
+| `DATABASE_URL` | Database connection URL | sqlite:///db/app.db |
 | `AZURE_CLIENT_ID` | Azure AD app client ID | -- |
 | `AZURE_CLIENT_SECRET` | Azure AD app client secret | -- |
 | `AZURE_TENANT_ID` | Azure AD tenant ID | -- |
 | `SESSION_SECRET` | Session encryption key | -- |
 | `CSRF_ROTATE_PER_REQUEST` | Rotate CSRF token per request | false |
-| `AZURE_USER_REFRESH_HOUR` | Hour (0-23) for Graph user cache sync | 5 |
+| `CSRF_PER_REQUEST_PATHS` | Comma-separated paths for per-request CSRF tokens | -- |
+| `GRAPH_USERCACHE_REFRESH_HOUR` | Hour (0-23) for Graph user cache sync | 5 |
 | `ENABLE_PHOTO_DOWNLOAD` | Download user photos from Graph | false |
