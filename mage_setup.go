@@ -107,16 +107,9 @@ func Setup() error {
 		if err := setup.Run(context.Background(), ".", *parsed); err != nil {
 			return err
 		}
-		if goModulePath() == templateModulePath {
-			return nil
-		}
-		cleanup, err := huhConfirm("Cleanup template files and setup helpers from this repo?")
-		if err != nil {
-			return err
-		}
-		if cleanup {
+		if goModulePath() != templateModulePath {
 			if err := cleanupTemplateFiles(); err != nil {
-				return err
+				fmt.Println("Warning: cleanup failed:", err)
 			}
 			fmt.Println("Template setup files removed.")
 		}
