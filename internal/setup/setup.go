@@ -57,11 +57,10 @@ var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMS
 var ImplicitFeatures = []string{FeatureDatabase, FeatureAlpine}
 
 // featureDeps maps a feature to the features it implies.
-// sync -> offline -> capacitor.
+// pwa -> sync -> offline.  capacitor is a separate opt-in for native wrapping.
 var featureDeps = map[string][]string{
 	FeatureSync:           {FeatureOffline},
-	FeatureOffline:        {FeatureCapacitor},
-	FeaturePWA:            {FeatureOffline, FeatureSync, FeatureCapacitor},
+	FeaturePWA:            {FeatureOffline, FeatureSync},
 	FeatureDemo:            {FeatureSessionSettings},
 	FeatureCSRF:           {FeatureSessionSettings},
 	FeatureLinkRelations:  {FeatureSessionSettings},
@@ -519,14 +518,29 @@ func removeOptionalContent(dir string, opts Options) error {
 		removeTags[FeatureDemo] = true
 	}
 
+	// Remove dothog-specific documentation that is not relevant to derived apps.
+	_ = os.Remove(filepath.Join(dir, "MANIFESTO.md"))
+	_ = os.Remove(filepath.Join(dir, "AGENTS.md"))
+	_ = os.Remove(filepath.Join(dir, "README.harmony.md"))
+
+	// Remove dothog-specific scripts (doc generation, screenshot automation).
+	_ = os.RemoveAll(filepath.Join(dir, "scripts"))
+	_ = os.Remove(filepath.Join(dir, ".github", "workflows", "screenshots.yml"))
+	_ = os.Remove(filepath.Join(dir, ".github", "workflows", "docs.yml"))
+
 	// Remove all .db files (and WAL/SHM) so derived apps start clean.
 	// The app auto-creates databases on first start via os.MkdirAll + EnsureSchema.
-	// seed.db and demo.db are tracked in git but not needed in derived apps.
 	if matches, err := filepath.Glob(filepath.Join(dir, "db", "*.db*")); err == nil {
 		for _, m := range matches {
 			_ = os.Remove(m)
 		}
 	}
+
+	// Seed data generation is only relevant when the demo feature is selected.
+	if removeTags[FeatureDemo] {
+		_ = os.RemoveAll(filepath.Join(dir, "db", "gen_seed"))
+	}
+
 	if removeTags[FeatureSSE] {
 		_ = os.Remove(filepath.Join(dir, "web", "assets", "public", "js", "htmx.ext.sse.js"))
 	}
@@ -537,6 +551,8 @@ func removeOptionalContent(dir string, opts Options) error {
 		_ = os.Remove(filepath.Join(dir, "capacitor.config.ts"))
 		_ = os.Remove(filepath.Join(dir, "tsconfig.json"))
 		_ = os.RemoveAll(filepath.Join(dir, "fastlane"))
+		_ = os.Remove(filepath.Join(dir, "Gemfile"))
+		_ = os.Remove(filepath.Join(dir, ".github", "workflows", "ios.yml"))
 	}
 	// Alpine.js is always included (implicit feature); no removal needed.
 

@@ -440,12 +440,32 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	assertDirRemoved(t, filepath.Join(dest, "internal", "domain"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "demo"))
 
-
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
 	require.True(t, os.IsNotExist(err), "Caddyfile should be removed when no features selected")
 
 	_, err = os.Stat(filepath.Join(dest, "web", "assets", "public", "js", "htmx.ext.sse.js"))
 	require.True(t, os.IsNotExist(err), "htmx.ext.sse.js should be removed when sse not selected")
+
+	// Dothog-specific docs should be removed (#354)
+	for _, f := range []string{"MANIFESTO.md", "AGENTS.md", "README.harmony.md"} {
+		_, err = os.Stat(filepath.Join(dest, f))
+		require.True(t, os.IsNotExist(err), "%s should be removed during setup", f)
+	}
+
+	// scripts/ directory should be removed (#361)
+	assertDirRemoved(t, filepath.Join(dest, "scripts"))
+	_, err = os.Stat(filepath.Join(dest, ".github", "workflows", "screenshots.yml"))
+	require.True(t, os.IsNotExist(err), "screenshots.yml should be removed during setup")
+
+	// db/gen_seed should be removed when demo not selected (#358)
+	assertDirRemoved(t, filepath.Join(dest, "db", "gen_seed"))
+
+	// Capacitor files should be removed when capacitor not selected (#353)
+	for _, f := range []string{"capacitor.config.ts", "tsconfig.json", "Gemfile"} {
+		_, err = os.Stat(filepath.Join(dest, f))
+		require.True(t, os.IsNotExist(err), "%s should be removed when capacitor not selected", f)
+	}
+	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
 }
 
 func TestSetup_FeaturesAuthOnly(t *testing.T) {
@@ -591,6 +611,42 @@ func TestSetup_FeaturesDemo(t *testing.T) {
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
 	assertDirExists(t, filepath.Join(dest, "internal", "demo"))
+
+	// db/gen_seed should be kept when demo is selected (#358)
+	assertDirExists(t, filepath.Join(dest, "db", "gen_seed"))
+}
+
+// TestSetup_PWAWithoutCapacitor verifies that selecting PWA does not pull in
+// Capacitor files (#353). PWA is a web feature; Capacitor is a separate opt-in.
+func TestSetup_PWAWithoutCapacitor(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", "bin", "build", "log", "tmp", "node_modules")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "PWA Only App",
+		ModulePath: "github.com/test/pwa-only-app",
+		BasePort:   "20900",
+		Force:      true,
+		Features:   []string{"pwa"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	// Capacitor files should NOT be present when only PWA is selected
+	for _, f := range []string{"capacitor.config.ts", "tsconfig.json", "Gemfile"} {
+		_, err = os.Stat(filepath.Join(dest, f))
+		require.True(t, os.IsNotExist(err), "%s should not exist with PWA-only setup", f)
+	}
+	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
+	_, err = os.Stat(filepath.Join(dest, ".github", "workflows", "ios.yml"))
+	require.True(t, os.IsNotExist(err), "ios.yml should not exist with PWA-only setup")
 }
 
 // TestSetup_NoDothogReferences runs setup with all features enabled and verifies
