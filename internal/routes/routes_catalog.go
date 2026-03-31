@@ -5,7 +5,7 @@ package routes
 import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	hx "catgoose/dothog/internal/routes/htmx"
+	hx "github.com/catgoose/cheddar"
 	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/web/views"

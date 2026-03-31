@@ -6,6 +6,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/a-h/templ v0.3.1001
+	github.com/catgoose/cheddar v0.0.0-20260331012714-dcfcc63b5fb0
 	github.com/catgoose/crooner v1.4.2
 	github.com/catgoose/dio v1.0.26
 	github.com/catgoose/fraggle v0.1.12

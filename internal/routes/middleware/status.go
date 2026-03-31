@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	htmxpkg "catgoose/dothog/internal/routes/htmx"
+	htmxpkg "github.com/catgoose/cheddar"
 	"catgoose/dothog/internal/routes/hypermedia"
 	"catgoose/dothog/internal/routes/response"
 	corecomponents "catgoose/dothog/web/components/core"

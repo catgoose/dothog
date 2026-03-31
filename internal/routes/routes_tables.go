@@ -8,7 +8,7 @@ import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/hypermedia"
 
-	hx "catgoose/dothog/internal/routes/htmx"
+	hx "github.com/catgoose/cheddar"
 
 	"github.com/labstack/echo/v4"
 )
