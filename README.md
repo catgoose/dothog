@@ -1,5 +1,6 @@
 # DOTHOG
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/catgoose/dothog.svg)](https://pkg.go.dev/github.com/catgoose/dothog)
 [![Pipeline](https://github.com/catgoose/dothog/actions/workflows/pipeline.yml/badge.svg?branch=main)](https://github.com/catgoose/dothog/actions/workflows/pipeline.yml)
 
 ## Or, How I Learned to Stop Worrying and Trust the Server
