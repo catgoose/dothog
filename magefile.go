@@ -458,6 +458,10 @@ func EnvCheck() error {
 
 // Watch runs Tailwind, Templ, Air, and Caddy in watch mode
 func Watch() error {
+	if err := nodeModulesCheck(); err != nil {
+		return err
+	}
+
 	type task struct {
 		name string
 		fn   func() error
