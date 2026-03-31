@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import hypermedia "github.com/catgoose/linkwell"
 
 // ErrorPage renders a self-contained HTML error page for non-HTMX requests.
 // It includes its own HTML shell with Tailwind, DaisyUI, HTMX, and HyperScript

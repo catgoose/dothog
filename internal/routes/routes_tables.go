@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"catgoose/dothog/internal/demo"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 
 	hx "github.com/catgoose/cheddar"
 

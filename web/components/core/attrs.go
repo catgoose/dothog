@@ -1,7 +1,7 @@
 package components
 
 import (
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"github.com/a-h/templ"
 )
 

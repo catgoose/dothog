@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"catgoose/dothog/internal/logger"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 
 	"github.com/catgoose/promolog"
 	"github.com/labstack/echo/v4"

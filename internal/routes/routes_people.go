@@ -11,7 +11,7 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/internal/shared"
 	ssebroker "github.com/catgoose/tavern"

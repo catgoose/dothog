@@ -10,7 +10,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import hypermedia "github.com/catgoose/linkwell"
 
 // SiteMap renders a footer site map grid from the hub/spoke topology.
 func SiteMap(hubs []hypermedia.HubEntry) templ.Component {

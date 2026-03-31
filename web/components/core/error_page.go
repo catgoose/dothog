@@ -1,6 +1,6 @@
 package components
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import hypermedia "github.com/catgoose/linkwell"
 
 func errorPageTheme(ec hypermedia.ErrorContext) string {
 	if ec.Theme != "" {

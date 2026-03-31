@@ -12,7 +12,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 )
 
 func errorJSON(ec hypermedia.ErrorContext) string {

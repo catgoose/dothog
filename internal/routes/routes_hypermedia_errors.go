@@ -11,7 +11,7 @@ import (
 
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/middleware"
 	"catgoose/dothog/internal/routes/response"
 	"catgoose/dothog/web/views"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"catgoose/dothog/internal/demo"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 )
 
 func linksRowspan(links []hypermedia.LinkRelation) string {

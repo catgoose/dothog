@@ -1,6 +1,6 @@
 package components
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import hypermedia "github.com/catgoose/linkwell"
 
 // navHxAttrs converts a NavItem's HTMXAttrs map to templ.Attributes with "hx-" prefix.
 func navHxAttrs(item hypermedia.NavItem) templ.Attributes {

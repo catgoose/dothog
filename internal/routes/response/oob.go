@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"

@@ -2,7 +2,7 @@
 
 package routes
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import hypermedia "github.com/catgoose/linkwell"
 
 // initLinkRelations registers all link relation declarations for the app.
 // Hubs define parent→child discovery pages. Rings define peer groups.

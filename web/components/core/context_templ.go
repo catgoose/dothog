@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import hypermedia "github.com/catgoose/linkwell"
 
 // ContextStrip renders a unified bar with breadcrumbs on the left and
 // app-provided context links (children) on the right. On mobile, breadcrumbs

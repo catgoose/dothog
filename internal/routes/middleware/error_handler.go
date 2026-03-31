@@ -7,7 +7,7 @@ import (
 
 	"catgoose/dothog/internal/logger"
 	"github.com/catgoose/promolog"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/response"
 	corecomponents "catgoose/dothog/web/components/core"
 

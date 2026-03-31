@@ -8,7 +8,7 @@ import (
 	// setup:feature:demo:end
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"net/http"
 
 	corecomponents "catgoose/dothog/web/components/core"

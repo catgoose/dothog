@@ -5,7 +5,7 @@ package routes
 import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/params"
 	ssebroker "github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"

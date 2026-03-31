@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	htmx "github.com/catgoose/cheddar"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"

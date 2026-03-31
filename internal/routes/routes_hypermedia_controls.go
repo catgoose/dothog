@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/middleware"
 	"catgoose/dothog/web/views"
 

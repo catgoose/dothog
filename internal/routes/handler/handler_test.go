@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"catgoose/dothog/internal/logger"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 
 	"github.com/a-h/templ"
 	"github.com/catgoose/promolog"

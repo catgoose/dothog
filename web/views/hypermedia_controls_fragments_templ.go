@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	components "catgoose/dothog/web/components/core"
 )
 

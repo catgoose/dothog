@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"

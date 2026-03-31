@@ -12,7 +12,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"catgoose/dothog/internal/demo"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 )
 
 // LinksPageData holds all data needed to render the links page.

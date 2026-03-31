@@ -9,7 +9,7 @@ import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
 	hx "github.com/catgoose/cheddar"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/web/views"
 

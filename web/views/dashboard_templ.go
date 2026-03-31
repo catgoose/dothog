@@ -14,7 +14,7 @@ import (
 	"fmt"
 
 	"catgoose/dothog/internal/demo"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 )
 
 // dashFromMask is the breadcrumb bitmask for links originating from the dashboard.

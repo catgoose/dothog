@@ -13,7 +13,7 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"catgoose/dothog/web/views"
 
 	"github.com/labstack/echo/v4"

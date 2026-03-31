@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import hypermedia "github.com/catgoose/linkwell"
 
 // variantClass maps a ControlVariant to the corresponding DaisyUI btn modifier class.
 func variantClass(v hypermedia.ControlVariant) string {

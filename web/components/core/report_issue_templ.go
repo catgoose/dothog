@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import hypermedia "github.com/catgoose/linkwell"
 
 // ReportIssueModal renders the Report Issue modal with a textarea for user context.
 // Log data is retrieved from the ring buffer server-side when the report is submitted.

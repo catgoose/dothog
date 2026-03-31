@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	htmxpkg "github.com/catgoose/cheddar"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/response"
 	corecomponents "catgoose/dothog/web/components/core"
 

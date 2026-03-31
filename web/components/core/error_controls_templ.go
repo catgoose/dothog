@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/dothog/internal/routes/hypermedia"
+import hypermedia "github.com/catgoose/linkwell"
 
 // ErrorControls renders a row of hypermedia action controls for an error response.
 func ErrorControls(controls []hypermedia.Control) templ.Component {

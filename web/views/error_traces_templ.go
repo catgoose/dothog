@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	components "catgoose/dothog/web/components/core"
 	"github.com/catgoose/promolog"
 )

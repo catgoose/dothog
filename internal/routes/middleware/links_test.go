@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"

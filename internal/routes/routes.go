@@ -14,7 +14,7 @@ import (
 	"catgoose/dothog/internal/version"
 	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/domain"
 	// setup:feature:session_settings:end

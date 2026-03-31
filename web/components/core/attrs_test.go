@@ -3,7 +3,7 @@ package components
 import (
 	"testing"
 
-	"catgoose/dothog/internal/routes/hypermedia"
+	hypermedia "github.com/catgoose/linkwell"
 
 	"github.com/stretchr/testify/require"
 )
