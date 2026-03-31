@@ -540,7 +540,6 @@ func removeOptionalContent(dir string, opts Options) error {
 	_ = os.RemoveAll(filepath.Join(dir, "cmd", "testwatcher"))
 	stripTestWatchTarget(filepath.Join(dir, "magefile.go"))
 	_ = os.RemoveAll(filepath.Join(dir, "scripts"))
-	_ = os.Remove(filepath.Join(dir, ".github", "workflows", "screenshots.yml"))
 	_ = os.Remove(filepath.Join(dir, ".github", "workflows", "docs.yml"))
 	_ = os.Remove(filepath.Join(dir, ".github", "workflows", "pipeline.yml"))
 	_ = os.RemoveAll(filepath.Join(dir, ".github", "harmony"))

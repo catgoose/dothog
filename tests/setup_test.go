@@ -478,8 +478,6 @@ func TestSetup_FeaturesNone(t *testing.T) {
 
 	// scripts/ directory should be removed (#361)
 	assertDirRemoved(t, filepath.Join(dest, "scripts"))
-	_, err = os.Stat(filepath.Join(dest, ".github", "workflows", "screenshots.yml"))
-	require.True(t, os.IsNotExist(err), "screenshots.yml should be removed during setup")
 	_, err = os.Stat(filepath.Join(dest, ".github", "workflows", "pipeline.yml"))
 	require.True(t, os.IsNotExist(err), "pipeline.yml should be removed during setup (#367)")
 	assertDirRemoved(t, filepath.Join(dest, ".github", "harmony"))

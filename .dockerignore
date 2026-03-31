@@ -6,7 +6,6 @@ tmp
 node_modules
 test-results
 playwright-report
-docs/screenshots
 site
 log
 *.exe

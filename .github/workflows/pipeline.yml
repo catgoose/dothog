@@ -209,91 +209,6 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  screenshots:
-    if: github.event_name == 'workflow_dispatch'
-    needs: [update-deps, go-test, e2e-test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.update-deps.outputs.sha }}
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: "stable"
-          cache: true
-
-      - name: Set up Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-
-      - name: Install npm dependencies
-        run: npm ci
-
-      - name: Install Playwright
-        run: npx playwright install --with-deps chromium
-
-      - name: Generate templ files
-        run: go tool templ generate
-
-      - name: Build application
-        run: go build -o dothog .
-
-      - name: Start application
-        run: |
-          SERVER_LISTEN_PORT=3000 ./dothog -env production &
-          echo "APP_PID=$!" >> $GITHUB_ENV
-
-      - name: Capture screenshots and recordings
-        run: node scripts/screenshots.mjs --base-url http://localhost:3000
-
-      - name: Stop application
-        if: always()
-        run: kill $APP_PID 2>/dev/null || true
-
-      - uses: actions/upload-artifact@v6
-        with:
-          name: screenshots
-          path: docs/screenshots/
-
-  publish-screenshots:
-    if: github.event_name == 'workflow_dispatch'
-    needs: [screenshots]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v6
-        with:
-          name: screenshots
-          path: output
-
-      - name: Checkout screenshots repo
-        uses: actions/checkout@v6
-        with:
-          repository: catgoose/screenshots
-          token: ${{ secrets.SCREENSHOTS_REPO_TOKEN }}
-          path: screenshots-repo
-
-      - name: Copy and push screenshots
-        run: |
-          mkdir -p screenshots-repo/dothog
-          cp -r output/* screenshots-repo/dothog/
-          cd screenshots-repo
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dothog
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
-          git commit -m "Update dothog screenshots"
-          git pull --rebase origin main
-          git push
-        env:
-          GH_TOKEN: ${{ secrets.SCREENSHOTS_REPO_TOKEN }}
-
   sync-harmony:
     needs: [update-deps, go-test, e2e-test]
     runs-on: ubuntu-latest
@@ -328,11 +243,10 @@ jobs:
           cp README.harmony.md README.md
           rm README.harmony.md
 
-          # Swap in harmony-specific workflows (no sync-harmony, publish-screenshots, or PR checks)
+          # Swap in harmony-specific workflows (no sync-harmony or PR checks)
           mv .github/harmony/pipeline.yml .github/workflows/pipeline.yml
           mv .github/harmony/release.yml .github/workflows/release.yml
           rm -rf .github/harmony
-          rm -f .github/workflows/screenshots.yml
           rm -f MANIFESTO.md
 
           # Replace Go module path in all source files (include .templ so
@@ -362,7 +276,7 @@ jobs:
   # ── Notify on pipeline failure ──────────────────────────────────────────────
   notify-failure:
     if: ${{ failure() }}
-    needs: [update-deps, go-test, e2e-test, docs, screenshots, publish-screenshots, sync-harmony]
+    needs: [update-deps, go-test, e2e-test, docs, sync-harmony]
     runs-on: ubuntu-latest
     steps:
       - name: Notify CI failure

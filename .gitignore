@@ -27,7 +27,7 @@ go.work.sum
 
 # env files (.env.sample is tracked)
 .env
-.env.dev
+.env.development
 .env.local
 
 # Editor/IDE
@@ -61,9 +61,6 @@ build/
 # generated docs (rebuilt in CI)
 docs/packages/
 site/
-
-# Screenshots (workflow pushes these to catgoose/screenshots)
-docs/screenshots/
 
 # Playwright
 test-results/
