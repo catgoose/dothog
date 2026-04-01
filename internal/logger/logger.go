@@ -15,7 +15,7 @@ import (
 
 	"github.com/catgoose/promolog"
 
-	"github.com/catgoose/dio"
+	"catgoose/dothog/internal/env"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -63,7 +63,7 @@ func Init() {
 
 		// Create multi-writer for both file and console output
 		var logWriter io.Writer
-		if dio.Dev() {
+		if env.Dev() {
 			logWriter = io.MultiWriter(os.Stdout, rotator)
 		} else {
 			logWriter = io.MultiWriter(os.Stderr, rotator)
@@ -72,7 +72,7 @@ func Init() {
 		// Create handler with multi-writer
 		opts := &slog.HandlerOptions{
 			Level:     logLevel,
-			AddSource: dio.Dev(),
+			AddSource: env.Dev(),
 		}
 		var handler slog.Handler = slog.NewJSONHandler(logWriter, opts)
 		if handlerWrapper != nil {
@@ -88,9 +88,9 @@ func Init() {
 
 // getLogLevel returns the log level based on environment variable
 func getLogLevel() slog.Level {
-	levelStr, err := dio.Env("LOG_LEVEL")
+	levelStr, err := env.Get("LOG_LEVEL")
 	if err != nil {
-		if dio.Dev() {
+		if env.Dev() {
 			return slog.LevelDebug
 		}
 		return slog.LevelInfo
@@ -107,7 +107,7 @@ func getLogLevel() slog.Level {
 		return slog.LevelError
 	default:
 		// Log invalid level and use default
-		if dio.Dev() {
+		if env.Dev() {
 			return slog.LevelDebug
 		}
 		return slog.LevelInfo

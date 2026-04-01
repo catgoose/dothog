@@ -37,7 +37,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/catgoose/dio"
+	appenv "catgoose/dothog/internal/env"
 )
 
 //go:embed web/assets/public/css/* web/assets/public/js/* all:web/assets/public/images
@@ -58,16 +58,12 @@ func main() {
 	})
 	logger.Init()
 	flag.Parse()
-	dioOpts := &dio.Options{}
-	if env := os.Getenv("ENV"); env != "" {
-		dioOpts.Env = env
-	}
-	envErr := dio.InitEnvironment(dioOpts)
+	envErr := appenv.Init(os.Getenv("ENV"))
 	// setup:feature:demo:start
 	if envErr != nil {
 		// No .env file -- apply standalone defaults so the demo binary
 		// can run without any configuration.
-		os.Setenv("SERVER_LISTEN_PORT", dio.EnvWithDefault("SERVER_LISTEN_PORT", "3000"))
+		os.Setenv("SERVER_LISTEN_PORT", appenv.GetDefault("SERVER_LISTEN_PORT", "3000"))
 	}
 	// setup:feature:demo:end
 	if envErr != nil {
@@ -188,9 +184,9 @@ func main() {
 	}
 	routes.RegisterAvatarRoutes(e, photoStore)
 
-	tenantID, _ := dio.Env("AZURE_TENANT_ID")
-	clientID, _ := dio.Env("AZURE_CLIENT_ID")
-	clientSecret, _ := dio.Env("AZURE_CLIENT_SECRET")
+	tenantID, _ := appenv.Get("AZURE_TENANT_ID")
+	clientID, _ := appenv.Get("AZURE_CLIENT_ID")
+	clientSecret, _ := appenv.Get("AZURE_CLIENT_SECRET")
 	if tenantID != "" && clientID != "" && clientSecret != "" {
 		graphClient, err := graph.NewGraphClient(tenantID, clientID, clientSecret)
 		if err != nil {
@@ -216,7 +212,7 @@ func main() {
 	// setup:feature:avatar:end
 
 	go func() {
-		if dio.Dev() {
+		if appenv.Dev() {
 			logger.Info("Starting Echo server with TLS (development mode)", "port", cfg.ServerPort)
 			if err := e.StartTLS(fmt.Sprintf(":%s", cfg.ServerPort), "localhost.crt", "localhost.key"); err != nil {
 				if err != http.ErrServerClosed {

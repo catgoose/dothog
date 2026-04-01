@@ -17,7 +17,7 @@ import (
 	// setup:feature:auth:start
 	"github.com/catgoose/crooner"
 	// setup:feature:auth:end
-	"github.com/catgoose/dio"
+	appenv "catgoose/dothog/internal/env"
 )
 
 // AppConfig holds all application configuration. Flat struct, globally
@@ -57,9 +57,9 @@ type AppConfig struct {
 func buildConfig() (*AppConfig, error) {
 	cfg := &AppConfig{
 		// Defaults — override with env vars
-		ServerPort:  env("SERVER_LISTEN_PORT", "3000"),
-		AppName:     env("APP_NAME", ""),
-		DatabaseURL: env("DATABASE_URL", "sqlite:///db/app.db"),
+		ServerPort:  envStr("SERVER_LISTEN_PORT", "3000"),
+		AppName:     envStr("APP_NAME", ""),
+		DatabaseURL: envStr("DATABASE_URL", "sqlite:///db/app.db"),
 	}
 
 	// APP_NAME: required unless demo provides a fallback
@@ -78,8 +78,8 @@ func buildConfig() (*AppConfig, error) {
 
 	// setup:feature:auth:start
 	cfg.CroonerDisabled = true
-	issuerURL := env("OIDC_ISSUER_URL", "")
-	clientID := env("OIDC_CLIENT_ID", "")
+	issuerURL := envStr("OIDC_ISSUER_URL", "")
+	clientID := envStr("OIDC_CLIENT_ID", "")
 	if issuerURL != "" && clientID != "" {
 		cfg.CroonerDisabled = false
 		secret, err := getEnvVar("SESSION_SECRET", "session secret")
@@ -90,10 +90,10 @@ func buildConfig() (*AppConfig, error) {
 		cfg.CroonerConfig = &crooner.AuthConfigParams{
 			IssuerURL:         issuerURL,
 			ClientID:          clientID,
-			ClientSecret:      env("OIDC_CLIENT_SECRET", ""),
-			RedirectURL:       env("OIDC_REDIRECT_URL", ""),
-			LogoutURLRedirect: env("OIDC_LOGOUT_REDIRECT_URL", "/"),
-			LoginURLRedirect:  env("OIDC_LOGIN_REDIRECT_URL", "/"),
+			ClientSecret:      envStr("OIDC_CLIENT_SECRET", ""),
+			RedirectURL:       envStr("OIDC_REDIRECT_URL", ""),
+			LogoutURLRedirect: envStr("OIDC_LOGOUT_REDIRECT_URL", "/"),
+			LoginURLRedirect:  envStr("OIDC_LOGIN_REDIRECT_URL", "/"),
 			AuthRoutes: &crooner.AuthRoutes{
 				Login:    "/login",
 				Logout:   "/logout",
@@ -118,12 +118,12 @@ func buildConfig() (*AppConfig, error) {
 
 // --- Env helpers ---
 
-func env(key, fallback string) string {
-	return dio.EnvWithDefault(key, fallback)
+func envStr(key, fallback string) string {
+	return appenv.GetDefault(key, fallback)
 }
 
 func envBool(key string, fallback bool) bool {
-	if v, err := dio.Env(key); err == nil {
+	if v, err := appenv.Get(key); err == nil {
 		if parsed, err := strconv.ParseBool(v); err == nil {
 			return parsed
 		}
@@ -132,7 +132,7 @@ func envBool(key string, fallback bool) bool {
 }
 
 func envInt(key string, fallback int) int {
-	if v, err := dio.Env(key); err == nil {
+	if v, err := appenv.Get(key); err == nil {
 		if parsed, err := strconv.Atoi(v); err == nil {
 			return parsed
 		}
@@ -141,7 +141,7 @@ func envInt(key string, fallback int) int {
 }
 
 func envList(key string) []string {
-	v, err := dio.Env(key)
+	v, err := appenv.Get(key)
 	if err != nil || v == "" {
 		return nil
 	}
@@ -155,7 +155,7 @@ func envList(key string) []string {
 }
 
 func getEnvVar(key string, description string) (string, error) {
-	value, err := dio.Env(key)
+	value, err := appenv.Get(key)
 	if err != nil {
 		return "", logger.LogAndReturnError(fmt.Sprintf("Failed to get %s", description), err)
 	}

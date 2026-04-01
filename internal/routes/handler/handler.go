@@ -16,7 +16,7 @@ import (
 	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"
-	"github.com/catgoose/dio"
+	"catgoose/dothog/internal/env"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
@@ -168,7 +168,7 @@ func renderDefaultLayout(c echo.Context, cmp templ.Component) error {
 	cfg.Items = linkwell.SetActiveNavItemPrefix(cfg.Items, lc.path)
 	return RenderComponent(c, views.AppNavLayout(
 		cmp, cfg,
-		lc.csrfToken, dio.Dev(), lc.theme,
+		lc.csrfToken, env.Dev(), lc.theme,
 		lc.crumbs, lc.links, lc.path, version.Display(), lc.hubs,
 	))
 }
@@ -189,7 +189,7 @@ func AppNavLayoutFunc(cfg linkwell.NavConfig) LayoutFunc {
 		lc := getLayoutCtx(c)
 		return RenderComponent(c, views.AppNavLayout(
 			cmp, navCfg,
-			lc.csrfToken, dio.Dev(), lc.theme,
+			lc.csrfToken, env.Dev(), lc.theme,
 			lc.crumbs, lc.links, lc.path, version.Display(), lc.hubs,
 		))
 	}

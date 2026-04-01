@@ -33,7 +33,7 @@
 | [catgoose/fraggle](https://github.com/catgoose/fraggle) | SQL dialects, schema DSL, query builders | `"github.com/catgoose/fraggle"` |
 | [catgoose/promolog](https://github.com/catgoose/promolog) | Error trace capture, promote-on-error | `"github.com/catgoose/promolog"` |
 | [catgoose/crooner](https://github.com/catgoose/crooner) | OIDC authentication | `"github.com/catgoose/crooner"` |
-| [catgoose/dio](https://github.com/catgoose/dio) | Environment config | `"github.com/catgoose/dio"` |
+| [catgoose/porter](https://github.com/catgoose/porter) | Auth, CSRF, security headers | `"github.com/catgoose/porter"` |
 
 ## For AI Agents Working on Derived Apps
 

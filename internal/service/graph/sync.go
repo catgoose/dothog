@@ -11,7 +11,7 @@ import (
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/shared"
 
-	"github.com/catgoose/dio"
+	"catgoose/dothog/internal/env"
 )
 
 // SyncType represents the type of sync operation being performed
@@ -37,7 +37,7 @@ func InitAndSyncUserCache(
 ) error {
 	ctx = shared.WithContextIDAndDescription(ctx, shared.GenerateContextID(), "user cache init")
 	log := logger.WithContext(ctx)
-	isDev := dio.Dev()
+	isDev := env.Dev()
 
 	// Development
 	if isDev {

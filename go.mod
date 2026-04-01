@@ -8,7 +8,6 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.11
-	github.com/catgoose/dio v1.0.31
 	github.com/catgoose/fraggle v0.1.22
 	github.com/catgoose/linkwell v0.2.10
 	github.com/catgoose/porter v0.4.0
@@ -70,7 +69,7 @@ require (
 	github.com/gohugoio/hugo v0.147.6 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/joho/godotenv v1.5.1
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect

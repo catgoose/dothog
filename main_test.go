@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/catgoose/dio"
+	appenv "catgoose/dothog/internal/env"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,7 +28,7 @@ func setupAppEcho(t *testing.T) *echo.Echo {
 		os.Unsetenv("LOG_LEVEL")
 	})
 
-	require.NoError(t, dio.InitEnvironment(nil))
+	require.NoError(t, appenv.Init(""))
 	logger.Init()
 	cfg, err := config.GetConfig()
 	require.NoError(t, err)
@@ -61,7 +61,7 @@ func TestApplicationStartup(t *testing.T) {
 	// This tests the startup sequence without actually starting the server
 
 	// Test environment initialization
-	err := dio.InitEnvironment(nil)
+	err := appenv.Init("")
 	require.NoError(t, err)
 
 	cfg, err := config.GetConfig()
