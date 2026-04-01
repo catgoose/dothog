@@ -11,7 +11,7 @@ require (
 	github.com/catgoose/dio v1.0.26
 	github.com/catgoose/flighty v0.2.6
 	github.com/catgoose/fraggle v0.1.15
-	github.com/catgoose/linkwell v0.2.3
+	github.com/catgoose/linkwell v0.2.4
 	github.com/catgoose/porter v0.3.4
 	github.com/catgoose/tavern v0.4.4
 	github.com/charmbracelet/huh v1.0.0
@@ -28,7 +28,7 @@ require (
 )
 
 require (
-	github.com/catgoose/cheddar v0.2.1 // indirect
+	github.com/catgoose/cheddar v0.2.2 // indirect
 	github.com/lib/pq v1.12.1 // indirect
 )
 
