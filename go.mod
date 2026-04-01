@@ -6,16 +6,16 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/a-h/templ v0.3.1001
-	github.com/catgoose/cheddar v0.2.2
-	github.com/catgoose/crooner v1.4.3
+	github.com/catgoose/crooner v1.4.4
 	github.com/catgoose/dio v1.0.26
-	github.com/catgoose/flighty v0.2.6
+	github.com/catgoose/flighty v0.2.8
 	github.com/catgoose/fraggle v0.1.15
 	github.com/catgoose/linkwell v0.2.3
-	github.com/catgoose/porter v0.3.4
+	github.com/catgoose/porter v0.3.5-0.20260401174348-c697c5d04f37
 	github.com/catgoose/tavern v0.4.4
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
+	github.com/gorilla/csrf v1.7.3
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/labstack/echo/v4 v4.15.1
 	github.com/magefile/mage v1.17.1
@@ -27,7 +27,10 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
-require github.com/lib/pq v1.12.1 // indirect
+require (
+	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/lib/pq v1.12.1 // indirect
+)
 
 require (
 	dario.cat/mergo v1.0.2 // indirect

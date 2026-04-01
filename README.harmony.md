@@ -849,7 +849,7 @@ See `.env.sample` for the full list. Key variables:
 | `AZURE_CLIENT_SECRET` | Azure AD app client secret | -- |
 | `AZURE_TENANT_ID` | Azure AD tenant ID | -- |
 | `SESSION_SECRET` | Session encryption key | -- |
-| `CSRF_ROTATE_PER_REQUEST` | Rotate CSRF token per request | false |
-| `CSRF_PER_REQUEST_PATHS` | Comma-separated paths for per-request CSRF tokens | -- |
+| `CSRF_ROTATE_PER_REQUEST` | Rotate CSRF token per request (legacy, unused with gorilla/csrf) | false |
+| `CSRF_PER_REQUEST_PATHS` | Comma-separated paths for per-request CSRF tokens (legacy, unused with gorilla/csrf) | -- |
 | `GRAPH_USERCACHE_REFRESH_HOUR` | Hour (0-23) for Graph user cache sync | 5 |
 | `ENABLE_PHOTO_DOWNLOAD` | Download user photos from Graph | false |

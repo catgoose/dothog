@@ -158,7 +158,7 @@ func TestCreated(t *testing.T) {
 	c, rec := newTestContext(http.MethodPost, "/items")
 	cmp := dummyComponent("<div>created</div>")
 
-	err := flighty.Created(c, cmp).Send()
+	err := flighty.Created(c.Response(), c.Request(), cmp).Send()
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusCreated, rec.Code)
@@ -169,7 +169,7 @@ func TestAccepted(t *testing.T) {
 	c, rec := newTestContext(http.MethodPost, "/jobs")
 	cmp := dummyComponent("<span>accepted</span>")
 
-	err := flighty.Accepted(c, cmp).Send()
+	err := flighty.Accepted(c.Response(), c.Request(), cmp).Send()
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusAccepted, rec.Code)
@@ -177,9 +177,9 @@ func TestAccepted(t *testing.T) {
 }
 
 func TestNoContent(t *testing.T) {
-	c, rec := newTestContext(http.MethodDelete, "/items/1")
+	_, rec := newTestContext(http.MethodDelete, "/items/1")
 
-	err := flighty.NoContent(c)
+	err := flighty.NoContent(rec)
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusNoContent, rec.Code)
@@ -187,9 +187,9 @@ func TestNoContent(t *testing.T) {
 }
 
 func TestSeeOther(t *testing.T) {
-	c, rec := newTestContext(http.MethodPost, "/login")
+	_, rec := newTestContext(http.MethodPost, "/login")
 
-	err := flighty.SeeOther(c, "/dashboard")
+	err := flighty.SeeOther(rec, "/dashboard")
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
@@ -204,7 +204,7 @@ func TestCreated_WithPushURL(t *testing.T) {
 	c, rec := newTestContext(http.MethodPost, "/items")
 	cmp := dummyComponent("<tr>new row</tr>")
 
-	err := flighty.Created(c, cmp).PushURL("/items/99").Send()
+	err := flighty.Created(c.Response(), c.Request(), cmp).PushURL("/items/99").Send()
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusCreated, rec.Code)
@@ -216,7 +216,7 @@ func TestCreated_WithTriggerEvent(t *testing.T) {
 	c, rec := newTestContext(http.MethodPost, "/items")
 	cmp := dummyComponent("<tr>row</tr>")
 
-	err := flighty.Created(c, cmp).TriggerEvent("item-created", map[string]string{"id": "42"}).Send()
+	err := flighty.Created(c.Response(), c.Request(), cmp).TriggerEvent("item-created", map[string]string{"id": "42"}).Send()
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusCreated, rec.Code)
@@ -227,7 +227,7 @@ func TestAccepted_WithTriggerEvent(t *testing.T) {
 	c, rec := newTestContext(http.MethodPost, "/jobs")
 	cmp := dummyComponent("<div>queued</div>")
 
-	err := flighty.Accepted(c, cmp).TriggerEvent("job-queued", nil).Send()
+	err := flighty.Accepted(c.Response(), c.Request(), cmp).TriggerEvent("job-queued", nil).Send()
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusAccepted, rec.Code)
@@ -245,9 +245,9 @@ func TestSeeOther_DifferentPaths(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, rec := newTestContext(http.MethodPost, "/form")
+			_, rec := newTestContext(http.MethodPost, "/form")
 
-			err := flighty.SeeOther(c, tt.url)
+			err := flighty.SeeOther(rec, tt.url)
 
 			require.NoError(t, err)
 			require.Equal(t, http.StatusSeeOther, rec.Code)
@@ -257,9 +257,9 @@ func TestSeeOther_DifferentPaths(t *testing.T) {
 }
 
 func TestNoContent_EmptyBody(t *testing.T) {
-	c, rec := newTestContext(http.MethodDelete, "/items/1")
+	_, rec := newTestContext(http.MethodDelete, "/items/1")
 
-	err := flighty.NoContent(c)
+	err := flighty.NoContent(rec)
 
 	require.NoError(t, err)
 	require.Empty(t, rec.Body.String())

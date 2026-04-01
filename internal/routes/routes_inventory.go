@@ -8,7 +8,6 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/cheddar"
 	"github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/web/views"
@@ -48,7 +47,7 @@ func (d *inventoryRoutes) handleInventoryItems(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load items", err)
 	}
-	if cheddar.IsBoosted(c) {
+	if c.Request().Header.Get("HX-Boosted") == "true" {
 		return handler.RenderBaseLayout(c, views.InventoryPage(bar, container))
 	}
 	setTableReplaceURL(c, inventoryBase)
@@ -102,7 +101,7 @@ func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 404, "Item not found", err)
 	}
-	if !cheddar.IsHTMX(c) || cheddar.IsBoosted(c) {
+	if c.Request().Header.Get("HX-Request") != "true" || c.Request().Header.Get("HX-Boosted") == "true" {
 		handler.SetPageLabel(c, item.Name)
 		return handler.RenderBaseLayout(c, views.InventoryDetailPage(item))
 	}

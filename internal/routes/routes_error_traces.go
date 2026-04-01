@@ -15,7 +15,6 @@ import (
 	"github.com/catgoose/flighty"
 	"catgoose/dothog/web/views"
 
-	"github.com/catgoose/cheddar"
 	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"
@@ -47,15 +46,15 @@ func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load error traces", err)
 	}
-	b := flighty.New(c).
+	b := flighty.New(c.Response(), c.Request()).
 		Component(container).
 		OOB(corecomponents.FilterGroupOOB(group))
-	if cheddar.IsHTMX(c) {
+	if c.Request().Header.Get("HX-Request") == "true" {
 		pushURL := errorTracesBase
 		if q := c.Request().URL.RawQuery; q != "" {
 			pushURL += "?" + q
 		}
-		cheddar.ReplaceURL(c, pushURL)
+		c.Response().Header().Set("HX-Replace-Url", pushURL)
 	}
 	return b.Send()
 }
@@ -88,7 +87,7 @@ func (ar *appRoutes) handleErrorTraceDelete(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to reload traces", err)
 	}
-	return flighty.New(c).
+	return flighty.New(c.Response(), c.Request()).
 		Component(container).
 		OOB(corecomponents.FilterGroupOOB(group)).
 		Send()

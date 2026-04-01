@@ -56,7 +56,7 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 		if ec.OOBSwap == "" {
 			ec.OOBSwap = "innerHTML"
 		}
-		return flighty.New(c).
+		return flighty.New(c.Response(), c.Request()).
 			Status(statusCode).
 			Component(templ.NopComponent).
 			OOB(corecomponents.ErrorStatusFromContext(ec)).
@@ -107,7 +107,7 @@ func handleErrorWithContext(c echo.Context, ec linkwell.ErrorContext) error {
 	if ec.OOBSwap == "" {
 		ec.OOBSwap = "innerHTML"
 	}
-	return flighty.New(c).
+	return flighty.New(c.Response(), c.Request()).
 		Status(ec.StatusCode).
 		Component(templ.NopComponent).
 		OOB(corecomponents.ErrorStatusFromContext(ec)).
@@ -202,7 +202,7 @@ func NewHTTPErrorHandler(reqLogStore *promolog.Store) func(err error, c echo.Con
 // Falls back to "dark" if session settings are unavailable.
 func errorPageTheme(c echo.Context) string {
 	// setup:feature:session_settings:start
-	if s := porter.GetSessionSettings(c); s != nil && s.Theme != "" {
+	if s := porter.GetSessionSettings(c.Request()); s != nil && s.Theme != "" {
 		return s.Theme
 	}
 	// setup:feature:session_settings:end

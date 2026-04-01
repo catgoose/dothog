@@ -94,7 +94,7 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 		theme = t
 	}
 	// setup:feature:session_settings:start
-	theme = porter.GetSessionSettings(c).Theme
+	theme = porter.GetSessionSettings(c.Request()).Theme
 	// setup:feature:session_settings:end
 
 	var crumbs []linkwell.Breadcrumb

@@ -8,8 +8,6 @@ import (
 	"catgoose/dothog/internal/demo"
 	"github.com/catgoose/linkwell"
 
-	"github.com/catgoose/cheddar"
-
 	"github.com/labstack/echo/v4"
 )
 
@@ -97,14 +95,14 @@ func filterQueryFromHXCurrentURL(c echo.Context) string {
 // setTableReplaceURL sets HX-Replace-Url to basePath?{currentQueryString} so the browser
 // URL stays in sync with the active filters after any table-replacing response.
 func setTableReplaceURL(c echo.Context, basePath string) {
-	if !cheddar.IsHTMX(c) {
+	if c.Request().Header.Get("HX-Request") != "true" {
 		return
 	}
 	pushURL := basePath
 	if q := c.Request().URL.RawQuery; q != "" {
 		pushURL += "?" + q
 	}
-	cheddar.ReplaceURL(c, pushURL)
+	c.Response().Header().Set("HX-Replace-Url", pushURL)
 }
 
 // applyFilterFromCurrentURL reads HX-Current-URL and sets the request URL's query string

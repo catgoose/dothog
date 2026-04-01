@@ -41,7 +41,7 @@ func (ar *appRoutes) handleTheme(broker *tavern.SSEBroker) echo.HandlerFunc {
 		if !valid {
 			theme = "light"
 		}
-		settings := porter.GetSessionSettings(c)
+		settings := porter.GetSessionSettings(c.Request())
 		settings.Theme = theme
 		if ar.settingsRepo != nil {
 			if err := ar.settingsRepo.Upsert(c.Request().Context(), settings); err != nil {
@@ -70,7 +70,7 @@ func (ar *appRoutes) handleLayout() echo.HandlerFunc {
 		if layout != porter.LayoutApp {
 			layout = porter.DefaultLayout
 		}
-		settings := porter.GetSessionSettings(c)
+		settings := porter.GetSessionSettings(c.Request())
 		settings.Layout = layout
 		if ar.settingsRepo != nil {
 			if err := ar.settingsRepo.Upsert(c.Request().Context(), settings); err != nil {
