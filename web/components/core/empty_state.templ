@@ -1,0 +1,16 @@
+package components
+
+import "github.com/catgoose/linkwell"
+
+// EmptyState renders a centered message when a list or table has no items.
+templ EmptyState(message string) {
+	<div class="text-center text-sm text-base-content/40 py-8">{ message }</div>
+}
+
+// EmptyStateWithAction renders an empty state with a call-to-action button.
+templ EmptyStateWithAction(message string, action linkwell.Control) {
+	<div class="flex flex-col items-center gap-3 py-8">
+		<span class="text-sm text-base-content/40">{ message }</span>
+		@control(action)
+	</div>
+}

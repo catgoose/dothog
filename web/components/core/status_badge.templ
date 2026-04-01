@@ -1,0 +1,45 @@
+package components
+
+// statusVariant returns a DaisyUI badge class for common status strings.
+func statusVariant(status string) string {
+	return variantFromMap(status, defaultStatusVariants)
+}
+
+// variantFromMap looks up a status in the given map, falling back to badge-neutral.
+func variantFromMap(status string, variants map[string]string) string {
+	if cls, ok := variants[status]; ok {
+		return cls
+	}
+	return "badge-neutral"
+}
+
+var defaultStatusVariants = map[string]string{
+	"active":    "badge-success",
+	"approved":  "badge-success",
+	"success":   "badge-success",
+	"completed": "badge-success",
+	"published": "badge-success",
+
+	"inactive":  "badge-error",
+	"rejected":  "badge-error",
+	"failed":    "badge-error",
+	"cancelled": "badge-error",
+
+	"pending": "badge-warning",
+	"draft":   "badge-warning",
+	"review":  "badge-warning",
+
+	"archived": "badge-ghost",
+	"disabled": "badge-ghost",
+}
+
+// StatusBadge renders a DaisyUI badge with a color derived from the status string.
+templ StatusBadge(status string) {
+	<span class={ "badge badge-sm", statusVariant(status) }>{ status }</span>
+}
+
+// StatusBadgeWithMap renders a badge using a custom status-to-CSS-class mapping.
+// Falls back to a neutral badge if the status is not in the map.
+templ StatusBadgeWithMap(status string, variants map[string]string) {
+	<span class={ "badge badge-sm", variantFromMap(status, variants) }>{ status }</span>
+}

@@ -1,0 +1,13 @@
+package components
+
+import "github.com/catgoose/linkwell"
+
+// CardHeader renders a card title row with optional action controls on the right.
+templ CardHeader(title string, controls []linkwell.Control) {
+	<div class="flex items-center justify-between">
+		<h2 class="card-title">{ title }</h2>
+		if len(controls) > 0 {
+			@Controls(controls)
+		}
+	</div>
+}

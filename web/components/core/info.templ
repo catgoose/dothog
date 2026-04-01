@@ -1,0 +1,15 @@
+package components
+
+// InfoRow renders a single label-value pair in muted text.
+templ InfoRow(label, value string) {
+	<div class="text-sm text-base-content/60">
+		<span class="font-medium">{ label }:</span> { value }
+	</div>
+}
+
+// InfoGrid lays out child InfoRows in a responsive grid.
+templ InfoGrid() {
+	<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+		{ children... }
+	</div>
+}
