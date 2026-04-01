@@ -1367,9 +1367,9 @@ func buildEnvTable(features []string, appName, appTLSPort string) string {
 		sb.WriteString("| `OIDC_CLIENT_SECRET` | OIDC client secret | -- |\n")
 	}
 
-	// CSRF
+	// CSRF — gorilla/csrf uses SESSION_SECRET as the auth key; no extra env vars needed.
 	if keep[FeatureCSRF] {
-		sb.WriteString("| `CSRF_ROTATE_PER_REQUEST` | Rotate CSRF token per request | false |\n")
+		sb.WriteString("| | CSRF protection enabled (gorilla/csrf) — uses SESSION_SECRET | |\n")
 	}
 
 	// Graph

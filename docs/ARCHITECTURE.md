@@ -19,7 +19,7 @@ Request
   ├─ Gzip (skipped when behind templ proxy; Caddy handles compression)
   ├─ Session (crooner/SCS — loads session, wraps LoadAndSave)
   ├─ Auth (crooner — OAuth/OIDC flow, login redirect)
-  ├─ CSRF (double-submit token, per-request rotation on configured paths)
+  ├─ CSRF (gorilla/csrf — cookie-based double-submit token)
   ├─ Session Settings (loads shared settings row from SQLite → echo context)
   ├─ Link Relations (resolves LinksFor(path) → echo context + Link HTTP header)
   ├─ Vary: HX-Request header
@@ -223,7 +223,7 @@ internal/
 │   ├── handler/     Layout rendering, breadcrumbs, error helpers
 │   ├── htmx/        HTMX request helpers (IsBoosted, IsHTMX, etc.)
 │   ├── hypermedia/  Link registry, controls, navigation, error types
-│   ├── middleware/   Echo middleware (CSRF, session, links, errors, timing)
+│   ├── middleware/   Echo middleware (session, links, errors, timing)
 │   ├── params/      Request parameter parsing
 │   ├── response/    Response builder (OOB swaps, retarget, etc.)
 │   ├── routes.go           InitEcho, InitRoutes, NewAppRoutes

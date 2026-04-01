@@ -22,6 +22,9 @@ import (
 	// setup:feature:session_settings:start
 	"github.com/catgoose/porter"
 	// setup:feature:session_settings:end
+	// setup:feature:csrf:start
+	"github.com/gorilla/csrf"
+	// setup:feature:csrf:end
 	"context"
 	"fmt"
 	"io/fs"
@@ -126,7 +129,7 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:demo:end
 	// setup:feature:session_settings:start
 	ar.e.GET("/settings", func(c echo.Context) error {
-		s := porter.GetSessionSettings(c)
+		s := porter.GetSessionSettings(c.Request())
 		return handler.RenderBaseLayout(c, views.AppSettingsPage(s.Theme))
 	})
 	// setup:feature:session_settings:end
@@ -305,16 +308,34 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		e.Use(echo.WrapMiddleware(scsMgr.LoadAndSave))
 		cfg.SessionMgr = sessionMgr
 		cfg.CroonerConfig.SessionMgr = sessionMgr
-		if err := crooner.NewAuthConfig(ctx, e, cfg.CroonerConfig); err != nil {
+		authMux := http.NewServeMux()
+		authCfg, err := crooner.NewAuthConfig(ctx, authMux, cfg.CroonerConfig)
+		if err != nil {
 			return nil, fmt.Errorf("crooner auth config: %w", err)
 		}
+		e.Use(echo.WrapMiddleware(authCfg.Middleware()))
+		e.GET(cfg.CroonerConfig.AuthRoutes.Login, echo.WrapHandler(authCfg.LoginHandler()))
+		e.GET(cfg.CroonerConfig.AuthRoutes.Logout, echo.WrapHandler(authCfg.LogoutHandler()))
+		e.GET(cfg.CroonerConfig.AuthRoutes.Callback, echo.WrapHandler(authCfg.CallbackHandler()))
 		// setup:feature:csrf:start
-		if cfg.SessionMgr != nil {
-			e.Use(porter.CSRF(cfg.SessionMgr, porter.CSRFConfig{
-				RotatePerRequest: cfg.CSRFRotatePerRequest,
-				PerRequestPaths:  cfg.CSRFPerRequestPaths,
-				ExemptPaths:      cfg.CSRFExemptPaths,
-			}))
+		if cfg.SessionSecret != "" {
+			csrfKey := []byte(cfg.SessionSecret)
+			if len(csrfKey) > 32 {
+				csrfKey = csrfKey[:32]
+			}
+			csrfProtect := csrf.Protect(csrfKey,
+				csrf.Path("/"),
+				csrf.FieldName("csrf_token"),
+				csrf.RequestHeader("X-CSRF-Token"),
+			)
+			e.Use(echo.WrapMiddleware(csrfProtect))
+			// Inject token into echo context for templates
+			e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+				return func(c echo.Context) error {
+					c.Set("csrf_token", csrf.Token(c.Request()))
+					return next(c)
+				}
+			})
 		}
 		// setup:feature:csrf:end
 	}
@@ -328,7 +349,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		if cfg != nil && cfg.AppName != "" {
 			sessCfg.CookieName = cfg.AppName + "_session_id"
 		}
-		e.Use(porter.SessionSettingsMiddleware(settingsRepo, nil, sessCfg))
+		e.Use(echo.WrapMiddleware(porter.SessionSettingsMiddleware(settingsRepo, nil, sessCfg)))
 	}
 	// setup:feature:session_settings:end
 

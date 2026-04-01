@@ -47,7 +47,7 @@ func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load error traces", err)
 	}
-	b := flighty.New(c).
+	b := flighty.New(c.Response(), c.Request()).
 		Component(container).
 		OOB(corecomponents.FilterGroupOOB(group))
 	if htmx.IsHTMX(c.Request()) {
@@ -88,7 +88,7 @@ func (ar *appRoutes) handleErrorTraceDelete(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to reload traces", err)
 	}
-	return flighty.New(c).
+	return flighty.New(c.Response(), c.Request()).
 		Component(container).
 		OOB(corecomponents.FilterGroupOOB(group)).
 		Send()

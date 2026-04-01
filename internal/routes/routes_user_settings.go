@@ -50,7 +50,7 @@ func (ar *appRoutes) handleUserSettingsSave(c echo.Context) error {
 		prefs.DateFormat = "relative"
 	}
 
-	sessionID := porter.GetSessionSettings(c).SessionUUID
+	sessionID := porter.GetSessionSettings(c.Request()).SessionUUID
 	prefsStore.Lock()
 	prefsStore.m[sessionID] = prefs
 	prefsStore.Unlock()
@@ -59,7 +59,7 @@ func (ar *appRoutes) handleUserSettingsSave(c echo.Context) error {
 }
 
 func getUserPrefs(c echo.Context) admininfo.UserPreferences {
-	sessionID := porter.GetSessionSettings(c).SessionUUID
+	sessionID := porter.GetSessionSettings(c.Request()).SessionUUID
 	prefsStore.RLock()
 	prefs, ok := prefsStore.m[sessionID]
 	prefsStore.RUnlock()

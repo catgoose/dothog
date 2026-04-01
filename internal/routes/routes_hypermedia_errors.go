@@ -110,7 +110,7 @@ func (ar *appRoutes) initErrorsRoutes() {
 				linkwell.ReportIssueButton(linkwell.LabelReportIssue, requestID),
 			},
 		}
-		return flighty.New(c).
+		return flighty.New(c.Response(), c.Request()).
 			Component(views.ErrorsOOBSuccess()).
 			OOB(corecomponents.ErrorStatusFromContext(ec)).
 			Send()

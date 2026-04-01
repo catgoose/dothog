@@ -46,7 +46,7 @@ ar.initRealtimeRoutes(broker)
 ```
 If `sse` is not selected, everything between `:start` and `:end` (inclusive) is removed.
 
-**CSRF feature** — wraps the CSRF block, which gates all CSRF-specific setup. Stripped when `csrf` (implied by `auth`) is not selected.
+**CSRF feature** — wraps the CSRF block, which gates gorilla/csrf middleware setup. Stripped when `csrf` (implied by `auth`) is not selected.
 
 ### Available Features
 
