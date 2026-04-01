@@ -10,9 +10,10 @@ require (
 	github.com/catgoose/crooner v1.4.4
 	github.com/catgoose/dio v1.0.26
 	github.com/catgoose/flighty v0.2.8
-	github.com/catgoose/fraggle v0.1.15
+	github.com/catgoose/fraggle v0.1.18
 	github.com/catgoose/linkwell v0.2.4
 	github.com/catgoose/porter v0.3.5-0.20260401174348-c697c5d04f37
+	github.com/catgoose/promolog/sqlite v0.0.0-20260401202939-361280beadb2
 	github.com/catgoose/tavern v0.4.4
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -46,7 +47,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bep/godartsass/v2 v2.5.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
-	github.com/catgoose/promolog v0.2.6
+	github.com/catgoose/promolog v0.2.10
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

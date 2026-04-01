@@ -15,6 +15,7 @@ import (
 	// setup:feature:database:end
 	"catgoose/dothog/internal/logger"
 	"github.com/catgoose/promolog"
+	promologsqlite "github.com/catgoose/promolog/sqlite"
 	"catgoose/dothog/internal/routes"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/repository"
@@ -91,7 +92,7 @@ func main() {
 			logger.Info("Error closing error traces database", "error", closeErr)
 		}
 	}()
-	reqLogStore := promolog.NewStore(traceDB)
+	reqLogStore := promologsqlite.NewStore(traceDB)
 	if err := reqLogStore.InitSchema(); err != nil {
 		logger.Fatal("Failed to init error traces schema", "error", err)
 	}

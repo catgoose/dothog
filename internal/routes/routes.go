@@ -62,7 +62,7 @@ type SessionSettingsStore interface {
 type appRoutes struct {
 	e             *echo.Echo
 	ctx           context.Context
-	reqLogStore   *promolog.Store
+	reqLogStore   promolog.Storer
 	issueReporter IssueReporter
 	startTime     time.Time
 	healthCfg     health.Config
@@ -84,7 +84,7 @@ type appRoutes struct {
 // NewAppRoutes initializes routes.
 // reqLogStore may be nil if request log capture is disabled.
 // reporter may be nil; a default no-op reporter is used.
-func NewAppRoutes(ctx context.Context, e *echo.Echo, reqLogStore *promolog.Store, reporter IssueReporter,
+func NewAppRoutes(ctx context.Context, e *echo.Echo, reqLogStore promolog.Storer, reporter IssueReporter,
 	// setup:feature:session_settings:start
 	settingsRepo SessionSettingsStore,
 	// setup:feature:session_settings:end
@@ -241,7 +241,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
 	settingsRepo porter.SessionSettingsProvider,
 	// setup:feature:session_settings:end
-	reqLogStore *promolog.Store,
+	reqLogStore promolog.Storer,
 ) (*echo.Echo, error) {
 	e := echo.New()
 

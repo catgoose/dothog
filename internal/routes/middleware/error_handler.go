@@ -118,7 +118,7 @@ func handleErrorWithContext(c echo.Context, ec linkwell.ErrorContext) error {
 // hypermedia responses. Assign it to e.HTTPErrorHandler in place of the default.
 // When reqLogStore is non-nil, the per-request log buffer is promoted to the
 // shared store on error so it can be retrieved for issue reports.
-func NewHTTPErrorHandler(reqLogStore *promolog.Store) func(err error, c echo.Context) {
+func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Context) {
 	return func(err error, c echo.Context) {
 		// Determine status code from error type before promoting.
 		statusCode := http.StatusInternalServerError

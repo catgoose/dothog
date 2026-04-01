@@ -24,7 +24,7 @@ func init() {
 }
 
 // setupEcho creates an Echo instance with promolog correlation and the HTTPErrorHandler.
-func setupEcho(reqLogStore *promolog.Store) *echo.Echo {
+func setupEcho(reqLogStore promolog.Storer) *echo.Echo {
 	e := echo.New()
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
 	e.HTTPErrorHandler = NewHTTPErrorHandler(reqLogStore)
