@@ -6,11 +6,12 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/a-h/templ v0.3.1001
+	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.4
 	github.com/catgoose/dio v1.0.26
 	github.com/catgoose/flighty v0.2.8
 	github.com/catgoose/fraggle v0.1.15
-	github.com/catgoose/linkwell v0.2.3
+	github.com/catgoose/linkwell v0.2.4
 	github.com/catgoose/porter v0.3.5-0.20260401174348-c697c5d04f37
 	github.com/catgoose/tavern v0.4.4
 	github.com/charmbracelet/huh v1.0.0

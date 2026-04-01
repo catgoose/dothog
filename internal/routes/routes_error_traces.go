@@ -15,6 +15,7 @@ import (
 	"github.com/catgoose/flighty"
 	"catgoose/dothog/web/views"
 
+	htmx "github.com/angelofallars/htmx-go"
 	corecomponents "catgoose/dothog/web/components/core"
 
 	"github.com/a-h/templ"
@@ -49,12 +50,12 @@ func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
 	b := flighty.New(c.Response(), c.Request()).
 		Component(container).
 		OOB(corecomponents.FilterGroupOOB(group))
-	if c.Request().Header.Get("HX-Request") == "true" {
+	if htmx.IsHTMX(c.Request()) {
 		pushURL := errorTracesBase
 		if q := c.Request().URL.RawQuery; q != "" {
 			pushURL += "?" + q
 		}
-		c.Response().Header().Set("HX-Replace-Url", pushURL)
+		htmx.NewResponse().ReplaceURL(pushURL).Write(c.Response())
 	}
 	return b.Send()
 }
