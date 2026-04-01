@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/catgoose/porter"
+	"catgoose/dothog/internal/session"
 )
 
 // AdminSessionsPage displays all session settings rows with live SSE updates.
-templ AdminSessionsPage(sessions []porter.SessionSettings) {
+templ AdminSessionsPage(sessions []session.SessionSettings) {
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<h1 class="text-2xl font-bold">Session Settings</h1>
 		<p class="text-sm text-base-content/60">
@@ -27,7 +27,7 @@ templ AdminSessionsPage(sessions []porter.SessionSettings) {
 }
 
 // AdminSessionsTable renders just the sessions table for HTMX fragment swaps.
-templ AdminSessionsTable(sessions []porter.SessionSettings) {
+templ AdminSessionsTable(sessions []session.SessionSettings) {
 	<div class="card bg-base-100 shadow border border-base-300">
 		<div class="card-body p-4">
 			<div class="overflow-x-auto">

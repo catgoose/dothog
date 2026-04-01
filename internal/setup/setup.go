@@ -66,10 +66,10 @@ var featureDeps = map[string][]string{
 	FeatureSync:           {FeatureOffline},
 	FeaturePWA:            {FeatureOffline, FeatureSync},
 	FeatureDemo:            {FeatureSessionSettings},
-	FeatureCSRF:           {FeatureSessionSettings},
-	FeatureLinkRelations:  {FeatureSessionSettings},
+	FeatureCSRF:           {},
+	FeatureLinkRelations:  {},
 	FeatureBrowserAPIs:    {FeatureSSE},
-	FeatureWebStandards:   {FeatureSessionSettings},
+	FeatureWebStandards:   {},
 }
 
 // ExpandFeatureDeps adds any transitive dependencies implied by the
@@ -1367,9 +1367,9 @@ func buildEnvTable(features []string, appName, appTLSPort string) string {
 		sb.WriteString("| `OIDC_CLIENT_SECRET` | OIDC client secret | -- |\n")
 	}
 
-	// CSRF — gorilla/csrf uses SESSION_SECRET as the auth key; no extra env vars needed.
+	// CSRF — porter.CSRFProtect uses SESSION_SECRET as the auth key; no extra env vars needed.
 	if keep[FeatureCSRF] {
-		sb.WriteString("| | CSRF protection enabled (gorilla/csrf) — uses SESSION_SECRET | |\n")
+		sb.WriteString("| | CSRF protection enabled (porter) — uses SESSION_SECRET | |\n")
 	}
 
 	// Graph

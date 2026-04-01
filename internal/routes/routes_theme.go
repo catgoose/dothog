@@ -14,7 +14,7 @@ import (
 	"github.com/catgoose/tavern"
 
 	// setup:feature:session_settings:start
-	"github.com/catgoose/porter"
+	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
 	"github.com/labstack/echo/v4"
 )
@@ -41,7 +41,7 @@ func (ar *appRoutes) handleTheme(broker *tavern.SSEBroker) echo.HandlerFunc {
 		if !valid {
 			theme = "light"
 		}
-		settings := porter.GetSessionSettings(c.Request())
+		settings := session.GetSettings(c.Request())
 		settings.Theme = theme
 		if ar.settingsRepo != nil {
 			if err := ar.settingsRepo.Upsert(c.Request().Context(), settings); err != nil {
@@ -67,10 +67,10 @@ func (ar *appRoutes) handleTheme(broker *tavern.SSEBroker) echo.HandlerFunc {
 func (ar *appRoutes) handleLayout() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		layout := c.FormValue("layout")
-		if layout != porter.LayoutApp {
-			layout = porter.DefaultLayout
+		if layout != session.LayoutApp {
+			layout = session.DefaultLayout
 		}
-		settings := porter.GetSessionSettings(c.Request())
+		settings := session.GetSettings(c.Request())
 		settings.Layout = layout
 		if ar.settingsRepo != nil {
 			if err := ar.settingsRepo.Upsert(c.Request().Context(), settings); err != nil {

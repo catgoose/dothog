@@ -78,8 +78,8 @@ github.com/catgoose/fraggle v0.1.19 h1:qDtIfGlfSHkjTnkUza8IgsTiGKvOpSV/ZePs2Qs1+
 github.com/catgoose/fraggle v0.1.19/go.mod h1:y1cwep4P/XCUSPJYp92Y+5yd+xgWIw4Z2khOvDwjGlo=
 github.com/catgoose/linkwell v0.2.7 h1:vR8UT/2HLr8M1lRdE0liaafjq3WVtwjahSoXRJFhcWU=
 github.com/catgoose/linkwell v0.2.7/go.mod h1:d7j/cAcLt+/BaW1HGf4olG1s5L5BFh8gyH8iFneDdXc=
-github.com/catgoose/porter v0.3.9 h1:B55Ds7RBzaBt4YUJjLy/PdPpUGfgcgamZT2j+d7aET8=
-github.com/catgoose/porter v0.3.9/go.mod h1:RRi+OhWUYcJPGOKI3JAtWh7F4nQWKoDteejYtjFeLBQ=
+github.com/catgoose/porter v0.4.0 h1:+fvVuY7AujV7j9alSfm0OWCblK9wE+vRDxSGp4kc6Ro=
+github.com/catgoose/porter v0.4.0/go.mod h1:RRi+OhWUYcJPGOKI3JAtWh7F4nQWKoDteejYtjFeLBQ=
 github.com/catgoose/promolog v0.2.10 h1:XgFbes1CNf27OUl5y8ntBZKbTWKZAzeYPNhkGtUwtSg=
 github.com/catgoose/promolog v0.2.10/go.mod h1:jEsBpxvJjXW8FTaCBi+vXaIwN5ISr3ylR6Z5AId+Yb4=
 github.com/catgoose/promolog/sqlite v0.0.0-20260401210124-ca42eb4f36e8 h1:gKr8Gu9vE7FyBYza+OUd0bHK0a8mwv5ZpnURLhpHKxg=
@@ -199,14 +199,8 @@ github.com/golang-sql/sqlexp v0.1.0/go.mod h1:J4ad9Vo8ZCWQ2GMrC4UCQy1JpCbwU9m3EO
 github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/google/gofuzz v1.2.0 h1:xRy4A+RhZaiKjJ1bPfwQ8sedCA+YS2YcCHW6ec7JMi0=
-github.com/google/gofuzz v1.2.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/gorilla/csrf v1.7.3 h1:BHWt6FTLZAb2HtWT5KDBf6qgpZzvtbp9QWDRKZMXJC0=
-github.com/gorilla/csrf v1.7.3/go.mod h1:F1Fj3KG23WYHE6gozCmBAezKookxbIvUJT+121wTuLk=
-github.com/gorilla/securecookie v1.1.2 h1:YCIWL56dvtr73r6715mJs5ZvhtnY73hBvEF8kXD8ePA=
-github.com/gorilla/securecookie v1.1.2/go.mod h1:NfCASbcHqRSY+3a8tlWJwsQap2VX5pwzwo4h3eOamfo=
 github.com/hairyhenderson/go-codeowners v0.7.0 h1:s0W4wF8bdsBEjTWzwzSlsatSthWtTAF2xLgo4a4RwAo=
 github.com/hairyhenderson/go-codeowners v0.7.0/go.mod h1:wUlNgQ3QjqC4z8DnM5nnCYVq/icpqXJyJOukKx5U8/Q=
 github.com/hashicorp/golang-lru/v2 v2.0.7 h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs4luLUK2k=

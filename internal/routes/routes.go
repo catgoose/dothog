@@ -20,11 +20,9 @@ import (
 	"catgoose/dothog/web/views"
 	"catgoose/dothog/internal/routes/middleware"
 	// setup:feature:session_settings:start
-	"github.com/catgoose/porter"
+	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
-	// setup:feature:csrf:start
-	"github.com/gorilla/csrf"
-	// setup:feature:csrf:end
+	"github.com/catgoose/porter"
 	"context"
 	"fmt"
 	"io/fs"
@@ -52,8 +50,8 @@ type AppRoutes interface {
 // SessionSettingsStore is the subset of session-settings operations that route
 // handlers need: listing all rows and upserting a single row.
 type SessionSettingsStore interface {
-	ListAll(ctx context.Context) ([]porter.SessionSettings, error)
-	Upsert(ctx context.Context, s *porter.SessionSettings) error
+	ListAll(ctx context.Context) ([]session.SessionSettings, error)
+	Upsert(ctx context.Context, s *session.SessionSettings) error
 }
 
 // setup:feature:session_settings:end
@@ -129,7 +127,7 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:demo:end
 	// setup:feature:session_settings:start
 	ar.e.GET("/settings", func(c echo.Context) error {
-		s := porter.GetSessionSettings(c.Request())
+		s := session.GetSettings(c.Request())
 		return handler.RenderBaseLayout(c, views.AppSettingsPage(s.Theme))
 	})
 	// setup:feature:session_settings:end
@@ -239,7 +237,7 @@ func (ar *appRoutes) SetHealthStats(fn health.StatsFunc) {
 // InitEcho initializes Echo with global configurations
 func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
-	settingsRepo porter.SessionSettingsProvider,
+	settingsRepo session.Provider,
 	// setup:feature:session_settings:end
 	reqLogStore promolog.Storer,
 ) (*echo.Echo, error) {
@@ -280,15 +278,10 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
 	e.Use(echoMiddleware.RequestLogger())
 	e.Use(echoMiddleware.Recover())
-	e.Use(echoMiddleware.Secure())
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			c.Response().Header().Set("Permissions-Policy",
-				"camera=(), microphone=(), geolocation=(), payment=(), usb=()")
-			c.Response().Header().Set("Cross-Origin-Opener-Policy", "same-origin")
-			return next(c)
-		}
-	})
+	e.Use(echo.WrapMiddleware(porter.SecurityHeaders(porter.SecurityHeadersConfig{
+		PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+		CrossOriginOpenerPolicy: "same-origin",
+	})))
 	// Skip gzip when running behind the templ proxy (mage watch).
 	// Echo's chunked gzip responses cause h2 framing errors through
 	// the templ-proxy → Caddy chain. Caddy handles compression instead.
@@ -322,16 +315,15 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 			if len(csrfKey) > 32 {
 				csrfKey = csrfKey[:32]
 			}
-			csrfProtect := csrf.Protect(csrfKey,
-				csrf.Path("/"),
-				csrf.FieldName("csrf_token"),
-				csrf.RequestHeader("X-CSRF-Token"),
-			)
-			e.Use(echo.WrapMiddleware(csrfProtect))
+			csrfMw := porter.CSRFProtect(porter.CSRFConfig{
+				Key: csrfKey, CookiePath: "/", FieldName: "csrf_token", RequestHeader: "X-CSRF-Token",
+				ExemptPaths: cfg.CSRFExemptPaths,
+			})
+			e.Use(echo.WrapMiddleware(csrfMw))
 			// Inject token into echo context for templates
 			e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 				return func(c echo.Context) error {
-					c.Set("csrf_token", csrf.Token(c.Request()))
+					c.Set("csrf_token", porter.GetToken(c.Request()))
 					return next(c)
 				}
 			})
@@ -344,11 +336,11 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 
 	// setup:feature:session_settings:start
 	if settingsRepo != nil {
-		var sessCfg porter.SessionConfig
+		var sessCfg session.SessionConfig
 		if cfg != nil && cfg.AppName != "" {
 			sessCfg.CookieName = cfg.AppName + "_session_id"
 		}
-		e.Use(echo.WrapMiddleware(porter.SessionSettingsMiddleware(settingsRepo, nil, sessCfg)))
+		e.Use(echo.WrapMiddleware(session.Middleware(settingsRepo, nil, sessCfg)))
 	}
 	// setup:feature:session_settings:end
 

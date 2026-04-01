@@ -18,7 +18,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/catgoose/dio"
 	// setup:feature:session_settings:start
-	"github.com/catgoose/porter"
+	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
 	"github.com/labstack/echo/v4"
 )
@@ -94,7 +94,7 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 		theme = t
 	}
 	// setup:feature:session_settings:start
-	theme = porter.GetSessionSettings(c.Request()).Theme
+	theme = session.GetSettings(c.Request()).Theme
 	// setup:feature:session_settings:end
 
 	var crumbs []linkwell.Breadcrumb

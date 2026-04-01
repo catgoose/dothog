@@ -10,7 +10,7 @@ import (
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 
-	"github.com/catgoose/porter"
+	"catgoose/dothog/internal/session"
 	"github.com/labstack/echo/v4"
 )
 
@@ -50,7 +50,7 @@ func (ar *appRoutes) handleUserSettingsSave(c echo.Context) error {
 		prefs.DateFormat = "relative"
 	}
 
-	sessionID := porter.GetSessionSettings(c.Request()).SessionUUID
+	sessionID := session.GetSettings(c.Request()).SessionUUID
 	prefsStore.Lock()
 	prefsStore.m[sessionID] = prefs
 	prefsStore.Unlock()
@@ -59,7 +59,7 @@ func (ar *appRoutes) handleUserSettingsSave(c echo.Context) error {
 }
 
 func getUserPrefs(c echo.Context) admininfo.UserPreferences {
-	sessionID := porter.GetSessionSettings(c.Request()).SessionUUID
+	sessionID := session.GetSettings(c.Request()).SessionUUID
 	prefsStore.RLock()
 	prefs, ok := prefsStore.m[sessionID]
 	prefsStore.RUnlock()

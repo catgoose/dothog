@@ -12,12 +12,11 @@ require (
 	github.com/catgoose/flighty v0.2.11
 	github.com/catgoose/fraggle v0.1.19
 	github.com/catgoose/linkwell v0.2.7
-	github.com/catgoose/porter v0.3.9
+	github.com/catgoose/porter v0.4.0
 	github.com/catgoose/promolog/sqlite v0.0.0-20260401210124-ca42eb4f36e8
 	github.com/catgoose/tavern v0.4.7
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/gorilla/csrf v1.7.3
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/labstack/echo/v4 v4.15.1
 	github.com/magefile/mage v1.17.1
@@ -29,10 +28,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
-require (
-	github.com/gorilla/securecookie v1.1.2 // indirect
-	github.com/lib/pq v1.12.1 // indirect
-)
+require github.com/lib/pq v1.12.1 // indirect
 
 require (
 	dario.cat/mergo v1.0.2 // indirect

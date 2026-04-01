@@ -7,7 +7,7 @@ import (
 
 	"catgoose/dothog/internal/logger"
 	// setup:feature:session_settings:start
-	"github.com/catgoose/porter"
+	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
 	"github.com/catgoose/promolog"
 	"github.com/catgoose/linkwell"
@@ -202,7 +202,7 @@ func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Con
 // Falls back to "dark" if session settings are unavailable.
 func errorPageTheme(c echo.Context) string {
 	// setup:feature:session_settings:start
-	if s := porter.GetSessionSettings(c.Request()); s != nil && s.Theme != "" {
+	if s := session.GetSettings(c.Request()); s != nil && s.Theme != "" {
 		return s.Theme
 	}
 	// setup:feature:session_settings:end
