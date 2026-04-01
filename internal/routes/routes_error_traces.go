@@ -12,7 +12,6 @@ import (
 	"github.com/catgoose/promolog"
 "catgoose/dothog/internal/routes/handler"
 	"github.com/catgoose/linkwell"
-	"github.com/catgoose/flighty"
 	"catgoose/dothog/web/views"
 
 	htmx "github.com/angelofallars/htmx-go"
@@ -47,9 +46,6 @@ func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load error traces", err)
 	}
-	b := flighty.New(c.Response(), c.Request()).
-		Component(container).
-		OOB(corecomponents.FilterGroupOOB(group))
 	if htmx.IsHTMX(c.Request()) {
 		pushURL := errorTracesBase
 		if q := c.Request().URL.RawQuery; q != "" {
@@ -57,7 +53,12 @@ func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
 		}
 		htmx.NewResponse().ReplaceURL(pushURL).Write(c.Response())
 	}
-	return b.Send()
+	ctx := c.Request().Context()
+	w := c.Response()
+	if err := container.Render(ctx, w); err != nil {
+		return err
+	}
+	return corecomponents.FilterGroupOOB(group).Render(ctx, w)
 }
 
 func (ar *appRoutes) handleErrorTraceDetail(c echo.Context) error {
@@ -88,10 +89,12 @@ func (ar *appRoutes) handleErrorTraceDelete(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to reload traces", err)
 	}
-	return flighty.New(c.Response(), c.Request()).
-		Component(container).
-		OOB(corecomponents.FilterGroupOOB(group)).
-		Send()
+	ctx := c.Request().Context()
+	w := c.Response()
+	if err := container.Render(ctx, w); err != nil {
+		return err
+	}
+	return corecomponents.FilterGroupOOB(group).Render(ctx, w)
 }
 
 func (ar *appRoutes) buildErrorTracesContent(c echo.Context) (linkwell.FilterGroup, templ.Component, error) {

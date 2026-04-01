@@ -16,7 +16,6 @@ import (
 	corecomponents "catgoose/dothog/web/components/core"
 	"catgoose/dothog/web/views"
 
-	"github.com/catgoose/flighty"
 	"github.com/labstack/echo/v4"
 )
 
@@ -110,10 +109,12 @@ func (ar *appRoutes) initErrorsRoutes() {
 				linkwell.ReportIssueButton(linkwell.LabelReportIssue, requestID),
 			},
 		}
-		return flighty.New(c.Response(), c.Request()).
-			Component(views.ErrorsOOBSuccess()).
-			OOB(corecomponents.ErrorStatusFromContext(ec)).
-			Send()
+		ctx := c.Request().Context()
+		w := c.Response()
+		if err := views.ErrorsOOBSuccess().Render(ctx, w); err != nil {
+			return err
+		}
+		return corecomponents.ErrorStatusFromContext(ec).Render(ctx, w)
 	})
 
 	// Flaky endpoint — first call fails with retry button, second succeeds.

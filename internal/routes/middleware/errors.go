@@ -73,8 +73,8 @@ func ServiceUnavailable(c echo.Context, message string) error {
 
 // HypermediaError builds a linkwell.ErrorContext populated with request metadata
 // (route, requestID) from the echo context. Pass the result to linkwell.NewHTTPError
-// to return it from a handler, or to flighty.Builder.OOBErrorStatus to compose it
-// alongside a primary component.
+// to return it from a handler, or render the error component directly alongside
+// a primary component via OOB swap.
 func HypermediaError(c echo.Context, statusCode int, message string, err error, controls ...linkwell.Control) linkwell.ErrorContext {
 	return linkwell.ErrorContext{
 		StatusCode: statusCode,

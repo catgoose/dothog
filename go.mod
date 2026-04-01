@@ -9,7 +9,6 @@ require (
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.11
 	github.com/catgoose/dio v1.0.31
-	github.com/catgoose/flighty v0.2.14
 	github.com/catgoose/fraggle v0.1.22
 	github.com/catgoose/linkwell v0.2.10
 	github.com/catgoose/porter v0.4.0

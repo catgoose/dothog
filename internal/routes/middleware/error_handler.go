@@ -11,10 +11,8 @@ import (
 	// setup:feature:session_settings:end
 	"github.com/catgoose/promolog"
 	"github.com/catgoose/linkwell"
-	"github.com/catgoose/flighty"
 	corecomponents "catgoose/dothog/web/components/core"
 
-	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
 )
 
@@ -56,11 +54,8 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 		if ec.OOBSwap == "" {
 			ec.OOBSwap = "innerHTML"
 		}
-		return flighty.New(c.Response(), c.Request()).
-			Status(statusCode).
-			Component(templ.NopComponent).
-			OOB(corecomponents.ErrorStatusFromContext(ec)).
-			Send()
+		c.Response().WriteHeader(statusCode)
+		return corecomponents.ErrorStatusFromContext(ec).Render(c.Request().Context(), c.Response())
 	}
 
 	// Non-HTMX: render a full HATEOAS error page with navigation controls
@@ -107,11 +102,8 @@ func handleErrorWithContext(c echo.Context, ec linkwell.ErrorContext) error {
 	if ec.OOBSwap == "" {
 		ec.OOBSwap = "innerHTML"
 	}
-	return flighty.New(c.Response(), c.Request()).
-		Status(ec.StatusCode).
-		Component(templ.NopComponent).
-		OOB(corecomponents.ErrorStatusFromContext(ec)).
-		Send()
+	c.Response().WriteHeader(ec.StatusCode)
+	return corecomponents.ErrorStatusFromContext(ec).Render(c.Request().Context(), c.Response())
 }
 
 // NewHTTPErrorHandler returns an echo.HTTPErrorHandler that renders errors as

@@ -1,16 +1,12 @@
 package middleware
 
 import (
-	"context"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/catgoose/flighty"
 	"github.com/catgoose/linkwell"
 
-	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 )
@@ -143,124 +139,3 @@ func TestHypermediaError_MultipleControls(t *testing.T) {
 	require.Equal(t, linkwell.ControlKindHome, ec.Controls[1].Kind)
 }
 
-// ---------------------------------------------------------------------------
-// status.go helpers
-// ---------------------------------------------------------------------------
-
-func dummyComponent(html string) templ.Component {
-	return templ.ComponentFunc(func(_ context.Context, w io.Writer) error {
-		_, err := io.WriteString(w, html)
-		return err
-	})
-}
-
-func TestCreated(t *testing.T) {
-	c, rec := newTestContext(http.MethodPost, "/items")
-	cmp := dummyComponent("<div>created</div>")
-
-	err := flighty.Created(c.Response(), c.Request(), cmp).Send()
-
-	require.NoError(t, err)
-	require.Equal(t, http.StatusCreated, rec.Code)
-	require.Contains(t, rec.Body.String(), "<div>created</div>")
-}
-
-func TestAccepted(t *testing.T) {
-	c, rec := newTestContext(http.MethodPost, "/jobs")
-	cmp := dummyComponent("<span>accepted</span>")
-
-	err := flighty.Accepted(c.Response(), c.Request(), cmp).Send()
-
-	require.NoError(t, err)
-	require.Equal(t, http.StatusAccepted, rec.Code)
-	require.Contains(t, rec.Body.String(), "<span>accepted</span>")
-}
-
-func TestNoContent(t *testing.T) {
-	_, rec := newTestContext(http.MethodDelete, "/items/1")
-
-	err := flighty.NoContent(rec)
-
-	require.NoError(t, err)
-	require.Equal(t, http.StatusNoContent, rec.Code)
-	require.Equal(t, "none", rec.Header().Get("HX-Reswap"))
-}
-
-func TestSeeOther(t *testing.T) {
-	_, rec := newTestContext(http.MethodPost, "/login")
-
-	err := flighty.SeeOther(rec, "/dashboard")
-
-	require.NoError(t, err)
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/dashboard", rec.Header().Get("HX-Redirect"))
-}
-
-// ---------------------------------------------------------------------------
-// Builder chaining: Created/Accepted with extra builder methods
-// ---------------------------------------------------------------------------
-
-func TestCreated_WithPushURL(t *testing.T) {
-	c, rec := newTestContext(http.MethodPost, "/items")
-	cmp := dummyComponent("<tr>new row</tr>")
-
-	err := flighty.Created(c.Response(), c.Request(), cmp).PushURL("/items/99").Send()
-
-	require.NoError(t, err)
-	require.Equal(t, http.StatusCreated, rec.Code)
-	require.Equal(t, "/items/99", rec.Header().Get("HX-Push-Url"))
-	require.Contains(t, rec.Body.String(), "<tr>new row</tr>")
-}
-
-func TestCreated_WithTriggerEvent(t *testing.T) {
-	c, rec := newTestContext(http.MethodPost, "/items")
-	cmp := dummyComponent("<tr>row</tr>")
-
-	err := flighty.Created(c.Response(), c.Request(), cmp).TriggerEvent("item-created", map[string]string{"id": "42"}).Send()
-
-	require.NoError(t, err)
-	require.Equal(t, http.StatusCreated, rec.Code)
-	require.Contains(t, rec.Header().Get("HX-Trigger"), "item-created")
-}
-
-func TestAccepted_WithTriggerEvent(t *testing.T) {
-	c, rec := newTestContext(http.MethodPost, "/jobs")
-	cmp := dummyComponent("<div>queued</div>")
-
-	err := flighty.Accepted(c.Response(), c.Request(), cmp).TriggerEvent("job-queued", nil).Send()
-
-	require.NoError(t, err)
-	require.Equal(t, http.StatusAccepted, rec.Code)
-	require.Contains(t, rec.Header().Get("HX-Trigger"), "job-queued")
-}
-
-func TestSeeOther_DifferentPaths(t *testing.T) {
-	tests := []struct {
-		name string
-		url  string
-	}{
-		{"root", "/"},
-		{"nested path", "/admin/settings"},
-		{"with query", "/search?q=test"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, rec := newTestContext(http.MethodPost, "/form")
-
-			err := flighty.SeeOther(rec, tt.url)
-
-			require.NoError(t, err)
-			require.Equal(t, http.StatusSeeOther, rec.Code)
-			require.Equal(t, tt.url, rec.Header().Get("HX-Redirect"))
-		})
-	}
-}
-
-func TestNoContent_EmptyBody(t *testing.T) {
-	_, rec := newTestContext(http.MethodDelete, "/items/1")
-
-	err := flighty.NoContent(rec)
-
-	require.NoError(t, err)
-	require.Empty(t, rec.Body.String())
-}
