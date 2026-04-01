@@ -7,14 +7,14 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/a-h/templ v0.3.1001
 	github.com/angelofallars/htmx-go v0.5.0
-	github.com/catgoose/crooner v1.4.4
-	github.com/catgoose/dio v1.0.26
-	github.com/catgoose/flighty v0.2.8
-	github.com/catgoose/fraggle v0.1.18
-	github.com/catgoose/linkwell v0.2.4
-	github.com/catgoose/porter v0.3.5-0.20260401174348-c697c5d04f37
+	github.com/catgoose/crooner v1.4.7
+	github.com/catgoose/dio v1.0.29
+	github.com/catgoose/flighty v0.2.11
+	github.com/catgoose/fraggle v0.1.19
+	github.com/catgoose/linkwell v0.2.7
+	github.com/catgoose/porter v0.3.9
 	github.com/catgoose/promolog/sqlite v0.0.0-20260401202939-361280beadb2
-	github.com/catgoose/tavern v0.4.4
+	github.com/catgoose/tavern v0.4.7
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/csrf v1.7.3
