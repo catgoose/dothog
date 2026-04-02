@@ -338,12 +338,35 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	// Compose .env.development from the tracked .env.development.
 	// Lines tagged with "# setup:env " are activated (prefix stripped, literal
 	// default removed) and template placeholders are resolved to real ports.
+	// Feature-gated blocks ("# setup:feature:TAG:start/end") are stripped when
+	// the corresponding feature is not selected.
 	envDevPath := filepath.Join(dir, ".env.development")
 	if data, err := os.ReadFile(envDevPath); err == nil {
 		content := composeSetupEnv(string(data))
 		content = strings.ReplaceAll(content, "{{APP_TLS_PORT}}", appTLSPort)
 		content = strings.ReplaceAll(content, "{{TEMPL_HTTP_PORT}}", templHTTPPort)
 		content = strings.ReplaceAll(content, "{{CADDY_TLS_PORT}}", caddyTLSPort)
+		// Strip feature-gated blocks that were not selected.
+		if opts.Features != nil {
+			expanded := ExpandFeatureDeps(opts.Features)
+			keep := make(map[string]bool, len(expanded))
+			for _, f := range expanded {
+				keep[f] = true
+			}
+			for _, f := range ImplicitFeatures {
+				keep[f] = true
+			}
+			envRemove := make(map[string]bool)
+			for _, f := range AllFeatures {
+				if !keep[f] {
+					envRemove[f] = true
+				}
+			}
+			content = stripEnvBlocks(content, envRemove)
+		} else {
+			// Legacy mode: strip all feature blocks (remove markers, keep content).
+			content = stripEnvBlocks(content, map[string]bool{})
+		}
 		// Ensure APP_NAME is set in the generated env file
 		if !strings.Contains(content, "APP_NAME=") {
 			content += "\n# Application\nAPP_NAME=" + opts.AppName + "\n"
@@ -1404,6 +1427,50 @@ func composeSetupEnv(content string) string {
 		out = append(out, line)
 	}
 	return strings.Join(out, "\n")
+}
+
+// envFeatureBlockStart is the prefix for env-file feature block start markers.
+// Env files use # comments, so markers take the form "# setup:feature:TAG:start".
+const envFeatureBlockStart = "# setup:feature:"
+
+// stripEnvBlocks removes "# setup:feature:TAG:start" / "# setup:feature:TAG:end"
+// blocks from env file content when TAG is in removeTags. Marker lines are always
+// stripped; block content is stripped only when the tag is being removed.
+func stripEnvBlocks(content string, removeTags map[string]bool) string {
+	lines := strings.Split(content, "\n")
+	var out []string
+	skipDepth := 0
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Check for "# setup:feature:TAG:start"
+		if strings.HasPrefix(trimmed, envFeatureBlockStart) {
+			rest := strings.TrimPrefix(trimmed, envFeatureBlockStart)
+			if strings.HasSuffix(rest, featureBlockStartSuffix) {
+				tag := strings.TrimSuffix(rest, featureBlockStartSuffix)
+				if tag != "" {
+					if skipDepth > 0 || removeTags[tag] {
+						skipDepth++
+					}
+					continue // always strip the marker line itself
+				}
+			}
+			// Check for "# setup:feature:TAG:end"
+			if strings.HasSuffix(rest, featureBlockEndSuffix) {
+				if skipDepth > 0 {
+					skipDepth--
+				}
+				continue // always strip the marker line itself
+			}
+		}
+
+		if skipDepth == 0 {
+			out = append(out, line)
+		}
+	}
+
+	return collapseBlankLines(out)
 }
 
 // replaceE2EWithSmoke removes all demo-specific e2e spec files and generates a

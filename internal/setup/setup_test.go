@@ -879,3 +879,60 @@ func TestStripFeatureFileMarker(t *testing.T) {
 		})
 	}
 }
+
+// ---------------------------------------------------------------------------
+// stripEnvBlocks
+// ---------------------------------------------------------------------------
+
+func TestStripEnvBlocks(t *testing.T) {
+	t.Run("removes block when tag is in removeTags", func(t *testing.T) {
+		content := strings.Join([]string{
+			"# before",
+			"",
+			"# setup:feature:graph:start",
+			"# AZURE_TENANT_ID=",
+			"# AZURE_CLIENT_ID=",
+			"# setup:feature:graph:end",
+			"",
+			"# after",
+		}, "\n")
+		got := stripEnvBlocks(content, map[string]bool{"graph": true})
+		require.NotContains(t, got, "AZURE_TENANT_ID")
+		require.NotContains(t, got, "AZURE_CLIENT_ID")
+		require.Contains(t, got, "# before")
+		require.Contains(t, got, "# after")
+	})
+
+	t.Run("keeps block content when tag is not in removeTags", func(t *testing.T) {
+		content := strings.Join([]string{
+			"# setup:feature:graph:start",
+			"# AZURE_TENANT_ID=",
+			"# AZURE_CLIENT_ID=",
+			"# AZURE_CLIENT_SECRET=",
+			"# setup:feature:graph:end",
+		}, "\n")
+		got := stripEnvBlocks(content, map[string]bool{})
+		require.Contains(t, got, "# AZURE_TENANT_ID=")
+		require.Contains(t, got, "# AZURE_CLIENT_ID=")
+		require.Contains(t, got, "# AZURE_CLIENT_SECRET=")
+		require.NotContains(t, got, "setup:feature:graph")
+	})
+
+	t.Run("always strips marker lines", func(t *testing.T) {
+		content := strings.Join([]string{
+			"# setup:feature:graph:start",
+			"# AZURE_TENANT_ID=",
+			"# setup:feature:graph:end",
+		}, "\n")
+		got := stripEnvBlocks(content, map[string]bool{})
+		require.NotContains(t, got, "# setup:feature:graph:start")
+		require.NotContains(t, got, "# setup:feature:graph:end")
+		require.Contains(t, got, "# AZURE_TENANT_ID=")
+	})
+
+	t.Run("no markers returns content unchanged", func(t *testing.T) {
+		content := "# plain env file\nSERVER_PORT=5000\n"
+		got := stripEnvBlocks(content, map[string]bool{"graph": true})
+		require.Equal(t, content, got)
+	})
+}
