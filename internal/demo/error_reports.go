@@ -119,10 +119,17 @@ func (d *DB) GetErrorReport(ctx context.Context, id int) (ErrorReport, error) {
 		return ErrorReport{}, fmt.Errorf("get error report %d: %w", id, err)
 	}
 	r.Status = ErrorReportStatus(status)
-	r.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+	if t, err := time.Parse(time.RFC3339, createdAt); err == nil {
+		r.CreatedAt = t
+	} else {
+		r.CreatedAt = time.Now()
+	}
 	if resolvedAt.Valid {
-		t, _ := time.Parse(time.RFC3339, resolvedAt.String)
-		r.ResolvedAt = sql.NullTime{Time: t, Valid: true}
+		if t, err := time.Parse(time.RFC3339, resolvedAt.String); err == nil {
+			r.ResolvedAt = sql.NullTime{Time: t, Valid: true}
+		} else {
+			r.ResolvedAt = sql.NullTime{Time: time.Now(), Valid: true}
+		}
 	}
 	return r, nil
 }
@@ -186,10 +193,17 @@ func (d *DB) ListErrorReports(ctx context.Context, search, status, sortBy, sortD
 			return nil, 0, err
 		}
 		r.Status = ErrorReportStatus(statusStr)
-		r.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+		if t, err := time.Parse(time.RFC3339, createdAt); err == nil {
+			r.CreatedAt = t
+		} else {
+			r.CreatedAt = time.Now()
+		}
 		if resolvedAt.Valid {
-			t, _ := time.Parse(time.RFC3339, resolvedAt.String)
-			r.ResolvedAt = sql.NullTime{Time: t, Valid: true}
+			if t, err := time.Parse(time.RFC3339, resolvedAt.String); err == nil {
+				r.ResolvedAt = sql.NullTime{Time: t, Valid: true}
+			} else {
+				r.ResolvedAt = sql.NullTime{Time: time.Now(), Valid: true}
+			}
 		}
 		reports = append(reports, r)
 	}

@@ -225,7 +225,10 @@ func (s *TaskStore) UpdateTask(ctx context.Context, t *Task) error {
 	if err != nil {
 		return fmt.Errorf("update task %d: %w", t.ID, err)
 	}
-	rows, _ := res.RowsAffected()
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("task %d: check affected rows: %w", t.ID, err)
+	}
 	if rows == 0 {
 		return fmt.Errorf("task %d: version conflict or not found", t.ID)
 	}
