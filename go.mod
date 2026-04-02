@@ -8,7 +8,7 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.14
-	github.com/catgoose/fraggle v0.1.25
+	github.com/catgoose/fraggle v0.1.26
 	github.com/catgoose/linkwell v0.2.14
 	github.com/catgoose/porter v0.4.4
 	github.com/catgoose/promolog/sqlite v0.0.0-20260402134330-814f9e6c453d
