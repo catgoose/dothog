@@ -2,6 +2,17 @@
 
 This document describes how dothog processes requests, resolves navigation, and renders pages. For design principles and rationale, see [PHILOSOPHY.md](../PHILOSOPHY.md).
 
+## Ecosystem Libraries
+
+| Library | Purpose |
+|---------|---------|
+| [fraggle](https://github.com/catgoose/fraggle) | Multi-dialect SQL schema and query fragments |
+| [promolog](https://github.com/catgoose/promolog) | Per-request log capture with promote-on-error |
+| [crooner](https://github.com/catgoose/crooner) | OIDC/OAuth2 authentication and session management |
+| [porter](https://github.com/catgoose/porter) | Authorization, CSRF protection, security headers |
+| [linkwell](https://github.com/catgoose/linkwell) | HATEOAS link registry, navigation, hypermedia controls |
+| [tavern](https://github.com/catgoose/tavern) | Thread-safe SSE pub/sub broker |
+
 ## Request Lifecycle
 
 Every HTTP request passes through Echo's middleware chain in this order:
@@ -19,8 +30,8 @@ Request
   ├─ Session (crooner/SCS — loads session, wraps LoadAndSave)
   ├─ Auth (crooner — OAuth/OIDC flow, login redirect)
   ├─ CSRF (porter.CSRFProtect — HMAC-SHA256 double-submit cookie)
-  ├─ Session Settings (loads shared settings row from SQLite → echo context)
-  ├─ Link Relations (resolves LinksFor(path) → echo context + Link HTTP header)
+  ├─ Session Settings (loads per-session preferences → request context)
+  ├─ Link Relations (resolves linkwell.LinksFor(path) → echo context + Link HTTP header)
   ├─ Vary: HX-Request header
   │
   └─ Handler
@@ -41,7 +52,7 @@ Middleware is registered in `InitEcho()` (`internal/routes/routes.go`). Each mid
    - Breadcrumbs (resolved by priority — see below)
    - Link relations (from middleware)
    - Hub entries (for site map footer)
-4. Layout checks `settings.Layout` — if `domain.LayoutApp`, renders `AppNavLayout`; otherwise renders the classic `Index` layout.
+4. Layout renders `AppNavLayout` with the full navigation context.
 5. Templ renders HTML and writes the response.
 
 **Key files:**
@@ -50,7 +61,7 @@ Middleware is registered in `InitEcho()` (`internal/routes/routes.go`). Each mid
 
 ## Link Relations System
 
-The link registry is the navigation topology of the application. All context bars, breadcrumbs, and the site map footer derive from it.
+The link registry (`linkwell`) is the navigation topology of the application. All context bars, breadcrumbs, and the site map footer derive from it.
 
 ### Registration
 
@@ -58,9 +69,9 @@ Links are registered at startup in `routes_links.go` using three primitives:
 
 | Primitive | Semantics | Example |
 |-----------|-----------|---------|
-| `Hub(center, title, spokes...)` | Parent→children. Center gets `rel="related"` to each spoke. Each spoke gets `rel="up"` to center. | `Hub("/demo", "Demo", Rel("/demo/inventory", "Inventory"))` |
-| `Ring(name, members...)` | Symmetric peers. Every member gets `rel="related"` to every other member, grouped by ring name. | `Ring("Data", Rel("/demo/inventory", "Inventory"), Rel("/demo/catalog", "Catalog"))` |
-| `Link(source, rel, target, title)` | Pairwise. `rel="related"` auto-creates the inverse. | `Link("/settings", "related", "/admin/config", "Admin Config")` |
+| `linkwell.Hub(center, title, spokes...)` | Parent→children. Center gets `rel="related"` to each spoke. Each spoke gets `rel="up"` to center. | `Hub("/demo", "Demo", Rel("/demo/inventory", "Inventory"))` |
+| `linkwell.Ring(name, members...)` | Symmetric peers. Every member gets `rel="related"` to every other member, grouped by ring name. | `Ring("Data", Rel("/demo/inventory", "Inventory"), Rel("/demo/catalog", "Catalog"))` |
+| `linkwell.Link(source, rel, target, title)` | Pairwise. `rel="related"` auto-creates the inverse. | `Link("/settings", "related", "/admin/config", "Admin Config")` |
 
 A page can belong to multiple rings and one hub. The registry deduplicates automatically.
 
@@ -68,17 +79,16 @@ A page can belong to multiple rings and one hub. The registry deduplicates autom
 
 `LinkRelationsMiddleware` (`internal/routes/middleware/links.go`) runs on every request:
 
-1. Calls `hypermedia.LinksFor(path)` to get all registered relations for the current path.
+1. Calls `linkwell.LinksFor(path)` to get all registered relations for the current path (walks parent paths if no exact match).
 2. Sets the `Link` HTTP header (RFC 8288 format).
 3. Stores links on the echo context for template rendering.
 
 ### Stored Links
 
-Links can also be loaded from the database at startup via `hypermedia.LoadStoredLink()`. The demo DB stores link relations in a `stored_links` table, loaded during `InitRoutes()`.
+Links can also be loaded from the database at startup via `linkwell.LoadStoredLink()`. The demo DB stores link relations in a `stored_links` table, loaded during `InitRoutes()`.
 
 **Key files:**
 - `internal/routes/routes_links.go` — all Hub/Ring/Link declarations
-- `internal/routes/hypermedia/links.go` — `Ring()`, `Hub()`, `Link()`, `LinksFor()`, registry internals
 - `internal/routes/middleware/links.go` — `LinkRelationsMiddleware()`
 
 ## Context Bar Resolution
@@ -99,11 +109,11 @@ Breadcrumbs are resolved in `getLayoutCtx()` (`internal/routes/handler/handler.g
 
 ### Priority 1: `?from=` bitmask (explicit navigation context)
 
-When a user navigates via a link that includes `?from=N`, the bitmask encodes which pages they came through. `hypermedia.ResolveFromMask(mask)` decodes the bitmask into breadcrumb entries. Origins are registered at startup via `hypermedia.RegisterFrom()`.
+When a user navigates via a link that includes `?from=N`, the bitmask encodes which pages they came through. `linkwell.ResolveFromMask(mask)` decodes the bitmask into breadcrumb entries. Origins are registered at startup via `linkwell.RegisterFrom()`.
 
 ### Priority 2: `rel="up"` chain (declared hierarchy)
 
-`hypermedia.BreadcrumbsFromLinks(path)` walks the `rel="up"` chain: current page → parent → grandparent → Home. This produces breadcrumbs like `Home > Demo > Inventory > Item Name`. Cycle detection prevents infinite loops.
+`linkwell.BreadcrumbsFromLinks(path)` walks the `rel="up"` chain: current page → parent → grandparent → Home. This produces breadcrumbs like `Home > Demo > Inventory > Item Name`. Cycle detection prevents infinite loops.
 
 ### Priority 3: URL path segments (fallback)
 
@@ -115,7 +125,7 @@ When a user navigates via a link that includes `?from=N`, the bitmask encodes wh
 
 ### Boosted Navigation
 
-`hx-boost` navigation sends full-page requests with the `HX-Boosted` header. Handlers check `hx.IsBoosted(c)` to decide whether to render a full layout or just a fragment.
+`hx-boost` navigation sends full-page requests with the `HX-Boosted` header. Handlers check `htmx.IsBoosted(c.Request())` to decide whether to render a full layout or just a fragment.
 
 ## Session Settings
 
@@ -152,8 +162,11 @@ Server-Sent Events provide real-time updates without polling.
 
 - `NewSSEBroker()` — creates a broker instance
 - `Subscribe(topic)` — returns a read channel and unsubscribe function
+- `SubscribeScoped(topic, scope)` — per-user/per-session subscriptions
 - `Publish(topic, data)` — sends to all subscribers on a topic
-- `HasSubscribers(topic)` — checks if anyone is listening (avoids rendering unused fragments)
+- `PublishTo(topic, scope, data)` — sends to matching scoped subscribers only
+- `HasSubscribers(topic)` — checks if anyone is listening
+- `Close()` — shuts down all subscriptions (called via `defer ar.Close()` in main.go)
 
 ### Wiring
 
@@ -182,7 +195,7 @@ Errors are hypermedia responses with navigation controls, not dead ends.
 
 | Type | Source | Handling |
 |------|--------|----------|
-| `hypermedia.HTTPError` | `handler.HandleHypermediaError()` | Rich error with custom controls |
+| `linkwell.HTTPError` | `handler.HandleHypermediaError()` | Rich error with custom controls |
 | `echo.HTTPError` | Echo framework | Converted to HTML with default controls |
 | Generic `error` | Unhandled errors | 500 with generic controls |
 
@@ -193,7 +206,7 @@ Errors are hypermedia responses with navigation controls, not dead ends.
 
 ### Error Controls
 
-`hypermedia.ErrorControlsForStatus(statusCode, opts)` returns appropriate actions:
+`linkwell.ErrorControlsForStatus(statusCode, opts)` returns appropriate actions:
 
 | Status | Controls |
 |--------|----------|
@@ -207,24 +220,41 @@ The "Report Issue" button opens a modal that captures the request ID and log buf
 
 ### Error Trace Promotion
 
-When `reqLogStore` is non-nil, the error handler promotes the per-request log buffer to the shared store. This allows the error report modal to retrieve the full request log by request ID.
+When `reqLogStore` is non-nil, the error handler promotes the per-request log buffer to the shared store via `promolog.Storer.Promote()`. This allows the error report modal to retrieve the full request log by request ID.
+
+## Security
+
+### Authentication (crooner)
+
+OIDC/OAuth2 with PKCE flow. Crooner manages the login/callback/logout routes and puts identity on the request context.
+
+### Authorization (porter)
+
+`porter.RequireAuth` rejects unauthenticated requests (401). `porter.RequireRole` / `porter.RequireAnyRole` enforce role-based access (403). Identity is read from context via `porter.GetIdentity(r)`.
+
+### CSRF (porter)
+
+`porter.CSRFProtect` implements double-submit cookie with HMAC-SHA256 and one-time-pad masking (BREACH protection). Token injected via `porter.GetToken(r)` → `<meta name="csrf-token">` → HTMX configRequest listener.
+
+### Security Headers (porter)
+
+`porter.SecurityHeaders` sets X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy, and optionally HSTS and CSP.
 
 ## File Organization
 
 ```
 internal/
-├── config/          App configuration (env vars, feature flags)
+├── config/          App configuration (env vars)
 ├── demo/            Demo SQLite database, seed data, domain models
-├── domain/          Core domain types (SessionSettings, etc.)
-├── health/          Health check endpoint logic
-├── logger/          Structured logging setup
+├── domain/          Core domain types
+├── env/             Environment loading (-env flag, .env.{mode} files)
+├── health/          Health endpoint, runtime stats collection
+├── logger/          Structured logging setup (slog + promolog)
+├── repository/      Database repository implementations
 ├── routes/
 │   ├── handler/     Layout rendering, breadcrumbs, error helpers
-│   ├── htmx/        HTMX request helpers (IsBoosted, IsHTMX, etc.)
-│   ├── hypermedia/  Link registry, controls, navigation, error types
-│   ├── middleware/   Echo middleware (session, links, errors, timing)
+│   ├── middleware/   Echo middleware (session, links, errors, timing, correlation)
 │   ├── params/      Request parameter parsing
-│   ├── response/    Response builder (OOB swaps, retarget, etc.)
 │   ├── routes.go           InitEcho, InitRoutes, NewAppRoutes
 │   ├── routes_links.go     Hub/Ring/Link declarations
 │   ├── routes_inventory.go Example: table with CRUD
@@ -239,6 +269,7 @@ web/
 │   └── core/        Reusable templ components
 │       ├── context_bar.templ  Context bar (grouped related links)
 │       ├── controls.templ     Hypermedia control buttons
+│       ├── csrf.templ         CSRF meta tag + HTMX listener
 │       ├── filter.templ       Filter bar for tables
 │       ├── form.templ         Form controls with validation
 │       ├── modal.templ        Dialog-based modals
