@@ -125,10 +125,12 @@ func InitAndSyncUserCache(
 		for {
 			next := nextRefreshTime()
 			logger.WithContext(ctx).Info("Scheduled user cache refresh", "next_refresh", next, "wait_duration", time.Until(next))
+			timer := time.NewTimer(time.Until(next))
 			select {
 			case <-ctx.Done():
+				timer.Stop()
 				return
-			case <-time.After(time.Until(next)):
+			case <-timer.C:
 				doSync(SyncTypeScheduled)
 			}
 		}

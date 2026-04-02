@@ -18,9 +18,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
+func TestMain(m *testing.M) {
 	os.Setenv("LOG_LEVEL", "ERROR")
 	logger.Init()
+	os.Exit(m.Run())
 }
 
 // setupEcho creates an Echo instance with promolog correlation and the HTTPErrorHandler.

@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3" // register sqlite3 driver with database/sql
 )
@@ -51,7 +52,9 @@ func Open(path string) (*DB, error) {
 		return nil, fmt.Errorf("ping sqlite: %w", err)
 	}
 	d := &DB{db: db}
-	if err := d.initSchema(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := d.initSchema(ctx); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("init schema: %w", err)
 	}
@@ -79,7 +82,9 @@ func (d *DB) Reset() error {
 			return fmt.Errorf("drop %s: %w", name, err)
 		}
 	}
-	return d.initSchema()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	return d.initSchema(ctx)
 }
 
 // TableMeta describes a single table in the database.
@@ -156,8 +161,8 @@ func (d *DB) columnCount(ctx context.Context, table string) (int, error) {
 	return count, rows.Err()
 }
 
-func (d *DB) initSchema() error {
-	_, err := d.db.Exec(`CREATE TABLE IF NOT EXISTS items (
+func (d *DB) initSchema(ctx context.Context) error {
+	_, err := d.db.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS items (
 		id         INTEGER PRIMARY KEY AUTOINCREMENT,
 		name       TEXT    NOT NULL,
 		category   TEXT    NOT NULL,
@@ -170,7 +175,7 @@ func (d *DB) initSchema() error {
 		return fmt.Errorf("create items table: %w", err)
 	}
 	var count int
-	if err := d.db.QueryRow("SELECT COUNT(*) FROM items").Scan(&count); err != nil {
+	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM items").Scan(&count); err != nil {
 		return fmt.Errorf("count items rows: %w", err)
 	}
 	if count == 0 {

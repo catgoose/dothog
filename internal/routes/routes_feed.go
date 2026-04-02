@@ -144,10 +144,12 @@ func seedFeedEvents(actLog *demo.ActivityLog) {
 func (ar *appRoutes) publishActivityEvents(actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
 	for {
 		delay := time.Duration(2000+rand.IntN(4000)) * time.Millisecond
+		timer := time.NewTimer(delay)
 		select {
 		case <-ar.ctx.Done():
+			timer.Stop()
 			return
-		case <-time.After(delay):
+		case <-timer.C:
 			if !broker.HasSubscribers(TopicActivityFeed) {
 				continue
 			}

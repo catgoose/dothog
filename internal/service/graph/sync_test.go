@@ -12,10 +12,11 @@ import (
 	"catgoose/dothog/internal/logger"
 )
 
-func init() {
+func TestMain(m *testing.M) {
 	os.Setenv("GO_ENV", "development")
 	os.Setenv("LOG_LEVEL", "ERROR")
 	logger.Init()
+	os.Exit(m.Run())
 }
 
 func testUsers() []domain.GraphUser {
