@@ -15,6 +15,7 @@ import (
 
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/shared"
+	"catgoose/dothog/internal/health"
 	"github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
 
@@ -37,7 +38,7 @@ func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 
 func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		stats := tavern.CollectRuntimeStats(time.Now())
+		stats := health.CollectRuntimeStats(time.Now())
 		snap := initialMetrics()
 		services := initialServices()
 		svcLatencies := initialServiceLatencies()
@@ -172,7 +173,7 @@ func (ar *appRoutes) publishSystemStats(broker *tavern.SSEBroker) {
 			if !broker.HasSubscribers(TopicSystemStats) {
 				continue
 			}
-			stats := tavern.CollectRuntimeStats(start)
+			stats := health.CollectRuntimeStats(start)
 			buf := statsBufPool.Get().(*bytes.Buffer)
 			buf.Reset()
 			if err := views.SystemStatsOOB(stats).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "publish system stats"), buf); err != nil {
@@ -385,7 +386,7 @@ func (ar *appRoutes) publishMetrics(broker *tavern.SSEBroker) {
 			snap.ConnWait = connWait
 
 			// Collect runtime stats for dashboard system metrics cards
-			stats := tavern.CollectRuntimeStats(ar.startTime)
+			stats := health.CollectRuntimeStats(ar.startTime)
 
 			buf := statsBufPool.Get().(*bytes.Buffer)
 			buf.Reset()

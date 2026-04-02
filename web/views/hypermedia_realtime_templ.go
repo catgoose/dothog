@@ -12,11 +12,11 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
-	"github.com/catgoose/tavern"
+	"catgoose/dothog/internal/health"
 )
 
 // RealtimePage is the full-page layout for /hypermedia/realtime.
-func RealtimePage(initial tavern.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency) templ.Component {
+func RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1080,7 +1080,7 @@ func oobServicesChart(services []ServiceStatus) templ.Component {
 }
 
 // --- Dashboard System Stats (compact 6-card subset) ---
-func dashboardSystemStats(s tavern.SystemStats) templ.Component {
+func dashboardSystemStats(s health.SystemStats) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1244,7 +1244,7 @@ func oobEventItem(evt DashboardEvent) templ.Component {
 // --- OOB Composites (rendered server-side, sent via SSE) ---
 
 // MetricsOOB emits KPI cards + all metrics charts + dashboard system stats via OOB swaps.
-func MetricsOOB(snap MetricsSnapshot, stats tavern.SystemStats) templ.Component {
+func MetricsOOB(snap MetricsSnapshot, stats health.SystemStats) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1407,7 +1407,7 @@ func EventOOB(evt DashboardEvent) templ.Component {
 
 // SystemStatsOOB renders all stat cards with hx-swap-oob for SSE per-card updates.
 // Also emits the goroutines KPI card for the dashboard.
-func SystemStatsOOB(s tavern.SystemStats) templ.Component {
+func SystemStatsOOB(s health.SystemStats) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

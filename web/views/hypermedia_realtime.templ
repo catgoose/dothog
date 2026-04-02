@@ -2,12 +2,12 @@
 package views
 
 import (
-	"github.com/catgoose/tavern"
+	"catgoose/dothog/internal/health"
 	"fmt"
 )
 
 // RealtimePage is the full-page layout for /hypermedia/realtime.
-templ RealtimePage(initial tavern.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency) {
+templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency) {
 	<link rel="stylesheet" href="/public/css/charts.min.css"/>
 	<style>
 		/* Charts.css transition smoothing */
@@ -383,7 +383,7 @@ templ oobServicesChart(services []ServiceStatus) {
 
 // --- Dashboard System Stats (compact 6-card subset) ---
 
-templ dashboardSystemStats(s tavern.SystemStats) {
+templ dashboardSystemStats(s health.SystemStats) {
 	<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 		@statsCard("stat-uptime", "Uptime", s.Uptime)
 		@statsCard("stat-goroutines", "Goroutines", fmt.Sprintf("%d", s.Goroutines))
@@ -413,7 +413,7 @@ templ oobEventItem(evt DashboardEvent) {
 // --- OOB Composites (rendered server-side, sent via SSE) ---
 
 // MetricsOOB emits KPI cards + all metrics charts + dashboard system stats via OOB swaps.
-templ MetricsOOB(snap MetricsSnapshot, stats tavern.SystemStats) {
+templ MetricsOOB(snap MetricsSnapshot, stats health.SystemStats) {
 	@oobKpiCard("kpi-rps", "Requests/s", fmtRPS(snap.RPS), "text-primary")
 	@oobKpiCard("kpi-errors", "Error Rate", fmtPct(snap.ErrorPct), "text-error")
 	@oobKpiCard("kpi-latency", "P99 Latency", fmtMs(snap.P99Ms), "text-warning")
@@ -447,7 +447,7 @@ templ EventOOB(evt DashboardEvent) {
 
 // SystemStatsOOB renders all stat cards with hx-swap-oob for SSE per-card updates.
 // Also emits the goroutines KPI card for the dashboard.
-templ SystemStatsOOB(s tavern.SystemStats) {
+templ SystemStatsOOB(s health.SystemStats) {
 	for _, e := range statsEntries(s) {
 		@oobStatsCard(e.ID, e.Label, e.Value)
 	}

@@ -3,7 +3,7 @@
 package views
 
 import (
-	"github.com/catgoose/tavern"
+	"catgoose/dothog/internal/health"
 	"fmt"
 )
 
@@ -13,7 +13,7 @@ type AdminPanelData struct {
 	Version   string
 	Uptime    string
 	Status    string
-	Stats     tavern.SystemStats
+	Stats     health.SystemStats
 	SSECounts map[string]int
 	Features  []FeatureFlag
 	Routes    []RouteInfo
@@ -161,7 +161,7 @@ templ AdminSettingsPage(data AdminPanelData) {
 
 // --- Fragments for auto-refresh ---
 
-templ AdminSettingsSystemFragment(stats tavern.SystemStats, uptime string) {
+templ AdminSettingsSystemFragment(stats health.SystemStats, uptime string) {
 	@adminSystemMetrics(stats, uptime)
 }
 
@@ -171,7 +171,7 @@ templ AdminSettingsSSEFragment(counts map[string]int) {
 
 // --- Internal components ---
 
-templ adminSystemMetrics(stats tavern.SystemStats, uptime string) {
+templ adminSystemMetrics(stats health.SystemStats, uptime string) {
 	<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
 		@metricCard("Uptime", uptime)
 		@metricCard("Goroutines", fmt.Sprintf("%d", stats.Goroutines))
