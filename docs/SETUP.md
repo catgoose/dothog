@@ -52,17 +52,24 @@ If `sse` is not selected, everything between `:start` and `:end` (inclusive) is 
 
 | Tag | Label | Dependencies | Description |
 |-----|-------|-------------|-------------|
+| `session_settings` | Session Settings | — | Per-session theme/layout preferences in SQLite |
+| `csrf` | CSRF Protection | — | CSRF middleware via gorilla/csrf |
 | `auth` | Auth (Crooner) | — | OAuth/OIDC authentication via crooner |
 | `graph` | Graph API | — | Microsoft Graph API integration |
-| `avatar` | Avatar Photos | graph | User avatar fetching (auto-includes graph) |
+| `avatar` | Avatar Photos | — | User avatar fetching (requires graph selected separately) |
 | `database` | Database | — | Implicit; SQLite is always included |
-| `sse` | SSE | caddy | Server-Sent Events (auto-includes caddy) |
+| `mssql` | MSSQL dialect | — | Microsoft SQL Server production dialect |
+| `postgres` | PostgreSQL dialect | — | PostgreSQL production dialect |
+| `sse` | SSE | — | Server-Sent Events (requires caddy selected separately) |
 | `caddy` | Caddy (HTTPS) | — | Caddy reverse proxy with TLS |
-| `demo` | Demo Content | — | Demo pages, SQLite seed data, example routes |
-| `session_settings` | Session Settings | — | Per-session theme/layout preferences in SQLite |
-| `capacitor` | Capacitor | — | Capacitor mobile shell |
-| `offline` | Offline | capacitor | Offline-first with service worker |
-| `sync` | Sync | offline | SQLite sync between client and server |
+| `link_relations` | Link Relations | — | Context bars, breadcrumbs, site map |
+| `web_standards` | Web Standards | — | Server-Timing, Vary, Permissions-Policy, Early Hints |
+| `browser_apis` | Browser APIs | sse | sendBeacon and BroadcastChannel support (auto-includes sse) |
+| `capacitor` | Capacitor | — | Capacitor mobile wrapper |
+| `offline` | Offline | — | Offline-first with service worker and write queue |
+| `sync` | Sync | offline | SQLite sync between client and server (auto-includes offline) |
+| `pwa` | PWA | offline, sync | Progressive Web App — offline + sync + mobile (auto-includes offline and sync) |
+| `demo` | Demo Content | session_settings | Demo pages, SQLite seed data, example routes (auto-includes session_settings) |
 
 ### Implicit Features
 
@@ -71,9 +78,10 @@ If `sse` is not selected, everything between `:start` and `:end` (inclusive) is 
 ### Feature Dependencies
 
 Dependencies are auto-resolved:
-- Selecting `sse` auto-includes `caddy`
-- Selecting `avatar` auto-includes `graph`
-- Selecting `sync` auto-includes `offline` and `capacitor`
+- Selecting `browser_apis` auto-includes `sse`
+- Selecting `sync` auto-includes `offline`
+- Selecting `pwa` auto-includes `offline` and `sync`
+- Selecting `demo` auto-includes `session_settings`
 
 ## Interactive Wizard
 
