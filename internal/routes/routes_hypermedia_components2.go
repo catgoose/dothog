@@ -218,7 +218,7 @@ func (s *components2State) handleUpload(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to read file", err)
 	}
-	defer src.Close()
+	defer func() { _ = src.Close() }()
 	// Count actual bytes read
 	n, err := io.Copy(io.Discard, src)
 	if err != nil {

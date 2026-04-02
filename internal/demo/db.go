@@ -136,7 +136,7 @@ func (d *DB) listTableNames(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list tables: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var names []string
 	for rows.Next() {
 		var name string
@@ -153,7 +153,7 @@ func (d *DB) columnCount(ctx context.Context, table string) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("table_info %s: %w", table, err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	count := 0
 	for rows.Next() {
 		count++
@@ -296,7 +296,7 @@ func seedBulk(db *sql.DB, query string, count int, argsFn func(i int) []any) err
 		_ = tx.Rollback()
 		return fmt.Errorf("prepare statement: %w", err)
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 	for i := range count {
 		if _, err := stmt.Exec(argsFn(i)...); err != nil {
 			_ = tx.Rollback()
@@ -426,7 +426,7 @@ func (d *DB) ListItems(ctx context.Context, q, category, active, sortBy, sortDir
 	if err != nil {
 		return nil, 0, fmt.Errorf("list query: %w", err)
 	}
-	defer dbRows.Close()
+	defer func() { _ = dbRows.Close() }()
 
 	var items []Item
 	for dbRows.Next() {

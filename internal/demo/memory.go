@@ -19,7 +19,7 @@ func OpenMemoryDB() (*sql.DB, error) {
 	}
 	db.SetMaxOpenConns(1)
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("ping in-memory db: %w", err)
 	}
 	return db, nil

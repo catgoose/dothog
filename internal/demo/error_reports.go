@@ -181,7 +181,7 @@ func (d *DB) ListErrorReports(ctx context.Context, search, status, sortBy, sortD
 	if err != nil {
 		return nil, 0, fmt.Errorf("list error reports: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var reports []ErrorReport
 	for rows.Next() {

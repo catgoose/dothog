@@ -181,7 +181,7 @@ func TestLogErrorWithFields(t *testing.T) {
 
 func TestGetLogLevel(t *testing.T) {
 	// Test default levels
-	os.Unsetenv("LOG_LEVEL")
+	_ = os.Unsetenv("LOG_LEVEL")
 
 	// This would require mocking env.Dev() to test properly
 	// For now, we'll just test that the function exists and doesn't panic

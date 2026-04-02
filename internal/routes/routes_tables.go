@@ -104,7 +104,7 @@ func setTableReplaceURL(c echo.Context, basePath string) {
 	if q := c.Request().URL.RawQuery; q != "" {
 		pushURL += "?" + q
 	}
-	htmx.NewResponse().ReplaceURL(pushURL).Write(c.Response())
+	_ = htmx.NewResponse().ReplaceURL(pushURL).Write(c.Response())
 }
 
 // applyFilterFromCurrentURL reads HX-Current-URL and sets the request URL's query string

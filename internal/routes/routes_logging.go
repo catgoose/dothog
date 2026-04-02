@@ -178,7 +178,7 @@ func handleErrorTracesSSE(broker *tavern.SSEBroker) echo.HandlerFunc {
 				if !ok {
 					return nil
 				}
-				fmt.Fprint(c.Response(), msg)
+				_, _ = fmt.Fprint(c.Response(), msg)
 				flusher.Flush()
 			}
 		}

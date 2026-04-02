@@ -28,7 +28,7 @@ func (badComponent) Render(ctx context.Context, w io.Writer) error {
 var _ templ.Component = badComponent{}
 
 func TestMain(m *testing.M) {
-	os.Setenv("LOG_LEVEL", "ERROR")
+	_ = os.Setenv("LOG_LEVEL", "ERROR")
 	logger.Init()
 	os.Exit(m.Run())
 }

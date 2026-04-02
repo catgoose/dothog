@@ -7,7 +7,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -21,12 +20,8 @@ import (
 func setupAppEcho(t *testing.T) *echo.Echo {
 	t.Helper()
 	config.ResetForTesting()
-	os.Setenv("SERVER_LISTEN_PORT", "0")
-	os.Setenv("LOG_LEVEL", "ERROR")
-	t.Cleanup(func() {
-		os.Unsetenv("SERVER_LISTEN_PORT")
-		os.Unsetenv("LOG_LEVEL")
-	})
+	t.Setenv("SERVER_LISTEN_PORT", "0")
+	t.Setenv("LOG_LEVEL", "ERROR")
 
 	require.NoError(t, appenv.Init(""))
 	logger.Init()
@@ -54,8 +49,7 @@ func setupAppEcho(t *testing.T) *echo.Echo {
 
 func TestApplicationStartup(t *testing.T) {
 	// Set up test environment
-	os.Setenv("SERVER_LISTEN_PORT", "0")
-	defer os.Unsetenv("SERVER_LISTEN_PORT")
+	t.Setenv("SERVER_LISTEN_PORT", "0")
 
 	// Test that we can initialize the application components
 	// This tests the startup sequence without actually starting the server
@@ -140,8 +134,7 @@ func TestEnvironmentVariables(t *testing.T) {
 
 	// Test environment variable handling
 	testPort := "12345"
-	os.Setenv("SERVER_LISTEN_PORT", testPort)
-	defer os.Unsetenv("SERVER_LISTEN_PORT")
+	t.Setenv("SERVER_LISTEN_PORT", testPort)
 
 	config, err := config.GetConfig()
 	require.NoError(t, err)
@@ -251,8 +244,7 @@ func TestWorkflowErrorHandlerHTMX(t *testing.T) {
 
 func BenchmarkServerStartup(b *testing.B) {
 	// Benchmark the server startup process
-	os.Setenv("SERVER_LISTEN_PORT", "0")
-	defer os.Unsetenv("SERVER_LISTEN_PORT")
+	b.Setenv("SERVER_LISTEN_PORT", "0")
 
 	for i := 0; i < b.N; i++ {
 		cfg, _ := config.GetConfig()

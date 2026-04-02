@@ -127,7 +127,7 @@ func (s *TaskStore) ListTasks(ctx context.Context, search, status, showArchived,
 	if err != nil {
 		return nil, 0, fmt.Errorf("list tasks: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var tasks []Task
 	for rows.Next() {

@@ -116,7 +116,7 @@ func (s *SeedDB) tableColumns(ctx context.Context, schema, table string) ([]stri
 	if err != nil {
 		return nil, fmt.Errorf("table_info %s.%s: %w", schema, table, err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var cols []string
 	for rows.Next() {
@@ -152,7 +152,7 @@ func (s *SeedDB) listTableNames(ctx context.Context, schema string) ([]string, e
 	if err != nil {
 		return nil, fmt.Errorf("list %s tables: %w", schema, err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var names []string
 	for rows.Next() {

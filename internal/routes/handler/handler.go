@@ -31,24 +31,6 @@ func SetPageLabel(c echo.Context, label string) {
 	c.Set(pageLabel, label)
 }
 
-// appNavComponent builds the NavBar with the active item set for the given path
-func appNavComponent(path string) templ.Component {
-	items := linkwell.SetActiveNavItemPrefix([]linkwell.NavItem{
-		// setup:feature:demo:start
-		{Label: "Home", Href: "/"},
-		{Label: "Dashboard", Href: "/dashboard"},
-		{Label: "Hypermedia", Href: "/hypermedia"},
-		{Label: "Demo", Href: "/demo"},
-		// setup:feature:demo:end
-		// setup:feature:demo:start
-		{Label: "Preferences", Href: "/user/settings"},
-		// setup:feature:demo:end
-		{Label: "Settings", Href: "/settings"},
-		{Label: "Admin", Href: "/admin"},
-	}, path)
-	return corecomponents.NavBar(items)
-}
-
 // LayoutFunc renders a page component into a full HTML page.
 // The default layout uses the dothog Index template with nav, breadcrumbs, and theme.
 // Derived apps can override this via SetLayout to use their own page wrapper.
@@ -89,12 +71,8 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 		csrfToken = t
 	}
 	// setup:feature:csrf:end
-	theme := "dark"
-	if t, ok := c.Get("theme").(string); ok && t != "" {
-		theme = t
-	}
 	// setup:feature:session_settings:start
-	theme = session.GetSettings(c.Request()).Theme
+	theme := session.GetSettings(c.Request()).Theme
 	// setup:feature:session_settings:end
 
 	var crumbs []linkwell.Breadcrumb

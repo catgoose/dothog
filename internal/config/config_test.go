@@ -12,8 +12,7 @@ import (
 func setTestDefaults(t *testing.T) {
 	t.Helper()
 	if os.Getenv("APP_NAME") == "" {
-		os.Setenv("APP_NAME", "test-app")
-		t.Cleanup(func() { os.Unsetenv("APP_NAME") })
+		t.Setenv("APP_NAME", "test-app")
 	}
 }
 
@@ -21,8 +20,7 @@ func TestGetConfig(t *testing.T) {
 	ResetForTesting()
 	setTestDefaults(t)
 
-	os.Setenv("SERVER_LISTEN_PORT", "9090")
-	defer os.Unsetenv("SERVER_LISTEN_PORT")
+	t.Setenv("SERVER_LISTEN_PORT", "9090")
 
 	config, err := GetConfig()
 	require.NoError(t, err)
@@ -37,8 +35,8 @@ func TestGetConfigDefaults(t *testing.T) {
 	ResetForTesting()
 	setTestDefaults(t)
 
-	os.Unsetenv("SERVER_LISTEN_PORT")
-	os.Unsetenv("DATABASE_URL")
+	t.Setenv("SERVER_LISTEN_PORT", "")
+	t.Setenv("DATABASE_URL", "")
 
 	config, err := GetConfig()
 	require.NoError(t, err)
@@ -50,8 +48,7 @@ func TestMustGetConfig(t *testing.T) {
 	ResetForTesting()
 	setTestDefaults(t)
 
-	os.Setenv("SERVER_LISTEN_PORT", "7070")
-	defer os.Unsetenv("SERVER_LISTEN_PORT")
+	t.Setenv("SERVER_LISTEN_PORT", "7070")
 
 	config := MustGetConfig()
 	assert.Equal(t, "7070", config.ServerPort)
@@ -60,14 +57,9 @@ func TestMustGetConfig(t *testing.T) {
 func TestConfigEnvOverride(t *testing.T) {
 	ResetForTesting()
 
-	os.Setenv("SERVER_LISTEN_PORT", "5555")
-	os.Setenv("DATABASE_URL", "postgres://localhost/test")
-	os.Setenv("APP_NAME", "testapp")
-	defer func() {
-		os.Unsetenv("SERVER_LISTEN_PORT")
-		os.Unsetenv("DATABASE_URL")
-		os.Unsetenv("APP_NAME")
-	}()
+	t.Setenv("SERVER_LISTEN_PORT", "5555")
+	t.Setenv("DATABASE_URL", "postgres://localhost/test")
+	t.Setenv("APP_NAME", "testapp")
 
 	config, err := GetConfig()
 	require.NoError(t, err)
@@ -80,8 +72,7 @@ func TestConfigSingleton(t *testing.T) {
 	ResetForTesting()
 	setTestDefaults(t)
 
-	os.Setenv("SERVER_LISTEN_PORT", "1234")
-	defer os.Unsetenv("SERVER_LISTEN_PORT")
+	t.Setenv("SERVER_LISTEN_PORT", "1234")
 
 	config1, err := GetConfig()
 	require.NoError(t, err)

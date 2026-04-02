@@ -32,7 +32,7 @@ func openTestMemoryDB(t *testing.T) *sql.DB {
 	t.Helper()
 	db, err := OpenMemoryDB()
 	require.NoError(t, err)
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() { _ = db.Close() })
 	return db
 }
 

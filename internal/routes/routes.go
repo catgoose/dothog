@@ -385,7 +385,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		if err != nil {
 			return echo.NewHTTPError(http.StatusNotFound)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 		c.Response().Header().Set("Content-Type", "application/javascript")
 		c.Response().Header().Set("Service-Worker-Allowed", "/")
 		return c.Stream(http.StatusOK, "application/javascript", f)

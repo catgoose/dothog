@@ -176,7 +176,7 @@ func (p *peopleRoutes) handlePersonSSE(c echo.Context) error {
 			if !ok {
 				return nil
 			}
-			fmt.Fprint(c.Response(), msg)
+			_, _ = fmt.Fprint(c.Response(), msg)
 			flusher.Flush()
 		}
 	}

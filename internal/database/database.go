@@ -36,16 +36,16 @@ func OpenSQLite(ctx context.Context, dbPath string) (*sqlx.DB, error) {
 	db.SetConnMaxIdleTime(5 * time.Minute)
 
 	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("failed to enable WAL mode: %w", err)
 	}
 	if _, err := db.Exec("PRAGMA busy_timeout=30000"); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("failed to set busy timeout: %w", err)
 	}
 
 	if err := db.PingContext(ctx); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("failed to ping SQLite database: %w", err)
 	}
 

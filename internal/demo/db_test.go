@@ -17,7 +17,7 @@ func openTestDB(t *testing.T) *DB {
 	dir := t.TempDir()
 	db, err := Open(filepath.Join(dir, "test.db"))
 	require.NoError(t, err)
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() { _ = db.Close() })
 	return db
 }
 
@@ -37,7 +37,7 @@ func TestOpenNonExistentPath(t *testing.T) {
 		// Some sqlite drivers can't create intermediate dirs; that's fine.
 		t.Skip("sqlite3 cannot create nested path:", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 }
 
 func TestCreateGetRoundTrip(t *testing.T) {
@@ -177,7 +177,7 @@ func TestListItemsArgsNotMutated(t *testing.T) {
 	dir := t.TempDir()
 	db, err := Open(filepath.Join(dir, "test.db"))
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	ctx := context.Background()
 
 	// Call with a category filter so args slice has content.

@@ -62,7 +62,7 @@ func TestGzip_CompressesResponse(t *testing.T) {
 	// Verify the body is valid gzip
 	gz, err := gzip.NewReader(rec.Body)
 	require.NoError(t, err)
-	defer gz.Close()
+	defer func() { _ = gz.Close() }()
 	body, err := io.ReadAll(gz)
 	require.NoError(t, err)
 	assert.Contains(t, string(body), "Hello, this is a test response")

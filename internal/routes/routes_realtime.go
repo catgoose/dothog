@@ -79,7 +79,7 @@ func handleSSESystem(broker *tavern.SSEBroker) echo.HandlerFunc {
 				if !ok {
 					return nil
 				}
-				fmt.Fprint(c.Response(), msg)
+				_, _ = fmt.Fprint(c.Response(), msg)
 				flusher.Flush()
 			}
 		}
@@ -120,7 +120,7 @@ func handleSSEDashboard(broker *tavern.SSEBroker) echo.HandlerFunc {
 		lastSent := make(map[string]time.Time)
 		forward := func(topic, msg string) {
 			if time.Since(lastSent[topic]) >= interval {
-				fmt.Fprint(c.Response(), msg)
+				_, _ = fmt.Fprint(c.Response(), msg)
 				flusher.Flush()
 				lastSent[topic] = time.Now()
 			}

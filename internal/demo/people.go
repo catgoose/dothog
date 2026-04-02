@@ -85,7 +85,7 @@ func (d *DB) ListPeople(ctx context.Context, search, department, sortBy, sortDir
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var people []Person
 	for rows.Next() {

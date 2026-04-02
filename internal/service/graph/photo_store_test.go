@@ -65,7 +65,7 @@ func TestOpen(t *testing.T) {
 
 	rc, err := ps.Open(azureID)
 	require.NoError(t, err)
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	buf := make([]byte, len(data))
 	n, err := rc.Read(buf)

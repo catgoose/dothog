@@ -21,7 +21,6 @@ import (
 	"catgoose/dothog/internal/repository"
 	// setup:feature:session_settings:end
 	// setup:feature:avatar:start
-	graphdb "catgoose/dothog/internal/database"
 	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/service/graph"
 	// setup:feature:avatar:end
@@ -63,7 +62,7 @@ func main() {
 	if envErr != nil {
 		// No .env file -- apply standalone defaults so the demo binary
 		// can run without any configuration.
-		os.Setenv("SERVER_LISTEN_PORT", appenv.GetDefault("SERVER_LISTEN_PORT", "3000"))
+		_ = os.Setenv("SERVER_LISTEN_PORT", appenv.GetDefault("SERVER_LISTEN_PORT", "3000"))
 	}
 	// setup:feature:demo:end
 	if envErr != nil {
@@ -193,7 +192,7 @@ func main() {
 		if err != nil {
 			logger.Fatal("Failed to create Graph client", "error", err)
 		}
-		sqliteDB, err := graphdb.OpenSQLiteInMemory()
+		sqliteDB, err := database.OpenSQLiteInMemory()
 		if err != nil {
 			logger.Fatal("Failed to open in-memory SQLite for user cache", "error", err)
 		}

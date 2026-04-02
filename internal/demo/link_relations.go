@@ -37,7 +37,7 @@ func (d *DB) ListStoredLinks() ([]StoredLinkRelation, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list stored links: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var links []StoredLinkRelation
 	for rows.Next() {
@@ -84,7 +84,7 @@ func (d *DB) StoredLinkIDs() (map[int]bool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("stored link ids: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	ids := make(map[int]bool)
 	for rows.Next() {

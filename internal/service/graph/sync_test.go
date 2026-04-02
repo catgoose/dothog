@@ -13,8 +13,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("GO_ENV", "development")
-	os.Setenv("LOG_LEVEL", "ERROR")
+	_ = os.Setenv("GO_ENV", "development")
+	_ = os.Setenv("LOG_LEVEL", "ERROR")
 	logger.Init()
 	os.Exit(m.Run())
 }
@@ -32,7 +32,7 @@ func setupTestCache(t *testing.T) *UserCache {
 	if err != nil {
 		t.Fatalf("open in-memory SQLite: %v", err)
 	}
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() { _ = db.Close() })
 	return NewUserCache(db)
 }
 

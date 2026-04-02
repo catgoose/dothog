@@ -14,7 +14,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("LOG_LEVEL", "ERROR")
+	_ = os.Setenv("LOG_LEVEL", "ERROR")
 	logger.Init()
 	os.Exit(m.Run())
 }

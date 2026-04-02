@@ -51,7 +51,7 @@ func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
 		if q := c.Request().URL.RawQuery; q != "" {
 			pushURL += "?" + q
 		}
-		htmx.NewResponse().ReplaceURL(pushURL).Write(c.Response())
+		_ = htmx.NewResponse().ReplaceURL(pushURL).Write(c.Response())
 	}
 	ctx := c.Request().Context()
 	w := c.Response()
@@ -389,7 +389,7 @@ func SeedErrorTraces(store promolog.Storer) {
 			}
 		}
 
-		store.PromoteAt(ctx, promolog.ErrorTrace{
+		_ = store.PromoteAt(ctx, promolog.ErrorTrace{
 			RequestID:  fmt.Sprintf("seed-%08x", i),
 			ErrorChain: errorChain,
 			StatusCode: tmpl.StatusCode,

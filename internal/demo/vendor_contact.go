@@ -43,7 +43,7 @@ func (d *DB) ListVendors(ctx context.Context, search, category string) ([]Vendor
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var vendors []Vendor
 	for rows.Next() {
 		var v Vendor
@@ -66,7 +66,7 @@ func (d *DB) ListContacts(ctx context.Context, vendorID int) ([]Contact, error) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var contacts []Contact
 	for rows.Next() {
 		var c Contact
