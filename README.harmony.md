@@ -472,7 +472,7 @@ go build -o harmony .
 | [DaisyUI](https://daisyui.com/) | Semantic component classes with 30+ themes |
 | [Hyperscript](https://hyperscript.org/) | Client-side DOM interactions |
 | [SQLite](https://www.sqlite.org/) | Embedded database |
-| [Fraggle](https://github.com/catgoose/fraggle) | SQL dialect abstraction -- open by URL, get the right DDL for SQLite, Postgres, or MSSQL |
+| [Chuck](https://github.com/catgoose/chuck) | SQL dialect abstraction -- open by URL, get the right DDL for SQLite, Postgres, or MSSQL |
 | [Promolog](https://github.com/catgoose/promolog) | Per-request log capture with promote-on-error semantics and SQLite-backed error trace store |
 | [Air](https://github.com/air-verse/air) | Live reload for development |
 | [Mage](https://magefile.org/) | Build automation (Go-based) |
@@ -639,7 +639,7 @@ Code that used to live in-tree has been extracted into standalone libraries:
 
 | Library | What it does | Former location |
 | --- | --- | --- |
-| [fraggle](https://github.com/catgoose/fraggle) | SQL dialect abstraction -- open by URL, get the right DDL | `internal/database/dialect/` |
+| [chuck](https://github.com/catgoose/chuck) | SQL dialect abstraction -- open by URL, get the right DDL | `internal/database/dialect/` |
 | [promolog](https://github.com/catgoose/promolog) | Per-request log capture, promote-on-error, error trace store | `internal/requestlog/` |
 
 ## Project Structure

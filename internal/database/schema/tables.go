@@ -1,10 +1,10 @@
 package schema
 
 import (
-	s "github.com/catgoose/fraggle/schema"
+	s "github.com/catgoose/chuck/schema"
 )
 
-// Re-export fraggle/schema types so consumers can continue to import
+// Re-export chuck/schema types so consumers can continue to import
 // this package for both table definitions and schema types.
 type (
 	TableDef  = s.TableDef
@@ -14,7 +14,7 @@ type (
 	TypeFunc  = s.TypeFunc
 )
 
-// Re-export fraggle/schema constructors.
+// Re-export chuck/schema constructors.
 var (
 	NewTable           = s.NewTable
 	Col                = s.Col

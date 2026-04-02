@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	dialect "github.com/catgoose/fraggle"
+	dialect "github.com/catgoose/chuck"
 	"catgoose/dothog/internal/database/schema"
 	"catgoose/dothog/internal/logger"
 

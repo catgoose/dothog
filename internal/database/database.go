@@ -1,7 +1,7 @@
 // setup:feature:database
 
 // Package database provides framework-internal database helpers.
-// App databases should use fraggle.OpenURL() directly.
+// App databases should use chuck.OpenURL() directly.
 // OpenSQLite is for framework-internal stores (error traces, session settings).
 package database
 

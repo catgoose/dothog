@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	dialect "github.com/catgoose/fraggle"
-	"github.com/catgoose/fraggle/dbrepo"
+	dialect "github.com/catgoose/chuck"
+	"github.com/catgoose/chuck/dbrepo"
 	"catgoose/dothog/internal/database/schema"
 )
 

@@ -343,7 +343,7 @@ The robustness principle isn't about being sloppy. It's about building systems t
 | Server        | Go + Echo          | Fast, typed, compiles to a single binary                      |
 | Templates     | templ              | Type-safe HTML generation, composable components              |
 | Hypermedia    | HTMX + linkwell    | Extends HTML with AJAX; linkwell provides the HATEOAS controls, navigation, and link registry |
-| SQL           | fraggle            | Multi-dialect schema DSL and query fragments (SQLite, Postgres, MSSQL) |
+| SQL           | chuck              | Multi-dialect schema DSL and query fragments (SQLite, Postgres, MSSQL) |
 | Auth          | crooner + porter   | crooner handles OIDC/OAuth2; porter handles authorization, CSRF, security headers |
 | Logging       | promolog           | Per-request log capture with promote-on-error                 |
 | Real-time     | tavern             | Thread-safe SSE pub/sub broker                                |
@@ -396,7 +396,7 @@ Each side's weaknesses are the other side's strengths. Pick the architecture tha
 
 ORMs hide SQL behind method chains and magic. When something goes wrong — a slow query, a missing join, an unexpected NULL — you're debugging the ORM's generated SQL, not your own. This project takes the opposite approach: **write the SQL, but don't write it by hand every time.**
 
-[Fraggle's dbrepo package](https://github.com/catgoose/fraggle) provides composable helpers that keep SQL visible:
+[Chuck's dbrepo package](https://github.com/catgoose/chuck) provides composable helpers that keep SQL visible:
 
 ```go
 sb := NewSelect(TasksTable.Name, cols).

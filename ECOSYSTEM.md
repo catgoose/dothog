@@ -4,7 +4,7 @@ Dothog is built on six Go libraries, each with a single responsibility and zero 
 
 ## Libraries
 
-### [fraggle](https://github.com/catgoose/fraggle) — SQL
+### [chuck](https://github.com/catgoose/chuck) — SQL
 
 Multi-dialect SQL schema builder and query fragments. One schema definition drives DDL generation, column lists, seed data, and schema snapshots across SQLite, PostgreSQL, and MSSQL. Composable query helpers (`WhereBuilder`, `SelectBuilder`) keep SQL visible without writing it by hand every time.
 
@@ -49,7 +49,7 @@ Thread-safe, topic-based SSE pub/sub broker. Handlers publish events when state 
   ┌──────▼──────┐
   │  handler     │
   │              │
-  │  fraggle ────┤  Schema, queries, dialect-aware SQL
+  │  chuck ────┤  Schema, queries, dialect-aware SQL
   │  promolog ───┤  Per-request log buffer
   │  linkwell ───┤  Controls, navigation, breadcrumbs
   │  tavern  ────┤  SSE publish to connected browsers
@@ -65,7 +65,7 @@ Thread-safe, topic-based SSE pub/sub broker. Handlers publish events when state 
 Every library follows the [dothog design philosophy](PHILOSOPHY.md):
 
 - **The server drives state.** Libraries provide data and middleware. Templates are downstream.
-- **Zero or minimal dependencies.** promolog (core), linkwell, porter, and tavern have zero runtime dependencies. fraggle has only database drivers. crooner has only OIDC/OAuth2 libraries.
+- **Zero or minimal dependencies.** promolog (core), linkwell, porter, and tavern have zero runtime dependencies. chuck has only database drivers. crooner has only OIDC/OAuth2 libraries.
 - **Interfaces over implementations.** `promolog.Storer`, `session.Provider`, `porter.IdentityProvider` — implement the interface, bring your own backend.
 - **Standard signatures.** All middleware uses `func(http.Handler) http.Handler`. No framework lock-in.
 - **The struct is the interface.** linkwell's control types are pure data. Any template engine that can read Go struct fields can render them. No `Renderer` interface needed — the data flows one way.

@@ -547,7 +547,7 @@ That's it. That's the build process. There is no step 4. If you are looking for 
 - [**DaisyUI**](https://daisyui.com/) -- Semantic component classes for Tailwind. `btn-primary` knows what theme you're in. `bg-blue-600` does not. One of these adapts. One of these is blue forever. Choose.
 - [**Hyperscript**](https://hyperscript.org/) -- Client-side behavior that reads like English, stays on the element, and doesn't require a build step. `_="on click toggle .hidden on #panel"` is a complete program. It is also a complete sentence. This is not a coincidence.
 - [**SQLite**](https://www.sqlite.org/) -- The most deployed database in human history. Embedded. Zero-config. A file on disk. If Fielding had specified a database -- which he did not, because he dealt in constraints, not implementations, and we respect this -- it would have been this one. Probably.
-- [**Fraggle**](https://github.com/catgoose/fraggle) -- SQL dialect abstraction. Opens a database by URL, figures out if it's SQLite or Postgres or MSSQL, and gives you a dialect that generates the right DDL. Previously lived in `internal/database/dialect/` until it realized it had opinions worth sharing with other projects. The code moved out. The opinions stayed.
+- [**Chuck**](https://github.com/catgoose/chuck) -- SQL dialect abstraction. Opens a database by URL, figures out if it's SQLite or Postgres or MSSQL, and gives you a dialect that generates the right DDL. Previously lived in `internal/database/dialect/` until it realized it had opinions worth sharing with other projects. The code moved out. The opinions stayed.
 - [**Promolog**](https://github.com/catgoose/promolog) -- Per-request log capture with promote-on-error semantics. Every request gets a buffer. Successful requests cost nothing -- the buffer is garbage collected with the context. Failed requests promote the buffer to a SQLite-backed store with the full error trace, request ID, and every slog entry from the request lifecycle. Previously lived in `internal/requestlog/` where it did the same thing but refused to return anyone else's calls.
 - [**Air**](https://github.com/air-verse/air) -- Live reloading for Go development. Change a file, see the result. The feedback loop is sacred.
 - [**Mage**](https://magefile.org/) -- Build tool written in Go, for Go. No Makefile syntax. No tab-versus-space wars. Just Go functions. The PENTAVERB does not address build tools but if it did, Mage would be compliant.
@@ -750,7 +750,7 @@ Code that used to live in-tree has been extracted into standalone libraries. The
 
 | Library | What it does | Used to be |
 |---------|-------------|------------|
-| [fraggle](https://github.com/catgoose/fraggle) | SQL dialect abstraction -- open by URL, get the right DDL | `internal/database/dialect/` |
+| [chuck](https://github.com/catgoose/chuck) | SQL dialect abstraction -- open by URL, get the right DDL | `internal/database/dialect/` |
 | [promolog](https://github.com/catgoose/promolog) | Per-request log capture, promote-on-error, error trace store | `internal/requestlog/` |
 
 ## Template Setup

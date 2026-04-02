@@ -30,7 +30,7 @@ var featureLabels = map[string]string{
 	setup.FeatureGraph:           "Graph API",
 	setup.FeatureAvatar:          "Avatar Photos (requires Graph)",
 	// Data
-	setup.FeatureDatabase:        "Database (fraggle repository layer)",
+	setup.FeatureDatabase:        "Database (chuck repository layer)",
 	setup.FeatureMSSQL:           "MSSQL dialect",
 	setup.FeaturePostgres:        "PostgreSQL dialect",
 	// Real-time

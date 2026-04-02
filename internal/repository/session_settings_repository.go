@@ -10,7 +10,7 @@ import (
 	dbrepoManager "catgoose/dothog/internal/database/repository"
 	"catgoose/dothog/internal/database/schema"
 
-	"github.com/catgoose/fraggle/dbrepo"
+	"github.com/catgoose/chuck/dbrepo"
 
 	"catgoose/dothog/internal/session"
 )

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	dialect "github.com/catgoose/fraggle"
+	dialect "github.com/catgoose/chuck"
 	"catgoose/dothog/internal/database/schema"
 
 	_ "github.com/mattn/go-sqlite3"

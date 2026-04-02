@@ -12,7 +12,7 @@ import (
 	"catgoose/dothog/internal/database/schema"
 	"catgoose/dothog/internal/domain"
 
-	"github.com/catgoose/fraggle/dbrepo"
+	"github.com/catgoose/chuck/dbrepo"
 	"github.com/jmoiron/sqlx"
 )
 

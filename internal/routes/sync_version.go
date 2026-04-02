@@ -25,7 +25,7 @@ type VersionChecker interface {
 
 // SQLVersionChecker checks row versions against a SQL database.
 // It expects tables to have an ID column and a Version column (as created by
-// fraggle's WithVersion() schema trait).
+// chuck's WithVersion() schema trait).
 type SQLVersionChecker struct {
 	db *sql.DB
 }

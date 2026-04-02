@@ -6,7 +6,7 @@ This document describes how dothog processes requests, resolves navigation, and 
 
 | Library | Purpose |
 |---------|---------|
-| [fraggle](https://github.com/catgoose/fraggle) | Multi-dialect SQL schema and query fragments |
+| [chuck](https://github.com/catgoose/chuck) | Multi-dialect SQL schema and query fragments |
 | [promolog](https://github.com/catgoose/promolog) | Per-request log capture with promote-on-error |
 | [crooner](https://github.com/catgoose/crooner) | OIDC/OAuth2 authentication and session management |
 | [porter](https://github.com/catgoose/porter) | Authorization, CSRF protection, security headers |

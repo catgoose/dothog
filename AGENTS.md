@@ -30,7 +30,7 @@
 
 | Library | Purpose | Import |
 |---------|---------|--------|
-| [catgoose/fraggle](https://github.com/catgoose/fraggle) | SQL dialects, schema DSL, query builders | `"github.com/catgoose/fraggle"` |
+| [catgoose/chuck](https://github.com/catgoose/chuck) | SQL dialects, schema DSL, query builders | `"github.com/catgoose/chuck"` |
 | [catgoose/promolog](https://github.com/catgoose/promolog) | Error trace capture, promote-on-error | `"github.com/catgoose/promolog"` |
 | [catgoose/crooner](https://github.com/catgoose/crooner) | OIDC authentication | `"github.com/catgoose/crooner"` |
 | [catgoose/porter](https://github.com/catgoose/porter) | Auth, CSRF, security headers | `"github.com/catgoose/porter"` |

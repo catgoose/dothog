@@ -1136,7 +1136,7 @@ var featureDescriptions = map[string]struct{ label, desc string }{
 	FeatureAuth:            {"Auth (Crooner)", "Azure AD / OIDC authentication via crooner"},
 	FeatureGraph:           {"Graph API", "Microsoft Graph API integration for user data"},
 	FeatureAvatar:          {"Avatar Photos", "User profile photo download and caching from Graph"},
-	FeatureDatabase:        {"Database (fraggle)", "Repository layer with schema DSL (SQLite base)"},
+	FeatureDatabase:        {"Database (chuck)", "Repository layer with schema DSL (SQLite base)"},
 	FeatureMSSQL:           {"MSSQL", "Microsoft SQL Server dialect support"},
 	FeaturePostgres:        {"PostgreSQL", "PostgreSQL dialect support"},
 	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration"},

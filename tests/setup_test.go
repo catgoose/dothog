@@ -526,7 +526,7 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	require.Contains(t, readmeContent, "No Features App")
 	require.Contains(t, readmeContent, "## Setup Configuration")
 	// Minimal config should still have implicit features (database, alpine)
-	require.Contains(t, readmeContent, "Database (fraggle)")
+	require.Contains(t, readmeContent, "Database (chuck)")
 }
 
 func TestSetup_FeaturesAuthOnly(t *testing.T) {
