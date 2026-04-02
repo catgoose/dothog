@@ -2,6 +2,8 @@
 
 package views
 
+import "fmt"
+
 templ LabPage(grid string) {
 	<div class="p-4 space-y-6 max-w-5xl mx-auto">
 		<div class="space-y-1">
@@ -16,24 +18,28 @@ templ LabPage(grid string) {
 						<h2 class="card-title">Mandelbrot Set</h2>
 						<p class="text-sm text-base-content/60">
 							Auto-zooming fractal explorer — the server finds the most
-							interesting boundary and dives deeper every 2 seconds.
+							interesting boundary and dives deeper.
 						</p>
 					</div>
-					<div id="mb-controls">
-						<button class="btn btn-sm btn-outline"
-							hx-post="/hypermedia/lab/mandelbrot/reset"
-							hx-target="#mb-controls"
-							hx-swap="innerHTML">Reset</button>
-					</div>
 				</div>
+
+				@mbControls(2.0, 30)
 
 				<div id="mb-status" class="text-sm text-base-content/50">
 					<span class="font-mono">×1</span> · depth 0/30
 				</div>
 
+				<style>
+					#mandelbrot-canvas svg {
+						animation: mb-zoom 0.6s ease-out;
+					}
+					@keyframes mb-zoom {
+						from { transform: scale(2); opacity: 0; }
+						to { transform: scale(1); opacity: 1; }
+					}
+				</style>
 				<div id="mandelbrot-canvas"
-					class="bg-black rounded-lg p-3 overflow-x-auto font-mono"
-					style="font-size:10px; min-height:200px">
+					class="bg-black rounded-lg overflow-hidden">
 					@templ.Raw(grid)
 				</div>
 
@@ -48,11 +54,56 @@ templ LabPage(grid string) {
 	</div>
 }
 
+templ mbControls(delay float64, maxDepth int) {
+	<div id="mb-controls" class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+		<div class="flex items-center gap-2" x-data="rangeOutput">
+			<span class="text-xs text-base-content/60">Delay</span>
+			<input type="range" class="range range-xs w-24"
+				name="delay" min="0.5" max="5" step="0.5"
+				value={ fmt.Sprintf("%.1f", delay) }
+				x-on:input="updateOutput()"
+				hx-post="/hypermedia/lab/mandelbrot/settings"
+				hx-trigger="change"
+				hx-include="#mb-controls [name=max_depth]"
+				hx-target="#mb-oob-sink"
+				hx-swap="innerHTML"/>
+			<output class="font-mono text-xs w-6 text-center">{ fmt.Sprintf("%.1f", delay) }</output>
+			<span class="text-xs text-base-content/40">s</span>
+		</div>
+		<div class="flex items-center gap-2" x-data="rangeOutput">
+			<span class="text-xs text-base-content/60">Depth</span>
+			<input type="range" class="range range-xs w-24"
+				name="max_depth" min="5" max="50" step="5"
+				value={ fmt.Sprintf("%d", maxDepth) }
+				x-on:input="updateOutput()"
+				hx-post="/hypermedia/lab/mandelbrot/settings"
+				hx-trigger="change"
+				hx-include="#mb-controls [name=delay]"
+				hx-target="#mb-oob-sink"
+				hx-swap="innerHTML"/>
+			<output class="font-mono text-xs w-6 text-center">{ fmt.Sprintf("%d", maxDepth) }</output>
+		</div>
+		<button class="btn btn-xs btn-outline"
+			hx-post="/hypermedia/lab/mandelbrot/reset"
+			hx-target="#mb-controls"
+			hx-swap="outerHTML">Reset</button>
+	</div>
+	<div id="mb-oob-sink" style="display:none"></div>
+}
+
+templ MandelbrotSettingsApplied(grid string, maxDepth int) {
+	<!-- main target is the hidden sink, real updates are OOB -->
+	<span></span>
+	<div id="mandelbrot-canvas" hx-swap-oob="innerHTML">
+		@templ.Raw(grid)
+	</div>
+	<div id="mb-status" hx-swap-oob="innerHTML">
+		<span class="font-mono">×1</span> · depth 0/{ fmt.Sprintf("%d", maxDepth) }
+	</div>
+}
+
 templ MandelbrotResetResponse(grid string) {
-	<button class="btn btn-sm btn-outline"
-		hx-post="/hypermedia/lab/mandelbrot/reset"
-		hx-target="#mb-controls"
-		hx-swap="innerHTML">Reset</button>
+	@mbControls(2.0, 30)
 	<div id="mandelbrot-canvas" hx-swap-oob="innerHTML">
 		@templ.Raw(grid)
 	</div>
@@ -78,7 +129,7 @@ templ labExplanation() {
 					<div class="font-medium mb-1">Stream</div>
 					<p class="text-base-content/70">
 						Each frame is published as a single SSE message containing OOB swap
-						directives. The canvas, status, and controls all update from one event.
+						directives. The canvas and status update from one event.
 						Max iterations increase with depth for finer detail.
 					</p>
 				</div>
@@ -86,8 +137,8 @@ templ labExplanation() {
 					<div class="font-medium mb-1">Render</div>
 					<p class="text-base-content/70">
 						HTMX's SSE extension receives the event and processes hx-swap-oob
-						attributes to replace the canvas content — a full-frame update with
-						zero JavaScript. Each journey is unique thanks to randomized target selection.
+						attributes. CSS keyframe animation gives each new SVG frame a
+						zoom-settle effect — zero JavaScript.
 					</p>
 				</div>
 			</div>

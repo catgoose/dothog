@@ -10,6 +10,8 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "fmt"
+
 func LabPage(grid string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -31,7 +33,15 @@ func LabPage(grid string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-5xl mx-auto\"><div class=\"space-y-1\"><h1 class=\"text-2xl font-bold\">SSE Laboratory</h1><p class=\"text-sm text-base-content/60\">Server-driven computation streams powered by Tavern.</p></div><div class=\"card bg-base-100 shadow-sm\"><div class=\"card-body\"><div class=\"flex items-center justify-between\"><div><h2 class=\"card-title\">Mandelbrot Set</h2><p class=\"text-sm text-base-content/60\">Auto-zooming fractal explorer — the server finds the most interesting boundary and dives deeper every 2 seconds.</p></div><div id=\"mb-controls\"><button class=\"btn btn-sm btn-outline\" hx-post=\"/hypermedia/lab/mandelbrot/reset\" hx-target=\"#mb-controls\" hx-swap=\"innerHTML\">Reset</button></div></div><div id=\"mb-status\" class=\"text-sm text-base-content/50\"><span class=\"font-mono\">×1</span> · depth 0/30</div><div id=\"mandelbrot-canvas\" class=\"bg-black rounded-lg p-3 overflow-x-auto font-mono\" style=\"font-size:10px; min-height:200px\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-5xl mx-auto\"><div class=\"space-y-1\"><h1 class=\"text-2xl font-bold\">SSE Laboratory</h1><p class=\"text-sm text-base-content/60\">Server-driven computation streams powered by Tavern.</p></div><div class=\"card bg-base-100 shadow-sm\"><div class=\"card-body\"><div class=\"flex items-center justify-between\"><div><h2 class=\"card-title\">Mandelbrot Set</h2><p class=\"text-sm text-base-content/60\">Auto-zooming fractal explorer — the server finds the most interesting boundary and dives deeper.</p></div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = mbControls(2.0, 30).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div id=\"mb-status\" class=\"text-sm text-base-content/50\"><span class=\"font-mono\">×1</span> · depth 0/30</div><style>\n\t\t\t\t\t#mandelbrot-canvas svg {\n\t\t\t\t\t\tanimation: mb-zoom 0.6s ease-out;\n\t\t\t\t\t}\n\t\t\t\t\t@keyframes mb-zoom {\n\t\t\t\t\t\tfrom { transform: scale(2); opacity: 0; }\n\t\t\t\t\t\tto { transform: scale(1); opacity: 1; }\n\t\t\t\t\t}\n\t\t\t\t</style><div id=\"mandelbrot-canvas\" class=\"bg-black rounded-lg overflow-hidden\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -39,7 +49,7 @@ func LabPage(grid string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><!-- SSE connection (always active) --><div hx-ext=\"sse\" sse-connect=\"/sse/lab\" hx-swap=\"innerHTML settle:0 transition:false\"><div sse-swap=\"lab-mandelbrot\" style=\"display:none\"></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- SSE connection (always active) --><div hx-ext=\"sse\" sse-connect=\"/sse/lab\" hx-swap=\"innerHTML settle:0 transition:false\"><div sse-swap=\"lab-mandelbrot\" style=\"display:none\"></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -47,7 +57,138 @@ func LabPage(grid string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func mbControls(delay float64, maxDepth int) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var2 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var2 == nil {
+			templ_7745c5c3_Var2 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"mb-controls\" class=\"flex flex-wrap items-center gap-x-6 gap-y-2 text-sm\"><div class=\"flex items-center gap-2\" x-data=\"rangeOutput\"><span class=\"text-xs text-base-content/60\">Delay</span> <input type=\"range\" class=\"range range-xs w-24\" name=\"delay\" min=\"0.5\" max=\"5\" step=\"0.5\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.1f", delay))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/lab.templ`, Line: 63, Col: 38}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" x-on:input=\"updateOutput()\" hx-post=\"/hypermedia/lab/mandelbrot/settings\" hx-trigger=\"change\" hx-include=\"#mb-controls [name=max_depth]\" hx-target=\"#mb-oob-sink\" hx-swap=\"innerHTML\"> <output class=\"font-mono text-xs w-6 text-center\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.1f", delay))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/lab.templ`, Line: 70, Col: 81}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</output> <span class=\"text-xs text-base-content/40\">s</span></div><div class=\"flex items-center gap-2\" x-data=\"rangeOutput\"><span class=\"text-xs text-base-content/60\">Depth</span> <input type=\"range\" class=\"range range-xs w-24\" name=\"max_depth\" min=\"5\" max=\"50\" step=\"5\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", maxDepth))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/lab.templ`, Line: 77, Col: 39}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" x-on:input=\"updateOutput()\" hx-post=\"/hypermedia/lab/mandelbrot/settings\" hx-trigger=\"change\" hx-include=\"#mb-controls [name=delay]\" hx-target=\"#mb-oob-sink\" hx-swap=\"innerHTML\"> <output class=\"font-mono text-xs w-6 text-center\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", maxDepth))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/lab.templ`, Line: 84, Col: 82}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</output></div><button class=\"btn btn-xs btn-outline\" hx-post=\"/hypermedia/lab/mandelbrot/reset\" hx-target=\"#mb-controls\" hx-swap=\"outerHTML\">Reset</button></div><div id=\"mb-oob-sink\" style=\"display:none\"></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func MandelbrotSettingsApplied(grid string, maxDepth int) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var7 == nil {
+			templ_7745c5c3_Var7 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<!-- main target is the hidden sink, real updates are OOB --><span></span><div id=\"mandelbrot-canvas\" hx-swap-oob=\"innerHTML\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.Raw(grid).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div><div id=\"mb-status\" hx-swap-oob=\"innerHTML\"><span class=\"font-mono\">×1</span> · depth 0/")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var8 string
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", maxDepth))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/lab.templ`, Line: 101, Col: 77}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -71,12 +212,16 @@ func MandelbrotResetResponse(grid string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var2 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var2 == nil {
-			templ_7745c5c3_Var2 = templ.NopComponent
+		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var9 == nil {
+			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<button class=\"btn btn-sm btn-outline\" hx-post=\"/hypermedia/lab/mandelbrot/reset\" hx-target=\"#mb-controls\" hx-swap=\"innerHTML\">Reset</button><div id=\"mandelbrot-canvas\" hx-swap-oob=\"innerHTML\">")
+		templ_7745c5c3_Err = mbControls(2.0, 30).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"mandelbrot-canvas\" hx-swap-oob=\"innerHTML\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -84,7 +229,7 @@ func MandelbrotResetResponse(grid string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div id=\"mb-status\" hx-swap-oob=\"innerHTML\"><span class=\"font-mono\">×1</span> · depth 0/30</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div><div id=\"mb-status\" hx-swap-oob=\"innerHTML\"><span class=\"font-mono\">×1</span> · depth 0/30</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -108,12 +253,12 @@ func labExplanation() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var3 == nil {
-			templ_7745c5c3_Var3 = templ.NopComponent
+		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var10 == nil {
+			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"card bg-base-100 shadow-sm\"><div class=\"card-body text-sm space-y-3\"><h3 class=\"font-semibold\">How it works</h3><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\"><div><div class=\"font-medium mb-1\">Compute</div><p class=\"text-base-content/70\">A goroutine computes the Mandelbrot set, then analyzes iteration-count variance to find the most detailed boundary region. It zooms 2× into that region and repeats — an autonomous fractal explorer.</p></div><div><div class=\"font-medium mb-1\">Stream</div><p class=\"text-base-content/70\">Each frame is published as a single SSE message containing OOB swap directives. The canvas, status, and controls all update from one event. Max iterations increase with depth for finer detail.</p></div><div><div class=\"font-medium mb-1\">Render</div><p class=\"text-base-content/70\">HTMX's SSE extension receives the event and processes hx-swap-oob attributes to replace the canvas content — a full-frame update with zero JavaScript. Each journey is unique thanks to randomized target selection.</p></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"card bg-base-100 shadow-sm\"><div class=\"card-body text-sm space-y-3\"><h3 class=\"font-semibold\">How it works</h3><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\"><div><div class=\"font-medium mb-1\">Compute</div><p class=\"text-base-content/70\">A goroutine computes the Mandelbrot set, then analyzes iteration-count variance to find the most detailed boundary region. It zooms 2× into that region and repeats — an autonomous fractal explorer.</p></div><div><div class=\"font-medium mb-1\">Stream</div><p class=\"text-base-content/70\">Each frame is published as a single SSE message containing OOB swap directives. The canvas and status update from one event. Max iterations increase with depth for finer detail.</p></div><div><div class=\"font-medium mb-1\">Render</div><p class=\"text-base-content/70\">HTMX's SSE extension receives the event and processes hx-swap-oob attributes. CSS keyframe animation gives each new SVG frame a zoom-settle effect — zero JavaScript.</p></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -9,6 +9,7 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,10 +24,11 @@ import (
 const labBase = hypermediaBase + "/lab"
 
 const (
-	mbWidth    = 120
-	mbHeight   = 60
-	mbMaxIter  = 256
-	mbMaxDepth = 30
+	mbWidth        = 120
+	mbHeight       = 60
+	mbMaxIter      = 256
+	mbDefaultDelay = 2 * time.Second
+	mbDefaultDepth = 30
 )
 
 var mbPalette = [16][3]uint8{
@@ -46,12 +48,17 @@ var mbDefaultVP = mbViewport{
 }
 
 var mandelbrotState struct {
-	cancel context.CancelFunc
-	mu     sync.Mutex
+	cancel   context.CancelFunc
+	delay    time.Duration
+	maxDepth int
+	mu       sync.Mutex
 }
 
 func (ar *appRoutes) initLabRoutes(broker *tavern.SSEBroker) {
+	mandelbrotState.delay = mbDefaultDelay
+	mandelbrotState.maxDepth = mbDefaultDepth
 	ar.e.GET(labBase, handleLabPage(ar.ctx, broker))
+	ar.e.POST(labBase+"/mandelbrot/settings", handleMandelbrotSettings(ar.ctx, broker))
 	ar.e.POST(labBase+"/mandelbrot/reset", handleMandelbrotReset(ar.ctx, broker))
 	ar.e.GET("/sse/lab", handleSSELab(broker))
 }
@@ -75,10 +82,45 @@ func handleLabPage(appCtx context.Context, broker *tavern.SSEBroker) echo.Handle
 	}
 }
 
-// handleMandelbrotReset cancels the current auto-zoom and restarts from default.
+// handleMandelbrotSettings applies new delay/depth and restarts the zoom.
+func handleMandelbrotSettings(appCtx context.Context, broker *tavern.SSEBroker) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		delay, _ := strconv.ParseFloat(c.FormValue("delay"), 64)
+		if delay < 0.5 {
+			delay = 0.5
+		} else if delay > 5.0 {
+			delay = 5.0
+		}
+		maxDepth, _ := strconv.Atoi(c.FormValue("max_depth"))
+		if maxDepth < 5 {
+			maxDepth = 5
+		} else if maxDepth > 50 {
+			maxDepth = 50
+		}
+
+		mandelbrotState.mu.Lock()
+		mandelbrotState.delay = time.Duration(delay * float64(time.Second))
+		mandelbrotState.maxDepth = maxDepth
+		if mandelbrotState.cancel != nil {
+			mandelbrotState.cancel()
+		}
+		ctx, cancel := context.WithCancel(appCtx)
+		mandelbrotState.cancel = cancel
+		mandelbrotState.mu.Unlock()
+
+		grid, _ := renderMandelbrotGrid(mbDefaultVP, mbMaxIter)
+		go publishAutoZoom(ctx, broker)
+
+		return handler.RenderComponent(c, views.MandelbrotSettingsApplied(grid, maxDepth))
+	}
+}
+
+// handleMandelbrotReset restores defaults and restarts from the beginning.
 func handleMandelbrotReset(appCtx context.Context, broker *tavern.SSEBroker) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		mandelbrotState.mu.Lock()
+		mandelbrotState.delay = mbDefaultDelay
+		mandelbrotState.maxDepth = mbDefaultDepth
 		if mandelbrotState.cancel != nil {
 			mandelbrotState.cancel()
 		}
@@ -137,13 +179,17 @@ func publishAutoZoom(ctx context.Context, broker *tavern.SSEBroker) {
 		}
 	}
 
+	mandelbrotState.mu.Lock()
+	maxDepth := mandelbrotState.maxDepth
+	mandelbrotState.mu.Unlock()
+
 	vp := mbDefaultVP
 	maxIter := mbMaxIter
 
 	// Compute iteration matrix for default view (already rendered on page, don't publish)
 	_, iters := renderMandelbrotGrid(vp, maxIter)
 
-	for depth := 1; depth <= mbMaxDepth; depth++ {
+	for depth := 1; depth <= maxDepth; depth++ {
 		// Find interesting point and zoom
 		col, row := findInterestingPoint(iters, maxIter)
 		cr := vp.realMin + (float64(col)+0.5)/float64(mbWidth)*(vp.realMax-vp.realMin)
@@ -160,34 +206,36 @@ func publishAutoZoom(ctx context.Context, broker *tavern.SSEBroker) {
 		}
 		maxIter = mbMaxIter + depth*64
 
-		// Pause before publishing zoomed frame
+		// Read current delay from state (allows live adjustment)
+		mandelbrotState.mu.Lock()
+		delay := mandelbrotState.delay
+		mandelbrotState.mu.Unlock()
+
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(2 * time.Second):
+		case <-time.After(delay):
 		}
 
 		// Compute zoomed view
 		grid, newIters := renderMandelbrotGrid(vp, maxIter)
 		iters = newIters
 
-		// Publish frame via SSE
+		// Publish frame via SSE (canvas + status only, controls stay as-is)
 		var buf strings.Builder
 		buf.WriteString(`<div id="mandelbrot-canvas" hx-swap-oob="innerHTML">`)
 		buf.WriteString(grid)
 		buf.WriteString(`</div>`)
 		zoomMult := 1 << uint(depth)
-		fmt.Fprintf(&buf, `<div id="mb-status" hx-swap-oob="innerHTML"><span class="font-mono">×%d</span> · depth %d/%d</div>`, zoomMult, depth, mbMaxDepth)
-		// Update controls to show Reset
-		fmt.Fprintf(&buf, `<div id="mb-controls" hx-swap-oob="innerHTML"><button class="btn btn-sm btn-outline" hx-post="%s/mandelbrot/reset" hx-target="#mb-controls" hx-swap="innerHTML">Reset</button></div>`, labBase)
+		fmt.Fprintf(&buf, `<div id="mb-status" hx-swap-oob="innerHTML"><span class="font-mono">×%d</span> · depth %d/%d</div>`, zoomMult, depth, maxDepth)
 
 		msg := tavern.NewSSEMessage("lab-mandelbrot", buf.String()).String()
 		broker.Publish(TopicLabMandelbrot, msg)
 	}
 
-	// Reached max depth — update status
+	// Reached max depth
 	var done strings.Builder
-	fmt.Fprintf(&done, `<div id="mb-status" hx-swap-oob="innerHTML"><span class="font-mono">×%d</span> · maximum depth reached</div>`, 1<<uint(mbMaxDepth))
+	fmt.Fprintf(&done, `<div id="mb-status" hx-swap-oob="innerHTML"><span class="font-mono">×%d</span> · maximum depth reached</div>`, 1<<uint(maxDepth))
 	msg := tavern.NewSSEMessage("lab-mandelbrot", done.String()).String()
 	broker.Publish(TopicLabMandelbrot, msg)
 }
@@ -221,23 +269,22 @@ func mbColorN(iter, maxIter int, zr, zi float64) string {
 func renderMandelbrotGrid(vp mbViewport, maxIter int) (string, [][]int) {
 	iters := make([][]int, mbHeight)
 	var buf strings.Builder
-	// Pre-allocate roughly: 120 cols * 50 bytes per span * 60 rows ≈ 360KB
-	buf.Grow(mbWidth * mbHeight * 50)
+	buf.Grow(mbWidth * mbHeight * 60)
+	fmt.Fprintf(&buf, `<svg viewBox="0 0 %d %d" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%%">`, mbWidth, mbHeight)
 
 	for row := 0; row < mbHeight; row++ {
 		ci := vp.imagMin + (float64(row)+0.5)/float64(mbHeight)*(vp.imagMax-vp.imagMin)
 		iters[row] = make([]int, mbWidth)
-		buf.WriteString(`<div class="leading-none whitespace-nowrap">`)
 		for col := 0; col < mbWidth; col++ {
 			cr := vp.realMin + (float64(col)+0.5)/float64(mbWidth)*(vp.realMax-vp.realMin)
 			iter, zr, zi := mbIterN(cr, ci, maxIter)
 			iters[row][col] = iter
 			color := mbColorN(iter, maxIter, zr, zi)
-			fmt.Fprintf(&buf, `<span style="color:%s">█</span>`, color)
+			fmt.Fprintf(&buf, `<rect x="%d" y="%d" width="1" height="1" fill="%s"/>`, col, row, color)
 		}
-		buf.WriteString("</div>")
 	}
 
+	buf.WriteString("</svg>")
 	return buf.String(), iters
 }
 
