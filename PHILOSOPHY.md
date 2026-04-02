@@ -342,7 +342,11 @@ The robustness principle isn't about being sloppy. It's about building systems t
 | ------------- | ------------------ | ------------------------------------------------------------- |
 | Server        | Go + Echo          | Fast, typed, compiles to a single binary                      |
 | Templates     | templ              | Type-safe HTML generation, composable components              |
-| Hypermedia    | HTMX               | Extends HTML with AJAX, keeps the browser as the client       |
+| Hypermedia    | HTMX + linkwell    | Extends HTML with AJAX; linkwell provides the HATEOAS controls, navigation, and link registry |
+| SQL           | fraggle            | Multi-dialect schema DSL and query fragments (SQLite, Postgres, MSSQL) |
+| Auth          | crooner + porter   | crooner handles OIDC/OAuth2; porter handles authorization, CSRF, security headers |
+| Logging       | promolog           | Per-request log capture with promote-on-error                 |
+| Real-time     | tavern             | Thread-safe SSE pub/sub broker                                |
 | Styling       | Tailwind + DaisyUI | Utility-first CSS, consistent design tokens                   |
 | Offline       | Capacitor + SQLite | Native container for iOS, offline-first data                  |
 | Interactivity | \_hyperscript      | Declarative client-side behavior (dismiss, back, transitions) |
