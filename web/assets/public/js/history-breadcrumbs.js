@@ -11,6 +11,7 @@ function historyBreadcrumbs() {
 
   return {
     trail: [],
+    currentTitle: '',
     init() {
       var history = JSON.parse(sessionStorage.getItem(KEY) || '[]');
       var current = window.location.pathname;
@@ -35,6 +36,7 @@ function historyBreadcrumbs() {
       // fall back to deriving from the URL path.
       var meta = document.querySelector('meta[name="page-title"]');
       var pageTitle = (meta && meta.content) ? meta.content : titleFromPath(current);
+      this.currentTitle = pageTitle;
       history.push({ path: current, title: pageTitle });
 
       // Cap the history

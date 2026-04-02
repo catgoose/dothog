@@ -153,7 +153,7 @@ templ FilterGroupOOB(group linkwell.FilterGroup) {
 
 // rangeFilterField renders a DaisyUI range slider with live value display via HyperScript.
 templ rangeFilterField(field linkwell.FilterField, bar linkwell.FilterBar) {
-	<label class="fieldset w-full max-w-xs">
+	<label class="fieldset w-full max-w-xs" x-data="rangeOutput">
 		if field.Label != "" {
 			<label class="label">{ field.Label }</label>
 		}
@@ -165,7 +165,7 @@ templ rangeFilterField(field linkwell.FilterField, bar linkwell.FilterBar) {
 			step={ field.Step }
 			value={ field.Value }
 			class="range range-sm"
-			x-on:input="$el.nextElementSibling.textContent = $el.value"
+			x-on:input="updateOutput()"
 			{ filterHxAttrs(field, bar)... }
 			disabled?={ field.Disabled }
 		/>

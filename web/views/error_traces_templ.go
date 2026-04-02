@@ -141,7 +141,7 @@ func ErrorTracesBody(traces []promolog.TraceSummary) templ.Component {
 			}
 		}
 		for _, t := range traces {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<tbody x-data=\"{ expanded: false, loaded: false }\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<tbody x-data=\"traceRow\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -194,7 +194,7 @@ func ErrorTraceRow(t promolog.TraceSummary) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" hx-target=\"next tr.detail-row\" hx-swap=\"innerHTML\" hx-trigger=\"expand\" x-on:click=\"expanded = !expanded; if (expanded && !loaded) { loaded = true; htmx.trigger($el, 'expand') }\"><td class=\"px-1\"><svg class=\"chevron w-4 h-4 text-base-content/40 transition-transform\" x-bind:class=\"expanded && 'rotate-90'\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"2\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8.25 4.5l7.5 7.5-7.5 7.5\"></path></svg></td><td class=\"text-xs font-mono whitespace-nowrap\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" hx-target=\"next tr.detail-row\" hx-swap=\"innerHTML\" hx-trigger=\"expand\" x-on:click=\"toggle()\"><td class=\"px-1\"><svg class=\"chevron w-4 h-4 text-base-content/40 transition-transform\" x-bind:class=\"expanded && 'rotate-90'\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"2\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8.25 4.5l7.5 7.5-7.5 7.5\"></path></svg></td><td class=\"text-xs font-mono whitespace-nowrap\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -430,7 +430,7 @@ func ErrorTraceDetailContent(trace *promolog.ErrorTrace) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" hx-target=\"#error-traces-table-container\" hx-swap=\"outerHTML\" hx-confirm=\"Delete this error trace?\">Delete</button> <button class=\"btn btn-sm btn-ghost\" x-on:click=\"expanded = false\">Close</button></div></div><div class=\"grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 text-sm\"><div><span class=\"font-medium text-base-content/60\">Request ID</span><p class=\"font-mono text-xs break-all\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" hx-target=\"#error-traces-table-container\" hx-swap=\"outerHTML\" hx-confirm=\"Delete this error trace?\">Delete</button> <button class=\"btn btn-sm btn-ghost\" x-on:click=\"collapse()\">Close</button></div></div><div class=\"grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 text-sm\"><div><span class=\"font-medium text-base-content/60\">Request ID</span><p class=\"font-mono text-xs break-all\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -596,7 +596,7 @@ func ErrorTraceDetailContent(trace *promolog.ErrorTrace) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if len(pairs) > 0 {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, " x-data=\"{ open: false }\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, " x-data=\"expandable\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -606,7 +606,7 @@ func ErrorTraceDetailContent(trace *promolog.ErrorTrace) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if len(pairs) > 0 {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, " x-on:click=\"open = !open\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, " x-on:click=\"toggle()\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

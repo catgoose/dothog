@@ -34,7 +34,7 @@ func OfflineIndicator() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div x-data=\"offlineIndicator()\" x-show=\"!online\" x-transition x-cloak class=\"fixed bottom-20 left-1/2 -translate-x-1/2 z-50 md:bottom-4\"><div class=\"badge badge-warning gap-2 shadow-lg px-4 py-3\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M18.364 5.636a9 9 0 010 12.728M5.636 5.636a9 9 0 000 12.728M12 12h.01\"></path></svg> <span x-text=\"pending > 0 ? 'Offline — ' + pending + ' pending' : 'Offline'\"></span></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div x-data=\"offlineIndicator\" x-show=\"!online\" x-transition x-cloak class=\"fixed bottom-20 left-1/2 -translate-x-1/2 z-50 md:bottom-4\"><div class=\"badge badge-warning gap-2 shadow-lg px-4 py-3\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M18.364 5.636a9 9 0 010 12.728M5.636 5.636a9 9 0 000 12.728M12 12h.01\"></path></svg> <span x-text=\"pending > 0 ? 'Offline — ' + pending + ' pending' : 'Offline'\"></span></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

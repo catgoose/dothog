@@ -36,6 +36,7 @@ const PRECACHE_URLS = [
   '/public/css/app-layout.css',
   '/public/js/htmx.min.js',
   '/public/js/_hyperscript.min.js',
+  '/public/js/alpine-components.js',
   '/public/js/alpine.min.js',
   '/public/js/alpine.morph.min.js',
   '/public/js/htmx.alpine-morph.js',

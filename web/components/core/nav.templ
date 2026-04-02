@@ -24,8 +24,8 @@ func navActiveClass(active bool) string {
 templ NavBar(items []linkwell.NavItem) {
 	<nav
 		class="navbar bg-base-200 shadow-sm"
-		x-data
-		x-on:click.window="$el.querySelectorAll('details[open]').forEach(d => { if (!d.contains($event.target)) d.open = false })"
+		x-data="navBar"
+		x-on:click.window="closeOthers($event)"
 	>
 		<div class="flex-1">
 			<ul class="menu menu-horizontal">
@@ -41,7 +41,8 @@ templ navMenuItem(item linkwell.NavItem) {
 	if len(item.Children) > 0 {
 		<li>
 			<details
-				x-on:toggle="if ($el.open) { $el.closest('ul.menu-horizontal').querySelectorAll('details').forEach(d => { if (d !== $el) d.open = false }) }"
+				x-data="navMenuDropdown"
+				x-on:toggle="closeOtherDropdowns()"
 			>
 				<summary class={ navActiveClass(item.Active) }>
 					@heroIcon(item.Icon)

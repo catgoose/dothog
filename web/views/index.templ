@@ -13,17 +13,8 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 		<body
 			hx-history="false"
 			hx-boost="true"
-			x-data
-			x-on:show-alert.window="
-				const t = document.createElement('div');
-				t.className = 'toast toast-end toast-top z-50';
-				const a = document.createElement('div');
-				a.className = 'alert alert-info shadow-lg';
-				a.textContent = $event.detail;
-				t.appendChild(a);
-				document.body.appendChild(t);
-				setTimeout(() => { t.style.transition = 'opacity 0.3s ease'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
-			"
+			x-data="alertListener"
+			x-on:show-alert.window="showAlert($event)"
 		>
 			<div id="error-status" class="sticky top-0 z-40" aria-live="assertive"></div>
 			if len(crumbs) > 0 {
@@ -95,6 +86,7 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		<script defer src="/public/js/history-breadcrumbs.js"></script>
 		<script defer src="/public/js/broadcast.js"></script>
 		// setup:feature:demo:end
+		<script defer src="/public/js/alpine-components.js"></script>
 		<script defer src="/public/js/alpine.min.js"></script>
 		// setup:feature:sse:start
 		<script defer src="/public/js/htmx.ext.sse.js"></script>

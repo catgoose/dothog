@@ -57,7 +57,7 @@ templ ErrorTracesBody(traces []promolog.TraceSummary) {
 		</tbody>
 	}
 	for _, t := range traces {
-		<tbody x-data="{ expanded: false, loaded: false }">
+		<tbody x-data="traceRow">
 			@ErrorTraceRow(t)
 			<tr class="detail-row" x-show="expanded"></tr>
 		</tbody>
@@ -73,7 +73,7 @@ templ ErrorTraceRow(t promolog.TraceSummary) {
 		hx-target="next tr.detail-row"
 		hx-swap="innerHTML"
 		hx-trigger="expand"
-		x-on:click="expanded = !expanded; if (expanded && !loaded) { loaded = true; htmx.trigger($el, 'expand') }"
+		x-on:click="toggle()"
 	>
 		<td class="px-1">
 			<svg class="chevron w-4 h-4 text-base-content/40 transition-transform" x-bind:class="expanded && 'rotate-90'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -129,7 +129,7 @@ templ ErrorTraceDetailContent(trace *promolog.ErrorTrace) {
 					</button>
 					<button
 						class="btn btn-sm btn-ghost"
-						x-on:click="expanded = false"
+						x-on:click="collapse()"
 					>
 						Close
 					</button>
@@ -184,13 +184,13 @@ templ ErrorTraceDetailContent(trace *promolog.ErrorTrace) {
 							<div
 								class={ "rounded-lg border p-2", templ.KV("border-error/30 bg-error/5", entry.Level == "ERROR"), templ.KV("border-warning/30 bg-warning/5", entry.Level == "WARN"), templ.KV("border-base-300 bg-base-200", entry.Level != "ERROR" && entry.Level != "WARN") }
 								if len(pairs) > 0 {
-									x-data="{ open: false }"
+									x-data="expandable"
 								}
 							>
 								<div
 									class="flex items-center gap-2 cursor-pointer select-none"
 									if len(pairs) > 0 {
-										x-on:click="open = !open"
+										x-on:click="toggle()"
 									}
 								>
 									if len(pairs) > 0 {

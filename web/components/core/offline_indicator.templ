@@ -6,7 +6,7 @@ package components
 // The badge is hidden when online and visible when offline, showing pending sync count.
 templ OfflineIndicator() {
 	<div
-		x-data="offlineIndicator()"
+		x-data="offlineIndicator"
 		x-show="!online"
 		x-transition
 		x-cloak

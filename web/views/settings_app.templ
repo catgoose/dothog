@@ -94,7 +94,7 @@ templ AppSettingsPage(currentTheme string) {
 // themeDropdown renders a dropdown select for choosing a DaisyUI theme,
 // grouped by light/dark category, with a visual color-swatch grid below.
 templ themeDropdown(currentTheme string) {
-	<div x-data={ "{ current: '" + currentTheme + "' }" }>
+	<div x-data="themePicker" data-theme={ currentTheme }>
 		<div class="flex items-center gap-3">
 			<div :data-theme="current" class="flex gap-0.5 shrink-0">
 				<span class="w-2 h-4 rounded-sm bg-primary"></span>
@@ -104,7 +104,7 @@ templ themeDropdown(currentTheme string) {
 			<select
 				class="select select-bordered select-sm w-full max-w-xs capitalize"
 				x-model="current"
-				x-on:change={ "document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.appChannel) window.appChannel.postMessage({type:'theme-change',theme:current})" }
+				x-on:change="setTheme(current)"
 			>
 				for _, cat := range ThemeCategories {
 					<optgroup label={ cat.Label }>
@@ -126,7 +126,7 @@ templ themeDropdown(currentTheme string) {
 								type="button"
 								:class={ "current === '" + theme + "' ? 'ring-2 ring-primary ring-offset-1' : ''" }
 								class="rounded-md overflow-hidden cursor-pointer"
-								x-on:click={ "current = '" + theme + "'; document.documentElement.dataset.theme = current; var t = document.querySelector('meta[name=\"csrf-token\"]'); fetch('/settings/theme', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': t ? t.content : ''}, body: 'theme=' + current }); if (window.appChannel) window.appChannel.postMessage({type:'theme-change',theme:current})" }
+								x-on:click={ "setTheme('" + theme + "')" }
 								title={ theme }
 							>
 								<div data-theme={ theme } class="flex gap-0.5 p-1 bg-base-100">
