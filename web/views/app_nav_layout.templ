@@ -26,7 +26,6 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 				<!-- Nav bar (CSS positions: bottom on mobile, top on desktop) -->
 				@appNav(cfg)
 				// setup:feature:demo:start
-			@components.ContextBar(links, currentPath)
 			@components.LocalContextBar(links, currentPath)
 			@components.HistoryBreadcrumbs()
 			// setup:feature:demo:end
