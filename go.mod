@@ -8,10 +8,10 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.14
-	github.com/catgoose/linkwell v0.2.14
-	github.com/catgoose/porter v0.4.4
-	github.com/catgoose/promolog/sqlite v0.0.0-20260402134330-814f9e6c453d
-	github.com/catgoose/tavern v0.4.18
+	github.com/catgoose/linkwell v0.2.15
+	github.com/catgoose/porter v0.4.5
+	github.com/catgoose/promolog/sqlite v0.0.0-20260403193042-a59a25dd4dd6
+	github.com/catgoose/tavern v0.4.30
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/jmoiron/sqlx v1.4.0
@@ -36,7 +36,7 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
-	github.com/AzureAD/microsoft-authentication-library-for-go v1.7.0 // indirect
+	github.com/AzureAD/microsoft-authentication-library-for-go v1.7.1 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
 	github.com/air-verse/air v1.62.0 // indirect
 	github.com/alexedwards/scs/v2 v2.9.0 // indirect
@@ -45,8 +45,8 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bep/godartsass/v2 v2.5.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
-	github.com/catgoose/chuck v0.1.3
-	github.com/catgoose/promolog v0.2.17
+	github.com/catgoose/chuck v0.1.4
+	github.com/catgoose/promolog v0.2.18
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
