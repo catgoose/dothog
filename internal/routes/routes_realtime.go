@@ -298,32 +298,17 @@ func broadcastCardSlider(section string, ms int) {
 	rtBroker.Publish(TopicDashMetrics, msg)
 }
 
-// broadcastMasterState renders the master toggle OOB and (when enabled) the
-// master slider OOB, then publishes to all dashboard clients.
+// broadcastMasterState renders the full master card OOB (locked for 5s on
+// receiving clients) and publishes to all dashboard clients.
 func broadcastMasterState(enabled bool, ms int) {
 	if rtBroker == nil || !rtBroker.HasSubscribers(TopicDashMetrics) {
 		return
 	}
 	buf := statsBufPool.Get().(*bytes.Buffer)
 	buf.Reset()
-	if err := views.OOBMasterToggle(enabled).Render(context.Background(), buf); err != nil {
+	if err := views.OOBMasterCard(enabled, ms, true).Render(context.Background(), buf); err != nil {
 		statsBufPool.Put(buf)
 		return
-	}
-	if enabled && ms > 0 {
-		cfg := components.IntervalSliderCfg{
-			ID:          "iv-master",
-			TargetKey:   "scope",
-			TargetValue: "all",
-			IntervalMs:  ms,
-			Scale:       components.AutoScale(ms),
-			PostURL:     "/hypermedia/realtime/interval-all",
-			OOB:         true,
-		}
-		if err := components.IntervalSlider(cfg).Render(context.Background(), buf); err != nil {
-			statsBufPool.Put(buf)
-			return
-		}
 	}
 	msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
 	statsBufPool.Put(buf)
