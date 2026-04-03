@@ -17,25 +17,25 @@ type IntervalSliderCfg struct {
 // cycles through ms → s → min → h. The slider reconfigures its range on
 // each unit change and POSTs the converted millisecond value via htmx.ajax.
 templ IntervalSlider(cfg IntervalSliderCfg) {
-	<div class="flex items-center gap-1"
+	<div class="iv-wrap flex items-center gap-1"
 		data-unit={ cfg.Scale }
 		data-post-url={ cfg.PostURL }
 		data-target-key={ cfg.TargetKey }
 		data-target-value={ cfg.TargetValue }
-		_={ "init call window._ivInit(me)" }>
+		_="init call window._ivInit(me)">
 		<input type="range" class="range range-xs flex-1"
 			min={ scaleAttr(cfg.Scale, "min") }
 			max={ scaleAttr(cfg.Scale, "max") }
 			step={ scaleAttr(cfg.Scale, "step") }
 			value={ scaleDisplay(cfg.IntervalMs, cfg.Scale) }
-			_="on input set next <span/>.innerText to my.value
-			   on change call window._ivPost(closest parent <div/>)"/>
-		<span class="font-mono text-xs text-base-content/40 w-10 text-right">
+			_="on input set the innerText of the next .iv-display to my.value
+			   on change call window._ivPost(the closest .iv-wrap to me)"/>
+		<span class="iv-display font-mono text-xs text-base-content/40 w-10 text-right">
 			{ scaleDisplay(cfg.IntervalMs, cfg.Scale) }
 		</span>
 		<button type="button"
 			class="btn btn-ghost btn-xs font-mono text-base-content/50 px-1 min-h-0 h-5"
-			_="on click call window._ivCycle(closest parent <div/>)">
+			_="on click call window._ivCycle(the closest .iv-wrap to me)">
 			{ cfg.Scale }
 		</button>
 	</div>

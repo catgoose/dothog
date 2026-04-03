@@ -45,7 +45,7 @@ func IntervalSlider(cfg IntervalSliderCfg) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex items-center gap-1\" data-unit=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"iv-wrap flex items-center gap-1\" data-unit=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -97,98 +97,85 @@ func IntervalSlider(cfg IntervalSliderCfg) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" _=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" _=\"init call window._ivInit(me)\"><input type=\"range\" class=\"range range-xs flex-1\" min=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("init call window._ivInit(me)")
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(scaleAttr(cfg.Scale, "min"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 25, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 27, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"><input type=\"range\" class=\"range range-xs flex-1\" min=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" max=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(scaleAttr(cfg.Scale, "min"))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(scaleAttr(cfg.Scale, "max"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 27, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 28, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" max=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" step=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(scaleAttr(cfg.Scale, "max"))
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(scaleAttr(cfg.Scale, "step"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 28, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 29, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" step=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(scaleAttr(cfg.Scale, "step"))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(scaleDisplay(cfg.IntervalMs, cfg.Scale))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 29, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 30, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" _=\"on input set the innerText of the next .iv-display to my.value\n\t\t\t   on change call window._ivPost(the closest .iv-wrap to me)\"> <span class=\"iv-display font-mono text-xs text-base-content/40 w-10 text-right\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(scaleDisplay(cfg.IntervalMs, cfg.Scale))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 30, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 34, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" _=\"on input set next <span/>.innerText to my.value\n\t\t\t   on change call window._ivPost(closest parent <div/>)\"> <span class=\"font-mono text-xs text-base-content/40 w-10 text-right\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</span> <button type=\"button\" class=\"btn btn-ghost btn-xs font-mono text-base-content/50 px-1 min-h-0 h-5\" _=\"on click call window._ivCycle(the closest .iv-wrap to me)\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(scaleDisplay(cfg.IntervalMs, cfg.Scale))
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(cfg.Scale)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 34, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 39, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span> <button type=\"button\" class=\"btn btn-ghost btn-xs font-mono text-base-content/50 px-1 min-h-0 h-5\" _=\"on click call window._ivCycle(closest parent <div/>)\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(cfg.Scale)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/interval.templ`, Line: 39, Col: 14}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

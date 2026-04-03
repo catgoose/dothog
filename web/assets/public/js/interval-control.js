@@ -22,7 +22,7 @@
   /** Cycle unit: ms → s → min → h → ms. Reconfigure slider and POST. */
   window._ivCycle = function (el) {
     var input = el.querySelector('input[type=range]');
-    var display = el.querySelector('span');
+    var display = el.querySelector('.iv-display');
     var btn = el.querySelector('button');
     if (!input) return;
 
