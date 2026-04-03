@@ -6,17 +6,47 @@ import "fmt"
 
 // IntervalSliderCfg configures a reusable update-frequency slider.
 type IntervalSliderCfg struct {
+	ID          string // unique DOM id for OOB targeting, e.g. "iv-network"
 	TargetKey   string // form key name, e.g. "tile", "section"
 	TargetValue string // form value, e.g. "num-txn", "system-metrics"
 	IntervalMs  int    // current interval in milliseconds
 	Scale       string // default unit: "ms", "s", "min", "h"
 	PostURL     string // endpoint to POST interval changes
+	OOB         bool   // when true, render with hx-swap-oob for multi-client sync
+}
+
+// AutoScale picks the best slider unit for a given interval in milliseconds.
+func AutoScale(ms int) string {
+	switch {
+	case ms >= 3600000:
+		return "h"
+	case ms >= 60000:
+		return "min"
+	case ms >= 1000:
+		return "s"
+	default:
+		return "ms"
+	}
 }
 
 // IntervalSlider renders a range input with a clickable unit label that
-// cycles through ms → s → min → h. The slider reconfigures its range on
-// each unit change and POSTs the converted millisecond value via htmx.ajax.
+// cycles through ms -> s -> min -> h. When OOB is true, the outer div gets
+// an id and hx-swap-oob="outerHTML" for multi-client sync.
 templ IntervalSlider(cfg IntervalSliderCfg) {
+	if cfg.OOB && cfg.ID != "" {
+		<div id={ cfg.ID } hx-swap-oob="outerHTML">
+			@intervalSliderInner(cfg)
+		</div>
+	} else if cfg.ID != "" {
+		<div id={ cfg.ID }>
+			@intervalSliderInner(cfg)
+		</div>
+	} else {
+		@intervalSliderInner(cfg)
+	}
+}
+
+templ intervalSliderInner(cfg IntervalSliderCfg) {
 	<div class="iv-wrap flex items-center gap-1"
 		data-unit={ cfg.Scale }
 		data-post-url={ cfg.PostURL }

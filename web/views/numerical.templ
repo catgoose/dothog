@@ -2,7 +2,10 @@
 
 package views
 
-import components "catgoose/dothog/web/components/core"
+import (
+	components "catgoose/dothog/web/components/core"
+	"fmt"
+)
 
 // numTileWrapper is the static outer shell: holds the OOB data target + the slider.
 // The slider lives OUTSIDE the OOB target so it's never replaced by SSE updates.
@@ -10,6 +13,7 @@ templ numTileWrapper(t NumTile) {
 	<div class="bg-base-200 rounded-lg p-4">
 		@numTileData(t)
 		@components.IntervalSlider(components.IntervalSliderCfg{
+			ID: fmt.Sprintf("iv-%s", t.ID),
 			TargetKey: "tile", TargetValue: t.ID,
 			IntervalMs: t.IntervalMs, Scale: t.Scale,
 			PostURL: "/hypermedia/realtime/tile-interval",

@@ -13,12 +13,13 @@ import (
 	"sync"
 	"time"
 
+	"catgoose/dothog/internal/health"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/shared"
-	"catgoose/dothog/internal/health"
-	"github.com/catgoose/tavern"
+	components "catgoose/dothog/web/components/core"
 	"catgoose/dothog/web/views"
 
+	"github.com/catgoose/tavern"
 	"github.com/labstack/echo/v4"
 )
 
@@ -46,6 +47,14 @@ var rtIntervals struct {
 	mu        sync.RWMutex
 }
 
+var rtMaster struct {
+	mu         sync.RWMutex
+	enabled    bool
+	intervalMs int
+}
+
+var rtBroker *tavern.SSEBroker
+
 func initRTIntervals() {
 	rtIntervals.intervals = make(map[string]int, len(rtCardDefaults))
 	rtIntervals.lastSent = make(map[string]time.Time, len(rtCardDefaults))
@@ -67,6 +76,8 @@ func isDue(cardID string, now time.Time) bool {
 }
 
 func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
+	rtBroker = broker
+	numBroker = broker
 	initRTIntervals()
 	ar.e.GET("/hypermedia/realtime", ar.handleRealtimePage())
 	ar.e.POST("/hypermedia/realtime/interval", handleRTInterval)
@@ -118,6 +129,15 @@ func handleRTIntervalAll(c echo.Context) error {
 	}
 	numTileIntervals.mu.Unlock()
 
+	// Track master state
+	rtMaster.mu.Lock()
+	rtMaster.enabled = true
+	rtMaster.intervalMs = ms
+	rtMaster.mu.Unlock()
+
+	// Broadcast master toggle + slider OOB to all dashboard clients
+	broadcastMasterState(true, ms)
+
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -140,6 +160,14 @@ func handleRTIntervalRestore(c echo.Context) error {
 	}
 	numTileIntervals.mu.Unlock()
 
+	// Clear master state
+	rtMaster.mu.Lock()
+	rtMaster.enabled = false
+	rtMaster.mu.Unlock()
+
+	// Broadcast master toggle OOB (unchecked) to all dashboard clients
+	broadcastMasterState(false, 0)
+
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -154,6 +182,10 @@ func handleRTInterval(c echo.Context) error {
 	rtIntervals.mu.Lock()
 	rtIntervals.intervals[section] = ms
 	rtIntervals.mu.Unlock()
+
+	// Broadcast OOB slider update to all dashboard clients
+	broadcastCardSlider(section, ms)
+
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -164,7 +196,16 @@ func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
 		services := initialServices()
 		svcLatencies := initialServiceLatencies()
 		tiles := newNumSim().buildTiles()
-		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services, svcLatencies, tiles))
+
+		rtMaster.mu.RLock()
+		masterEnabled := rtMaster.enabled
+		masterMs := rtMaster.intervalMs
+		rtMaster.mu.RUnlock()
+		if masterMs == 0 {
+			masterMs = 2000 // default
+		}
+
+		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services, svcLatencies, tiles, masterEnabled, masterMs))
 	}
 }
 
@@ -229,6 +270,64 @@ func handleSSEDashboard(broker *tavern.SSEBroker) echo.HandlerFunc {
 			}
 		}
 	}
+}
+
+// broadcastCardSlider renders a card's IntervalSlider with OOB=true and publishes
+// it so all connected dashboard clients see the updated slider state.
+func broadcastCardSlider(section string, ms int) {
+	if rtBroker == nil || !rtBroker.HasSubscribers(TopicDashMetrics) {
+		return
+	}
+	cfg := components.IntervalSliderCfg{
+		ID:          fmt.Sprintf("iv-%s", section),
+		TargetKey:   "section",
+		TargetValue: section,
+		IntervalMs:  ms,
+		Scale:       components.AutoScale(ms),
+		PostURL:     "/hypermedia/realtime/interval",
+		OOB:         true,
+	}
+	buf := statsBufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	if err := components.IntervalSlider(cfg).Render(context.Background(), buf); err != nil {
+		statsBufPool.Put(buf)
+		return
+	}
+	msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
+	statsBufPool.Put(buf)
+	rtBroker.Publish(TopicDashMetrics, msg)
+}
+
+// broadcastMasterState renders the master toggle OOB and (when enabled) the
+// master slider OOB, then publishes to all dashboard clients.
+func broadcastMasterState(enabled bool, ms int) {
+	if rtBroker == nil || !rtBroker.HasSubscribers(TopicDashMetrics) {
+		return
+	}
+	buf := statsBufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	if err := views.OOBMasterToggle(enabled).Render(context.Background(), buf); err != nil {
+		statsBufPool.Put(buf)
+		return
+	}
+	if enabled && ms > 0 {
+		cfg := components.IntervalSliderCfg{
+			ID:          "iv-master",
+			TargetKey:   "scope",
+			TargetValue: "all",
+			IntervalMs:  ms,
+			Scale:       components.AutoScale(ms),
+			PostURL:     "/hypermedia/realtime/interval-all",
+			OOB:         true,
+		}
+		if err := components.IntervalSlider(cfg).Render(context.Background(), buf); err != nil {
+			statsBufPool.Put(buf)
+			return
+		}
+	}
+	msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
+	statsBufPool.Put(buf)
+	rtBroker.Publish(TopicDashMetrics, msg)
 }
 
 var statsBufPool = sync.Pool{

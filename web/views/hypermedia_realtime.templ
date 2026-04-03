@@ -8,7 +8,7 @@ import (
 )
 
 // RealtimePage is the full-page layout for /hypermedia/realtime.
-templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency, tiles []NumTile) {
+templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency, tiles []NumTile, masterEnabled bool, masterMs int) {
 	<link rel="stylesheet" href="/public/css/charts.min.css"/>
 	<style>
 		/* Charts.css transition smoothing */
@@ -59,15 +59,20 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 		<div class="card bg-base-100 shadow border border-base-300">
 			<div class="card-body p-3">
 				<div class="flex items-center gap-4">
-					<label class="flex items-center gap-2 cursor-pointer shrink-0">
+					<label id="master-toggle-wrap" class="flex items-center gap-2 cursor-pointer shrink-0">
 						<input type="checkbox" class="toggle toggle-sm toggle-primary master-toggle"
+							if masterEnabled {
+								checked
+							}
 							_="on change if my.checked then call window._ivPost(the first .iv-wrap in the next .master-slider) else fetch /hypermedia/realtime/interval-restore with method:'POST'"/>
 						<span class="text-sm font-semibold">Master Control</span>
 					</label>
 					<div class="master-slider flex-1 flex items-center gap-2">
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-master",
 							TargetKey: "scope", TargetValue: "all",
-							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval-all",
+							IntervalMs: masterMs, Scale: components.AutoScale(masterMs),
+							PostURL: "/hypermedia/realtime/interval-all",
 						})
 					</div>
 				</div>
@@ -86,6 +91,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Network Traffic</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-network",
 							TargetKey: "section", TargetValue: "network",
 							IntervalMs: 1000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -98,6 +104,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Service Health</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-services",
 							TargetKey: "section", TargetValue: "services",
 							IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -113,6 +120,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Latency Histogram</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-latency",
 							TargetKey: "section", TargetValue: "latency",
 							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -125,6 +133,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Error Rate Trend</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-error-spark",
 							TargetKey: "section", TargetValue: "error-spark",
 							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -137,6 +146,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Request Distribution</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-req-dist",
 							TargetKey: "section", TargetValue: "req-dist",
 							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -152,6 +162,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Throughput Split</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-throughput",
 							TargetKey: "section", TargetValue: "throughput",
 							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -164,6 +175,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Per-Service Latency</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-svc-latency",
 							TargetKey: "section", TargetValue: "svc-latency",
 							IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -179,6 +191,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">CPU & Memory</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-gauges",
 							TargetKey: "section", TargetValue: "gauges",
 							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -191,6 +204,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Disk I/O</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-disk-io",
 							TargetKey: "section", TargetValue: "disk-io",
 							IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -203,6 +217,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Connection Pool</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-conn-pool",
 							TargetKey: "section", TargetValue: "conn-pool",
 							IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -218,6 +233,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">System Metrics</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-sys-stats",
 							TargetKey: "section", TargetValue: "sys-stats",
 							IntervalMs: 5000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -230,6 +246,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 					<div class="flex items-center justify-between mb-2">
 						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Live Event Feed</h2>
 						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-events",
 							TargetKey: "section", TargetValue: "events",
 							IntervalMs: 1500, Scale: "s", PostURL: "/hypermedia/realtime/interval",
 						})
@@ -257,6 +274,19 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 			@realtimePatternCard("Charts.css", "Pure CSS data visualization", "HTML tables with CSS custom properties (--size) — no JavaScript charting library needed. Animated via CSS transitions.")
 		</div>
 	</div>
+}
+
+// --- OOB Master Control ---
+
+templ OOBMasterToggle(enabled bool) {
+	<label id="master-toggle-wrap" hx-swap-oob="outerHTML" class="flex items-center gap-2 cursor-pointer shrink-0">
+		<input type="checkbox" class="toggle toggle-sm toggle-primary master-toggle"
+			if enabled {
+				checked
+			}
+			_="on change if my.checked then call window._ivPost(the first .iv-wrap in the next .master-slider) else fetch /hypermedia/realtime/interval-restore with method:'POST'"/>
+		<span class="text-sm font-semibold">Master Control</span>
+	</label>
 }
 
 // --- KPI Cards ---

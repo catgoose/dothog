@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	components "catgoose/dothog/web/components/core"
 	"catgoose/dothog/web/views"
 
 	"github.com/catgoose/tavern"
@@ -325,22 +326,6 @@ var numDefaultIntervals = map[string]int{
 	"num-deploys": 300000, // 5min — rare events
 }
 
-// numTileScales determines slider unit for each tile.
-var numTileScales = map[string]string{
-	"num-txn":     "ms",
-	"num-queue":   "ms",
-	"num-p99":     "ms",
-	"num-cpu":     "s",
-	"num-users":   "s",
-	"num-errors":  "s",
-	"num-revenue": "s",
-	"num-cache":   "s",
-	"num-mem":     "s",
-	"num-sla":     "s",
-	"num-uptime":  "min",
-	"num-deploys": "min",
-}
-
 var numTileIntervals struct {
 	intervals map[string]int       // ms per tile
 	lastSent  map[string]time.Time // last publish time per tile
@@ -366,15 +351,15 @@ func getTileInterval(id string) int {
 }
 
 func getTileScale(id string) string {
-	if s, ok := numTileScales[id]; ok {
-		return s
-	}
-	return "s"
+	return components.AutoScale(getTileInterval(id))
 }
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 
-var numBufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
+var (
+	numBufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
+	numBroker  *tavern.SSEBroker
+)
 
 func handleNumericalInterval(c echo.Context) error {
 	tileID := c.FormValue("tile")
@@ -389,7 +374,36 @@ func handleNumericalInterval(c echo.Context) error {
 	numTileIntervals.intervals[tileID] = ms
 	numTileIntervals.mu.Unlock()
 
+	// Broadcast OOB slider update to all clients
+	broadcastTileSlider(tileID, ms)
+
 	return c.NoContent(http.StatusNoContent)
+}
+
+// broadcastTileSlider renders a tile's IntervalSlider with OOB=true and publishes
+// it so all connected clients see the updated slider state.
+func broadcastTileSlider(tileID string, ms int) {
+	if numBroker == nil || !numBroker.HasSubscribers(TopicNumericalDash) {
+		return
+	}
+	cfg := components.IntervalSliderCfg{
+		ID:          fmt.Sprintf("iv-%s", tileID),
+		TargetKey:   "tile",
+		TargetValue: tileID,
+		IntervalMs:  ms,
+		Scale:       components.AutoScale(ms),
+		PostURL:     "/hypermedia/realtime/tile-interval",
+		OOB:         true,
+	}
+	buf := numBufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	if err := components.IntervalSlider(cfg).Render(context.Background(), buf); err != nil {
+		numBufPool.Put(buf)
+		return
+	}
+	msg := tavern.NewSSEMessage("numerical-dash", buf.String()).String()
+	numBufPool.Put(buf)
+	numBroker.Publish(TopicNumericalDash, msg)
 }
 
 func handleSSENumerical(broker *tavern.SSEBroker) echo.HandlerFunc {
