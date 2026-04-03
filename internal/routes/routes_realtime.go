@@ -58,10 +58,16 @@ func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 	ar.e.GET("/sse/system", handleSSESystem(broker))
 	ar.e.GET("/sse/dashboard", handleSSEDashboard(broker))
 
+	// Numerical tile publisher (shares the page, separate SSE stream)
+	initTileIntervals()
+	ar.e.POST("/hypermedia/realtime/tile-interval", handleNumericalInterval)
+	ar.e.GET("/sse/numerical", handleSSENumerical(broker))
+
 	go ar.publishSystemStats(broker)
 	go ar.publishMetrics(broker)
 	go ar.publishServices(broker)
 	go ar.publishEvents(broker)
+	go ar.publishNumerical(broker)
 }
 
 func handleRTInterval(c echo.Context) error {
@@ -84,7 +90,8 @@ func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
 		snap := initialMetrics()
 		services := initialServices()
 		svcLatencies := initialServiceLatencies()
-		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services, svcLatencies))
+		tiles := newNumSim().buildTiles()
+		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services, svcLatencies, tiles))
 	}
 }
 

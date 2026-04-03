@@ -8,7 +8,7 @@ import (
 )
 
 // RealtimePage is the full-page layout for /hypermedia/realtime.
-templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency) {
+templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency, tiles []NumTile) {
 	<link rel="stylesheet" href="/public/css/charts.min.css"/>
 	<style>
 		/* Charts.css transition smoothing */
@@ -79,12 +79,11 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 				})
 			</div>
 		</div>
-		<!-- KPI Row -->
-		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-			@kpiCard("kpi-rps", "Requests/s", fmtRPS(snap.RPS), "text-primary")
-			@kpiCard("kpi-errors", "Error Rate", fmtPct(snap.ErrorPct), "text-error")
-			@kpiCard("kpi-latency", "P99 Latency", fmtMs(snap.P99Ms), "text-warning")
-			@kpiCard("kpi-goroutines", "Goroutines", fmt.Sprintf("%d", initial.Goroutines), "text-info")
+		<!-- KPI Tiles (numerical, per-tile intervals) -->
+		<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+			for _, t := range tiles {
+				@numTileWrapper(t)
+			}
 		</div>
 		<!-- Row 2: Network Chart + Service Health -->
 		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
@@ -179,11 +178,14 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 				</div>
 			</div>
 		</div>
-		<!-- SSE connection — direct, publishers control their own rate -->
+		<!-- SSE connections — charts + numerical tiles -->
 		<div hx-ext="sse" sse-connect="/sse/dashboard" hx-swap="innerHTML settle:0 transition:false">
 			<div sse-swap="dashboard-metrics" style="display:none"></div>
 			<div sse-swap="dashboard-services" style="display:none"></div>
 			<div sse-swap="dashboard-events" style="display:none"></div>
+		</div>
+		<div hx-ext="sse" sse-connect="/sse/numerical" hx-swap="innerHTML settle:0 transition:false">
+			<div sse-swap="numerical-dash" style="display:none"></div>
 		</div>
 		<!-- Pattern explanation cards -->
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">

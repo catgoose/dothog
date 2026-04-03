@@ -13,14 +13,11 @@ import (
 	"sync"
 	"time"
 
-	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 
 	"github.com/catgoose/tavern"
 	"github.com/labstack/echo/v4"
 )
-
-const numericalBase = hypermediaBase + "/numerical"
 
 // ── Simulation state ────────────────────────────────────────────────────────
 
@@ -377,26 +374,6 @@ func getTileScale(id string) string {
 // ── Routes ──────────────────────────────────────────────────────────────────
 
 var numBufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
-
-func (ar *appRoutes) initNumericalRoutes(broker *tavern.SSEBroker) {
-	initTileIntervals()
-	ar.e.GET(numericalBase, ar.handleNumericalPage)
-	ar.e.GET(numericalBase+"/sse-connect", handleNumericalSSEConnect)
-	ar.e.POST(numericalBase+"/interval", handleNumericalInterval)
-	ar.e.GET("/sse/numerical", handleSSENumerical(broker))
-
-	go ar.publishNumerical(broker)
-}
-
-func (ar *appRoutes) handleNumericalPage(c echo.Context) error {
-	sim := newNumSim()
-	tiles := sim.buildTiles()
-	return handler.RenderBaseLayout(c, views.NumericalPage(tiles))
-}
-
-func handleNumericalSSEConnect(c echo.Context) error {
-	return handler.RenderComponent(c, views.NumericalSSEBlock())
-}
 
 func handleNumericalInterval(c echo.Context) error {
 	tileID := c.FormValue("tile")

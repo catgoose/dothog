@@ -72,11 +72,7 @@ func PatternsIndexPage() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = adminResourceCard("/hypermedia/realtime", "Real-time — Charts", "SSE-powered live dashboard with Charts.css visualizations and OOB swaps.", "M13 10V3L4 14h7v7l9-11h-7z").Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = adminResourceCard("/hypermedia/numerical", "Real-time — Numerical", "Live KPI tiles with big numbers, deltas, and color-coded thresholds — all via SSE OOB swaps.", "M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = adminResourceCard("/hypermedia/realtime", "Real-time", "Live operations dashboard — KPI tiles with per-tile intervals, Charts.css visualizations, and SSE event feed.", "M13 10V3L4 14h7v7l9-11h-7z").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
