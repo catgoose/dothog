@@ -15,6 +15,7 @@ templ AdminHealthPage(h health.Response) {
 			</div>
 			<div class="flex items-center gap-3">
 				@components.IntervalSlider(components.IntervalSliderCfg{
+					ID: "iv-health",
 					TargetKey: "section", TargetValue: "health",
 					IntervalMs: 5000, Scale: "s", PostURL: "/admin/settings/interval",
 				})

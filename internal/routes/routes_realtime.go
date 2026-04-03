@@ -16,8 +16,9 @@ import (
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/shared"
 	"catgoose/dothog/internal/health"
-	"github.com/catgoose/tavern"
+	components "catgoose/dothog/web/components/core"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/tavern"
 
 	"github.com/labstack/echo/v4"
 )
@@ -30,9 +31,21 @@ var rtDefaultIntervals = map[string]int{
 	"events":   1500, // 1.5s — live event feed
 }
 
+// rtSectionOrder preserves the display order for card intervals on the page.
+var rtSectionOrder = []string{"metrics", "services", "events"}
+
 var rtIntervals struct {
 	intervals map[string]int
 	mu        sync.RWMutex
+}
+
+// ── Master control state ────────────────────────────────────────────────────
+
+var rtMaster struct {
+	mu         sync.RWMutex
+	enabled    bool
+	intervalMs int
+	saved      map[string]int // individual intervals saved before master override
 }
 
 func initRTIntervals() {
@@ -40,6 +53,7 @@ func initRTIntervals() {
 	for id, iv := range rtDefaultIntervals {
 		rtIntervals.intervals[id] = iv
 	}
+	rtMaster.saved = make(map[string]int)
 }
 
 func getRTInterval(id string) time.Duration {
@@ -51,10 +65,34 @@ func getRTInterval(id string) time.Duration {
 	return time.Second
 }
 
+// getRTCardIntervals returns current section intervals in display order.
+func getRTCardIntervals() []views.RTCardInterval {
+	rtIntervals.mu.RLock()
+	defer rtIntervals.mu.RUnlock()
+	cis := make([]views.RTCardInterval, 0, len(rtSectionOrder))
+	for _, id := range rtSectionOrder {
+		ms := rtIntervals.intervals[id]
+		if ms <= 0 {
+			ms = 1000
+		}
+		cis = append(cis, views.RTCardInterval{ID: id, IntervalMs: ms})
+	}
+	return cis
+}
+
+// getRTMasterState returns the current master control state.
+func getRTMasterState() views.RTMasterState {
+	rtMaster.mu.RLock()
+	defer rtMaster.mu.RUnlock()
+	return views.RTMasterState{Enabled: rtMaster.enabled, IntervalMs: rtMaster.intervalMs}
+}
+
 func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 	initRTIntervals()
 	ar.e.GET("/hypermedia/realtime", ar.handleRealtimePage())
-	ar.e.POST("/hypermedia/realtime/interval", handleRTInterval)
+	ar.e.POST("/hypermedia/realtime/interval", handleRTInterval(broker))
+	ar.e.POST("/hypermedia/realtime/interval-master", handleRTIntervalMaster(broker))
+	ar.e.POST("/hypermedia/realtime/interval-master-toggle", handleRTIntervalMasterToggle(broker))
 	ar.e.GET("/sse/system", handleSSESystem(broker))
 	ar.e.GET("/sse/dashboard", handleSSEDashboard(broker))
 
@@ -64,18 +102,178 @@ func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 	go ar.publishEvents(broker)
 }
 
-func handleRTInterval(c echo.Context) error {
-	section := c.FormValue("section")
-	ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
-	if ms < 500 {
-		ms = 500
-	} else if ms > 30000 {
-		ms = 30000
+// ── Broadcast helpers ───────────────────────────────────────────────────────
+
+// broadcastSliderOOB renders a single IntervalSlider with OOB and publishes it.
+func broadcastSliderOOB(broker *tavern.SSEBroker, id, targetKey, targetValue, postURL string, ms int) {
+	cfg := components.IntervalSliderCfg{
+		ID:          id,
+		TargetKey:   targetKey,
+		TargetValue: targetValue,
+		IntervalMs:  ms,
+		Scale:       components.AutoScale(ms),
+		PostURL:     postURL,
+		OOB:         true,
 	}
-	rtIntervals.mu.Lock()
-	rtIntervals.intervals[section] = ms
-	rtIntervals.mu.Unlock()
-	return c.NoContent(http.StatusNoContent)
+	buf := statsBufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	if err := components.IntervalSlider(cfg).Render(context.Background(), buf); err != nil {
+		statsBufPool.Put(buf)
+		return
+	}
+	msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
+	statsBufPool.Put(buf)
+	broker.Publish(TopicDashMetrics, msg)
+}
+
+// broadcastMasterOOB renders the master control with OOB and publishes it.
+func broadcastMasterOOB(broker *tavern.SSEBroker, master views.RTMasterState) {
+	buf := statsBufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	if err := views.OOBMasterControl(master).Render(context.Background(), buf); err != nil {
+		statsBufPool.Put(buf)
+		return
+	}
+	msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
+	statsBufPool.Put(buf)
+	broker.Publish(TopicDashMetrics, msg)
+}
+
+// broadcastAllSlidersOOB sends OOB updates for all section sliders.
+func broadcastAllSlidersOOB(broker *tavern.SSEBroker) {
+	rtIntervals.mu.RLock()
+	defer rtIntervals.mu.RUnlock()
+	buf := statsBufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	for _, id := range rtSectionOrder {
+		ms := rtIntervals.intervals[id]
+		cfg := components.IntervalSliderCfg{
+			ID:          "iv-" + id,
+			TargetKey:   "section",
+			TargetValue: id,
+			IntervalMs:  ms,
+			Scale:       components.AutoScale(ms),
+			PostURL:     "/hypermedia/realtime/interval",
+			OOB:         true,
+		}
+		_ = components.IntervalSlider(cfg).Render(context.Background(), buf)
+	}
+	if buf.Len() > 0 {
+		msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
+		broker.Publish(TopicDashMetrics, msg)
+	}
+	statsBufPool.Put(buf)
+}
+
+// ── POST handlers ───────────────────────────────────────────────────────────
+
+func handleRTInterval(broker *tavern.SSEBroker) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		section := c.FormValue("section")
+		ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
+		if ms < 500 {
+			ms = 500
+		} else if ms > 30000 {
+			ms = 30000
+		}
+		rtIntervals.mu.Lock()
+		rtIntervals.intervals[section] = ms
+		rtIntervals.mu.Unlock()
+
+		// Broadcast OOB update for this slider to all clients
+		broadcastSliderOOB(broker, "iv-"+section, "section", section, "/hypermedia/realtime/interval", ms)
+
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+// handleRTIntervalMaster handles the master slider change (sets all intervals).
+func handleRTIntervalMaster(broker *tavern.SSEBroker) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
+		if ms < 500 {
+			ms = 500
+		} else if ms > 30000 {
+			ms = 30000
+		}
+
+		rtMaster.mu.Lock()
+		rtMaster.intervalMs = ms
+		if rtMaster.enabled {
+			// Save current individual intervals before overriding
+			if len(rtMaster.saved) == 0 {
+				rtIntervals.mu.RLock()
+				for id, iv := range rtIntervals.intervals {
+					rtMaster.saved[id] = iv
+				}
+				rtIntervals.mu.RUnlock()
+			}
+			// Override all section intervals
+			rtIntervals.mu.Lock()
+			for id := range rtIntervals.intervals {
+				rtIntervals.intervals[id] = ms
+			}
+			rtIntervals.mu.Unlock()
+		}
+		rtMaster.mu.Unlock()
+
+		if rtMaster.enabled {
+			broadcastAllSlidersOOB(broker)
+		}
+		broadcastMasterOOB(broker, getRTMasterState())
+
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+// handleRTIntervalMasterToggle handles the master enable/disable toggle.
+func handleRTIntervalMasterToggle(broker *tavern.SSEBroker) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		enabled := c.FormValue("enabled") == "true"
+		ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
+		if ms < 500 {
+			ms = 500
+		} else if ms > 30000 {
+			ms = 30000
+		}
+
+		rtMaster.mu.Lock()
+		rtMaster.enabled = enabled
+		rtMaster.intervalMs = ms
+
+		if enabled {
+			// Save current individual intervals
+			rtIntervals.mu.RLock()
+			rtMaster.saved = make(map[string]int, len(rtIntervals.intervals))
+			for id, iv := range rtIntervals.intervals {
+				rtMaster.saved[id] = iv
+			}
+			rtIntervals.mu.RUnlock()
+
+			// Override all section intervals
+			rtIntervals.mu.Lock()
+			for id := range rtIntervals.intervals {
+				rtIntervals.intervals[id] = ms
+			}
+			rtIntervals.mu.Unlock()
+		} else {
+			// Restore saved intervals
+			if len(rtMaster.saved) > 0 {
+				rtIntervals.mu.Lock()
+				for id, iv := range rtMaster.saved {
+					rtIntervals.intervals[id] = iv
+				}
+				rtIntervals.mu.Unlock()
+			}
+			rtMaster.saved = make(map[string]int)
+		}
+		rtMaster.mu.Unlock()
+
+		broadcastAllSlidersOOB(broker)
+		broadcastMasterOOB(broker, getRTMasterState())
+
+		return c.NoContent(http.StatusNoContent)
+	}
 }
 
 func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
@@ -84,7 +282,9 @@ func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
 		snap := initialMetrics()
 		services := initialServices()
 		svcLatencies := initialServiceLatencies()
-		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services, svcLatencies))
+		master := getRTMasterState()
+		cardIntervals := getRTCardIntervals()
+		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services, svcLatencies, master, cardIntervals))
 	}
 }
 

@@ -10,6 +10,14 @@ import (
 	"catgoose/dothog/internal/health"
 )
 
+// masterSliderVal returns the slider display value (in seconds) for the master control.
+func masterSliderVal(m RTMasterState) int {
+	if m.IntervalMs > 0 {
+		return m.IntervalMs / 1000
+	}
+	return 1
+}
+
 // --- Dashboard data types ---
 
 // NetworkPoint is a single data point for network traffic.

@@ -54,6 +54,7 @@ templ AdminSettingsPage(data AdminPanelData) {
 				<div class="flex items-center justify-between mb-3">
 					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">System Metrics</h2>
 					@components.IntervalSlider(components.IntervalSliderCfg{
+						ID: "iv-system-metrics",
 						TargetKey: "section", TargetValue: "system-metrics",
 						IntervalMs: 5000, Scale: "s", PostURL: "/admin/settings/interval",
 					})
@@ -70,6 +71,7 @@ templ AdminSettingsPage(data AdminPanelData) {
 				<div class="flex items-center justify-between mb-3">
 					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">SSE Connections</h2>
 					@components.IntervalSlider(components.IntervalSliderCfg{
+						ID: "iv-sse-counts",
 						TargetKey: "section", TargetValue: "sse-counts",
 						IntervalMs: 3000, Scale: "s", PostURL: "/admin/settings/interval",
 					})

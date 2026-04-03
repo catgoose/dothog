@@ -7,8 +7,20 @@ import (
 	"fmt"
 )
 
+// RTMasterState holds the server-side master control state for template rendering.
+type RTMasterState struct {
+	Enabled    bool
+	IntervalMs int
+}
+
+// RTCardInterval holds the current interval for a realtime dashboard section.
+type RTCardInterval struct {
+	ID         string
+	IntervalMs int
+}
+
 // RealtimePage is the full-page layout for /hypermedia/realtime.
-templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency) {
+templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency, master RTMasterState, cardIntervals []RTCardInterval) {
 	<link rel="stylesheet" href="/public/css/charts.min.css"/>
 	<style>
 		/* Charts.css transition smoothing */
@@ -57,26 +69,42 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 	<div id="dashboard-sse" class="p-4 space-y-4 max-w-7xl mx-auto">
 		<h1 class="text-2xl font-bold mb-2">Live Operations Dashboard</h1>
 		<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-base-content/50">
-			<div class="flex items-center gap-2">
-				<span>Metrics</span>
-				@components.IntervalSlider(components.IntervalSliderCfg{
-					TargetKey: "section", TargetValue: "metrics",
-					IntervalMs: 1000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
-				})
-			</div>
-			<div class="flex items-center gap-2">
-				<span>Services</span>
-				@components.IntervalSlider(components.IntervalSliderCfg{
-					TargetKey: "section", TargetValue: "services",
-					IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
-				})
-			</div>
-			<div class="flex items-center gap-2">
-				<span>Events</span>
-				@components.IntervalSlider(components.IntervalSliderCfg{
-					TargetKey: "section", TargetValue: "events",
-					IntervalMs: 1500, Scale: "s", PostURL: "/hypermedia/realtime/interval",
-				})
+			for _, ci := range cardIntervals {
+				<div class="flex items-center gap-2">
+					<span>{ ci.ID }</span>
+					@components.IntervalSlider(components.IntervalSliderCfg{
+						ID: fmt.Sprintf("iv-%s", ci.ID),
+						TargetKey: "section", TargetValue: ci.ID,
+						IntervalMs: ci.IntervalMs, Scale: components.AutoScale(ci.IntervalMs),
+						PostURL: "/hypermedia/realtime/interval",
+					})
+				</div>
+			}
+			<div id="iv-master" class="flex items-center gap-2 border-l border-base-content/20 pl-4">
+				<label class="flex items-center gap-1 cursor-pointer">
+					<span class="font-semibold">Master</span>
+					<input type="checkbox" class="toggle toggle-xs toggle-primary"
+						if master.Enabled {
+							checked
+						}
+						hx-post="/hypermedia/realtime/interval-master-toggle"
+						hx-trigger="change"
+						hx-swap="none"
+						hx-vals="js:{enabled: this.checked, interval_ms: parseInt(this.closest('#iv-master').querySelector('input[type=range]').value) * 1000}"
+					/>
+				</label>
+				<input type="range" class="range range-xs flex-1"
+					min="1" max="30" step="1"
+					value={ fmt.Sprintf("%d", masterSliderVal(master)) }
+					x-data="rangeOutput"
+					x-on:input="updateOutput()"
+					hx-post="/hypermedia/realtime/interval-master"
+					hx-trigger="change"
+					hx-vals="js:{interval_ms: parseInt(this.value)*1000}"
+					hx-swap="none"
+				/>
+				<output class="font-mono text-xs text-base-content/40 w-6 text-right" x-data="rangeOutput">{ fmt.Sprintf("%d", masterSliderVal(master)) }</output>
+				<span class="text-xs text-base-content/30">s</span>
 			</div>
 		</div>
 		<!-- KPI Row -->
@@ -686,6 +714,38 @@ templ oobRequestDistChart(snap MetricsSnapshot) {
 				}
 			</tbody>
 		</table>
+	</div>
+}
+
+// --- OOB Master Control ---
+
+// OOBMasterControl re-renders the master toggle + slider for cross-client sync.
+templ OOBMasterControl(master RTMasterState) {
+	<div id="iv-master" hx-swap-oob="outerHTML" class="flex items-center gap-2 border-l border-base-content/20 pl-4">
+		<label class="flex items-center gap-1 cursor-pointer">
+			<span class="font-semibold">Master</span>
+			<input type="checkbox" class="toggle toggle-xs toggle-primary"
+				if master.Enabled {
+					checked
+				}
+				hx-post="/hypermedia/realtime/interval-master-toggle"
+				hx-trigger="change"
+				hx-swap="none"
+				hx-vals="js:{enabled: this.checked, interval_ms: parseInt(this.closest('#iv-master').querySelector('input[type=range]').value) * 1000}"
+			/>
+		</label>
+		<input type="range" class="range range-xs flex-1"
+			min="1" max="30" step="1"
+			value={ fmt.Sprintf("%d", masterSliderVal(master)) }
+			x-data="rangeOutput"
+			x-on:input="updateOutput()"
+			hx-post="/hypermedia/realtime/interval-master"
+			hx-trigger="change"
+			hx-vals="js:{interval_ms: parseInt(this.value)*1000}"
+			hx-swap="none"
+		/>
+		<output class="font-mono text-xs text-base-content/40 w-6 text-right" x-data="rangeOutput">{ fmt.Sprintf("%d", masterSliderVal(master)) }</output>
+		<span class="text-xs text-base-content/30">s</span>
 	</div>
 }
 

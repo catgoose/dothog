@@ -2,7 +2,10 @@
 
 package views
 
-import components "catgoose/dothog/web/components/core"
+import (
+	"fmt"
+	components "catgoose/dothog/web/components/core"
+)
 
 templ NumericalPage(tiles []NumTile) {
 	<div class="p-4 space-y-6 max-w-6xl mx-auto">
@@ -40,8 +43,9 @@ templ numTileWrapper(t NumTile) {
 	<div class="bg-base-200 rounded-lg p-4">
 		@numTileData(t)
 		@components.IntervalSlider(components.IntervalSliderCfg{
+			ID: fmt.Sprintf("iv-%s", t.ID),
 			TargetKey: "tile", TargetValue: t.ID,
-			IntervalMs: t.IntervalMs, Scale: t.Scale,
+			IntervalMs: t.IntervalMs, Scale: components.AutoScale(t.IntervalMs),
 			PostURL: "/hypermedia/numerical/interval",
 		})
 	</div>

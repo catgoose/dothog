@@ -4,55 +4,108 @@ package components
 
 import "fmt"
 
+// AutoScale picks the most natural unit for a millisecond interval.
+func AutoScale(ms int) string {
+	switch {
+	case ms < 1000:
+		return "ms"
+	case ms < 60000:
+		return "s"
+	case ms < 3600000:
+		return "min"
+	default:
+		return "h"
+	}
+}
+
 // IntervalSliderCfg configures a reusable update-frequency slider.
 type IntervalSliderCfg struct {
+	ID          string // unique ID for OOB targeting, e.g. "iv-network"
 	TargetKey   string // form key name, e.g. "tile", "section"
 	TargetValue string // form value, e.g. "num-txn", "system-metrics"
 	IntervalMs  int    // current interval in milliseconds
-	Scale       string // "ms", "s", "min"
+	Scale       string // "ms", "s", "min", "h"
 	PostURL     string // endpoint to POST interval changes
+	OOB         bool   // when true, add hx-swap-oob="outerHTML" to the wrapper div
+}
+
+// scaleDisplay converts milliseconds to display value in the given scale.
+func scaleDisplay(ms int, scale string) string {
+	switch scale {
+	case "ms":
+		return fmt.Sprintf("%d", ms)
+	case "s":
+		return fmt.Sprintf("%d", ms/1000)
+	case "min":
+		return fmt.Sprintf("%d", ms/60000)
+	case "h":
+		return fmt.Sprintf("%d", ms/3600000)
+	default:
+		return fmt.Sprintf("%d", ms)
+	}
 }
 
 // IntervalSlider renders a range input with unit label that POSTs interval
-// changes. The slider works in its native unit (ms/s/min) and converts to
+// changes. The slider works in its native unit (ms/s/min/h) and converts to
 // milliseconds via hx-vals before sending.
 templ IntervalSlider(cfg IntervalSliderCfg) {
-	<div class="flex items-center gap-1" x-data="rangeOutput">
-		if cfg.Scale == "ms" {
-			<input type="range" class="range range-xs flex-1"
-				min="100" max="2000" step="100"
-				value={ fmt.Sprintf("%d", cfg.IntervalMs) }
-				x-on:input="updateOutput()"
-				hx-post={ cfg.PostURL }
-				hx-trigger="change"
-				hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)") }
-				hx-swap="none"/>
-			<output class="font-mono text-xs text-base-content/40 w-10 text-right">{ fmt.Sprintf("%d", cfg.IntervalMs) }</output>
-			<span class="text-xs text-base-content/30">ms</span>
-		} else if cfg.Scale == "s" {
-			<input type="range" class="range range-xs flex-1"
-				min="1" max="30" step="1"
-				value={ fmt.Sprintf("%d", cfg.IntervalMs/1000) }
-				x-on:input="updateOutput()"
-				hx-post={ cfg.PostURL }
-				hx-trigger="change"
-				hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)*1000") }
-				hx-swap="none"/>
-			<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ fmt.Sprintf("%d", cfg.IntervalMs/1000) }</output>
-			<span class="text-xs text-base-content/30">s</span>
-		} else {
-			<input type="range" class="range range-xs flex-1"
-				min="1" max="10" step="1"
-				value={ fmt.Sprintf("%d", cfg.IntervalMs/60000) }
-				x-on:input="updateOutput()"
-				hx-post={ cfg.PostURL }
-				hx-trigger="change"
-				hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)*60000") }
-				hx-swap="none"/>
-			<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ fmt.Sprintf("%d", cfg.IntervalMs/60000) }</output>
-			<span class="text-xs text-base-content/30">min</span>
-		}
-	</div>
+	if cfg.OOB {
+		<div id={ cfg.ID } hx-swap-oob="outerHTML" class="iv-wrap flex items-center gap-1" x-data="rangeOutput">
+			@intervalSliderInner(cfg)
+		</div>
+	} else {
+		<div id={ cfg.ID } class="iv-wrap flex items-center gap-1" x-data="rangeOutput">
+			@intervalSliderInner(cfg)
+		</div>
+	}
+}
+
+templ intervalSliderInner(cfg IntervalSliderCfg) {
+	if cfg.Scale == "ms" {
+		<input type="range" class="range range-xs flex-1"
+			min="100" max="2000" step="100"
+			value={ fmt.Sprintf("%d", cfg.IntervalMs) }
+			x-on:input="updateOutput()"
+			hx-post={ cfg.PostURL }
+			hx-trigger="change"
+			hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)") }
+			hx-swap="none"/>
+		<output class="font-mono text-xs text-base-content/40 w-10 text-right">{ scaleDisplay(cfg.IntervalMs, "ms") }</output>
+		<span class="text-xs text-base-content/30">ms</span>
+	} else if cfg.Scale == "s" {
+		<input type="range" class="range range-xs flex-1"
+			min="1" max="30" step="1"
+			value={ scaleDisplay(cfg.IntervalMs, "s") }
+			x-on:input="updateOutput()"
+			hx-post={ cfg.PostURL }
+			hx-trigger="change"
+			hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)*1000") }
+			hx-swap="none"/>
+		<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ scaleDisplay(cfg.IntervalMs, "s") }</output>
+		<span class="text-xs text-base-content/30">s</span>
+	} else if cfg.Scale == "min" {
+		<input type="range" class="range range-xs flex-1"
+			min="1" max="10" step="1"
+			value={ scaleDisplay(cfg.IntervalMs, "min") }
+			x-on:input="updateOutput()"
+			hx-post={ cfg.PostURL }
+			hx-trigger="change"
+			hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)*60000") }
+			hx-swap="none"/>
+		<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ scaleDisplay(cfg.IntervalMs, "min") }</output>
+		<span class="text-xs text-base-content/30">min</span>
+	} else {
+		<input type="range" class="range range-xs flex-1"
+			min="1" max="24" step="1"
+			value={ scaleDisplay(cfg.IntervalMs, "h") }
+			x-on:input="updateOutput()"
+			hx-post={ cfg.PostURL }
+			hx-trigger="change"
+			hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)*3600000") }
+			hx-swap="none"/>
+		<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ scaleDisplay(cfg.IntervalMs, "h") }</output>
+		<span class="text-xs text-base-content/30">h</span>
+	}
 }
 
 func intervalHxVals(key, value, expr string) string {
