@@ -2,37 +2,10 @@
 
 package views
 
-import components "catgoose/dothog/web/components/core"
-
-templ NumericalPage(tiles []NumTile) {
-	<div class="p-4 space-y-6 max-w-6xl mx-auto">
-		<div class="space-y-1">
-			<h1 class="text-2xl font-bold">Numerical Dashboard</h1>
-			<p class="text-sm text-base-content/60">
-				Real-time KPIs — every tile is an independent OOB swap target updated via a single SSE stream.
-			</p>
-		</div>
-
-		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-			for _, t := range tiles {
-				@numTileWrapper(t)
-			}
-		</div>
-
-		<!-- Lazy SSE connection: loads after all OOB targets exist -->
-		<div id="num-sse-wrapper"
-			hx-get="/hypermedia/numerical/sse-connect"
-			hx-trigger="load"
-			hx-swap="innerHTML">
-		</div>
-	</div>
-}
-
-templ NumericalSSEBlock() {
-	<div hx-ext="sse" sse-connect="/sse/numerical" hx-swap="innerHTML settle:0 transition:false">
-		<div sse-swap="numerical-dash" style="display:none"></div>
-	</div>
-}
+import (
+	components "catgoose/dothog/web/components/core"
+	"fmt"
+)
 
 // numTileWrapper is the static outer shell: holds the OOB data target + the slider.
 // The slider lives OUTSIDE the OOB target so it's never replaced by SSE updates.
@@ -40,9 +13,10 @@ templ numTileWrapper(t NumTile) {
 	<div class="bg-base-200 rounded-lg p-4">
 		@numTileData(t)
 		@components.IntervalSlider(components.IntervalSliderCfg{
+			ID: fmt.Sprintf("iv-%s", t.ID),
 			TargetKey: "tile", TargetValue: t.ID,
 			IntervalMs: t.IntervalMs, Scale: t.Scale,
-			PostURL: "/hypermedia/numerical/interval",
+			PostURL: "/hypermedia/realtime/tile-interval",
 		})
 	</div>
 }

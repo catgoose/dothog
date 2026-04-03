@@ -77,8 +77,8 @@ func handleAdminInterval(c echo.Context) error {
 	ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
 	if ms < 100 {
 		ms = 100
-	} else if ms > 600000 {
-		ms = 600000
+	} else if ms > 86400000 {
+		ms = 86400000
 	}
 	adminIntervals.mu.Lock()
 	adminIntervals.intervals[section] = ms

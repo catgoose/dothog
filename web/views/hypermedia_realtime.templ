@@ -8,7 +8,7 @@ import (
 )
 
 // RealtimePage is the full-page layout for /hypermedia/realtime.
-templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency) {
+templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency, tiles []NumTile, masterEnabled bool, masterMs int) {
 	<link rel="stylesheet" href="/public/css/charts.min.css"/>
 	<style>
 		/* Charts.css transition smoothing */
@@ -56,47 +56,59 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 	</style>
 	<div id="dashboard-sse" class="p-4 space-y-4 max-w-7xl mx-auto">
 		<h1 class="text-2xl font-bold mb-2">Live Operations Dashboard</h1>
-		<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-base-content/50">
-			<div class="flex items-center gap-2">
-				<span>Metrics</span>
-				@components.IntervalSlider(components.IntervalSliderCfg{
-					TargetKey: "section", TargetValue: "metrics",
-					IntervalMs: 1000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
-				})
-			</div>
-			<div class="flex items-center gap-2">
-				<span>Services</span>
-				@components.IntervalSlider(components.IntervalSliderCfg{
-					TargetKey: "section", TargetValue: "services",
-					IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
-				})
-			</div>
-			<div class="flex items-center gap-2">
-				<span>Events</span>
-				@components.IntervalSlider(components.IntervalSliderCfg{
-					TargetKey: "section", TargetValue: "events",
-					IntervalMs: 1500, Scale: "s", PostURL: "/hypermedia/realtime/interval",
-				})
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-3">
+				<div class="flex items-center gap-4">
+					<label id="master-toggle-wrap" class="flex items-center gap-2 cursor-pointer shrink-0">
+						<input type="checkbox" class="toggle toggle-sm toggle-primary master-toggle"
+							if masterEnabled {
+								checked
+							}
+							_="on change if my.checked then call window._ivPost(the first .iv-wrap in the next .master-slider) else fetch /hypermedia/realtime/interval-restore with method:'POST'"/>
+						<span class="text-sm font-semibold">Master Control</span>
+					</label>
+					<div class="master-slider flex-1 flex items-center gap-2">
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-master",
+							TargetKey: "scope", TargetValue: "all",
+							IntervalMs: masterMs, Scale: components.AutoScale(masterMs),
+							PostURL: "/hypermedia/realtime/interval-all",
+						})
+					</div>
+				</div>
 			</div>
 		</div>
-		<!-- KPI Row -->
-		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-			@kpiCard("kpi-rps", "Requests/s", fmtRPS(snap.RPS), "text-primary")
-			@kpiCard("kpi-errors", "Error Rate", fmtPct(snap.ErrorPct), "text-error")
-			@kpiCard("kpi-latency", "P99 Latency", fmtMs(snap.P99Ms), "text-warning")
-			@kpiCard("kpi-goroutines", "Goroutines", fmt.Sprintf("%d", initial.Goroutines), "text-info")
+		<!-- KPI Tiles (numerical, per-tile intervals) -->
+		<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+			for _, t := range tiles {
+				@numTileWrapper(t)
+			}
 		</div>
 		<!-- Row 2: Network Chart + Service Health -->
 		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
 			<div class="lg:col-span-2 card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Network Traffic (15-point window)</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Network Traffic</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-network",
+							TargetKey: "section", TargetValue: "network",
+							IntervalMs: 1000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@networkChart(snap)
 				</div>
 			</div>
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Service Health</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Service Health</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-services",
+							TargetKey: "section", TargetValue: "services",
+							IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@servicesChart(services)
 				</div>
 			</div>
@@ -105,19 +117,40 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Latency Histogram</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Latency Histogram</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-latency",
+							TargetKey: "section", TargetValue: "latency",
+							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@latencyHistChart(snap)
 				</div>
 			</div>
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Error Rate Trend</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Error Rate Trend</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-error-spark",
+							TargetKey: "section", TargetValue: "error-spark",
+							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@errorSparkline(snap)
 				</div>
 			</div>
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Request Distribution</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Request Distribution</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-req-dist",
+							TargetKey: "section", TargetValue: "req-dist",
+							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@requestDistChart(snap)
 				</div>
 			</div>
@@ -126,13 +159,27 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
 			<div class="lg:col-span-2 card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Throughput Split (In / Out)</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Throughput Split</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-throughput",
+							TargetKey: "section", TargetValue: "throughput",
+							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@throughputSplitChart(snap)
 				</div>
 			</div>
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Per-Service Latency</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Per-Service Latency</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-svc-latency",
+							TargetKey: "section", TargetValue: "svc-latency",
+							IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@serviceLatencyChart(svcLatencies, 150)
 				</div>
 			</div>
@@ -141,19 +188,40 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 		<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">CPU & Memory</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">CPU & Memory</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-gauges",
+							TargetKey: "section", TargetValue: "gauges",
+							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@cpuMemGauges(snap)
 				</div>
 			</div>
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Disk I/O</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Disk I/O</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-disk-io",
+							TargetKey: "section", TargetValue: "disk-io",
+							IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@diskIOChart(snap)
 				</div>
 			</div>
 			<div class="lg:col-span-2 card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Connection Pool</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Connection Pool</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-conn-pool",
+							TargetKey: "section", TargetValue: "conn-pool",
+							IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@connPool(snap)
 				</div>
 			</div>
@@ -162,13 +230,27 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">System Metrics</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">System Metrics</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-sys-stats",
+							TargetKey: "section", TargetValue: "sys-stats",
+							IntervalMs: 5000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					@dashboardSystemStats(initial)
 				</div>
 			</div>
 			<div class="card bg-base-100 shadow border border-base-300">
 				<div class="card-body p-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">Live Event Feed</h2>
+					<div class="flex items-center justify-between mb-2">
+						<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">Live Event Feed</h2>
+						@components.IntervalSlider(components.IntervalSliderCfg{
+							ID: "iv-events",
+							TargetKey: "section", TargetValue: "events",
+							IntervalMs: 1500, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+						})
+					</div>
 					<div
 						id="event-feed"
 						class="space-y-1"
@@ -179,11 +261,12 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 				</div>
 			</div>
 		</div>
-		<!-- SSE connection — direct, publishers control their own rate -->
+		<!-- SSE connections — charts + numerical tiles -->
 		<div hx-ext="sse" sse-connect="/sse/dashboard" hx-swap="innerHTML settle:0 transition:false">
 			<div sse-swap="dashboard-metrics" style="display:none"></div>
-			<div sse-swap="dashboard-services" style="display:none"></div>
-			<div sse-swap="dashboard-events" style="display:none"></div>
+		</div>
+		<div hx-ext="sse" sse-connect="/sse/numerical" hx-swap="innerHTML settle:0 transition:false">
+			<div sse-swap="numerical-dash" style="display:none"></div>
 		</div>
 		<!-- Pattern explanation cards -->
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -191,6 +274,19 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 			@realtimePatternCard("Charts.css", "Pure CSS data visualization", "HTML tables with CSS custom properties (--size) — no JavaScript charting library needed. Animated via CSS transitions.")
 		</div>
 	</div>
+}
+
+// --- OOB Master Control ---
+
+templ OOBMasterToggle(enabled bool) {
+	<label id="master-toggle-wrap" hx-swap-oob="outerHTML" class="flex items-center gap-2 cursor-pointer shrink-0">
+		<input type="checkbox" class="toggle toggle-sm toggle-primary master-toggle"
+			if enabled {
+				checked
+			}
+			_="on change if my.checked then call window._ivPost(the first .iv-wrap in the next .master-slider) else fetch /hypermedia/realtime/interval-restore with method:'POST'"/>
+		<span class="text-sm font-semibold">Master Control</span>
+	</label>
 }
 
 // --- KPI Cards ---
@@ -227,7 +323,7 @@ templ networkChart(snap MetricsSnapshot) {
 	</div>
 }
 
-templ oobNetworkChart(snap MetricsSnapshot) {
+templ OOBNetworkChart(snap MetricsSnapshot) {
 	<div id="network-content" hx-swap-oob="innerHTML">
 		<div class="flex gap-4 text-xs text-base-content/60 mb-2">
 			<span>↓ In: <strong class="text-base-content">{ fmtMBps(latestNetworkIn(snap)) }</strong></span>
@@ -252,7 +348,7 @@ templ cpuMemGauges(snap MetricsSnapshot) {
 	</div>
 }
 
-templ oobCpuMemGauges(snap MetricsSnapshot) {
+templ OOBCpuMemGauges(snap MetricsSnapshot) {
 	<div id="gauges-content" hx-swap-oob="innerHTML" class="flex justify-around items-center py-4">
 		@radialGauge("gauge-cpu", "CPU", snap.CPUPercent)
 		@radialGauge("gauge-mem", "Memory", snap.MemPercent)
@@ -296,7 +392,7 @@ templ connPool(snap MetricsSnapshot) {
 	</div>
 }
 
-templ oobConnPool(snap MetricsSnapshot) {
+templ OOBConnPool(snap MetricsSnapshot) {
 	<div id="pool-content" hx-swap-oob="innerHTML">
 		<div class="flex gap-4 text-xs text-base-content/60 mb-3">
 			<span class="flex items-center gap-1"><span class="conn-dot conn-dot-active inline-block"></span> Active: { fmt.Sprintf("%d", snap.ConnActive) }</span>
@@ -334,7 +430,7 @@ templ servicesChart(services []ServiceStatus) {
 	</table>
 }
 
-templ oobServicesChart(services []ServiceStatus) {
+templ OOBServicesChart(services []ServiceStatus) {
 	<table id="services-chart" hx-swap-oob="outerHTML" class="charts-css bar show-labels show-data-on-hover data-spacing-4">
 		<tbody>
 			for _, svc := range services {
@@ -364,7 +460,7 @@ templ dashboardSystemStats(s health.SystemStats) {
 
 // --- Event Feed ---
 
-templ oobEventItem(evt DashboardEvent) {
+templ OOBEventItem(evt DashboardEvent) {
 	<div
 		id="event-feed"
 		hx-swap-oob="afterbegin"
@@ -386,14 +482,14 @@ templ MetricsOOB(snap MetricsSnapshot, stats health.SystemStats) {
 	@oobKpiCard("kpi-errors", "Error Rate", fmtPct(snap.ErrorPct), "text-error")
 	@oobKpiCard("kpi-latency", "P99 Latency", fmtMs(snap.P99Ms), "text-warning")
 	@oobKpiCard("kpi-goroutines", "Goroutines", fmt.Sprintf("%d", stats.Goroutines), "text-info")
-	@oobNetworkChart(snap)
-	@oobCpuMemGauges(snap)
-	@oobConnPool(snap)
-	@oobLatencyHistChart(snap)
-	@oobErrorSparkline(snap)
-	@oobThroughputSplitChart(snap)
-	@oobDiskIOChart(snap)
-	@oobRequestDistChart(snap)
+	@OOBNetworkChart(snap)
+	@OOBCpuMemGauges(snap)
+	@OOBConnPool(snap)
+	@OOBLatencyHistChart(snap)
+	@OOBErrorSparkline(snap)
+	@OOBThroughputSplitChart(snap)
+	@OOBDiskIOChart(snap)
+	@OOBRequestDistChart(snap)
 	@oobStatsCard("stat-uptime", "Uptime", stats.Uptime)
 	@oobStatsCard("stat-goroutines", "Goroutines", fmt.Sprintf("%d", stats.Goroutines))
 	@oobStatsCard("stat-heapalloc", "Heap Alloc", fmt.Sprintf("%.2f MB", stats.HeapAllocMB))
@@ -404,22 +500,31 @@ templ MetricsOOB(snap MetricsSnapshot, stats health.SystemStats) {
 
 // ServicesOOB emits the services bar chart and per-service latency via OOB swap.
 templ ServicesOOB(services []ServiceStatus, svcLatencies []ServiceLatency, maxLatencyMs float64) {
-	@oobServicesChart(services)
-	@oobServiceLatencyChart(svcLatencies, maxLatencyMs)
+	@OOBServicesChart(services)
+	@OOBServiceLatencyChart(svcLatencies, maxLatencyMs)
 }
 
 // EventOOB emits a single event item prepended to the feed.
 templ EventOOB(evt DashboardEvent) {
-	@oobEventItem(evt)
+	@OOBEventItem(evt)
 }
 
 // SystemStatsOOB renders all stat cards with hx-swap-oob for SSE per-card updates.
-// Also emits the goroutines KPI card for the dashboard.
+// Used by the /sse/system endpoint for the full system stats page.
 templ SystemStatsOOB(s health.SystemStats) {
 	for _, e := range statsEntries(s) {
 		@oobStatsCard(e.ID, e.Label, e.Value)
 	}
-	@oobKpiCard("kpi-goroutines", "Goroutines", fmt.Sprintf("%d", s.Goroutines), "text-info")
+}
+
+// OOBDashboardStats renders only the 6 compact stat cards shown on the dashboard.
+templ OOBDashboardStats(s health.SystemStats) {
+	@oobStatsCard("stat-uptime", "Uptime", s.Uptime)
+	@oobStatsCard("stat-goroutines", "Goroutines", fmt.Sprintf("%d", s.Goroutines))
+	@oobStatsCard("stat-heapalloc", "Heap Alloc", fmt.Sprintf("%.2f MB", s.HeapAllocMB))
+	@oobStatsCard("stat-gccycles", "GC Cycles", fmt.Sprintf("%d", s.GCCycles))
+	@oobStatsCard("stat-numcpu", "CPUs", fmt.Sprintf("%d", s.NumCPU))
+	@oobStatsCard("stat-liveobjects", "Live Objects", fmt.Sprintf("%d", s.LiveObjects))
 }
 
 
@@ -460,7 +565,7 @@ templ latencyHistChart(snap MetricsSnapshot) {
 	</div>
 }
 
-templ oobLatencyHistChart(snap MetricsSnapshot) {
+templ OOBLatencyHistChart(snap MetricsSnapshot) {
 	<div id="latency-hist-content" hx-swap-oob="innerHTML">
 		<div class="chart-legend mb-2">
 			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#34d399"></span> P50</span>
@@ -498,7 +603,7 @@ templ errorSparkline(snap MetricsSnapshot) {
 	</div>
 }
 
-templ oobErrorSparkline(snap MetricsSnapshot) {
+templ OOBErrorSparkline(snap MetricsSnapshot) {
 	<div id="error-sparkline-content" hx-swap-oob="innerHTML">
 		<div class="text-xs text-base-content/60 mb-2">
 			Current: <strong class="text-error">{ fmtPct(snap.ErrorPct) }</strong>
@@ -546,7 +651,7 @@ templ throughputSplitChart(snap MetricsSnapshot) {
 	</div>
 }
 
-templ oobThroughputSplitChart(snap MetricsSnapshot) {
+templ OOBThroughputSplitChart(snap MetricsSnapshot) {
 	<div id="throughput-split-content" hx-swap-oob="innerHTML">
 		<div class="grid grid-cols-2 gap-4">
 			<div>
@@ -596,7 +701,7 @@ templ serviceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) {
 	</div>
 }
 
-templ oobServiceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) {
+templ OOBServiceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) {
 	<div id="svc-latency-content" hx-swap-oob="innerHTML">
 		<table id="svc-latency-chart" class="charts-css bar show-labels show-data-on-hover data-spacing-4">
 			<tbody>
@@ -634,7 +739,7 @@ templ diskIOChart(snap MetricsSnapshot) {
 	</div>
 }
 
-templ oobDiskIOChart(snap MetricsSnapshot) {
+templ OOBDiskIOChart(snap MetricsSnapshot) {
 	<div id="disk-io-content" hx-swap-oob="innerHTML">
 		<div class="chart-legend mb-2">
 			<span class="chart-legend-item"><span class="chart-legend-dot" style="background:#34d399"></span> Read</span>
@@ -672,7 +777,7 @@ templ requestDistChart(snap MetricsSnapshot) {
 	</div>
 }
 
-templ oobRequestDistChart(snap MetricsSnapshot) {
+templ OOBRequestDistChart(snap MetricsSnapshot) {
 	<div id="request-dist-content" hx-swap-oob="innerHTML">
 		<table id="request-dist-chart" class="charts-css column show-labels show-data-on-hover data-spacing-8">
 			<tbody>

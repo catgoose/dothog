@@ -6,55 +6,107 @@ import "fmt"
 
 // IntervalSliderCfg configures a reusable update-frequency slider.
 type IntervalSliderCfg struct {
+	ID          string // unique DOM id for OOB targeting, e.g. "iv-network"
 	TargetKey   string // form key name, e.g. "tile", "section"
 	TargetValue string // form value, e.g. "num-txn", "system-metrics"
 	IntervalMs  int    // current interval in milliseconds
-	Scale       string // "ms", "s", "min"
+	Scale       string // default unit: "ms", "s", "min", "h"
 	PostURL     string // endpoint to POST interval changes
+	OOB         bool   // when true, render with hx-swap-oob for multi-client sync
 }
 
-// IntervalSlider renders a range input with unit label that POSTs interval
-// changes. The slider works in its native unit (ms/s/min) and converts to
-// milliseconds via hx-vals before sending.
+// AutoScale picks the best slider unit for a given interval in milliseconds.
+func AutoScale(ms int) string {
+	switch {
+	case ms >= 3600000:
+		return "h"
+	case ms >= 60000:
+		return "min"
+	case ms >= 1000:
+		return "s"
+	default:
+		return "ms"
+	}
+}
+
+// IntervalSlider renders a range input with a clickable unit label that
+// cycles through ms -> s -> min -> h. When OOB is true, the outer div gets
+// an id and hx-swap-oob="outerHTML" for multi-client sync.
 templ IntervalSlider(cfg IntervalSliderCfg) {
-	<div class="flex items-center gap-1" x-data="rangeOutput">
-		if cfg.Scale == "ms" {
-			<input type="range" class="range range-xs flex-1"
-				min="100" max="2000" step="100"
-				value={ fmt.Sprintf("%d", cfg.IntervalMs) }
-				x-on:input="updateOutput()"
-				hx-post={ cfg.PostURL }
-				hx-trigger="change"
-				hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)") }
-				hx-swap="none"/>
-			<output class="font-mono text-xs text-base-content/40 w-10 text-right">{ fmt.Sprintf("%d", cfg.IntervalMs) }</output>
-			<span class="text-xs text-base-content/30">ms</span>
-		} else if cfg.Scale == "s" {
-			<input type="range" class="range range-xs flex-1"
-				min="1" max="30" step="1"
-				value={ fmt.Sprintf("%d", cfg.IntervalMs/1000) }
-				x-on:input="updateOutput()"
-				hx-post={ cfg.PostURL }
-				hx-trigger="change"
-				hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)*1000") }
-				hx-swap="none"/>
-			<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ fmt.Sprintf("%d", cfg.IntervalMs/1000) }</output>
-			<span class="text-xs text-base-content/30">s</span>
-		} else {
-			<input type="range" class="range range-xs flex-1"
-				min="1" max="10" step="1"
-				value={ fmt.Sprintf("%d", cfg.IntervalMs/60000) }
-				x-on:input="updateOutput()"
-				hx-post={ cfg.PostURL }
-				hx-trigger="change"
-				hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)*60000") }
-				hx-swap="none"/>
-			<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ fmt.Sprintf("%d", cfg.IntervalMs/60000) }</output>
-			<span class="text-xs text-base-content/30">min</span>
-		}
+	if cfg.OOB && cfg.ID != "" {
+		<div id={ cfg.ID } hx-swap-oob="outerHTML">
+			@intervalSliderInner(cfg)
+		</div>
+	} else if cfg.ID != "" {
+		<div id={ cfg.ID }>
+			@intervalSliderInner(cfg)
+		</div>
+	} else {
+		@intervalSliderInner(cfg)
+	}
+}
+
+templ intervalSliderInner(cfg IntervalSliderCfg) {
+	<div class="iv-wrap flex items-center gap-1"
+		data-unit={ cfg.Scale }
+		data-post-url={ cfg.PostURL }
+		data-target-key={ cfg.TargetKey }
+		data-target-value={ cfg.TargetValue }>
+		<input type="range" class="range range-xs flex-1"
+			min={ scaleAttr(cfg.Scale, "min") }
+			max={ scaleAttr(cfg.Scale, "max") }
+			step={ scaleAttr(cfg.Scale, "step") }
+			value={ scaleDisplay(cfg.IntervalMs, cfg.Scale) }
+			_="on input set the innerText of the next .iv-display to my.value
+			   on change call window._ivPost(the closest .iv-wrap to me)"/>
+		<span class="iv-display font-mono text-xs text-base-content/40 w-10 text-right">
+			{ scaleDisplay(cfg.IntervalMs, cfg.Scale) }
+		</span>
+		<button type="button"
+			class="badge badge-outline badge-sm font-mono cursor-pointer hover:badge-primary transition-colors"
+			title="Click to cycle unit (right-click for reverse)"
+			_="on click call window._ivUp(the closest .iv-wrap to me)
+			   on contextmenu halt the event then call window._ivDown(the closest .iv-wrap to me)">
+			{ cfg.Scale }
+		</button>
 	</div>
 }
 
-func intervalHxVals(key, value, expr string) string {
-	return fmt.Sprintf(`js:{%s:"%s",interval_ms:%s}`, key, value, expr)
+func scaleDisplay(ms int, scale string) string {
+	switch scale {
+	case "ms":
+		return fmt.Sprintf("%d", ms)
+	case "s":
+		return fmt.Sprintf("%d", ms/1000)
+	case "min":
+		return fmt.Sprintf("%d", ms/60000)
+	case "h":
+		return fmt.Sprintf("%d", ms/3600000)
+	default:
+		return fmt.Sprintf("%d", ms/1000)
+	}
+}
+
+func scaleAttr(scale, attr string) string {
+	type cfg struct{ min, max, step string }
+	scales := map[string]cfg{
+		"ms":  {"100", "2000", "100"},
+		"s":   {"1", "60", "1"},
+		"min": {"1", "60", "1"},
+		"h":   {"1", "24", "1"},
+	}
+	c, ok := scales[scale]
+	if !ok {
+		c = scales["s"]
+	}
+	switch attr {
+	case "min":
+		return c.min
+	case "max":
+		return c.max
+	case "step":
+		return c.step
+	default:
+		return "1"
+	}
 }

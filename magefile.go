@@ -331,7 +331,7 @@ func Air() error {
 
 	return sh.Run("go", "tool", "air",
 		"-c", ".air/server.toml",
-		"-build.cmd", fmt.Sprintf("go build -o ./tmp/main . && %s",
+		"-build.cmd", fmt.Sprintf("CGO_ENABLED=0 go build -o ./tmp/main . && %s",
 			getTemplNotifyProxyCmd()))
 }
 

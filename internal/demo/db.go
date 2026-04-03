@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3" // register sqlite3 driver with database/sql
+	_ "github.com/catgoose/chuck/driver/sqlite" // register sqlite3 driver with database/sql
 )
 
 // Item represents one inventory row returned from the demo database.

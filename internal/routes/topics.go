@@ -4,9 +4,7 @@ package routes
 // used by the real-time features (dashboard, canvas, feed, etc.).
 const (
 	TopicSystemStats  = "system-stats"
-	TopicDashMetrics  = "dashboard-metrics"
-	TopicDashServices = "dashboard-services"
-	TopicDashEvents   = "dashboard-events"
+	TopicDashMetrics = "dashboard-metrics"
 	TopicPeopleUpdate = "people-update"
 	TopicActivityFeed = "activity-feed"
 	TopicErrorTraces  = "error-traces"
