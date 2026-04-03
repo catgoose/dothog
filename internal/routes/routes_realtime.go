@@ -533,7 +533,7 @@ func (ar *appRoutes) publishRealtimeDashboard(broker *tavern.SSEBroker) {
 				needsPublish = true
 			}
 			if isDue("sys-stats", now) {
-				views.SystemStatsOOB(stats).Render(ctx, buf)
+				views.OOBDashboardStats(stats).Render(ctx, buf)
 				needsPublish = true
 			}
 			if isDue("services", now) {

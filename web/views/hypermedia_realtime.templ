@@ -463,12 +463,21 @@ templ EventOOB(evt DashboardEvent) {
 }
 
 // SystemStatsOOB renders all stat cards with hx-swap-oob for SSE per-card updates.
-// Also emits the goroutines KPI card for the dashboard.
+// Used by the /sse/system endpoint for the full system stats page.
 templ SystemStatsOOB(s health.SystemStats) {
 	for _, e := range statsEntries(s) {
 		@oobStatsCard(e.ID, e.Label, e.Value)
 	}
-	@oobKpiCard("kpi-goroutines", "Goroutines", fmt.Sprintf("%d", s.Goroutines), "text-info")
+}
+
+// OOBDashboardStats renders only the 6 compact stat cards shown on the dashboard.
+templ OOBDashboardStats(s health.SystemStats) {
+	@oobStatsCard("stat-uptime", "Uptime", s.Uptime)
+	@oobStatsCard("stat-goroutines", "Goroutines", fmt.Sprintf("%d", s.Goroutines))
+	@oobStatsCard("stat-heapalloc", "Heap Alloc", fmt.Sprintf("%.2f MB", s.HeapAllocMB))
+	@oobStatsCard("stat-gccycles", "GC Cycles", fmt.Sprintf("%d", s.GCCycles))
+	@oobStatsCard("stat-numcpu", "CPUs", fmt.Sprintf("%d", s.NumCPU))
+	@oobStatsCard("stat-liveobjects", "Live Objects", fmt.Sprintf("%d", s.LiveObjects))
 }
 
 
