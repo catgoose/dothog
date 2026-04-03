@@ -56,8 +56,8 @@ func initRTIntervals() {
 
 func isDue(cardID string, now time.Time) bool {
 	ms := rtIntervals.intervals[cardID]
-	if ms < 20 {
-		ms = 20
+	if ms < 100 {
+		ms = 100
 	}
 	if now.Sub(rtIntervals.lastSent[cardID]) >= time.Duration(ms)*time.Millisecond {
 		rtIntervals.lastSent[cardID] = now
@@ -87,8 +87,8 @@ func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 
 func handleRTIntervalAll(c echo.Context) error {
 	ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
-	if ms < 20 {
-		ms = 20
+	if ms < 100 {
+		ms = 100
 	} else if ms > 86400000 {
 		ms = 86400000
 	}
@@ -146,8 +146,8 @@ func handleRTIntervalRestore(c echo.Context) error {
 func handleRTInterval(c echo.Context) error {
 	section := c.FormValue("section")
 	ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
-	if ms < 20 {
-		ms = 20
+	if ms < 100 {
+		ms = 100
 	} else if ms > 86400000 {
 		ms = 86400000
 	}
