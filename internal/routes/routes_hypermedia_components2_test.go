@@ -429,12 +429,12 @@ func TestFormatFileSize(t *testing.T) {
 		expected string
 		bytes    int64
 	}{
-		{0, "0 B"},
-		{512, "512 B"},
-		{1024, "1.00 KB"},
-		{1536, "1.50 KB"},
-		{1048576, "1.00 MB"},
-		{1073741824, "1.00 GB"},
+		{bytes: 0, expected: "0 B"},
+		{bytes: 512, expected: "512 B"},
+		{bytes: 1024, expected: "1.00 KB"},
+		{bytes: 1536, expected: "1.50 KB"},
+		{bytes: 1048576, expected: "1.00 MB"},
+		{bytes: 1073741824, expected: "1.00 GB"},
 	}
 	for _, tt := range tests {
 		assert.Equal(t, tt.expected, formatFileSize(tt.bytes), "bytes=%d", tt.bytes)
