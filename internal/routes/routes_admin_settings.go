@@ -75,8 +75,8 @@ func (ar *appRoutes) handleAdminSettings(broker *tavern.SSEBroker) echo.HandlerF
 func handleAdminInterval(c echo.Context) error {
 	section := c.FormValue("section")
 	ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
-	if ms < 100 {
-		ms = 100
+	if ms < 20 {
+		ms = 20
 	} else if ms > 86400000 {
 		ms = 86400000
 	}
