@@ -69,6 +69,7 @@ func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 	initRTIntervals()
 	ar.e.GET("/hypermedia/realtime", ar.handleRealtimePage())
 	ar.e.POST("/hypermedia/realtime/interval", handleRTInterval)
+	ar.e.POST("/hypermedia/realtime/interval-all", handleRTIntervalAll)
 	ar.e.GET("/sse/system", handleSSESystem(broker))
 	ar.e.GET("/sse/dashboard", handleSSEDashboard(broker))
 
@@ -80,6 +81,31 @@ func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 	go ar.publishSystemStats(broker)
 	go ar.publishRealtimeDashboard(broker)
 	go ar.publishNumerical(broker)
+}
+
+func handleRTIntervalAll(c echo.Context) error {
+	ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
+	if ms < 100 {
+		ms = 100
+	} else if ms > 86400000 {
+		ms = 86400000
+	}
+
+	// Set all chart card intervals
+	rtIntervals.mu.Lock()
+	for id := range rtIntervals.intervals {
+		rtIntervals.intervals[id] = ms
+	}
+	rtIntervals.mu.Unlock()
+
+	// Set all numerical tile intervals
+	numTileIntervals.mu.Lock()
+	for id := range numTileIntervals.intervals {
+		numTileIntervals.intervals[id] = ms
+	}
+	numTileIntervals.mu.Unlock()
+
+	return c.NoContent(http.StatusNoContent)
 }
 
 func handleRTInterval(c echo.Context) error {
