@@ -7,9 +7,9 @@
 (function () {
   var units = ['ms', 's', 'min', 'h'];
   var configs = {
-    ms:  { min: 100, max: 2000, step: 100, mult: 1 },
-    s:   { min: 1,   max: 60,   step: 1,   mult: 1000 },
-    min: { min: 1,   max: 60,   step: 1,   mult: 60000 },
+    ms:  { min: 100, max: 900, step: 100, mult: 1 },
+    s:   { min: 1,   max: 59,   step: 1,   mult: 1000 },
+    min: { min: 1,   max: 59,   step: 1,   mult: 60000 },
     h:   { min: 1,   max: 24,   step: 1,   mult: 3600000 }
   };
 
@@ -77,6 +77,7 @@
     var params = new URLSearchParams();
     params.set(key, value);
     params.set('interval_ms', ms.toString());
+    params.set('unit', units[el._ivUnit]);
     var t = document.querySelector('meta[name="csrf-token"]');
     fetch(url, {
       method: 'POST',
