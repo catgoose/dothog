@@ -54,7 +54,7 @@ templ numTile(t NumTile) {
 		} else if t.Subtitle != "" {
 			<div class="text-xs text-base-content/40 mt-1">{ t.Subtitle }</div>
 		}
-		@numIntervalSlider(t.ID, t.Interval)
+		@numIntervalSlider(t.ID, t.IntervalMs)
 	</div>
 }
 
@@ -78,23 +78,37 @@ templ oobNumTile(t NumTile) {
 		} else if t.Subtitle != "" {
 			<div class="text-xs text-base-content/40 mt-1">{ t.Subtitle }</div>
 		}
-		@numIntervalSlider(t.ID, t.Interval)
+		@numIntervalSlider(t.ID, t.IntervalMs)
 	</div>
 }
 
-templ numIntervalSlider(tileID string, interval int) {
+templ numIntervalSlider(tileID string, intervalMs int) {
 	<div class="flex items-center gap-1 mt-2 pt-2 border-t border-base-content/10" x-data="rangeOutput">
-		<input type="range" class="range range-xs flex-1"
-			min="1" max="10" step="1"
-			value={ fmt.Sprintf("%d", interval) }
-			name="interval"
-			x-on:input="updateOutput()"
-			hx-post="/hypermedia/numerical/interval"
-			hx-trigger="change"
-			hx-vals={ fmt.Sprintf(`js:{tile:"%s"}`, tileID) }
-			hx-swap="none"/>
-		<output class="font-mono text-xs text-base-content/40 w-4 text-right">{ fmt.Sprintf("%d", interval) }</output>
-		<span class="text-xs text-base-content/30">s</span>
+		if intervalMs < 2000 {
+			<input type="range" class="range range-xs flex-1"
+				min="100" max="2000" step="100"
+				value={ fmt.Sprintf("%d", intervalMs) }
+				name="interval_ms"
+				x-on:input="updateOutput()"
+				hx-post="/hypermedia/numerical/interval"
+				hx-trigger="change"
+				hx-vals={ fmt.Sprintf(`js:{tile:"%s"}`, tileID) }
+				hx-swap="none"/>
+			<output class="font-mono text-xs text-base-content/40 w-10 text-right">{ fmt.Sprintf("%d", intervalMs) }</output>
+			<span class="text-xs text-base-content/30">ms</span>
+		} else {
+			<input type="range" class="range range-xs flex-1"
+				min="1000" max="10000" step="1000"
+				value={ fmt.Sprintf("%d", intervalMs) }
+				name="interval_ms"
+				x-on:input="updateOutput()"
+				hx-post="/hypermedia/numerical/interval"
+				hx-trigger="change"
+				hx-vals={ fmt.Sprintf(`js:{tile:"%s"}`, tileID) }
+				hx-swap="none"/>
+			<output class="font-mono text-xs text-base-content/40 w-10 text-right">{ fmt.Sprintf("%d", intervalMs/1000) }</output>
+			<span class="text-xs text-base-content/30">s</span>
+		}
 	</div>
 }
 

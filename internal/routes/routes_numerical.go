@@ -64,6 +64,8 @@ func newNumSim() *numSim {
 	}
 }
 
+// tick advances the simulation by one 100ms step.
+// Deltas are scaled for 10 Hz (1/10th of the 1 Hz magnitudes).
 func (s *numSim) tick() {
 	s.prevTxn = s.txnSec
 	s.prevUsers = s.users
@@ -72,26 +74,26 @@ func (s *numSim) tick() {
 	s.prevP99 = s.p99
 	s.prevCPU = s.cpu
 
-	s.txnSec = clampF(s.txnSec+(rand.Float64()-0.48)*300, 800, 9000)
-	s.revenue += s.txnSec * 0.035 * (0.8 + rand.Float64()*0.4)
-	s.users = clampF(s.users+(rand.Float64()-0.5)*150, 3000, 30000)
-	s.queue = clampF(s.queue+(rand.Float64()-0.55)*4, 0, 200)
-	s.cacheHit = clampF(s.cacheHit+(rand.Float64()-0.48)*0.8, 82, 99.9)
-	s.p99 = clampF(s.p99+(rand.Float64()-0.48)*6, 5, 500)
-	s.cpu = clampF(s.cpu+(rand.Float64()-0.5)*8, 5, 98)
-	s.mem = clampF(s.mem+(rand.Float64()-0.5)*0.2, 4, 15.5)
+	s.txnSec = clampF(s.txnSec+(rand.Float64()-0.48)*30, 800, 9000)
+	s.revenue += s.txnSec * 0.0035 * (0.8 + rand.Float64()*0.4)
+	s.users = clampF(s.users+(rand.Float64()-0.5)*15, 3000, 30000)
+	s.queue = clampF(s.queue+(rand.Float64()-0.55)*0.4, 0, 200)
+	s.cacheHit = clampF(s.cacheHit+(rand.Float64()-0.48)*0.08, 82, 99.9)
+	s.p99 = clampF(s.p99+(rand.Float64()-0.48)*0.6, 5, 500)
+	s.cpu = clampF(s.cpu+(rand.Float64()-0.5)*0.8, 5, 98)
+	s.mem = clampF(s.mem+(rand.Float64()-0.5)*0.02, 4, 15.5)
 
 	// Correlate p99 with cpu load
 	if s.cpu > 80 {
-		s.p99 += (s.cpu - 80) * 0.5
+		s.p99 += (s.cpu - 80) * 0.05
 	}
 
 	// Error accumulation with occasional spike
-	if rand.Float64() < 0.03 {
+	if rand.Float64() < 0.003 {
 		s.errors += float64(10 + rand.IntN(30))
 		s.incidents++
-	} else {
-		s.errors += float64(rand.IntN(3))
+	} else if rand.Float64() < 0.1 {
+		s.errors++
 	}
 
 	// SLA derived from error rate
@@ -99,7 +101,7 @@ func (s *numSim) tick() {
 	s.sla = clampF(100.0-errorRate*5, 95, 100)
 
 	// Occasional deploy
-	if rand.Float64() < 0.001 {
+	if rand.Float64() < 0.0001 {
 		s.deploys++
 	}
 }
@@ -117,7 +119,7 @@ func (s *numSim) buildTiles() []views.NumTile {
 			Delta:    fmtDelta(s.txnSec, s.prevTxn),
 			DeltaUp:  s.txnSec >= s.prevTxn,
 			Color:    "info",
-			Interval: getTileInterval("num-txn"),
+			IntervalMs: getTileInterval("num-txn"),
 		},
 		{
 			ID: "num-revenue", Title: "Revenue Today",
@@ -126,7 +128,7 @@ func (s *numSim) buildTiles() []views.NumTile {
 			DeltaUp:  true,
 			Subtitle: "accumulating",
 			Color:    "success",
-			Interval: getTileInterval("num-revenue"),
+			IntervalMs: getTileInterval("num-revenue"),
 		},
 		{
 			ID: "num-users", Title: "Active Users",
@@ -134,7 +136,7 @@ func (s *numSim) buildTiles() []views.NumTile {
 			Delta:    fmtDelta(s.users, s.prevUsers),
 			DeltaUp:  s.users >= s.prevUsers,
 			Color:    "info",
-			Interval: getTileInterval("num-users"),
+			IntervalMs: getTileInterval("num-users"),
 		},
 		{
 			ID: "num-queue", Title: "Queue Depth",
@@ -142,7 +144,7 @@ func (s *numSim) buildTiles() []views.NumTile {
 			Delta:    fmtDelta(s.queue, s.prevQueue),
 			DeltaUp:  s.queue <= s.prevQueue, // lower is better
 			Color:    queueColor(s.queue),
-			Interval: getTileInterval("num-queue"),
+			IntervalMs: getTileInterval("num-queue"),
 		},
 		{
 			ID: "num-cache", Title: "Cache Hit Rate",
@@ -150,14 +152,14 @@ func (s *numSim) buildTiles() []views.NumTile {
 			Delta:    fmtDeltaPct(s.cacheHit, s.prevCache),
 			DeltaUp:  s.cacheHit >= s.prevCache,
 			Color:    cacheColor(s.cacheHit),
-			Interval: getTileInterval("num-cache"),
+			IntervalMs: getTileInterval("num-cache"),
 		},
 		{
 			ID: "num-errors", Title: "Errors (24h)",
 			Value:    fmtCommas(int(s.errors)),
 			Subtitle: fmt.Sprintf("%d incidents", s.incidents),
 			Color:    errorCountColor(s.errors),
-			Interval: getTileInterval("num-errors"),
+			IntervalMs: getTileInterval("num-errors"),
 		},
 		{
 			ID: "num-p99", Title: "P99 Latency",
@@ -165,7 +167,7 @@ func (s *numSim) buildTiles() []views.NumTile {
 			Delta:    fmtDelta(s.p99, s.prevP99),
 			DeltaUp:  s.p99 <= s.prevP99, // lower is better
 			Color:    latencyColor(s.p99),
-			Interval: getTileInterval("num-p99"),
+			IntervalMs: getTileInterval("num-p99"),
 		},
 		{
 			ID: "num-cpu", Title: "CPU Load",
@@ -173,34 +175,34 @@ func (s *numSim) buildTiles() []views.NumTile {
 			Delta:    fmtDeltaPct(s.cpu, s.prevCPU),
 			DeltaUp:  s.cpu <= s.prevCPU, // lower is better
 			Color:    cpuColor(s.cpu),
-			Interval: getTileInterval("num-cpu"),
+			IntervalMs: getTileInterval("num-cpu"),
 		},
 		{
 			ID: "num-mem", Title: "Memory",
 			Value:    fmt.Sprintf("%.1f GB", s.mem),
 			Subtitle: fmt.Sprintf("of 16 GB (%.0f%%)", s.mem/16*100),
 			Color:    memColor(s.mem),
-			Interval: getTileInterval("num-mem"),
+			IntervalMs: getTileInterval("num-mem"),
 		},
 		{
 			ID: "num-uptime", Title: "Uptime",
 			Value:    fmt.Sprintf("%dd %dh %dm", days, hours, mins),
 			Neutral:  true,
 			Color:    "success",
-			Interval: getTileInterval("num-uptime"),
+			IntervalMs: getTileInterval("num-uptime"),
 		},
 		{
 			ID: "num-deploys", Title: "Deploys Today",
 			Value:    fmt.Sprintf("%d", s.deploys),
 			Neutral:  true,
 			Color:    "info",
-			Interval: getTileInterval("num-deploys"),
+			IntervalMs: getTileInterval("num-deploys"),
 		},
 		{
 			ID: "num-sla", Title: "SLA Compliance",
 			Value:    fmt.Sprintf("%.2f%%", s.sla),
 			Color:    slaColor(s.sla),
-			Interval: getTileInterval("num-sla"),
+			IntervalMs: getTileInterval("num-sla"),
 		},
 	}
 }
@@ -339,20 +341,20 @@ func clampF(v, lo, hi float64) float64 {
 
 // ── Per-tile interval state ─────────────────────────────────────────────────
 
-// Default intervals (seconds) — tuned per metric context.
+// Default intervals (milliseconds) — tuned per metric context.
 var numDefaultIntervals = map[string]int{
-	"num-txn":     1,  // volatile, high-frequency
-	"num-revenue": 3,  // accumulating, less urgent
-	"num-users":   2,  // moderate churn
-	"num-queue":   1,  // operational, needs quick visibility
-	"num-cache":   5,  // relatively stable
-	"num-errors":  3,  // accumulating counter
-	"num-p99":     1,  // performance critical
-	"num-cpu":     2,  // OS-level, moderate
-	"num-mem":     5,  // changes slowly
-	"num-uptime":  10, // minutes-level granularity
-	"num-deploys": 10, // rare events
-	"num-sla":     5,  // derived, slow-moving
+	"num-txn":     1000,  // volatile, high-frequency
+	"num-revenue": 3000,  // accumulating, less urgent
+	"num-users":   2000,  // moderate churn
+	"num-queue":   1000,  // operational, needs quick visibility
+	"num-cache":   5000,  // relatively stable
+	"num-errors":  3000,  // accumulating counter
+	"num-p99":     1000,  // performance critical
+	"num-cpu":     2000,  // OS-level, moderate
+	"num-mem":     5000,  // changes slowly
+	"num-uptime":  10000, // minutes-level granularity
+	"num-deploys": 10000, // rare events
+	"num-sla":     5000,  // derived, slow-moving
 }
 
 var numTileIntervals struct {
@@ -404,15 +406,15 @@ func handleNumericalSSEConnect(c echo.Context) error {
 
 func handleNumericalInterval(c echo.Context) error {
 	tileID := c.FormValue("tile")
-	iv, _ := strconv.Atoi(c.FormValue("interval"))
-	if iv < 1 {
-		iv = 1
-	} else if iv > 10 {
-		iv = 10
+	ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
+	if ms < 100 {
+		ms = 100
+	} else if ms > 10000 {
+		ms = 10000
 	}
 
 	numTileIntervals.mu.Lock()
-	numTileIntervals.intervals[tileID] = iv
+	numTileIntervals.intervals[tileID] = ms
 	numTileIntervals.mu.Unlock()
 
 	return c.NoContent(http.StatusNoContent)
@@ -453,13 +455,12 @@ func handleSSENumerical(broker *tavern.SSEBroker) echo.HandlerFunc {
 
 func (ar *appRoutes) publishNumerical(broker *tavern.SSEBroker) {
 	// Fast tick: check tile intervals at 100ms resolution.
-	// Simulation advances every second regardless.
+	// Simulation also advances each tick with scaled deltas.
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	sim := newNumSim()
 	ctx := context.Background()
-	lastSimTick := time.Now()
 
 	for {
 		select {
@@ -470,12 +471,8 @@ func (ar *appRoutes) publishNumerical(broker *tavern.SSEBroker) {
 				continue
 			}
 
-			// Advance simulation at 1 Hz
 			now := time.Now()
-			if now.Sub(lastSimTick) >= time.Second {
-				sim.tick()
-				lastSimTick = now
-			}
+			sim.tick()
 
 			// Build all tiles, filter to those whose interval has elapsed
 			allTiles := sim.buildTiles()
@@ -483,12 +480,12 @@ func (ar *appRoutes) publishNumerical(broker *tavern.SSEBroker) {
 
 			numTileIntervals.mu.Lock()
 			for _, t := range allTiles {
-				iv := numTileIntervals.intervals[t.ID]
-				if iv < 1 {
-					iv = 1
+				ms := numTileIntervals.intervals[t.ID]
+				if ms < 100 {
+					ms = 100
 				}
 				last := numTileIntervals.lastSent[t.ID]
-				if now.Sub(last) >= time.Duration(iv)*time.Second {
+				if now.Sub(last) >= time.Duration(ms)*time.Millisecond {
 					due = append(due, t)
 					numTileIntervals.lastSent[t.ID] = now
 				}
