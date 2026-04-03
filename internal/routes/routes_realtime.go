@@ -661,47 +661,47 @@ func (ar *appRoutes) publishRealtimeDashboard(broker *tavern.SSEBroker) {
 			rtIntervals.mu.Lock()
 
 			if isDue("network", now) {
-				views.OOBNetworkChart(snap).Render(ctx, buf)
+				views.OOBNetworkChart(snap).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("latency", now) {
-				views.OOBLatencyHistChart(snap).Render(ctx, buf)
+				views.OOBLatencyHistChart(snap).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("error-spark", now) {
-				views.OOBErrorSparkline(snap).Render(ctx, buf)
+				views.OOBErrorSparkline(snap).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("req-dist", now) {
-				views.OOBRequestDistChart(snap).Render(ctx, buf)
+				views.OOBRequestDistChart(snap).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("throughput", now) {
-				views.OOBThroughputSplitChart(snap).Render(ctx, buf)
+				views.OOBThroughputSplitChart(snap).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("gauges", now) {
-				views.OOBCpuMemGauges(snap).Render(ctx, buf)
+				views.OOBCpuMemGauges(snap).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("disk-io", now) {
-				views.OOBDiskIOChart(snap).Render(ctx, buf)
+				views.OOBDiskIOChart(snap).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("conn-pool", now) {
-				views.OOBConnPool(snap).Render(ctx, buf)
+				views.OOBConnPool(snap).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("sys-stats", now) {
-				views.OOBDashboardStats(stats).Render(ctx, buf)
+				views.OOBDashboardStats(stats).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("services", now) {
-				views.OOBServicesChart(services).Render(ctx, buf)
+				views.OOBServicesChart(services).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("svc-latency", now) {
-				views.OOBServiceLatencyChart(svcLatencies, maxMs*1.1).Render(ctx, buf)
+				views.OOBServiceLatencyChart(svcLatencies, maxMs*1.1).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 			if isDue("events", now) {
@@ -711,7 +711,7 @@ func (ar *appRoutes) publishRealtimeDashboard(broker *tavern.SSEBroker) {
 					Kind:    tmpl.Kind,
 					Message: tmpl.Messages[rand.IntN(len(tmpl.Messages))],
 				}
-				views.OOBEventItem(evt).Render(ctx, buf)
+				views.OOBEventItem(evt).Render(ctx, buf) //nolint:errcheck
 				needsPublish = true
 			}
 

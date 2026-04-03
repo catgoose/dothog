@@ -42,16 +42,6 @@ func initAdminIntervals() {
 		adminIntervals.intervals[id] = iv
 	}
 }
-
-func getAdminInterval(id string) int {
-	adminIntervals.mu.RLock()
-	defer adminIntervals.mu.RUnlock()
-	if iv, ok := adminIntervals.intervals[id]; ok {
-		return iv
-	}
-	return 5000
-}
-
 // ── Routes ──────────────────────────────────────────────────────────────────
 
 var adminBufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
