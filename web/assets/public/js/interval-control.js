@@ -59,7 +59,13 @@
     if (!el) return;
     ensureInit(el);
     var input = el.querySelector('input[type=range]');
-    if (!input || input.disabled) return;
+    if (!input) return;
+    // If inside a master control, only POST when the toggle is checked
+    var master = el.closest('.master-slider');
+    if (master) {
+      var toggle = master.parentElement.querySelector('.master-toggle');
+      if (toggle && !toggle.checked) return;
+    }
     var cfg = configs[units[el._ivUnit]];
     var ms = parseInt(input.value) * cfg.mult;
 
