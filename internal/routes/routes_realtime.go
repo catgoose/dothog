@@ -42,6 +42,7 @@ var rtCardDefaults = map[string]int{
 var rtIntervals struct {
 	intervals map[string]int
 	lastSent  map[string]time.Time
+	saved     map[string]int // snapshot before master override
 	mu        sync.RWMutex
 }
 
@@ -70,6 +71,7 @@ func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 	ar.e.GET("/hypermedia/realtime", ar.handleRealtimePage())
 	ar.e.POST("/hypermedia/realtime/interval", handleRTInterval)
 	ar.e.POST("/hypermedia/realtime/interval-all", handleRTIntervalAll)
+	ar.e.POST("/hypermedia/realtime/interval-restore", handleRTIntervalRestore)
 	ar.e.GET("/sse/system", handleSSESystem(broker))
 	ar.e.GET("/sse/dashboard", handleSSEDashboard(broker))
 
@@ -91,17 +93,50 @@ func handleRTIntervalAll(c echo.Context) error {
 		ms = 86400000
 	}
 
-	// Set all chart card intervals
+	// Save individual intervals before overriding
 	rtIntervals.mu.Lock()
+	if rtIntervals.saved == nil {
+		rtIntervals.saved = make(map[string]int, len(rtIntervals.intervals))
+		for id, iv := range rtIntervals.intervals {
+			rtIntervals.saved[id] = iv
+		}
+	}
 	for id := range rtIntervals.intervals {
 		rtIntervals.intervals[id] = ms
 	}
 	rtIntervals.mu.Unlock()
 
-	// Set all numerical tile intervals
 	numTileIntervals.mu.Lock()
+	if numTileIntervals.saved == nil {
+		numTileIntervals.saved = make(map[string]int, len(numTileIntervals.intervals))
+		for id, iv := range numTileIntervals.intervals {
+			numTileIntervals.saved[id] = iv
+		}
+	}
 	for id := range numTileIntervals.intervals {
 		numTileIntervals.intervals[id] = ms
+	}
+	numTileIntervals.mu.Unlock()
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+func handleRTIntervalRestore(c echo.Context) error {
+	rtIntervals.mu.Lock()
+	if rtIntervals.saved != nil {
+		for id, iv := range rtIntervals.saved {
+			rtIntervals.intervals[id] = iv
+		}
+		rtIntervals.saved = nil
+	}
+	rtIntervals.mu.Unlock()
+
+	numTileIntervals.mu.Lock()
+	if numTileIntervals.saved != nil {
+		for id, iv := range numTileIntervals.saved {
+			numTileIntervals.intervals[id] = iv
+		}
+		numTileIntervals.saved = nil
 	}
 	numTileIntervals.mu.Unlock()
 

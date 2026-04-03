@@ -342,8 +342,9 @@ var numTileScales = map[string]string{
 }
 
 var numTileIntervals struct {
-	intervals map[string]int       // seconds per tile
+	intervals map[string]int       // ms per tile
 	lastSent  map[string]time.Time // last publish time per tile
+	saved     map[string]int       // snapshot before master override
 	mu        sync.RWMutex
 }
 
