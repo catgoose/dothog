@@ -50,17 +50,16 @@ templ AppSettingsPage(currentTheme string) {
 // themeDropdown renders a dropdown select for choosing a DaisyUI theme,
 // grouped by light/dark category, with a visual color-swatch grid below.
 templ themeDropdown(currentTheme string) {
-	<div x-data="themePicker" data-theme={ currentTheme }>
+	<div x-data="themePicker" data-current-theme={ currentTheme }>
 		<div class="flex items-center gap-3">
-			<div :data-theme="current" class="flex gap-0.5 shrink-0">
+			<div class="theme-preview-swatch flex gap-0.5 shrink-0" data-theme={ currentTheme }>
 				<span class="w-2 h-4 rounded-sm bg-primary"></span>
 				<span class="w-2 h-4 rounded-sm bg-secondary"></span>
 				<span class="w-2 h-4 rounded-sm bg-accent"></span>
 			</div>
 			<select
 				class="select select-bordered select-sm w-full max-w-xs capitalize"
-				x-model="current"
-				x-on:change="setTheme(current)"
+				x-on:change="pickFromSelect"
 			>
 				for _, cat := range ThemeCategories {
 					<optgroup label={ cat.Label }>
@@ -76,13 +75,13 @@ templ themeDropdown(currentTheme string) {
 			for _, cat := range ThemeCategories {
 				<div class="mb-2">
 					<p class="text-xs font-medium text-base-content/50 mb-1">{ cat.Label }</p>
-					<div class="flex flex-wrap gap-1.5">
+					<div class="flex flex-wrap gap-1.5" x-on:click="pickSwatch">
 						for _, theme := range cat.Themes {
 							<button
 								type="button"
-								:class={ "current === '" + theme + "' ? 'ring-2 ring-primary ring-offset-1' : ''" }
-								class="rounded-md overflow-hidden cursor-pointer"
-								x-on:click={ "setTheme('" + theme + "')" }
+								class={ "theme-swatch rounded-md overflow-hidden cursor-pointer",
+									templ.KV("ring-2 ring-primary ring-offset-1", theme == currentTheme) }
+								data-theme-value={ theme }
 								title={ theme }
 							>
 								<div data-theme={ theme } class="flex gap-0.5 p-1 bg-base-100">
