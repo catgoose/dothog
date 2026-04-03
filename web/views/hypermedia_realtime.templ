@@ -56,27 +56,8 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 	</style>
 	<div id="dashboard-sse" class="p-4 space-y-4 max-w-7xl mx-auto">
 		<h1 class="text-2xl font-bold mb-2">Live Operations Dashboard</h1>
-		<div class="card bg-base-100 shadow border border-base-300">
-			<div class="card-body p-3">
-				<div class="flex items-center gap-4">
-					<label id="master-toggle-wrap" class="flex items-center gap-2 cursor-pointer shrink-0">
-						<input type="checkbox" class="toggle toggle-sm toggle-primary master-toggle"
-							if masterEnabled {
-								checked
-							}
-							_="on change if my.checked then call window._ivPost(the first .iv-wrap in the next .master-slider) else fetch /hypermedia/realtime/interval-restore with method:'POST'"/>
-						<span class="text-sm font-semibold">Master Control</span>
-					</label>
-					<div class="master-slider flex-1 flex items-center gap-2">
-						@components.IntervalSlider(components.IntervalSliderCfg{
-							ID: "iv-master",
-							TargetKey: "scope", TargetValue: "all",
-							IntervalMs: masterMs, Scale: components.AutoScale(masterMs),
-							PostURL: "/hypermedia/realtime/interval-all",
-						})
-					</div>
-				</div>
-			</div>
+		<div id="master-card" class="card bg-base-100 shadow border border-base-300">
+			@masterCardInner(masterEnabled, masterMs)
 		</div>
 		<!-- KPI Tiles (numerical, per-tile intervals) -->
 		<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
@@ -276,17 +257,35 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 	</div>
 }
 
-// --- OOB Master Control ---
+// --- Master Control ---
 
-templ OOBMasterToggle(enabled bool) {
-	<label id="master-toggle-wrap" hx-swap-oob="outerHTML" class="flex items-center gap-2 cursor-pointer shrink-0">
-		<input type="checkbox" class="toggle toggle-sm toggle-primary master-toggle"
-			if enabled {
-				checked
-			}
-			_="on change if my.checked then call window._ivPost(the first .iv-wrap in the next .master-slider) else fetch /hypermedia/realtime/interval-restore with method:'POST'"/>
-		<span class="text-sm font-semibold">Master Control</span>
-	</label>
+templ masterCardInner(enabled bool, ms int) {
+	<div class="card-body p-3">
+		<div class="flex items-center gap-4">
+			<label id="master-toggle-wrap" class="flex items-center gap-2 cursor-pointer shrink-0">
+				<input type="checkbox" class="toggle toggle-sm toggle-primary master-toggle"
+					if enabled {
+						checked
+					}
+					_="on change if my.checked then call window._ivPost(the first .iv-wrap in the next .master-slider) else fetch /hypermedia/realtime/interval-restore with method:'POST'"/>
+				<span class="text-sm font-semibold">Master Control</span>
+			</label>
+			<div class="master-slider flex-1 flex items-center gap-2">
+				@components.IntervalSlider(components.IntervalSliderCfg{
+					ID: "iv-master",
+					TargetKey: "scope", TargetValue: "all",
+					IntervalMs: ms, Scale: components.AutoScale(ms),
+					PostURL: "/hypermedia/realtime/interval-all",
+				})
+			</div>
+		</div>
+	</div>
+}
+
+templ OOBMasterCard(enabled bool, ms int) {
+	<div id="master-card" hx-swap-oob="outerHTML" class="card bg-base-100 shadow border border-base-300">
+		@masterCardInner(enabled, ms)
+	</div>
 }
 
 // --- KPI Cards ---
