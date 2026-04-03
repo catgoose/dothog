@@ -17,7 +17,6 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/labstack/echo/v4 v4.15.1
 	github.com/magefile/mage v1.17.1
-	github.com/mattn/go-sqlite3 v1.14.40
 	github.com/microsoft/kiota-abstractions-go v1.9.4
 	github.com/microsoftgraph/msgraph-sdk-go v1.96.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.4.0
@@ -25,7 +24,13 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
-require github.com/lib/pq v1.12.2 // indirect
+require (
+	github.com/lib/pq v1.12.3 // indirect
+	github.com/mattn/go-sqlite3 v1.14.40 // indirect
+	github.com/ncruces/go-sqlite3 v0.33.2 // indirect
+	github.com/ncruces/go-sqlite3-wasm v1.0.5-0.20260329114232-2491c387476c // indirect
+	github.com/ncruces/julianday v1.0.0 // indirect
+)
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
@@ -40,7 +45,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bep/godartsass/v2 v2.5.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
-	github.com/catgoose/chuck v0.1.2
+	github.com/catgoose/chuck v0.1.3
 	github.com/catgoose/promolog v0.2.17
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect

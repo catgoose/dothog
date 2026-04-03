@@ -9,7 +9,7 @@ import (
 	dialect "github.com/catgoose/chuck"
 	"catgoose/dothog/internal/database/schema"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/catgoose/chuck/driver/sqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
