@@ -2,7 +2,7 @@
 
 package views
 
-import "fmt"
+import components "catgoose/dothog/web/components/core"
 
 templ NumericalPage(tiles []NumTile) {
 	<div class="p-4 space-y-6 max-w-6xl mx-auto">
@@ -39,7 +39,11 @@ templ NumericalSSEBlock() {
 templ numTileWrapper(t NumTile) {
 	<div class="bg-base-200 rounded-lg p-4">
 		@numTileData(t)
-		@numIntervalSlider(t.ID, t.IntervalMs, t.Scale)
+		@components.IntervalSlider(components.IntervalSliderCfg{
+			TargetKey: "tile", TargetValue: t.ID,
+			IntervalMs: t.IntervalMs, Scale: t.Scale,
+			PostURL: "/hypermedia/numerical/interval",
+		})
 	</div>
 }
 
@@ -87,45 +91,6 @@ templ oobNumTile(t NumTile) {
 			</div>
 		} else if t.Subtitle != "" {
 			<div class="text-xs text-base-content/40 mt-1">{ t.Subtitle }</div>
-		}
-	</div>
-}
-
-templ numIntervalSlider(tileID string, intervalMs int, scale string) {
-	<div class="flex items-center gap-1 mt-2 pt-2 border-t border-base-content/10" x-data="rangeOutput">
-		if scale == "ms" {
-			<input type="range" class="range range-xs flex-1"
-				min="100" max="2000" step="100"
-				value={ fmt.Sprintf("%d", intervalMs) }
-				x-on:input="updateOutput()"
-				hx-post="/hypermedia/numerical/interval"
-				hx-trigger="change"
-				hx-vals={ fmt.Sprintf(`js:{tile:"%s",interval_ms:parseInt(this.value)}`, tileID) }
-				hx-swap="none"/>
-			<output class="font-mono text-xs text-base-content/40 w-10 text-right">{ fmt.Sprintf("%d", intervalMs) }</output>
-			<span class="text-xs text-base-content/30">ms</span>
-		} else if scale == "s" {
-			<input type="range" class="range range-xs flex-1"
-				min="1" max="30" step="1"
-				value={ fmt.Sprintf("%d", intervalMs/1000) }
-				x-on:input="updateOutput()"
-				hx-post="/hypermedia/numerical/interval"
-				hx-trigger="change"
-				hx-vals={ fmt.Sprintf(`js:{tile:"%s",interval_ms:parseInt(this.value)*1000}`, tileID) }
-				hx-swap="none"/>
-			<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ fmt.Sprintf("%d", intervalMs/1000) }</output>
-			<span class="text-xs text-base-content/30">s</span>
-		} else {
-			<input type="range" class="range range-xs flex-1"
-				min="1" max="10" step="1"
-				value={ fmt.Sprintf("%d", intervalMs/60000) }
-				x-on:input="updateOutput()"
-				hx-post="/hypermedia/numerical/interval"
-				hx-trigger="change"
-				hx-vals={ fmt.Sprintf(`js:{tile:"%s",interval_ms:parseInt(this.value)*60000}`, tileID) }
-				hx-swap="none"/>
-			<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ fmt.Sprintf("%d", intervalMs/60000) }</output>
-			<span class="text-xs text-base-content/30">min</span>
 		}
 	</div>
 }

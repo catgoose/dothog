@@ -1,0 +1,60 @@
+// setup:feature:demo
+
+package components
+
+import "fmt"
+
+// IntervalSliderCfg configures a reusable update-frequency slider.
+type IntervalSliderCfg struct {
+	TargetKey   string // form key name, e.g. "tile", "section"
+	TargetValue string // form value, e.g. "num-txn", "system-metrics"
+	IntervalMs  int    // current interval in milliseconds
+	Scale       string // "ms", "s", "min"
+	PostURL     string // endpoint to POST interval changes
+}
+
+// IntervalSlider renders a range input with unit label that POSTs interval
+// changes. The slider works in its native unit (ms/s/min) and converts to
+// milliseconds via hx-vals before sending.
+templ IntervalSlider(cfg IntervalSliderCfg) {
+	<div class="flex items-center gap-1" x-data="rangeOutput">
+		if cfg.Scale == "ms" {
+			<input type="range" class="range range-xs flex-1"
+				min="100" max="2000" step="100"
+				value={ fmt.Sprintf("%d", cfg.IntervalMs) }
+				x-on:input="updateOutput()"
+				hx-post={ cfg.PostURL }
+				hx-trigger="change"
+				hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)") }
+				hx-swap="none"/>
+			<output class="font-mono text-xs text-base-content/40 w-10 text-right">{ fmt.Sprintf("%d", cfg.IntervalMs) }</output>
+			<span class="text-xs text-base-content/30">ms</span>
+		} else if cfg.Scale == "s" {
+			<input type="range" class="range range-xs flex-1"
+				min="1" max="30" step="1"
+				value={ fmt.Sprintf("%d", cfg.IntervalMs/1000) }
+				x-on:input="updateOutput()"
+				hx-post={ cfg.PostURL }
+				hx-trigger="change"
+				hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)*1000") }
+				hx-swap="none"/>
+			<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ fmt.Sprintf("%d", cfg.IntervalMs/1000) }</output>
+			<span class="text-xs text-base-content/30">s</span>
+		} else {
+			<input type="range" class="range range-xs flex-1"
+				min="1" max="10" step="1"
+				value={ fmt.Sprintf("%d", cfg.IntervalMs/60000) }
+				x-on:input="updateOutput()"
+				hx-post={ cfg.PostURL }
+				hx-trigger="change"
+				hx-vals={ intervalHxVals(cfg.TargetKey, cfg.TargetValue, "parseInt(this.value)*60000") }
+				hx-swap="none"/>
+			<output class="font-mono text-xs text-base-content/40 w-6 text-right">{ fmt.Sprintf("%d", cfg.IntervalMs/60000) }</output>
+			<span class="text-xs text-base-content/30">min</span>
+		}
+	</div>
+}
+
+func intervalHxVals(key, value, expr string) string {
+	return fmt.Sprintf(`js:{%s:"%s",interval_ms:%s}`, key, value, expr)
+}
