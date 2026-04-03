@@ -11,8 +11,7 @@ const (
 	TopicActivityFeed = "activity-feed"
 	TopicErrorTraces  = "error-traces"
 	TopicThemeChange  = "theme-change"
-	TopicCanvasUpdate = "canvas-update"
-	TopicAdminPanel  = "admin-panel"
-	TopicLabMandelbrot   = "lab-mandelbrot"
-	TopicNumericalDash   = "numerical-dash"
+	TopicCanvasUpdate  = "canvas-update"
+	TopicAdminPanel    = "admin-panel"
+	TopicNumericalDash = "numerical-dash"
 )

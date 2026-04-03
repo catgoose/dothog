@@ -186,7 +186,6 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initErrorsRoutes()
 	// setup:feature:sse:start
 	ar.initRealtimeRoutes(ar.broker)
-	ar.initLabRoutes(ar.broker)
 	ar.initNumericalRoutes(ar.broker)
 	// setup:feature:sse:end
 
