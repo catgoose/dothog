@@ -187,6 +187,7 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:sse:start
 	ar.initRealtimeRoutes(ar.broker)
 	ar.initLabRoutes(ar.broker)
+	ar.initNumericalRoutes(ar.broker)
 	// setup:feature:sse:end
 
 	db, err := demo.Open("db/demo.db")

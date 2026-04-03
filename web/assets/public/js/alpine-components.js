@@ -259,8 +259,5 @@ document.addEventListener('alpine:init', function () {
   if (typeof offlineIndicator === 'function') {
     Alpine.data('offlineIndicator', offlineIndicator);
   }
-  if (typeof historyBreadcrumbs === 'function') {
-    Alpine.data('historyBreadcrumbs', historyBreadcrumbs);
-  }
 
 });

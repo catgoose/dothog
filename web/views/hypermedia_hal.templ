@@ -27,12 +27,9 @@ type HALLinkView struct {
 
 templ HALPage(rawJSON string, resource HALResourceView) {
 	<div class="p-4 space-y-6 max-w-5xl mx-auto">
-		<div class="flex items-center justify-between mb-4">
-			<div>
-				<h1 class="text-2xl font-bold">HAL — Hypertext Application Language</h1>
-				<p class="text-sm text-base-content/60 mt-1">RFC draft — <code class="text-xs bg-base-200 px-1 rounded">application/hal+json</code></p>
-			</div>
-			<a href="/hypermedia" class="btn btn-sm btn-ghost">← Hypermedia</a>
+		<div class="mb-4">
+			<h1 class="text-2xl font-bold">HAL — Hypertext Application Language</h1>
+			<p class="text-sm text-base-content/60 mt-1">RFC draft — <code class="text-xs bg-base-200 px-1 rounded">application/hal+json</code></p>
 		</div>
 
 		<div role="alert" class="alert alert-info text-sm">

@@ -32,9 +32,7 @@ func hasItem(items []contextBarItem, href string) bool {
 // LocalContextBar renders a compact strip of the current page's immediate
 // ring siblings — the pages in the same ring group(s) as the current page.
 templ LocalContextBar(links []linkwell.LinkRelation, currentPath string) {
-	<div id="local-context-bar"
-		_="init if localStorage.getItem('dothog_hide_local_context_bar') === 'true' then hide me"
-	>
+	<div id="local-context-bar">
 		if groups := localGroups(links, currentPath); len(groups) > 0 {
 			<div class="border-b border-base-300">
 				<div class="flex items-center justify-center gap-3 overflow-x-auto px-8 py-1 bg-base-100/50 text-xs">
@@ -103,31 +101,5 @@ func localGroups(links []linkwell.LinkRelation, currentPath string) []contextBar
 		})
 	}
 	return groups
-}
-
-// HistoryBreadcrumbs renders a trail of recently visited pages.
-// Client-side via Alpine.js reading from sessionStorage.
-templ HistoryBreadcrumbs() {
-	<div id="history-breadcrumbs"
-		x-data="historyBreadcrumbs"
-		x-show="trail.length > 0"
-		x-cloak
-		_="init if localStorage.getItem('dothog_show_history_crumbs') !== 'true' then hide me"
-	>
-		<div class="border-b border-base-300">
-			<div class="flex items-center gap-2 overflow-x-auto px-8 py-1 bg-base-100/30 text-xs">
-				<template x-for="(item, idx) in trail" :key="item.path">
-					<div class="flex items-center gap-2">
-						<a :href="item.path"
-							x-text="item.title"
-							class="link link-hover text-base-content/40 hover:text-base-content whitespace-nowrap"
-						></a>
-						<span class="text-base-content/20">›</span>
-					</div>
-				</template>
-				<span class="text-base-content/60 font-medium whitespace-nowrap" x-text="currentTitle"></span>
-			</div>
-		</div>
-	</div>
 }
 

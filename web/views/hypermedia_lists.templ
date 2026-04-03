@@ -18,10 +18,7 @@ type ListsDemoItem struct {
 // ListsPage is a static showcase of list/pagination/filter/sort patterns.
 templ ListsPage(items []ListsDemoItem, info linkwell.PageInfo) {
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
-		<div class="flex items-center justify-between mb-4">
-			<h1 class="text-2xl font-bold">List Patterns</h1>
-			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Overview</a>
-		</div>
+		<h1 class="text-2xl font-bold mb-4">List Patterns</h1>
 		<div role="alert" class="alert alert-info text-sm">
 			<span>Demonstrates: <strong>next</strong>, <strong>prev</strong>, <strong>search</strong>, <strong>sort</strong>, <strong>filter</strong> — all driven by HTMX. See <a href="/demo/inventory" class="link link-primary">Tables → Inventory</a> { "for" } a live backend demo.</span>
 		</div>

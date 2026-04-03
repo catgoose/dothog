@@ -1,0 +1,118 @@
+// setup:feature:demo
+
+package views
+
+import components "catgoose/dothog/web/components/core"
+
+templ NumericalPage(tiles []NumTile) {
+	<div class="p-4 space-y-6 max-w-6xl mx-auto">
+		<div class="space-y-1">
+			<h1 class="text-2xl font-bold">Numerical Dashboard</h1>
+			<p class="text-sm text-base-content/60">
+				Real-time KPIs — every tile is an independent OOB swap target updated via a single SSE stream.
+			</p>
+		</div>
+
+		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+			for _, t := range tiles {
+				@numTileWrapper(t)
+			}
+		</div>
+
+		<!-- Lazy SSE connection: loads after all OOB targets exist -->
+		<div id="num-sse-wrapper"
+			hx-get="/hypermedia/numerical/sse-connect"
+			hx-trigger="load"
+			hx-swap="innerHTML">
+		</div>
+	</div>
+}
+
+templ NumericalSSEBlock() {
+	<div hx-ext="sse" sse-connect="/sse/numerical" hx-swap="innerHTML settle:0 transition:false">
+		<div sse-swap="numerical-dash" style="display:none"></div>
+	</div>
+}
+
+// numTileWrapper is the static outer shell: holds the OOB data target + the slider.
+// The slider lives OUTSIDE the OOB target so it's never replaced by SSE updates.
+templ numTileWrapper(t NumTile) {
+	<div class="bg-base-200 rounded-lg p-4">
+		@numTileData(t)
+		@components.IntervalSlider(components.IntervalSliderCfg{
+			TargetKey: "tile", TargetValue: t.ID,
+			IntervalMs: t.IntervalMs, Scale: t.Scale,
+			PostURL: "/hypermedia/numerical/interval",
+		})
+	</div>
+}
+
+// numTileData is the OOB swap target — only the data portion, no slider.
+templ numTileData(t NumTile) {
+	<div id={ t.ID }>
+		<div class="text-xs text-base-content/50 uppercase tracking-wider mb-1">{ t.Title }</div>
+		<div class={ numValueClass(t.Color) }>{ t.Value }</div>
+		if t.Delta != "" {
+			<div class="flex items-center gap-1 text-xs mt-1">
+				if t.Neutral {
+					<span class="text-base-content/50">{ t.Delta }</span>
+				} else if t.DeltaUp {
+					<span class="text-success">▲ { t.Delta }</span>
+				} else {
+					<span class="text-error">▼ { t.Delta }</span>
+				}
+				if t.Subtitle != "" {
+					<span class="text-base-content/40">· { t.Subtitle }</span>
+				}
+			</div>
+		} else if t.Subtitle != "" {
+			<div class="text-xs text-base-content/40 mt-1">{ t.Subtitle }</div>
+		}
+	</div>
+}
+
+// oobNumTile replaces only the data div — the slider is untouched.
+templ oobNumTile(t NumTile) {
+	<div id={ t.ID } hx-swap-oob="innerHTML">
+		<div class="text-xs text-base-content/50 uppercase tracking-wider mb-1">{ t.Title }</div>
+		<div class={ numValueClass(t.Color) }>{ t.Value }</div>
+		if t.Delta != "" {
+			<div class="flex items-center gap-1 text-xs mt-1">
+				if t.Neutral {
+					<span class="text-base-content/50">{ t.Delta }</span>
+				} else if t.DeltaUp {
+					<span class="text-success">▲ { t.Delta }</span>
+				} else {
+					<span class="text-error">▼ { t.Delta }</span>
+				}
+				if t.Subtitle != "" {
+					<span class="text-base-content/40">· { t.Subtitle }</span>
+				}
+			</div>
+		} else if t.Subtitle != "" {
+			<div class="text-xs text-base-content/40 mt-1">{ t.Subtitle }</div>
+		}
+	</div>
+}
+
+templ NumericalOOB(tiles []NumTile) {
+	for _, t := range tiles {
+		@oobNumTile(t)
+	}
+}
+
+func numValueClass(color string) string {
+	base := "font-mono font-bold text-3xl "
+	switch color {
+	case "success":
+		return base + "text-success"
+	case "warning":
+		return base + "text-warning"
+	case "error":
+		return base + "text-error"
+	case "info":
+		return base + "text-info"
+	default:
+		return base + "text-base-content"
+	}
+}

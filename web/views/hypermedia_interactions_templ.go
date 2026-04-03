@@ -32,7 +32,7 @@ func InteractionsPage(comments []string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><div class=\"flex items-center justify-between mb-4\"><h1 class=\"text-2xl font-bold\">Interaction Patterns</h1><a href=\"/hypermedia/controls\" class=\"btn btn-sm btn-ghost\">← Overview</a></div><div role=\"alert\" class=\"alert alert-info text-sm\"><span>Demonstrates: <strong>submit</strong>, <strong>cancel</strong>, <strong>modal-open</strong>, <strong>modal-close</strong>, <strong>preview</strong>, <strong>comment</strong>, <strong>inline-edit</strong>, <strong>popover</strong>.</span></div><!-- Submit + Cancel --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Submit / Cancel</h2><p class=\"text-sm text-base-content/70 mb-3\">The form posts to the server via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-post</code>. Cancel resets the form using HyperScript.</p><div id=\"interaction-form-result\"><form id=\"interaction-form\" hx-post=\"/hypermedia/interactions/submit\" hx-target=\"#interaction-form-result\" hx-swap=\"outerHTML\" class=\"space-y-3\"><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-name\">Name</label> <input id=\"contact-name\" type=\"text\" name=\"contact-name\" placeholder=\"Your name\" class=\"input input-sm w-full max-w-sm\"></div><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-email\">Email</label> <input id=\"contact-email\" type=\"email\" name=\"contact-email\" placeholder=\"you@example.com\" class=\"input input-sm w-full max-w-sm\"></div><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-message\">Message</label> <textarea id=\"contact-message\" name=\"contact-message\" rows=\"3\" placeholder=\"Say something…\" class=\"textarea textarea-sm w-full max-w-sm\"></textarea></div><div class=\"flex gap-2\"><button type=\"submit\" class=\"btn btn-sm btn-primary\">Submit</button> <button type=\"button\" class=\"btn btn-sm btn-ghost\" _=\"on click\n\t\t\t\t\t\t\t\t\tset #contact-name.value to ''\n\t\t\t\t\t\t\t\t\tset #contact-email.value to ''\n\t\t\t\t\t\t\t\t\tset #contact-message.value to ''\">Cancel</button></div></form></div></div></div><!-- Modal open / close --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Modal Open / Close</h2><p class=\"text-sm text-base-content/70 mb-3\">Button fetches the modal fragment via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-get</code> and injects it into <code class=\"text-xs bg-base-200 px-1 rounded\">#modal-container</code>, then opens the DaisyUI dialog. Close button calls <code class=\"text-xs bg-base-200 px-1 rounded\">dialog.close()</code> via HyperScript.</p><div><button class=\"btn btn-sm btn-secondary\" hx-get=\"/hypermedia/interactions/modal\" hx-target=\"#modal-container\" hx-swap=\"innerHTML transition:false\">Open Modal</button></div><div id=\"modal-container\"></div></div></div><!-- Live Preview --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Live Preview</h2><p class=\"text-sm text-base-content/70 mb-3\">Textarea posts to the server on every keystroke (debounced 500 ms). The server returns rendered preview HTML.</p><div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\"><div><label class=\"label label-text text-sm\" for=\"preview-text\">Write something</label> <textarea id=\"preview-text\" name=\"preview-text\" rows=\"5\" placeholder=\"Type markdown-like text…\" class=\"textarea textarea-sm w-full\" hx-post=\"/hypermedia/interactions/preview\" hx-target=\"#preview-output\" hx-swap=\"innerHTML\" hx-trigger=\"keyup changed delay:500ms\"></textarea></div><div><p class=\"label-text text-sm mb-1\">Preview</p><div id=\"preview-output\" class=\"border border-base-300 rounded p-3 min-h-[7rem] text-sm bg-base-200 text-base-content/70 italic\">Preview appears here…</div></div></div></div></div><!-- Comments --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Append Comment</h2><p class=\"text-sm text-base-content/70 mb-3\">Form posts a comment; server returns only the new <code class=\"text-xs bg-base-200 px-1 rounded\">&lt;li&gt;</code> appended via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-swap=\"beforeend\"</code>.</p><form hx-post=\"/hypermedia/interactions/comment\" hx-target=\"#comment-list\" hx-swap=\"beforeend\" hx-on::after-request=\"this.reset()\" class=\"flex gap-2 mb-3\"><input type=\"text\" name=\"comment-text\" placeholder=\"Add a comment…\" class=\"input input-sm flex-1\"> <button type=\"submit\" class=\"btn btn-sm btn-primary\">Post</button></form><ul id=\"comment-list\" class=\"space-y-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><h1 class=\"text-2xl font-bold mb-4\">Interaction Patterns</h1><div role=\"alert\" class=\"alert alert-info text-sm\"><span>Demonstrates: <strong>submit</strong>, <strong>cancel</strong>, <strong>modal-open</strong>, <strong>modal-close</strong>, <strong>preview</strong>, <strong>comment</strong>, <strong>inline-edit</strong>, <strong>popover</strong>.</span></div><!-- Submit + Cancel --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Submit / Cancel</h2><p class=\"text-sm text-base-content/70 mb-3\">The form posts to the server via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-post</code>. Cancel resets the form using HyperScript.</p><div id=\"interaction-form-result\"><form id=\"interaction-form\" hx-post=\"/hypermedia/interactions/submit\" hx-target=\"#interaction-form-result\" hx-swap=\"outerHTML\" class=\"space-y-3\"><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-name\">Name</label> <input id=\"contact-name\" type=\"text\" name=\"contact-name\" placeholder=\"Your name\" class=\"input input-sm w-full max-w-sm\"></div><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-email\">Email</label> <input id=\"contact-email\" type=\"email\" name=\"contact-email\" placeholder=\"you@example.com\" class=\"input input-sm w-full max-w-sm\"></div><div class=\"fieldset\"><label class=\"label label-text text-sm\" for=\"contact-message\">Message</label> <textarea id=\"contact-message\" name=\"contact-message\" rows=\"3\" placeholder=\"Say something…\" class=\"textarea textarea-sm w-full max-w-sm\"></textarea></div><div class=\"flex gap-2\"><button type=\"submit\" class=\"btn btn-sm btn-primary\">Submit</button> <button type=\"button\" class=\"btn btn-sm btn-ghost\" _=\"on click\n\t\t\t\t\t\t\t\t\tset #contact-name.value to ''\n\t\t\t\t\t\t\t\t\tset #contact-email.value to ''\n\t\t\t\t\t\t\t\t\tset #contact-message.value to ''\">Cancel</button></div></form></div></div></div><!-- Modal open / close --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Modal Open / Close</h2><p class=\"text-sm text-base-content/70 mb-3\">Button fetches the modal fragment via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-get</code> and injects it into <code class=\"text-xs bg-base-200 px-1 rounded\">#modal-container</code>, then opens the DaisyUI dialog. Close button calls <code class=\"text-xs bg-base-200 px-1 rounded\">dialog.close()</code> via HyperScript.</p><div><button class=\"btn btn-sm btn-secondary\" hx-get=\"/hypermedia/interactions/modal\" hx-target=\"#modal-container\" hx-swap=\"innerHTML transition:false\">Open Modal</button></div><div id=\"modal-container\"></div></div></div><!-- Live Preview --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Live Preview</h2><p class=\"text-sm text-base-content/70 mb-3\">Textarea posts to the server on every keystroke (debounced 500 ms). The server returns rendered preview HTML.</p><div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\"><div><label class=\"label label-text text-sm\" for=\"preview-text\">Write something</label> <textarea id=\"preview-text\" name=\"preview-text\" rows=\"5\" placeholder=\"Type markdown-like text…\" class=\"textarea textarea-sm w-full\" hx-post=\"/hypermedia/interactions/preview\" hx-target=\"#preview-output\" hx-swap=\"innerHTML\" hx-trigger=\"keyup changed delay:500ms\"></textarea></div><div><p class=\"label-text text-sm mb-1\">Preview</p><div id=\"preview-output\" class=\"border border-base-300 rounded p-3 min-h-[7rem] text-sm bg-base-200 text-base-content/70 italic\">Preview appears here…</div></div></div></div></div><!-- Comments --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Append Comment</h2><p class=\"text-sm text-base-content/70 mb-3\">Form posts a comment; server returns only the new <code class=\"text-xs bg-base-200 px-1 rounded\">&lt;li&gt;</code> appended via <code class=\"text-xs bg-base-200 px-1 rounded\">hx-swap=\"beforeend\"</code>.</p><form hx-post=\"/hypermedia/interactions/comment\" hx-target=\"#comment-list\" hx-swap=\"beforeend\" hx-on::after-request=\"this.reset()\" class=\"flex gap-2 mb-3\"><input type=\"text\" name=\"comment-text\" placeholder=\"Add a comment…\" class=\"input input-sm flex-1\"> <button type=\"submit\" class=\"btn btn-sm btn-primary\">Post</button></form><ul id=\"comment-list\" class=\"space-y-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -141,7 +141,7 @@ func InteractionsSubmitResult(name, email, msg string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 221, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 218, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -154,7 +154,7 @@ func InteractionsSubmitResult(name, email, msg string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 222, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 219, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -167,7 +167,7 @@ func InteractionsSubmitResult(name, email, msg string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 223, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 220, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -216,7 +216,7 @@ func InteractionsPreviewFragment(text string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 239, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 236, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -260,7 +260,7 @@ func InteractionsCommentItem(comment string) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(comment)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 247, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 244, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -303,7 +303,7 @@ func InlineTitleFragment(title string) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 261, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 258, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -345,7 +345,7 @@ func interactionPatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 268, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 265, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -358,7 +358,7 @@ func interactionPatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 269, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 266, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -371,7 +371,7 @@ func interactionPatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(desc)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 270, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_interactions.templ`, Line: 267, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {

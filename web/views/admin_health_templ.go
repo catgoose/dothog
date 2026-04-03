@@ -8,7 +8,10 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "catgoose/dothog/internal/health"
+import (
+	"catgoose/dothog/internal/health"
+	components "catgoose/dothog/web/components/core"
+)
 
 // AdminHealthPage renders the /admin/health page with live health status.
 func AdminHealthPage(h health.Response) templ.Component {
@@ -32,7 +35,18 @@ func AdminHealthPage(h health.Response) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><div class=\"flex items-center justify-between\"><div class=\"space-y-1\"><h1 class=\"text-2xl font-bold\">Health</h1><p class=\"text-sm text-base-content/60\">Live application health status. Auto-refreshes every 5 seconds.</p></div><a href=\"/health\" target=\"_blank\" class=\"btn btn-sm btn-ghost font-mono\">GET /health</a></div><div id=\"health-content\" hx-get=\"/admin/health/check\" hx-trigger=\"every 5s\" hx-swap=\"innerHTML\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><div class=\"flex items-center justify-between\"><div class=\"space-y-1\"><h1 class=\"text-2xl font-bold\">Health</h1><p class=\"text-sm text-base-content/60\">Live application health status via SSE.</p></div><div class=\"flex items-center gap-3\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.IntervalSlider(components.IntervalSliderCfg{
+			TargetKey: "section", TargetValue: "health",
+			IntervalMs: 5000, Scale: "s", PostURL: "/admin/settings/interval",
+		}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<a href=\"/health\" target=\"_blank\" class=\"btn btn-sm btn-ghost font-mono\">GET /health</a></div></div><div id=\"health-content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -40,7 +54,7 @@ func AdminHealthPage(h health.Response) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- SSE connection (shared admin stream) --><div hx-ext=\"sse\" sse-connect=\"/sse/admin\" hx-swap=\"innerHTML settle:0 transition:false\"><div sse-swap=\"admin-panel\" style=\"display:none\"></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -98,7 +112,7 @@ func healthContent(h health.Response) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-0\"><table class=\"table\"><tbody><tr><td class=\"text-xs uppercase tracking-wider text-base-content/40 w-40\">Status</td><td>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-0\"><table class=\"table\"><tbody><tr><td class=\"text-xs uppercase tracking-wider text-base-content/40 w-40\">Status</td><td>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -107,7 +121,7 @@ func healthContent(h health.Response) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -120,7 +134,7 @@ func healthContent(h health.Response) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -131,57 +145,57 @@ func healthContent(h health.Response) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(h.Status)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 41, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 50, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></td></tr><tr><td class=\"text-xs uppercase tracking-wider text-base-content/40\">Application</td><td><span class=\"font-mono font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></td></tr><tr><td class=\"text-xs uppercase tracking-wider text-base-content/40\">Application</td><td><span class=\"font-mono font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(h.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 47, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 56, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span></td></tr><tr><td class=\"text-xs uppercase tracking-wider text-base-content/40\">Version</td><td><span class=\"badge badge-ghost badge-sm font-mono\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</span></td></tr><tr><td class=\"text-xs uppercase tracking-wider text-base-content/40\">Version</td><td><span class=\"badge badge-ghost badge-sm font-mono\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(h.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 51, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 60, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</span></td></tr><tr><td class=\"text-xs uppercase tracking-wider text-base-content/40\">Uptime</td><td><span class=\"font-mono tabular-nums\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</span></td></tr><tr><td class=\"text-xs uppercase tracking-wider text-base-content/40\">Uptime</td><td><span class=\"font-mono tabular-nums\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(h.Uptime)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 55, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 64, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</span></td></tr>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</span></td></tr>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if h.Database != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<tr><td class=\"text-xs uppercase tracking-wider text-base-content/40\">Database</td><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<tr><td class=\"text-xs uppercase tracking-wider text-base-content/40\">Database</td><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -190,7 +204,7 @@ func healthContent(h health.Response) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -203,7 +217,7 @@ func healthContent(h health.Response) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -214,18 +228,18 @@ func healthContent(h health.Response) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(h.Database)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 63, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 72, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div></td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div></td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</tbody></table></div></div><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-base\">System Gauges</h2><p class=\"text-sm text-base-content/70\">Native <code class=\"text-xs bg-base-200 px-1 rounded\">&lt;meter&gt;</code> elements visualize system metrics. Browsers render color-coded bars based on low/high/optimum thresholds.</p><div class=\"space-y-2\"><div class=\"flex items-center gap-3\"><span class=\"text-xs uppercase tracking-wider text-base-content/40 w-28\">CPU</span> <meter value=\"0.35\" min=\"0\" max=\"1\" low=\"0.3\" high=\"0.7\" optimum=\"0.2\" class=\"w-full\">35%</meter> <span class=\"text-xs font-mono w-10 text-right\">35%</span></div><div class=\"flex items-center gap-3\"><span class=\"text-xs uppercase tracking-wider text-base-content/40 w-28\">Memory</span> <meter value=\"0.62\" min=\"0\" max=\"1\" low=\"0.5\" high=\"0.85\" optimum=\"0.3\" class=\"w-full\">62%</meter> <span class=\"text-xs font-mono w-10 text-right\">62%</span></div><div class=\"flex items-center gap-3\"><span class=\"text-xs uppercase tracking-wider text-base-content/40 w-28\">Disk</span> <meter value=\"0.48\" min=\"0\" max=\"1\" low=\"0.6\" high=\"0.9\" optimum=\"0.3\" class=\"w-full\">48%</meter> <span class=\"text-xs font-mono w-10 text-right\">48%</span></div><div class=\"flex items-center gap-3\"><span class=\"text-xs uppercase tracking-wider text-base-content/40 w-28\">Goroutines</span> <meter value=\"42\" min=\"0\" max=\"200\" low=\"50\" high=\"150\" optimum=\"30\" class=\"w-full\">42</meter> <span class=\"text-xs font-mono w-10 text-right\">42</span></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</tbody></table></div></div><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-base\">System Gauges</h2><p class=\"text-sm text-base-content/70\">Native <code class=\"text-xs bg-base-200 px-1 rounded\">&lt;meter&gt;</code> elements visualize system metrics. Browsers render color-coded bars based on low/high/optimum thresholds.</p><div class=\"space-y-2\"><div class=\"flex items-center gap-3\"><span class=\"text-xs uppercase tracking-wider text-base-content/40 w-28\">CPU</span> <meter value=\"0.35\" min=\"0\" max=\"1\" low=\"0.3\" high=\"0.7\" optimum=\"0.2\" class=\"w-full\">35%</meter> <span class=\"text-xs font-mono w-10 text-right\">35%</span></div><div class=\"flex items-center gap-3\"><span class=\"text-xs uppercase tracking-wider text-base-content/40 w-28\">Memory</span> <meter value=\"0.62\" min=\"0\" max=\"1\" low=\"0.5\" high=\"0.85\" optimum=\"0.3\" class=\"w-full\">62%</meter> <span class=\"text-xs font-mono w-10 text-right\">62%</span></div><div class=\"flex items-center gap-3\"><span class=\"text-xs uppercase tracking-wider text-base-content/40 w-28\">Disk</span> <meter value=\"0.48\" min=\"0\" max=\"1\" low=\"0.6\" high=\"0.9\" optimum=\"0.3\" class=\"w-full\">48%</meter> <span class=\"text-xs font-mono w-10 text-right\">48%</span></div><div class=\"flex items-center gap-3\"><span class=\"text-xs uppercase tracking-wider text-base-content/40 w-28\">Goroutines</span> <meter value=\"42\" min=\"0\" max=\"200\" low=\"50\" high=\"150\" optimum=\"30\" class=\"w-full\">42</meter> <span class=\"text-xs font-mono w-10 text-right\">42</span></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -255,17 +269,17 @@ func healthStatusIcon(status string) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if status == "healthy" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else if status == "degraded" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z\"></path></svg>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z\"></path></svg>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -296,12 +310,12 @@ func dbStatusIcon(status string) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if status == "connected" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"3\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M5 13l4 4L19 7\"></path></svg>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"3\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M5 13l4 4L19 7\"></path></svg>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"3\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6 18L18 6M6 6l12 12\"></path></svg>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"3\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6 18L18 6M6 6l12 12\"></path></svg>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -4,6 +4,7 @@ package views
 
 import (
 	"catgoose/dothog/internal/health"
+	components "catgoose/dothog/web/components/core"
 	"fmt"
 )
 
@@ -47,37 +48,33 @@ templ AdminSettingsPage(data AdminPanelData) {
 			</div>
 		</div>
 
-		<!-- System Metrics (auto-refresh) -->
+		<!-- System Metrics (SSE) -->
 		<div class="card bg-base-100 shadow border border-base-300">
 			<div class="card-body p-4">
 				<div class="flex items-center justify-between mb-3">
 					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">System Metrics</h2>
-					<span class="text-xs text-base-content/30">auto-refresh 5s</span>
+					@components.IntervalSlider(components.IntervalSliderCfg{
+						TargetKey: "section", TargetValue: "system-metrics",
+						IntervalMs: 5000, Scale: "s", PostURL: "/admin/settings/interval",
+					})
 				</div>
-				<div
-					id="admin-system-metrics"
-					hx-get="/admin/settings/system"
-					hx-trigger="every 5s"
-					hx-swap="innerHTML"
-				>
+				<div id="admin-system-metrics">
 					@adminSystemMetrics(data.Stats, data.Uptime)
 				</div>
 			</div>
 		</div>
 
-		<!-- SSE Connections (auto-refresh) -->
+		<!-- SSE Connections (SSE) -->
 		<div class="card bg-base-100 shadow border border-base-300">
 			<div class="card-body p-4">
 				<div class="flex items-center justify-between mb-3">
 					<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/40">SSE Connections</h2>
-					<span class="text-xs text-base-content/30">auto-refresh 3s</span>
+					@components.IntervalSlider(components.IntervalSliderCfg{
+						TargetKey: "section", TargetValue: "sse-counts",
+						IntervalMs: 3000, Scale: "s", PostURL: "/admin/settings/interval",
+					})
 				</div>
-				<div
-					id="admin-sse-counts"
-					hx-get="/admin/settings/sse"
-					hx-trigger="every 3s"
-					hx-swap="innerHTML"
-				>
+				<div id="admin-sse-counts">
 					@adminSSECounts(data.SSECounts)
 				</div>
 			</div>
@@ -156,17 +153,31 @@ templ AdminSettingsPage(data AdminPanelData) {
 			</div>
 		</div>
 	</div>
+	<!-- SSE connection -->
+	<div hx-ext="sse" sse-connect="/sse/admin" hx-swap="innerHTML settle:0 transition:false">
+		<div sse-swap="admin-panel" style="display:none"></div>
+	</div>
 	@debugScript()
 }
 
-// --- Fragments for auto-refresh ---
+// --- OOB templates (published via tavern SSE) ---
 
-templ AdminSettingsSystemFragment(stats health.SystemStats, uptime string) {
-	@adminSystemMetrics(stats, uptime)
+templ OOBAdminSystemMetrics(stats health.SystemStats, uptime string) {
+	<div id="admin-system-metrics" hx-swap-oob="innerHTML">
+		@adminSystemMetrics(stats, uptime)
+	</div>
 }
 
-templ AdminSettingsSSEFragment(counts map[string]int) {
-	@adminSSECounts(counts)
+templ OOBAdminSSECounts(counts map[string]int) {
+	<div id="admin-sse-counts" hx-swap-oob="innerHTML">
+		@adminSSECounts(counts)
+	</div>
+}
+
+templ OOBAdminHealth(h health.Response) {
+	<div id="health-content" hx-swap-oob="innerHTML">
+		@healthContent(h)
+	</div>
 }
 
 // --- Internal components ---

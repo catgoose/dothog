@@ -3,6 +3,7 @@ package views
 
 import (
 	"catgoose/dothog/internal/health"
+	components "catgoose/dothog/web/components/core"
 	"fmt"
 )
 
@@ -54,31 +55,28 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 		#event-feed { max-height: 260px; overflow-y: auto; scroll-behavior: smooth; }
 	</style>
 	<div id="dashboard-sse" class="p-4 space-y-4 max-w-7xl mx-auto">
-		<div class="flex items-center justify-between mb-2">
-			<h1 class="text-2xl font-bold">Live Operations Dashboard</h1>
-			<div class="flex items-center gap-4">
-				<!-- Update frequency slider -->
-				<div class="flex items-center gap-2">
-					<label for="freq-slider" class="text-xs text-base-content/50 whitespace-nowrap">Update</label>
-					<input
-						id="freq-slider"
-						type="range"
-						name="interval"
-						min="1"
-						max="60"
-						value="5"
-						class="range range-xs range-primary w-24"
-						hx-get="/hypermedia/realtime/sse-connect"
-						hx-trigger="change"
-						hx-target="#sse-connect-wrapper"
-						hx-swap="innerHTML"
-						hx-include="this"
-						_="on input set #freq-display.innerText to my.value + 's'"
-					/>
-					<span id="freq-display" class="text-xs font-mono text-base-content/50 w-8">5s</span>
-				</div>
-				<a href="/hypermedia/realtime" class="btn btn-sm btn-ghost">Reset</a>
-				<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Controls</a>
+		<h1 class="text-2xl font-bold mb-2">Live Operations Dashboard</h1>
+		<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-base-content/50">
+			<div class="flex items-center gap-2">
+				<span>Metrics</span>
+				@components.IntervalSlider(components.IntervalSliderCfg{
+					TargetKey: "section", TargetValue: "metrics",
+					IntervalMs: 1000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+				})
+			</div>
+			<div class="flex items-center gap-2">
+				<span>Services</span>
+				@components.IntervalSlider(components.IntervalSliderCfg{
+					TargetKey: "section", TargetValue: "services",
+					IntervalMs: 3000, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+				})
+			</div>
+			<div class="flex items-center gap-2">
+				<span>Events</span>
+				@components.IntervalSlider(components.IntervalSliderCfg{
+					TargetKey: "section", TargetValue: "events",
+					IntervalMs: 1500, Scale: "s", PostURL: "/hypermedia/realtime/interval",
+				})
 			</div>
 		</div>
 		<!-- KPI Row -->
@@ -181,28 +179,17 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 				</div>
 			</div>
 		</div>
-		<!-- SSE connection — lazy-loaded to ensure all OOB targets exist in the DOM first -->
-		<div
-			id="sse-connect-wrapper"
-			hx-get="/hypermedia/realtime/sse-connect?interval=5"
-			hx-trigger="load"
-			hx-swap="innerHTML"
-		></div>
+		<!-- SSE connection — direct, publishers control their own rate -->
+		<div hx-ext="sse" sse-connect="/sse/dashboard" hx-swap="innerHTML settle:0 transition:false">
+			<div sse-swap="dashboard-metrics" style="display:none"></div>
+			<div sse-swap="dashboard-services" style="display:none"></div>
+			<div sse-swap="dashboard-events" style="display:none"></div>
+		</div>
 		<!-- Pattern explanation cards -->
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
 			@realtimePatternCard("SSE Multiplexing", "GET /sse/dashboard (4 topics)", "Single EventSource multiplexes system-stats, metrics, services, and events via hx-swap-oob targeting.")
 			@realtimePatternCard("Charts.css", "Pure CSS data visualization", "HTML tables with CSS custom properties (--size) — no JavaScript charting library needed. Animated via CSS transitions.")
 		</div>
-	</div>
-}
-
-// SSEConnectBlock renders the SSE connection element with hidden swap receivers.
-// Swapping this block closes the old EventSource and opens a new one at the given interval.
-templ SSEConnectBlock(interval int) {
-	<div hx-ext="sse" sse-connect={ fmt.Sprintf("/sse/dashboard?interval=%d", interval) } hx-swap="innerHTML settle:0 transition:false">
-		<div sse-swap="dashboard-metrics" style="display:none"></div>
-		<div sse-swap="dashboard-services" style="display:none"></div>
-		<div sse-swap="dashboard-events" style="display:none"></div>
 	</div>
 }
 

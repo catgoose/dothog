@@ -6,10 +6,7 @@ import "fmt"
 // StatePage is the full-page layout for /hypermedia/state.
 templ StatePage(likeCount int, toggleOn bool) {
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
-		<div class="flex items-center justify-between mb-4">
-			<h1 class="text-2xl font-bold">State Patterns</h1>
-			<a href="/hypermedia/controls" class="btn btn-sm btn-ghost">← Overview</a>
-		</div>
+		<h1 class="text-2xl font-bold mb-4">State Patterns</h1>
 		<div role="alert" class="alert alert-info text-sm">
 			<span>Demonstrates: <strong>like</strong>, <strong>toggle</strong>, <strong>load</strong>, <strong>reveal</strong>, <strong>show/hide</strong>.</span>
 		</div>

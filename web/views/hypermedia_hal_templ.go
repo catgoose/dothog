@@ -54,7 +54,7 @@ func HALPage(rawJSON string, resource HALResourceView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-5xl mx-auto\"><div class=\"flex items-center justify-between mb-4\"><div><h1 class=\"text-2xl font-bold\">HAL — Hypertext Application Language</h1><p class=\"text-sm text-base-content/60 mt-1\">RFC draft — <code class=\"text-xs bg-base-200 px-1 rounded\">application/hal+json</code></p></div><a href=\"/hypermedia\" class=\"btn btn-sm btn-ghost\">← Hypermedia</a></div><div role=\"alert\" class=\"alert alert-info text-sm\"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"stroke-current shrink-0 w-5 h-5\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg> <span>HAL represents resources with <strong>_links</strong> (relations to other resources) and <strong>_embedded</strong> (inline sub-resources). Click any link below to navigate the resource graph — each navigation fetches the HAL+JSON, then renders it as interactive hypermedia.</span></div><!-- Intro cards --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-5xl mx-auto\"><div class=\"mb-4\"><h1 class=\"text-2xl font-bold\">HAL — Hypertext Application Language</h1><p class=\"text-sm text-base-content/60 mt-1\">RFC draft — <code class=\"text-xs bg-base-200 px-1 rounded\">application/hal+json</code></p></div><div role=\"alert\" class=\"alert alert-info text-sm\"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"stroke-current shrink-0 w-5 h-5\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg> <span>HAL represents resources with <strong>_links</strong> (relations to other resources) and <strong>_embedded</strong> (inline sub-resources). Click any link below to navigate the resource graph — each navigation fetches the HAL+JSON, then renders it as interactive hypermedia.</span></div><!-- Intro cards --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -143,7 +143,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(currentURL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 96, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 93, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -156,7 +156,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/hypermedia/hal/explore?url=%s", "/hypermedia/hal/api/catalog"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 99, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 96, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -179,7 +179,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(p.Key)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 115, Col: 65}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 112, Col: 65}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -192,7 +192,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(p.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 116, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 113, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -231,7 +231,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(l.Rel)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 135, Col: 95}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 132, Col: 95}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -244,7 +244,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 					var templ_7745c5c3_Var8 string
 					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/hypermedia/hal/explore?url=%s", l.Href))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 138, Col: 73}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 135, Col: 73}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 					if templ_7745c5c3_Err != nil {
@@ -257,7 +257,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(l.Href)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 143, Col: 19}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 140, Col: 19}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -275,7 +275,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 						var templ_7745c5c3_Var10 string
 						templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(l.Title)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 146, Col: 80}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 143, Col: 80}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 						if templ_7745c5c3_Err != nil {
@@ -309,7 +309,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", len(resource.EmbeddedBooks)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 160, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 157, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -337,7 +337,7 @@ func HALExploreFragment(rawJSON string, resource HALResourceView, currentURL str
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(rawJSON)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 179, Col: 138}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 176, Col: 138}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -380,7 +380,7 @@ func HALErrorFragment(url string, errMsg string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(url)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 197, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 194, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -393,7 +393,7 @@ func HALErrorFragment(url string, errMsg string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 201, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 198, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -406,7 +406,7 @@ func HALErrorFragment(url string, errMsg string) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/hypermedia/hal/explore?url=%s", "/hypermedia/hal/api/catalog"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 205, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 202, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -449,7 +449,7 @@ func halTemplatedLink(l HALLinkView) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(l.Rel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 216, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 213, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -462,7 +462,7 @@ func halTemplatedLink(l HALLinkView) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(l.Href)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 218, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 215, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -480,7 +480,7 @@ func halTemplatedLink(l HALLinkView) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`js:{url: '%s/api/books?q=' + document.getElementById('hal-search-input').value}`, "/hypermedia/hal"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 231, Col: 128}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 228, Col: 128}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -493,7 +493,7 @@ func halTemplatedLink(l HALLinkView) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`js:{url: '%s/api/books?q=' + document.getElementById('hal-search-input').value}`, "/hypermedia/hal"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 238, Col: 128}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 235, Col: 128}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -542,7 +542,7 @@ func halEmbeddedCard(book HALResourceView) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(p.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 250, Col: 14}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 247, Col: 14}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -563,7 +563,7 @@ func halEmbeddedCard(book HALResourceView) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(p.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 255, Col: 60}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 252, Col: 60}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -587,7 +587,7 @@ func halEmbeddedCard(book HALResourceView) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(p.Key)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 264, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 261, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -600,7 +600,7 @@ func halEmbeddedCard(book HALResourceView) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(p.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 265, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 262, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -628,7 +628,7 @@ func halEmbeddedCard(book HALResourceView) templ.Component {
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(l.Rel)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 275, Col: 67}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 272, Col: 67}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -641,7 +641,7 @@ func halEmbeddedCard(book HALResourceView) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/hypermedia/hal/explore?url=%s", l.Href))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 278, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 275, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -654,7 +654,7 @@ func halEmbeddedCard(book HALResourceView) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(l.Href)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 282, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 279, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -706,7 +706,7 @@ func halConceptCard(title, desc, iconPath string) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(iconPath)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 297, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 294, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
@@ -719,7 +719,7 @@ func halConceptCard(title, desc, iconPath string) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 299, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 296, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -732,7 +732,7 @@ func halConceptCard(title, desc, iconPath string) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(desc)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 301, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 298, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -774,7 +774,7 @@ func halPatternCard(title, code, desc string) templ.Component {
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 309, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 306, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -787,7 +787,7 @@ func halPatternCard(title, code, desc string) templ.Component {
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 310, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 307, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 		if templ_7745c5c3_Err != nil {
@@ -800,7 +800,7 @@ func halPatternCard(title, code, desc string) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(desc)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 311, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_hal.templ`, Line: 308, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {

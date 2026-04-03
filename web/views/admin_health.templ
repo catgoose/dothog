@@ -1,6 +1,9 @@
 package views
 
-import "catgoose/dothog/internal/health"
+import (
+	"catgoose/dothog/internal/health"
+	components "catgoose/dothog/web/components/core"
+)
 
 // AdminHealthPage renders the /admin/health page with live health status.
 templ AdminHealthPage(h health.Response) {
@@ -8,18 +11,24 @@ templ AdminHealthPage(h health.Response) {
 		<div class="flex items-center justify-between">
 			<div class="space-y-1">
 				<h1 class="text-2xl font-bold">Health</h1>
-				<p class="text-sm text-base-content/60">Live application health status. Auto-refreshes every 5 seconds.</p>
+				<p class="text-sm text-base-content/60">Live application health status via SSE.</p>
 			</div>
-			<a href="/health" target="_blank" class="btn btn-sm btn-ghost font-mono">GET /health</a>
+			<div class="flex items-center gap-3">
+				@components.IntervalSlider(components.IntervalSliderCfg{
+					TargetKey: "section", TargetValue: "health",
+					IntervalMs: 5000, Scale: "s", PostURL: "/admin/settings/interval",
+				})
+				<a href="/health" target="_blank" class="btn btn-sm btn-ghost font-mono">GET /health</a>
+			</div>
 		</div>
 
-		<div
-			id="health-content"
-			hx-get="/admin/health/check"
-			hx-trigger="every 5s"
-			hx-swap="innerHTML"
-		>
+		<div id="health-content">
 			@healthContent(h)
+		</div>
+
+		<!-- SSE connection (shared admin stream) -->
+		<div hx-ext="sse" sse-connect="/sse/admin" hx-swap="innerHTML settle:0 transition:false">
+			<div sse-swap="admin-panel" style="display:none"></div>
 		</div>
 	</div>
 }
