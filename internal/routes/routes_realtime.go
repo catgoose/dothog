@@ -22,17 +22,60 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// ── Per-section interval state ──────────────────────────────────────────────
+
+var rtDefaultIntervals = map[string]int{
+	"metrics":  1000, // 1s — KPIs, charts, gauges
+	"services": 3000, // 3s — service health, per-service latency
+	"events":   1500, // 1.5s — live event feed
+}
+
+var rtIntervals struct {
+	intervals map[string]int
+	mu        sync.RWMutex
+}
+
+func initRTIntervals() {
+	rtIntervals.intervals = make(map[string]int, len(rtDefaultIntervals))
+	for id, iv := range rtDefaultIntervals {
+		rtIntervals.intervals[id] = iv
+	}
+}
+
+func getRTInterval(id string) time.Duration {
+	rtIntervals.mu.RLock()
+	defer rtIntervals.mu.RUnlock()
+	if ms, ok := rtIntervals.intervals[id]; ok && ms > 0 {
+		return time.Duration(ms) * time.Millisecond
+	}
+	return time.Second
+}
+
 func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
+	initRTIntervals()
 	ar.e.GET("/hypermedia/realtime", ar.handleRealtimePage())
-	ar.e.GET("/hypermedia/realtime/sse-connect", handleSSEConnect)
+	ar.e.POST("/hypermedia/realtime/interval", handleRTInterval)
 	ar.e.GET("/sse/system", handleSSESystem(broker))
 	ar.e.GET("/sse/dashboard", handleSSEDashboard(broker))
 
-	// Start background publishers.
 	go ar.publishSystemStats(broker)
 	go ar.publishMetrics(broker)
 	go ar.publishServices(broker)
 	go ar.publishEvents(broker)
+}
+
+func handleRTInterval(c echo.Context) error {
+	section := c.FormValue("section")
+	ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
+	if ms < 500 {
+		ms = 500
+	} else if ms > 30000 {
+		ms = 30000
+	}
+	rtIntervals.mu.Lock()
+	rtIntervals.intervals[section] = ms
+	rtIntervals.mu.Unlock()
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
@@ -43,16 +86,6 @@ func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
 		svcLatencies := initialServiceLatencies()
 		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services, svcLatencies))
 	}
-}
-
-func handleSSEConnect(c echo.Context) error {
-	interval := 5
-	if v := c.QueryParam("interval"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n >= 1 && n <= 60 {
-			interval = n
-		}
-	}
-	return handler.RenderComponent(c, views.SSEConnectBlock(interval))
 }
 
 func handleSSESystem(broker *tavern.SSEBroker) echo.HandlerFunc {
@@ -87,19 +120,9 @@ func handleSSESystem(broker *tavern.SSEBroker) echo.HandlerFunc {
 }
 
 // handleSSEDashboard multiplexes 3 SSE topics into one event stream.
-// Accepts ?interval=N (1–60 seconds) to throttle per-topic updates.
-// Note: system-stats is NOT subscribed here — the dashboard only renders 6 of 21
-// stat cards, so the full SystemStatsOOB would produce oobErrorNoTarget for the
-// missing 15. Instead, dashboard stats are included in MetricsOOB.
+// Each publisher controls its own rate via rtIntervals — no handler-side throttling.
 func handleSSEDashboard(broker *tavern.SSEBroker) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		interval := 5 * time.Second
-		if v := c.QueryParam("interval"); v != "" {
-			if n, err := strconv.Atoi(v); err == nil && n >= 1 && n <= 60 {
-				interval = time.Duration(n) * time.Second
-			}
-		}
-
 		c.Response().Header().Set("Content-Type", "text/event-stream")
 		c.Response().Header().Set("Cache-Control", "no-cache")
 		c.Response().Header().Set("Connection", "keep-alive")
@@ -117,15 +140,6 @@ func handleSSEDashboard(broker *tavern.SSEBroker) echo.HandlerFunc {
 		chEvents, unsubEvents := broker.Subscribe(TopicDashEvents)
 		defer unsubEvents()
 
-		lastSent := make(map[string]time.Time)
-		forward := func(topic, msg string) {
-			if time.Since(lastSent[topic]) >= interval {
-				_, _ = fmt.Fprint(c.Response(), msg)
-				flusher.Flush()
-				lastSent[topic] = time.Now()
-			}
-		}
-
 		ctx := c.Request().Context()
 		for {
 			select {
@@ -135,17 +149,20 @@ func handleSSEDashboard(broker *tavern.SSEBroker) echo.HandlerFunc {
 				if !ok {
 					return nil
 				}
-				forward("metrics", msg)
+				_, _ = fmt.Fprint(c.Response(), msg)
+				flusher.Flush()
 			case msg, ok := <-chServices:
 				if !ok {
 					return nil
 				}
-				forward("services", msg)
+				_, _ = fmt.Fprint(c.Response(), msg)
+				flusher.Flush()
 			case msg, ok := <-chEvents:
 				if !ok {
 					return nil
 				}
-				forward("events", msg)
+				_, _ = fmt.Fprint(c.Response(), msg)
+				flusher.Flush()
 			}
 		}
 	}
@@ -208,9 +225,6 @@ func initialMetrics() views.MetricsSnapshot {
 }
 
 func (ar *appRoutes) publishMetrics(broker *tavern.SSEBroker) {
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
-
 	snap := initialMetrics()
 
 	// Simulation state
@@ -234,7 +248,7 @@ func (ar *appRoutes) publishMetrics(broker *tavern.SSEBroker) {
 		select {
 		case <-ar.ctx.Done():
 			return
-		case <-ticker.C:
+		case <-time.After(getRTInterval("metrics")):
 			if !broker.HasSubscribers(TopicDashMetrics) {
 				continue
 			}
@@ -435,9 +449,6 @@ func initialServiceLatencies() []views.ServiceLatency {
 }
 
 func (ar *appRoutes) publishServices(broker *tavern.SSEBroker) {
-	ticker := time.NewTicker(3 * time.Second)
-	defer ticker.Stop()
-
 	services := initialServices()
 	svcLatencies := initialServiceLatencies()
 
@@ -445,7 +456,7 @@ func (ar *appRoutes) publishServices(broker *tavern.SSEBroker) {
 		select {
 		case <-ar.ctx.Done():
 			return
-		case <-ticker.C:
+		case <-time.After(getRTInterval("services")):
 			if !broker.HasSubscribers(TopicDashServices) {
 				continue
 			}
@@ -522,13 +533,14 @@ var eventTemplates = []eventTemplate{
 
 func (ar *appRoutes) publishEvents(broker *tavern.SSEBroker) {
 	for {
-		// Random interval 800ms–2s
-		delay := time.Duration(800+rand.IntN(1200)) * time.Millisecond
+		// Random jitter ±30% around configured interval
+		base := getRTInterval("events")
+		jitter := time.Duration(float64(base) * (0.7 + rand.Float64()*0.6))
 
 		select {
 		case <-ar.ctx.Done():
 			return
-		case <-time.After(delay):
+		case <-time.After(jitter):
 			if !broker.HasSubscribers(TopicDashEvents) {
 				continue
 			}
