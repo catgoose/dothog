@@ -80,8 +80,8 @@ github.com/catgoose/promolog v0.2.17 h1:ruoQKlfsVeefCFOXNnAV3lJJPwsFw6KwQrJNNg9b
 github.com/catgoose/promolog v0.2.17/go.mod h1:jEsBpxvJjXW8FTaCBi+vXaIwN5ISr3ylR6Z5AId+Yb4=
 github.com/catgoose/promolog/sqlite v0.0.0-20260402134330-814f9e6c453d h1:2bb263RI3TxT+4VMYMS7w+/nAvU0Exoyvf5S5LdfQEQ=
 github.com/catgoose/promolog/sqlite v0.0.0-20260402134330-814f9e6c453d/go.mod h1:DlhnBaX+j0c6CvlOt+xzk1Rt8O+UB+pcx75RndMa70o=
-github.com/catgoose/tavern v0.4.18 h1:+eK3fu1PbsAL1EEOc95vO4+hKUkwpZZ3VGSN4szk35U=
-github.com/catgoose/tavern v0.4.18/go.mod h1:DhiRI7tzfzB+pNwV8JeFjNI5Qx+PFZE1Wfy2dmavs1M=
+github.com/catgoose/tavern v0.4.26 h1:ahFSDYL18hSiOw1ggRPSafsXKfAQ0E3ACXNYfMvwM2c=
+github.com/catgoose/tavern v0.4.26/go.mod h1:DhiRI7tzfzB+pNwV8JeFjNI5Qx+PFZE1Wfy2dmavs1M=
 github.com/catppuccin/go v0.3.0 h1:d+0/YicIq+hSTo5oPuRi5kOpqkVA5tAsU6dNhvRu+aY=
 github.com/catppuccin/go v0.3.0/go.mod h1:8IHJuMGaUUjQM82qBrGNBv7LFq6JI3NnQCF6MOlZjpc=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=

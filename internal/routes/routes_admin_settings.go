@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
-	"sync"
 	"time"
 
 	"catgoose/dothog/internal/health"
@@ -21,48 +20,32 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// ── Per-section interval state ──────────────────────────────────────────────
+// ── ScheduledPublisher for admin panel ─────────────────────────────────────
 
-var adminDefaultIntervals = map[string]int{
-	"system-metrics": 5000,  // 5s
-	"sse-counts":     3000,  // 3s
-	"health":         5000,  // 5s
-}
-
-var adminIntervals struct {
-	intervals map[string]int
-	lastSent  map[string]time.Time
-	mu        sync.RWMutex
-}
-
-func initAdminIntervals() {
-	adminIntervals.intervals = make(map[string]int, len(adminDefaultIntervals))
-	adminIntervals.lastSent = make(map[string]time.Time, len(adminDefaultIntervals))
-	for id, iv := range adminDefaultIntervals {
-		adminIntervals.intervals[id] = iv
-	}
-}
-
-func getAdminInterval(id string) int {
-	adminIntervals.mu.RLock()
-	defer adminIntervals.mu.RUnlock()
-	if iv, ok := adminIntervals.intervals[id]; ok {
-		return iv
-	}
-	return 5000
-}
+var adminPub *tavern.ScheduledPublisher
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 
-var adminBufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
-
 func (ar *appRoutes) initAdminSettingsRoutes(broker *tavern.SSEBroker) {
-	initAdminIntervals()
 	ar.e.GET("/admin/settings", ar.handleAdminSettings(broker))
 	ar.e.POST("/admin/settings/interval", handleAdminInterval)
 	ar.e.GET("/sse/admin", handleSSEAdmin(broker))
 
-	go ar.publishAdminPanel(broker)
+	adminPub = broker.NewScheduledPublisher(TopicAdminPanel, tavern.WithBaseTick(500*time.Millisecond))
+	adminPub.Register("system-metrics", 5*time.Second, func(ctx context.Context, buf *bytes.Buffer) error {
+		stats := health.CollectRuntimeStats(ar.startTime)
+		uptime := formatUptime(time.Since(ar.startTime))
+		return views.OOBAdminSystemMetrics(stats, uptime).Render(ctx, buf)
+	})
+	adminPub.Register("sse-counts", 3*time.Second, func(ctx context.Context, buf *bytes.Buffer) error {
+		counts := broker.TopicCounts()
+		return views.OOBAdminSSECounts(counts).Render(ctx, buf)
+	})
+	adminPub.Register("health", 5*time.Second, func(ctx context.Context, buf *bytes.Buffer) error {
+		h := health.Check(ctx, ar.healthCfg)
+		return views.OOBAdminHealth(h).Render(ctx, buf)
+	})
+	broker.RunPublisher(ar.ctx, adminPub.Start)
 }
 
 func (ar *appRoutes) handleAdminSettings(broker *tavern.SSEBroker) echo.HandlerFunc {
@@ -80,9 +63,7 @@ func handleAdminInterval(c echo.Context) error {
 	} else if ms > 600000 {
 		ms = 600000
 	}
-	adminIntervals.mu.Lock()
-	adminIntervals.intervals[section] = ms
-	adminIntervals.mu.Unlock()
+	adminPub.SetInterval(section, time.Duration(ms)*time.Millisecond)
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -110,76 +91,8 @@ func handleSSEAdmin(broker *tavern.SSEBroker) echo.HandlerFunc {
 				if !ok {
 					return nil
 				}
-				fmt.Fprint(c.Response(), msg)
+				fmt.Fprint(c.Response(), tavern.NewSSEMessage("admin-panel", msg).String())
 				flusher.Flush()
-			}
-		}
-	}
-}
-
-// ── Publisher ────────────────────────────────────────────────────────────────
-
-func (ar *appRoutes) publishAdminPanel(broker *tavern.SSEBroker) {
-	ticker := time.NewTicker(500 * time.Millisecond)
-	defer ticker.Stop()
-
-	ctx := context.Background()
-
-	for {
-		select {
-		case <-ar.ctx.Done():
-			return
-		case <-ticker.C:
-			if !broker.HasSubscribers(TopicAdminPanel) {
-				continue
-			}
-
-			now := time.Now()
-			buf := adminBufPool.Get().(*bytes.Buffer)
-			buf.Reset()
-			needsPublish := false
-
-			adminIntervals.mu.Lock()
-
-			// System metrics
-			if ms := adminIntervals.intervals["system-metrics"]; ms > 0 {
-				if now.Sub(adminIntervals.lastSent["system-metrics"]) >= time.Duration(ms)*time.Millisecond {
-					stats := health.CollectRuntimeStats(ar.startTime)
-					uptime := formatUptime(time.Since(ar.startTime))
-					_ = views.OOBAdminSystemMetrics(stats, uptime).Render(ctx, buf)
-					adminIntervals.lastSent["system-metrics"] = now
-					needsPublish = true
-				}
-			}
-
-			// SSE topic counts
-			if ms := adminIntervals.intervals["sse-counts"]; ms > 0 {
-				if now.Sub(adminIntervals.lastSent["sse-counts"]) >= time.Duration(ms)*time.Millisecond {
-					counts := broker.TopicCounts()
-					_ = views.OOBAdminSSECounts(counts).Render(ctx, buf)
-					adminIntervals.lastSent["sse-counts"] = now
-					needsPublish = true
-				}
-			}
-
-			// Health (for /admin/health page)
-			if ms := adminIntervals.intervals["health"]; ms > 0 {
-				if now.Sub(adminIntervals.lastSent["health"]) >= time.Duration(ms)*time.Millisecond {
-					h := health.Check(ctx, ar.healthCfg)
-					_ = views.OOBAdminHealth(h).Render(ctx, buf)
-					adminIntervals.lastSent["health"] = now
-					needsPublish = true
-				}
-			}
-
-			adminIntervals.mu.Unlock()
-
-			if needsPublish {
-				msg := tavern.NewSSEMessage("admin-panel", buf.String()).String()
-				adminBufPool.Put(buf)
-				broker.Publish(TopicAdminPanel, msg)
-			} else {
-				adminBufPool.Put(buf)
 			}
 		}
 	}

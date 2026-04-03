@@ -10,7 +10,6 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"catgoose/dothog/internal/routes/handler"
@@ -312,20 +311,19 @@ func clampF(v, lo, hi float64) float64 {
 
 // ── Per-tile interval state ─────────────────────────────────────────────────
 
-// Default intervals (milliseconds) — tuned per metric context.
-var numDefaultIntervals = map[string]int{
-	"num-txn":     500,    // volatile, sub-second
-	"num-queue":   500,    // operational, sub-second
-	"num-p99":     500,    // performance critical, sub-second
-	"num-cpu":     3000,   // 3s — OS-level, moderate
-	"num-users":   5000,   // 5s — moderate churn
-	"num-errors":  5000,   // 5s — accumulating counter
-	"num-revenue": 10000,  // 10s — accumulating slowly
-	"num-cache":   10000,  // 10s — relatively stable
-	"num-mem":     15000,  // 15s — changes slowly
-	"num-sla":     15000,  // 15s — derived, slow-moving
-	"num-uptime":  60000,  // 1min — minutes-level granularity
-	"num-deploys": 300000, // 5min — rare events
+var numDefaultIntervals = map[string]time.Duration{
+	"num-txn":     500 * time.Millisecond,
+	"num-queue":   500 * time.Millisecond,
+	"num-p99":     500 * time.Millisecond,
+	"num-cpu":     3000 * time.Millisecond,
+	"num-users":   5000 * time.Millisecond,
+	"num-errors":  5000 * time.Millisecond,
+	"num-revenue": 10000 * time.Millisecond,
+	"num-cache":   10000 * time.Millisecond,
+	"num-mem":     15000 * time.Millisecond,
+	"num-sla":     15000 * time.Millisecond,
+	"num-uptime":  60000 * time.Millisecond,
+	"num-deploys": 300000 * time.Millisecond,
 }
 
 // numTileScales determines slider unit for each tile.
@@ -344,25 +342,16 @@ var numTileScales = map[string]string{
 	"num-deploys": "min",
 }
 
-var numTileIntervals struct {
-	intervals map[string]int       // seconds per tile
-	lastSent  map[string]time.Time // last publish time per tile
-	mu        sync.RWMutex
-}
-
-func initTileIntervals() {
-	numTileIntervals.intervals = make(map[string]int, len(numDefaultIntervals))
-	numTileIntervals.lastSent = make(map[string]time.Time, len(numDefaultIntervals))
-	for id, iv := range numDefaultIntervals {
-		numTileIntervals.intervals[id] = iv
-	}
-}
+var (
+	numPub     *tavern.ScheduledPublisher
+	numTracker *intervalTracker
+)
 
 func getTileInterval(id string) int {
-	numTileIntervals.mu.RLock()
-	defer numTileIntervals.mu.RUnlock()
-	if iv, ok := numTileIntervals.intervals[id]; ok {
-		return iv
+	numTracker.mu.RLock()
+	defer numTracker.mu.RUnlock()
+	if d, ok := numTracker.cur[id]; ok {
+		return int(d.Milliseconds())
 	}
 	return 1000
 }
@@ -376,16 +365,13 @@ func getTileScale(id string) string {
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 
-var numBufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
-
 func (ar *appRoutes) initNumericalRoutes(broker *tavern.SSEBroker) {
-	initTileIntervals()
 	ar.e.GET(numericalBase, ar.handleNumericalPage)
 	ar.e.GET(numericalBase+"/sse-connect", handleNumericalSSEConnect)
 	ar.e.POST(numericalBase+"/interval", handleNumericalInterval)
 	ar.e.GET("/sse/numerical", handleSSENumerical(broker))
 
-	go ar.publishNumerical(broker)
+	ar.initNumericalPublisher(broker)
 }
 
 func (ar *appRoutes) handleNumericalPage(c echo.Context) error {
@@ -403,14 +389,10 @@ func handleNumericalInterval(c echo.Context) error {
 	ms, _ := strconv.Atoi(c.FormValue("interval_ms"))
 	if ms < 100 {
 		ms = 100
-	} else if ms > 600000 {
-		ms = 600000
+	} else if ms > 86400000 {
+		ms = 86400000
 	}
-
-	numTileIntervals.mu.Lock()
-	numTileIntervals.intervals[tileID] = ms
-	numTileIntervals.mu.Unlock()
-
+	numTracker.set(numPub, tileID, time.Duration(ms)*time.Millisecond)
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -438,68 +420,46 @@ func handleSSENumerical(broker *tavern.SSEBroker) echo.HandlerFunc {
 				if !ok {
 					return nil
 				}
-				fmt.Fprint(c.Response(), msg)
+				fmt.Fprint(c.Response(), tavern.NewSSEMessage("numerical-dash", msg).String())
 				flusher.Flush()
 			}
 		}
 	}
 }
 
-// ── Publisher ────────────────────────────────────────────────────────────────
+// ── Numerical Publisher ────────────────────────────────────────────────────
 
-func (ar *appRoutes) publishNumerical(broker *tavern.SSEBroker) {
-	// Fast tick: check tile intervals at 100ms resolution.
-	// Simulation also advances each tick with scaled deltas.
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
+func (ar *appRoutes) initNumericalPublisher(broker *tavern.SSEBroker) {
+	numTracker = newIntervalTracker(numDefaultIntervals)
+	numPub = broker.NewScheduledPublisher(TopicNumericalDash, tavern.WithBaseTick(100*time.Millisecond))
 
 	sim := newNumSim()
-	ctx := context.Background()
+	var tileMap map[string]views.NumTile
 
-	for {
-		select {
-		case <-ar.ctx.Done():
-			return
-		case <-ticker.C:
-			if !broker.HasSubscribers(TopicNumericalDash) {
-				continue
+	// Sim advance + build tiles every tick
+	numPub.Register("_sim", 100*time.Millisecond, func(_ context.Context, _ *bytes.Buffer) error {
+		sim.tick()
+		tiles := sim.buildTiles()
+		tileMap = make(map[string]views.NumTile, len(tiles))
+		for _, t := range tiles {
+			tileMap[t.ID] = t
+		}
+		return nil
+	})
+
+	// Register each tile as its own section
+	tileRender := func(id string) tavern.RenderFunc {
+		return func(ctx context.Context, buf *bytes.Buffer) error {
+			if t, ok := tileMap[id]; ok {
+				return views.NumericalOOB([]views.NumTile{t}).Render(ctx, buf)
 			}
-
-			now := time.Now()
-			sim.tick()
-
-			// Build all tiles, filter to those whose interval has elapsed
-			allTiles := sim.buildTiles()
-			var due []views.NumTile
-
-			numTileIntervals.mu.Lock()
-			for _, t := range allTiles {
-				ms := numTileIntervals.intervals[t.ID]
-				if ms < 100 {
-					ms = 100
-				}
-				last := numTileIntervals.lastSent[t.ID]
-				if now.Sub(last) >= time.Duration(ms)*time.Millisecond {
-					due = append(due, t)
-					numTileIntervals.lastSent[t.ID] = now
-				}
-			}
-			numTileIntervals.mu.Unlock()
-
-			if len(due) == 0 {
-				continue
-			}
-
-			buf := numBufPool.Get().(*bytes.Buffer)
-			buf.Reset()
-			if err := views.NumericalOOB(due).Render(ctx, buf); err != nil {
-				numBufPool.Put(buf)
-				continue
-			}
-
-			msg := tavern.NewSSEMessage("numerical-dash", buf.String()).String()
-			numBufPool.Put(buf)
-			broker.Publish(TopicNumericalDash, msg)
+			return nil
 		}
 	}
+
+	for id, d := range numDefaultIntervals {
+		numPub.Register(id, d, tileRender(id))
+	}
+
+	broker.RunPublisher(ar.ctx, numPub.Start)
 }
