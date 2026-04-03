@@ -32,9 +32,7 @@ func hasItem(items []contextBarItem, href string) bool {
 // LocalContextBar renders a compact strip of the current page's immediate
 // ring siblings — the pages in the same ring group(s) as the current page.
 templ LocalContextBar(links []linkwell.LinkRelation, currentPath string) {
-	<div id="local-context-bar"
-		_="init if localStorage.getItem('dothog_hide_local_context_bar') === 'true' then hide me"
-	>
+	<div id="local-context-bar">
 		if groups := localGroups(links, currentPath); len(groups) > 0 {
 			<div class="border-b border-base-300">
 				<div class="flex items-center justify-center gap-3 overflow-x-auto px-8 py-1 bg-base-100/50 text-xs">

@@ -25,33 +25,6 @@ templ AppSettingsPage(currentTheme string) {
 			</div>
 		</div>
 		// setup:feature:demo:start
-		<div class="card bg-base-100 shadow-sm border border-base-300">
-			<div class="card-body">
-				<details>
-					<summary class="font-semibold text-lg cursor-pointer">Navigation</summary>
-					<p class="text-sm text-base-content/70 mt-1">Toggle visibility of navigation context bars.</p>
-					<div class="mt-2 space-y-2">
-						<label class="label cursor-pointer justify-start gap-3">
-							<input type="checkbox" class="toggle toggle-sm toggle-primary"
-								_="init set my.checked to localStorage.getItem('dothog_hide_local_context_bar') !== 'true'
-								   on change
-								     if my.checked
-								       set localStorage.dothog_hide_local_context_bar to 'false'
-								       show #local-context-bar
-								     else
-								       set localStorage.dothog_hide_local_context_bar to 'true'
-								       hide #local-context-bar
-								     end"/>
-							<div>
-								<span class="label-text">Show local context bar</span>
-								<button class="badge badge-ghost badge-sm ml-1" _="on click toggle .hidden on next <p/>">help</button>
-								<p class="hidden text-xs text-base-content/40">Your immediate sibling pages in the same ring</p>
-							</div>
-						</label>
-					</div>
-				</details>
-			</div>
-		</div>
 		// setup:feature:demo:end
 		// setup:feature:demo:start
 		<div class="card bg-base-100 shadow-sm border border-base-300">
