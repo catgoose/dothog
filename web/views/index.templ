@@ -74,6 +74,9 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 			}
 		</script>
 		<script defer src="/public/js/htmx.min.js"></script>
+		// setup:feature:demo:start
+		<script defer src="/public/js/interval-control.js"></script>
+		// setup:feature:demo:end
 		<script defer src="/public/js/_hyperscript.min.js"></script>
 		<script defer src="/public/js/htmx.alpine-morph.js"></script>
 		<script defer src="/public/js/alpine.morph.min.js"></script>
@@ -83,7 +86,6 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:demo:start
 		<script defer src="/public/js/beacon.js"></script>
 		<script defer src="/public/js/broadcast.js"></script>
-		<script defer src="/public/js/interval-control.js"></script>
 		// setup:feature:demo:end
 		<script defer src="/public/js/alpine-components.js"></script>
 		<script defer src="/public/js/alpine.min.js"></script>

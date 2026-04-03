@@ -21,8 +21,7 @@ templ IntervalSlider(cfg IntervalSliderCfg) {
 		data-unit={ cfg.Scale }
 		data-post-url={ cfg.PostURL }
 		data-target-key={ cfg.TargetKey }
-		data-target-value={ cfg.TargetValue }
-		_="init call window._ivInit(me)">
+		data-target-value={ cfg.TargetValue }>
 		<input type="range" class="range range-xs flex-1"
 			min={ scaleAttr(cfg.Scale, "min") }
 			max={ scaleAttr(cfg.Scale, "max") }

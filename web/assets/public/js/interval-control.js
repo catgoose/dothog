@@ -2,6 +2,7 @@
  * Interval control helpers called from hyperscript.
  * Each interval slider wrapper <div> stores state in data-* attributes
  * and a _ivUnit expando property for the current unit index.
+ * Self-initializing: _ivUnit is set lazily on first use.
  */
 (function () {
   var units = ['ms', 's', 'min', 'h'];
@@ -12,15 +13,18 @@
     h:   { min: 1,   max: 24,   step: 1,   mult: 3600000 }
   };
 
-  /** Called once via hyperscript init to set the unit index. */
-  window._ivInit = function (el) {
-    var unit = el.dataset.unit || 's';
-    var idx = units.indexOf(unit);
-    el._ivUnit = idx >= 0 ? idx : 1;
-  };
+  function ensureInit(el) {
+    if (el._ivUnit == null) {
+      var unit = el.dataset.unit || 's';
+      var idx = units.indexOf(unit);
+      el._ivUnit = idx >= 0 ? idx : 1;
+    }
+  }
 
   /** Cycle unit: ms → s → min → h → ms. Reconfigure slider and POST. */
   window._ivCycle = function (el) {
+    if (!el) return;
+    ensureInit(el);
     var input = el.querySelector('input[type=range]');
     var display = el.querySelector('.iv-display');
     var btn = el.querySelector('button');
@@ -49,9 +53,11 @@
 
   /** POST the current interval in ms. */
   window._ivPost = function (el) {
+    if (!el) return;
+    ensureInit(el);
     var input = el.querySelector('input[type=range]');
     if (!input) return;
-    var cfg = configs[units[el._ivUnit || 0]];
+    var cfg = configs[units[el._ivUnit]];
     var ms = parseInt(input.value) * cfg.mult;
 
     var url = el.dataset.postUrl;
