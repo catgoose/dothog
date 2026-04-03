@@ -64,7 +64,8 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 							_="on change if my.checked then remove .opacity-50 from the next .master-slider then remove [@disabled] from <input[type=range]/> in the next .master-slider else add .opacity-50 to the next .master-slider then add [@disabled] to <input[type=range]/> in the next .master-slider"/>
 						<span class="text-sm font-semibold">Master Control</span>
 					</label>
-					<div class="master-slider opacity-50 flex-1 flex items-center gap-2">
+					<div class="master-slider opacity-50 flex-1 flex items-center gap-2"
+						_="init add [@disabled] to <input[type=range]/> in me">
 						@components.IntervalSlider(components.IntervalSliderCfg{
 							TargetKey: "scope", TargetValue: "all",
 							IntervalMs: 2000, Scale: "s", PostURL: "/hypermedia/realtime/interval-all",

@@ -38,7 +38,7 @@ func RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []S
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<link rel=\"stylesheet\" href=\"/public/css/charts.min.css\"><style>\n\t\t/* Charts.css transition smoothing */\n\t\t.charts-css.area tbody td { transition: --size 0.6s ease; }\n\t\t.charts-css.bar tbody td { transition: --size 0.8s ease; }\n\t\t.charts-css.column tbody td { transition: --size 0.6s ease; }\n\t\t/* Custom chart styling */\n\t\t.charts-css { --color: var(--color-primary); }\n\t\t.charts-css caption { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.5; padding: 0.5rem 0; }\n\t\t#network-content { overflow: hidden; }\n\t\t#network-chart { height: 200px; max-height: 200px; }\n\t\t#services-chart { height: 200px; max-width: 100%; }\n\t\t#services-chart tbody td { border-radius: 0 4px 4px 0; }\n\t\t/* New chart heights */\n\t\t#latency-hist-chart { height: 180px; max-height: 180px; }\n\t\t#error-sparkline-content { overflow: hidden; }\n\t\t#error-sparkline-chart { height: 120px; max-height: 120px; }\n\t\t#error-sparkline-chart td::before { background: var(--color, #f87171) !important; }\n\t\t#throughput-split-content { overflow: hidden; }\n\t\t#throughput-in-chart, #throughput-out-chart { height: 120px; max-height: 120px; }\n\t\t#svc-latency-chart { height: 200px; max-width: 100%; }\n\t\t#svc-latency-chart tbody td { border-radius: 0 4px 4px 0; }\n\t\t#disk-io-chart { height: 180px; max-height: 180px; }\n\t\t#request-dist-chart { height: 180px; max-height: 180px; }\n\t\t/* Multi-series colors */\n\t\t#latency-hist-chart { --color-1: #34d399; --color-2: #fbbf24; --color-3: #f87171; }\n\t\t#throughput-in-chart { --color: #38bdf8; }\n\t\t#throughput-out-chart { --color: #a78bfa; }\n\t\t#disk-io-chart { --color-1: #34d399; --color-2: #fbbf24; }\n\t\t#error-sparkline-chart { --color: #f87171; }\n\t\t/* Chart legend */\n\t\t.chart-legend { display: flex; gap: 1rem; flex-wrap: wrap; }\n\t\t.chart-legend-item { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: color-mix(in oklab, var(--color-base-content) 60%, transparent); }\n\t\t.chart-legend-dot { width: 8px; height: 8px; border-radius: 2px; }\n\t\t/* Gauge styling */\n\t\t.gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }\n\t\t.gauge-wrap .radial-progress { --thickness: 0.35rem; }\n\t\t/* Connection pool dot grid */\n\t\t.conn-dot { width: 12px; height: 12px; border-radius: 2px; }\n\t\t.conn-dot-active { background: #34d399; }\n\t\t.conn-dot-idle { background: #94a3b8; }\n\t\t.conn-dot-wait { background: #fbbf24; }\n\t\t/* Event feed scrollable */\n\t\t#event-feed { max-height: 260px; overflow-y: auto; scroll-behavior: smooth; }\n\t</style><div id=\"dashboard-sse\" class=\"p-4 space-y-4 max-w-7xl mx-auto\"><h1 class=\"text-2xl font-bold mb-2\">Live Operations Dashboard</h1><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-3\"><div class=\"flex items-center gap-4\"><label class=\"flex items-center gap-2 cursor-pointer shrink-0\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" _=\"on change if my.checked then remove .opacity-50 from the next .master-slider then remove [@disabled] from <input[type=range]/> in the next .master-slider else add .opacity-50 to the next .master-slider then add [@disabled] to <input[type=range]/> in the next .master-slider\"> <span class=\"text-sm font-semibold\">Master Control</span></label><div class=\"master-slider opacity-50 flex-1 flex items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<link rel=\"stylesheet\" href=\"/public/css/charts.min.css\"><style>\n\t\t/* Charts.css transition smoothing */\n\t\t.charts-css.area tbody td { transition: --size 0.6s ease; }\n\t\t.charts-css.bar tbody td { transition: --size 0.8s ease; }\n\t\t.charts-css.column tbody td { transition: --size 0.6s ease; }\n\t\t/* Custom chart styling */\n\t\t.charts-css { --color: var(--color-primary); }\n\t\t.charts-css caption { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.5; padding: 0.5rem 0; }\n\t\t#network-content { overflow: hidden; }\n\t\t#network-chart { height: 200px; max-height: 200px; }\n\t\t#services-chart { height: 200px; max-width: 100%; }\n\t\t#services-chart tbody td { border-radius: 0 4px 4px 0; }\n\t\t/* New chart heights */\n\t\t#latency-hist-chart { height: 180px; max-height: 180px; }\n\t\t#error-sparkline-content { overflow: hidden; }\n\t\t#error-sparkline-chart { height: 120px; max-height: 120px; }\n\t\t#error-sparkline-chart td::before { background: var(--color, #f87171) !important; }\n\t\t#throughput-split-content { overflow: hidden; }\n\t\t#throughput-in-chart, #throughput-out-chart { height: 120px; max-height: 120px; }\n\t\t#svc-latency-chart { height: 200px; max-width: 100%; }\n\t\t#svc-latency-chart tbody td { border-radius: 0 4px 4px 0; }\n\t\t#disk-io-chart { height: 180px; max-height: 180px; }\n\t\t#request-dist-chart { height: 180px; max-height: 180px; }\n\t\t/* Multi-series colors */\n\t\t#latency-hist-chart { --color-1: #34d399; --color-2: #fbbf24; --color-3: #f87171; }\n\t\t#throughput-in-chart { --color: #38bdf8; }\n\t\t#throughput-out-chart { --color: #a78bfa; }\n\t\t#disk-io-chart { --color-1: #34d399; --color-2: #fbbf24; }\n\t\t#error-sparkline-chart { --color: #f87171; }\n\t\t/* Chart legend */\n\t\t.chart-legend { display: flex; gap: 1rem; flex-wrap: wrap; }\n\t\t.chart-legend-item { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: color-mix(in oklab, var(--color-base-content) 60%, transparent); }\n\t\t.chart-legend-dot { width: 8px; height: 8px; border-radius: 2px; }\n\t\t/* Gauge styling */\n\t\t.gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }\n\t\t.gauge-wrap .radial-progress { --thickness: 0.35rem; }\n\t\t/* Connection pool dot grid */\n\t\t.conn-dot { width: 12px; height: 12px; border-radius: 2px; }\n\t\t.conn-dot-active { background: #34d399; }\n\t\t.conn-dot-idle { background: #94a3b8; }\n\t\t.conn-dot-wait { background: #fbbf24; }\n\t\t/* Event feed scrollable */\n\t\t#event-feed { max-height: 260px; overflow-y: auto; scroll-behavior: smooth; }\n\t</style><div id=\"dashboard-sse\" class=\"p-4 space-y-4 max-w-7xl mx-auto\"><h1 class=\"text-2xl font-bold mb-2\">Live Operations Dashboard</h1><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-3\"><div class=\"flex items-center gap-4\"><label class=\"flex items-center gap-2 cursor-pointer shrink-0\"><input type=\"checkbox\" class=\"toggle toggle-sm toggle-primary\" _=\"on change if my.checked then remove .opacity-50 from the next .master-slider then remove [@disabled] from <input[type=range]/> in the next .master-slider else add .opacity-50 to the next .master-slider then add [@disabled] to <input[type=range]/> in the next .master-slider\"> <span class=\"text-sm font-semibold\">Master Control</span></label><div class=\"master-slider opacity-50 flex-1 flex items-center gap-2\" _=\"init add [@disabled] to <input[type=range]/> in me\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -328,7 +328,7 @@ func kpiCard(id, label, value, colorClass string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 265, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 266, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -341,7 +341,7 @@ func kpiCard(id, label, value, colorClass string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 266, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 267, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -376,7 +376,7 @@ func kpiCard(id, label, value, colorClass string) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 267, Col: 82}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 268, Col: 82}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -418,7 +418,7 @@ func oobKpiCard(id, label, value, colorClass string) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 272, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 273, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -431,7 +431,7 @@ func oobKpiCard(id, label, value, colorClass string) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 273, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 274, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -466,7 +466,7 @@ func oobKpiCard(id, label, value, colorClass string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 274, Col: 82}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 275, Col: 82}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -509,7 +509,7 @@ func networkChart(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMBps(latestNetworkIn(snap)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 283, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 284, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -522,7 +522,7 @@ func networkChart(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMBps(latestNetworkOut(snap)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 284, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 285, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -540,7 +540,7 @@ func networkChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 289, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 290, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -587,7 +587,7 @@ func OOBNetworkChart(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMBps(latestNetworkIn(snap)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 299, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 300, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -600,7 +600,7 @@ func OOBNetworkChart(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMBps(latestNetworkOut(snap)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 300, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 301, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -618,7 +618,7 @@ func OOBNetworkChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 305, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 306, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -757,7 +757,7 @@ func radialGauge(id, label string, pct float64) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 331, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 332, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -783,7 +783,7 @@ func radialGauge(id, label string, pct float64) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("--value:%d; --size:5rem;", int(pct)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 333, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 334, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -796,7 +796,7 @@ func radialGauge(id, label string, pct float64) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d%%", int(pct)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 336, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 337, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -809,7 +809,7 @@ func radialGauge(id, label string, pct float64) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 338, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 339, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -852,7 +852,7 @@ func connPool(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", snap.ConnActive))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 347, Col: 145}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 348, Col: 145}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -865,7 +865,7 @@ func connPool(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", snap.ConnIdle))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 348, Col: 139}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 349, Col: 139}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -878,7 +878,7 @@ func connPool(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", snap.ConnWait))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 349, Col: 142}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 350, Col: 142}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -942,7 +942,7 @@ func OOBConnPool(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", snap.ConnActive))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 368, Col: 145}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 369, Col: 145}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 		if templ_7745c5c3_Err != nil {
@@ -955,7 +955,7 @@ func OOBConnPool(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", snap.ConnIdle))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 369, Col: 139}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 370, Col: 139}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
@@ -968,7 +968,7 @@ func OOBConnPool(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", snap.ConnWait))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 370, Col: 142}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 371, Col: 142}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
@@ -1038,7 +1038,7 @@ func servicesChart(services []ServiceStatus) templ.Component {
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(svc.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 393, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 394, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 			if templ_7745c5c3_Err != nil {
@@ -1051,7 +1051,7 @@ func servicesChart(services []ServiceStatus) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("--size: %s; --color: %s", fmtSize(svc.Load), serviceBarColor(svc)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 394, Col: 96}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 395, Col: 96}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -1064,7 +1064,7 @@ func servicesChart(services []ServiceStatus) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(fmtPct(svc.Load * 100))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 395, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 396, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -1116,7 +1116,7 @@ func OOBServicesChart(services []ServiceStatus) templ.Component {
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(svc.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 408, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 409, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
@@ -1129,7 +1129,7 @@ func OOBServicesChart(services []ServiceStatus) templ.Component {
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("--size: %s; --color: %s", fmtSize(svc.Load), serviceBarColor(svc)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 409, Col: 96}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 410, Col: 96}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -1142,7 +1142,7 @@ func OOBServicesChart(services []ServiceStatus) templ.Component {
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(fmtPct(svc.Load * 100))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 410, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 411, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -1270,7 +1270,7 @@ func OOBEventItem(evt DashboardEvent) templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(eventIcon(evt.Kind))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 439, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 440, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -1283,7 +1283,7 @@ func OOBEventItem(evt DashboardEvent) templ.Component {
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(evt.Time.Format("15:04:05"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 440, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 441, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 		if templ_7745c5c3_Err != nil {
@@ -1296,7 +1296,7 @@ func OOBEventItem(evt DashboardEvent) templ.Component {
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(evt.Message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 441, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 442, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1309,7 +1309,7 @@ func OOBEventItem(evt DashboardEvent) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(evt.Kind)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 442, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 443, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -1598,7 +1598,7 @@ func statsCard(id, label, value string) templ.Component {
 		var templ_7745c5c3_Var61 string
 		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 502, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 503, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 		if templ_7745c5c3_Err != nil {
@@ -1611,7 +1611,7 @@ func statsCard(id, label, value string) templ.Component {
 		var templ_7745c5c3_Var62 string
 		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 503, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 504, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 		if templ_7745c5c3_Err != nil {
@@ -1624,7 +1624,7 @@ func statsCard(id, label, value string) templ.Component {
 		var templ_7745c5c3_Var63 string
 		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 504, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 505, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 		if templ_7745c5c3_Err != nil {
@@ -1666,7 +1666,7 @@ func oobStatsCard(id, label, value string) templ.Component {
 		var templ_7745c5c3_Var65 string
 		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 509, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 510, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 		if templ_7745c5c3_Err != nil {
@@ -1679,7 +1679,7 @@ func oobStatsCard(id, label, value string) templ.Component {
 		var templ_7745c5c3_Var66 string
 		templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 510, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 511, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 		if templ_7745c5c3_Err != nil {
@@ -1692,7 +1692,7 @@ func oobStatsCard(id, label, value string) templ.Component {
 		var templ_7745c5c3_Var67 string
 		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 511, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 512, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 		if templ_7745c5c3_Err != nil {
@@ -1740,7 +1740,7 @@ func latencyHistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var69 string
 			templ_7745c5c3_Var69, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(b.P50Style)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 528, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 529, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 			if templ_7745c5c3_Err != nil {
@@ -1753,7 +1753,7 @@ func latencyHistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var70 string
 			templ_7745c5c3_Var70, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(b.P90Style)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 529, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 530, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 			if templ_7745c5c3_Err != nil {
@@ -1766,7 +1766,7 @@ func latencyHistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var71 string
 			templ_7745c5c3_Var71, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(b.P99Style)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 530, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 531, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 			if templ_7745c5c3_Err != nil {
@@ -1818,7 +1818,7 @@ func OOBLatencyHistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var73 string
 			templ_7745c5c3_Var73, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(b.P50Style)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 549, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 550, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 			if templ_7745c5c3_Err != nil {
@@ -1831,7 +1831,7 @@ func OOBLatencyHistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var74 string
 			templ_7745c5c3_Var74, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(b.P90Style)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 550, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 551, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 			if templ_7745c5c3_Err != nil {
@@ -1844,7 +1844,7 @@ func OOBLatencyHistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(b.P99Style)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 551, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 552, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 			if templ_7745c5c3_Err != nil {
@@ -1892,7 +1892,7 @@ func errorSparkline(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var77 string
 		templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(fmtPct(snap.ErrorPct))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 564, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 565, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 		if templ_7745c5c3_Err != nil {
@@ -1910,7 +1910,7 @@ func errorSparkline(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var78 string
 			templ_7745c5c3_Var78, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 569, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 570, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 			if templ_7745c5c3_Err != nil {
@@ -1957,7 +1957,7 @@ func OOBErrorSparkline(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var80 string
 		templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(fmtPct(snap.ErrorPct))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 579, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 580, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 		if templ_7745c5c3_Err != nil {
@@ -1975,7 +1975,7 @@ func OOBErrorSparkline(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var81 string
 			templ_7745c5c3_Var81, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 584, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 585, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 			if templ_7745c5c3_Err != nil {
@@ -2023,7 +2023,7 @@ func throughputSplitChart(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var83 string
 		templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMBps(latestNetworkIn(snap)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 598, Col: 146}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 599, Col: 146}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 		if templ_7745c5c3_Err != nil {
@@ -2041,7 +2041,7 @@ func throughputSplitChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var84 string
 			templ_7745c5c3_Var84, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 603, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 604, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 			if templ_7745c5c3_Err != nil {
@@ -2059,7 +2059,7 @@ func throughputSplitChart(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var85 string
 		templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMBps(latestNetworkOut(snap)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 610, Col: 148}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 611, Col: 148}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var85))
 		if templ_7745c5c3_Err != nil {
@@ -2077,7 +2077,7 @@ func throughputSplitChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var86 string
 			templ_7745c5c3_Var86, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 615, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 616, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var86))
 			if templ_7745c5c3_Err != nil {
@@ -2124,7 +2124,7 @@ func OOBThroughputSplitChart(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var88 string
 		templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMBps(latestNetworkIn(snap)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 629, Col: 146}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 630, Col: 146}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
 		if templ_7745c5c3_Err != nil {
@@ -2142,7 +2142,7 @@ func OOBThroughputSplitChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var89 string
 			templ_7745c5c3_Var89, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 634, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 635, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 			if templ_7745c5c3_Err != nil {
@@ -2160,7 +2160,7 @@ func OOBThroughputSplitChart(snap MetricsSnapshot) templ.Component {
 		var templ_7745c5c3_Var90 string
 		templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMBps(latestNetworkOut(snap)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 641, Col: 148}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 642, Col: 148}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var90))
 		if templ_7745c5c3_Err != nil {
@@ -2178,7 +2178,7 @@ func OOBThroughputSplitChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var91 string
 			templ_7745c5c3_Var91, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 646, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 647, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var91))
 			if templ_7745c5c3_Err != nil {
@@ -2231,7 +2231,7 @@ func serviceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) templ.Com
 			var templ_7745c5c3_Var93 string
 			templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.JoinStringErrs(svc.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 663, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 664, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var93))
 			if templ_7745c5c3_Err != nil {
@@ -2244,7 +2244,7 @@ func serviceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) templ.Com
 			var templ_7745c5c3_Var94 string
 			templ_7745c5c3_Var94, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(svcLatencyBarStyle(svc, maxMs))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 664, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 665, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
 			if templ_7745c5c3_Err != nil {
@@ -2257,7 +2257,7 @@ func serviceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) templ.Com
 			var templ_7745c5c3_Var95 string
 			templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMs(svcLatestLatency(svc)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 665, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 666, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var95))
 			if templ_7745c5c3_Err != nil {
@@ -2309,7 +2309,7 @@ func OOBServiceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) templ.
 			var templ_7745c5c3_Var97 string
 			templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(svc.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 680, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 681, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 			if templ_7745c5c3_Err != nil {
@@ -2322,7 +2322,7 @@ func OOBServiceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) templ.
 			var templ_7745c5c3_Var98 string
 			templ_7745c5c3_Var98, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(svcLatencyBarStyle(svc, maxMs))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 681, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 682, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
 			if templ_7745c5c3_Err != nil {
@@ -2335,7 +2335,7 @@ func OOBServiceLatencyChart(svcLatencies []ServiceLatency, maxMs float64) templ.
 			var templ_7745c5c3_Var99 string
 			templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinStringErrs(fmtMs(svcLatestLatency(svc)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 682, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 683, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var99))
 			if templ_7745c5c3_Err != nil {
@@ -2388,7 +2388,7 @@ func diskIOChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var101 string
 			templ_7745c5c3_Var101, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(d.ReadStyle)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 703, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 704, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
 			if templ_7745c5c3_Err != nil {
@@ -2401,7 +2401,7 @@ func diskIOChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var102 string
 			templ_7745c5c3_Var102, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(d.WriteStyle)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 704, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 705, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var102))
 			if templ_7745c5c3_Err != nil {
@@ -2453,7 +2453,7 @@ func OOBDiskIOChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var104 string
 			templ_7745c5c3_Var104, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(d.ReadStyle)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 722, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 723, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 			if templ_7745c5c3_Err != nil {
@@ -2466,7 +2466,7 @@ func OOBDiskIOChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var105 string
 			templ_7745c5c3_Var105, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(d.WriteStyle)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 723, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 724, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var105))
 			if templ_7745c5c3_Err != nil {
@@ -2519,7 +2519,7 @@ func requestDistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var107 string
 			templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(s.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 739, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 740, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
 			if templ_7745c5c3_Err != nil {
@@ -2532,7 +2532,7 @@ func requestDistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var108 string
 			templ_7745c5c3_Var108, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s.Style)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 740, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 741, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var108))
 			if templ_7745c5c3_Err != nil {
@@ -2545,7 +2545,7 @@ func requestDistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var109 string
 			templ_7745c5c3_Var109, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", s.Count))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 741, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 742, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var109))
 			if templ_7745c5c3_Err != nil {
@@ -2597,7 +2597,7 @@ func OOBRequestDistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var111 string
 			templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.JoinStringErrs(s.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 756, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 757, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var111))
 			if templ_7745c5c3_Err != nil {
@@ -2610,7 +2610,7 @@ func OOBRequestDistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var112 string
 			templ_7745c5c3_Var112, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(s.Style)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 757, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 758, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var112))
 			if templ_7745c5c3_Err != nil {
@@ -2623,7 +2623,7 @@ func OOBRequestDistChart(snap MetricsSnapshot) templ.Component {
 			var templ_7745c5c3_Var113 string
 			templ_7745c5c3_Var113, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", s.Count))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 758, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 759, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var113))
 			if templ_7745c5c3_Err != nil {
@@ -2671,7 +2671,7 @@ func realtimePatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var115 string
 		templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 772, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 773, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var115))
 		if templ_7745c5c3_Err != nil {
@@ -2684,7 +2684,7 @@ func realtimePatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var116 string
 		templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 773, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 774, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 		if templ_7745c5c3_Err != nil {
@@ -2697,7 +2697,7 @@ func realtimePatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var117 string
 		templ_7745c5c3_Var117, templ_7745c5c3_Err = templ.JoinStringErrs(desc)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 774, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_realtime.templ`, Line: 775, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var117))
 		if templ_7745c5c3_Err != nil {
