@@ -48,23 +48,6 @@ templ AppSettingsPage(currentTheme string) {
 								<p class="hidden text-xs text-base-content/40">Your immediate sibling pages in the same ring</p>
 							</div>
 						</label>
-						<label class="label cursor-pointer justify-start gap-3">
-							<input type="checkbox" class="toggle toggle-sm toggle-primary"
-								_="init set my.checked to localStorage.getItem('dothog_show_history_crumbs') === 'true'
-								   on change
-								     if my.checked
-								       set localStorage.dothog_show_history_crumbs to 'true'
-								       show #history-breadcrumbs
-								     else
-								       set localStorage.dothog_show_history_crumbs to 'false'
-								       hide #history-breadcrumbs
-								     end"/>
-							<div>
-								<span class="label-text">Show history breadcrumbs</span>
-								<button class="badge badge-ghost badge-sm ml-1" _="on click toggle .hidden on next <p/>">help</button>
-								<p class="hidden text-xs text-base-content/40">Trail of the last few pages you visited</p>
-							</div>
-						</label>
 					</div>
 				</details>
 			</div>

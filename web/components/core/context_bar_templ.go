@@ -224,35 +224,4 @@ func localGroups(links []linkwell.LinkRelation, currentPath string) []contextBar
 	return groups
 }
 
-// HistoryBreadcrumbs renders a trail of recently visited pages.
-// Client-side via Alpine.js reading from sessionStorage.
-func HistoryBreadcrumbs() templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div id=\"history-breadcrumbs\" x-data=\"historyBreadcrumbs\" x-show=\"trail.length > 0\" x-cloak _=\"init if localStorage.getItem('dothog_show_history_crumbs') !== 'true' then hide me\"><div class=\"border-b border-base-300\"><div class=\"flex items-center gap-2 overflow-x-auto px-8 py-1 bg-base-100/30 text-xs\"><template x-for=\"(item, idx) in trail\" :key=\"item.path\"><div class=\"flex items-center gap-2\"><a :href=\"item.path\" x-text=\"item.title\" class=\"link link-hover text-base-content/40 hover:text-base-content whitespace-nowrap\"></a> <span class=\"text-base-content/20\">›</span></div></template><span class=\"text-base-content/60 font-medium whitespace-nowrap\" x-text=\"currentTitle\"></span></div></div></div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
 var _ = templruntime.GeneratedTemplate

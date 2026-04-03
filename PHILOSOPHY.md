@@ -997,7 +997,6 @@ The platform ships APIs that replace entire categories of npm packages:
 
 - `navigator.sendBeacon()` — fire-and-forget logging without blocking navigation. Replaces analytics libraries.
 - `BroadcastChannel` — cross-tab sync (theme changes propagate to all tabs). No polling, no extra SSE connections.
-- `sessionStorage` — history breadcrumb trail. Per-tab, ephemeral, no server round-trip.
 - `localStorage` — dismiss state for context bars. Persists across sessions.
 - Service Worker — offline caching for PWA, gated behind production mode.
 
