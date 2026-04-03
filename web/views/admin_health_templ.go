@@ -10,7 +10,9 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"catgoose/dothog/internal/health"
+	// setup:feature:demo:start
 	components "catgoose/dothog/web/components/core"
+	// setup:feature:demo:end
 )
 
 // AdminHealthPage renders the /admin/health page with live health status.
@@ -39,6 +41,7 @@ func AdminHealthPage(h health.Response) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		// setup:feature:demo:start
 		templ_7745c5c3_Err = components.IntervalSlider(components.IntervalSliderCfg{
 			TargetKey: "section", TargetValue: "health",
 			IntervalMs: 5000, Scale: "s", PostURL: "/admin/settings/interval",
@@ -46,6 +49,7 @@ func AdminHealthPage(h health.Response) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		// setup:feature:demo:end
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<a href=\"/health\" target=\"_blank\" class=\"btn btn-sm btn-ghost font-mono\">GET /health</a></div></div><div id=\"health-content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -145,7 +149,7 @@ func healthContent(h health.Response) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(h.Status)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 50, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 54, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -158,7 +162,7 @@ func healthContent(h health.Response) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(h.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 56, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 60, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -171,7 +175,7 @@ func healthContent(h health.Response) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(h.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 60, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 64, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -184,7 +188,7 @@ func healthContent(h health.Response) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(h.Uptime)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 64, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 68, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -228,7 +232,7 @@ func healthContent(h health.Response) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(h.Database)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 72, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 76, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {

@@ -24,8 +24,11 @@ import (
 // accessible via GetConfig()/MustGetConfig(). Extend by adding fields
 // and reading them in buildConfig().
 type AppConfig struct {
-	SessionMgr                crooner.SessionManager
-	CroonerConfig             *crooner.AuthConfigParams
+	// setup:feature:auth:start
+	SessionMgr      crooner.SessionManager
+	CroonerConfig   *crooner.AuthConfigParams
+	CroonerDisabled bool
+	// setup:feature:auth:end
 	DatabaseURL               string
 	SessionSecret             string
 	AppName                   string
@@ -33,7 +36,6 @@ type AppConfig struct {
 	CSRFPerRequestPaths       []string
 	CSRFExemptPaths           []string
 	GraphUserCacheRefreshHour int
-	CroonerDisabled           bool
 	EnableDatabase            bool
 	InitRepo                  bool
 	CSRFRotatePerRequest      bool

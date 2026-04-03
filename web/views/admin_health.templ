@@ -2,7 +2,9 @@ package views
 
 import (
 	"catgoose/dothog/internal/health"
+	// setup:feature:demo:start
 	components "catgoose/dothog/web/components/core"
+	// setup:feature:demo:end
 )
 
 // AdminHealthPage renders the /admin/health page with live health status.
@@ -14,10 +16,12 @@ templ AdminHealthPage(h health.Response) {
 				<p class="text-sm text-base-content/60">Live application health status via SSE.</p>
 			</div>
 			<div class="flex items-center gap-3">
+				// setup:feature:demo:start
 				@components.IntervalSlider(components.IntervalSliderCfg{
 					TargetKey: "section", TargetValue: "health",
 					IntervalMs: 5000, Scale: "s", PostURL: "/admin/settings/interval",
 				})
+				// setup:feature:demo:end
 				<a href="/health" target="_blank" class="btn btn-sm btn-ghost font-mono">GET /health</a>
 			</div>
 		</div>
