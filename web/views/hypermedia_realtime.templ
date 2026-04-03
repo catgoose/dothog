@@ -61,7 +61,7 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 				<div class="flex items-center gap-4">
 					<label class="flex items-center gap-2 cursor-pointer shrink-0">
 						<input type="checkbox" class="toggle toggle-sm toggle-primary master-toggle"
-							_="on change if not my.checked then fetch /hypermedia/realtime/interval-restore with method:'POST'"/>
+							_="on change if my.checked then call window._ivPost(the first .iv-wrap in the next .master-slider) else fetch /hypermedia/realtime/interval-restore with method:'POST'"/>
 						<span class="text-sm font-semibold">Master Control</span>
 					</label>
 					<div class="master-slider flex-1 flex items-center gap-2">
