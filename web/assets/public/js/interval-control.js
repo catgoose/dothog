@@ -54,13 +54,12 @@
     _ivPost(el);
   };
 
-  /** POST the current interval in ms. Skips if inside a disabled master. */
+  /** POST the current interval in ms. Skips if the range input is disabled. */
   window._ivPost = function (el) {
     if (!el) return;
-    if (el.classList.contains('opacity-50')) return;
     ensureInit(el);
     var input = el.querySelector('input[type=range]');
-    if (!input) return;
+    if (!input || input.disabled) return;
     var cfg = configs[units[el._ivUnit]];
     var ms = parseInt(input.value) * cfg.mult;
 
