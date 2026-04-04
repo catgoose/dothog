@@ -76,6 +76,115 @@ Dothog runs as a single binary with all assets embedded -- no external dependenc
 
 See [PHILOSOPHY.md](PHILOSOPHY.md) for the sacred architectural texts, which are also not sacred, except in the sense that they are. See [MANIFESTO.md](MANIFESTO.md) for the PENTAVERB, the Novice's Creed, the Wisdom of the Uniform Interface, and the Recorded Sayings of Layman Grug, which are also not sacred, except in every sense. See [docs/SECURITY.md](docs/SECURITY.md) for what the scaffold secures by default, what's opt-in, and what it deliberately leaves to you.
 
+## Philosophy
+
+> _The Novice asked: "What is the architecture?" The Master replied: "The server returns HTML." The Novice asked: "Yes, but what about the libraries?" The Master replied: "They help the server return HTML." The Novice was not yet enlightened but was getting suspicious._
+
+Each library exists because a single responsibility needed a home. None of them know about each other. All of them serve the server. The server serves HTML. This is the entire philosophy. Everything else is implementation detail, and implementation details belong in [PHILOSOPHY.md](PHILOSOPHY.md).
+
+- **Zero coupling** -- Libraries compose through Go interfaces and `net/http` middleware. No library imports another. Dothog wires them together; they do not wire themselves.
+- **Zero dependencies in core** -- Each library's core module imports only the Go standard library. Optional submodules (database drivers, test helpers) carry the weight so your binary doesn't.
+- **Server as source of truth** -- The server defines the schema ([chuck](https://github.com/catgoose/chuck)), manages identity ([crooner](https://github.com/catgoose/crooner)), enforces access ([porter](https://github.com/catgoose/porter)), declares navigation ([linkwell](https://github.com/catgoose/linkwell)), captures diagnostics ([promolog](https://github.com/catgoose/promolog)), and pushes state changes ([tavern](https://github.com/catgoose/tavern)). The client renders what it receives. This is the natural order.
+- **Reach up, not down** -- Start at HTML. Reach for a library only when the current layer cannot express what you need. Each library is one reach. If you are reaching more than once for the same problem, the problem is architectural, and the answer is in the [MANIFESTO](MANIFESTO.md).
+
+## Architecture
+
+> _"How many libraries does it take to return HTML?" "Seven. But they're small. And they don't talk to each other. And one of them is just environment variables."_
+
+```mermaid
+graph TB
+    subgraph browser ["Browser"]
+        HTML["HTML + HTMX"]
+        SSE["SSE EventSource"]
+    end
+
+    subgraph dothog ["Dothog"]
+        direction TB
+
+        subgraph startup ["Startup"]
+            DIO["<b>dio</b><br/>environment config"]
+            CHUCK_DDL["<b>chuck</b><br/>schema · DDL · migrations"]
+        end
+
+        subgraph pipeline ["Request Pipeline"]
+            direction LR
+            PORTER["<b>porter</b><br/>security headers<br/>max body · CSRF · authz"]
+            CROONER["<b>crooner</b><br/>OIDC sessions"]
+            PROMOLOG["<b>promolog</b><br/>request capture<br/>policy-driven promotion"]
+            HANDLER["handler"]
+            PORTER --> CROONER --> PROMOLOG --> HANDLER
+        end
+
+        subgraph response ["Response"]
+            LINKWELL["<b>linkwell</b><br/>hypermedia controls<br/>link relations · breadcrumbs"]
+            TEMPL["templ → HTML"]
+        end
+
+        TAVERN["<b>tavern</b><br/>SSE pub/sub broker"]
+        CHUCK_Q["<b>chuck</b><br/>queries · dbrepo"]
+        SQLITE[("SQLite")]
+    end
+
+    HTML -- "HTTP request" --> PORTER
+    HANDLER --> CHUCK_Q --> SQLITE
+    HANDLER --> LINKWELL --> TEMPL
+    TEMPL -- "HTML response" --> HTML
+    HANDLER -. "publish" .-> TAVERN
+    TAVERN -. "SSE stream" .-> SSE
+    DIO -. "config" .-> pipeline
+    CHUCK_DDL -. "DDL" .-> SQLITE
+```
+
+<details>
+<summary>ASCII version</summary>
+
+```
+                             ┌──────────────────────────────────────────────────────────────┐
+                             │                          DOTHOG                              │
+                             │                                                              │
+                             │  STARTUP                                                     │
+                             │  ┌──────────────┐       ┌──────────────────────┐             │
+                             │  │     dio      │       │       chuck          │             │
+                             │  │  env config  │       │  schema · DDL        │             │
+                             │  └──────┬───────┘       └──────────┬───────────┘             │
+                             │         │ config                   │ DDL                     │
+                             │         ▼                          ▼                         │
+  ┌─────────────┐            │  REQUEST PIPELINE                          ┌──────────┐      │
+  │   Browser   │            │  ┌──────────┐  ┌──────────┐  ┌──────────┐ │  SQLite  │      │
+  │             │  request   │  │  porter  ├─►│ crooner  ├─►│ promolog │ │          │      │
+  │  HTML+HTMX ─┼───────────┼─►│ security │  │   OIDC   │  │ request  │ └──────────┘      │
+  │             │            │  │ headers  │  │ sessions │  │ capture  │      ▲             │
+  │             │            │  │ CSRF     │  │          │  │ policy   │      │             │
+  │             │            │  │ authz    │  │          │  │ promote  │      │             │
+  │             │            │  └──────────┘  └──────────┘  └────┬─────┘      │             │
+  │             │            │                                   │            │             │
+  │             │            │                              ┌────▼────┐       │             │
+  │             │            │                              │ handler ├───────┤             │
+  │             │            │                              └──┬───┬──┘       │             │
+  │             │            │                                 │   │          │             │
+  │             │            │                    ┌─────────────┘   └──────┐  │             │
+  │             │            │                    ▼                       ▼  │             │
+  │             │            │              ┌──────────┐            ┌────────┴┐ ┌────────┐  │
+  │             │            │              │ linkwell │            │  chuck  │ │ tavern │  │
+  │             │            │              │ controls │            │  query  │ │  SSE   │  │
+  │             │            │              │ links    │            │  dbrepo │ │ pub/   │  │
+  │             │            │              │ crumbs   │            │         │ │ sub    │  │
+  │             │            │              └────┬─────┘            └─────────┘ └───┬────┘  │
+  │             │            │                   ▼                                  │       │
+  │             │            │              ┌──────────┐                            │       │
+  │             │            │              │  templ   │                            │       │
+  │             │            │              │  → HTML  │                            │       │
+  │             │            │              └────┬─────┘                            │       │
+  │             │  response  │                   │                                  │       │
+  │             │◄───────────┼───────────────────┘                                 │       │
+  │             │            │                                                      │       │
+  │ EventSource │◄── SSE ───┼──────────────────────────────────────────────────────┘       │
+  │             │            │                                                              │
+  └─────────────┘            └──────────────────────────────────────────────────────────────┘
+```
+
+</details>
+
 ## Demo
 
 > _The student asked the master, "What does the application look like?" The master replied, "Run the binary." The student was enlightened._
@@ -548,7 +657,7 @@ That's it. That's the build process. There is no step 4. If you are looking for 
 - [**Hyperscript**](https://hyperscript.org/) -- Client-side behavior that reads like English, stays on the element, and doesn't require a build step. `_="on click toggle .hidden on #panel"` is a complete program. It is also a complete sentence. This is not a coincidence.
 - [**SQLite**](https://www.sqlite.org/) -- The most deployed database in human history. Embedded. Zero-config. A file on disk. If Fielding had specified a database -- which he did not, because he dealt in constraints, not implementations, and we respect this -- it would have been this one. Probably.
 - [**Chuck**](https://github.com/catgoose/chuck) -- SQL dialect abstraction. Opens a database by URL, figures out if it's SQLite or Postgres or MSSQL, and gives you a dialect that generates the right DDL. Previously lived in `internal/database/dialect/` until it realized it had opinions worth sharing with other projects. The code moved out. The opinions stayed.
-- [**Promolog**](https://github.com/catgoose/promolog) -- Per-request log capture with promote-on-error semantics. Every request gets a buffer. Successful requests cost nothing -- the buffer is garbage collected with the context. Failed requests promote the buffer to a SQLite-backed store with the full error trace, request ID, and every slog entry from the request lifecycle. Previously lived in `internal/requestlog/` where it did the same thing but refused to return anyone else's calls.
+- [**Promolog**](https://github.com/catgoose/promolog) -- Per-request log capture with policy-driven promotion. Every request gets a buffer. Requests that don't match a promotion policy cost nothing -- the buffer is garbage collected with the context. Requests that match a policy (errors, slow responses, route patterns, sampling) promote the buffer to a SQLite-backed store with the full trace, request ID, and every slog entry from the request lifecycle. Previously lived in `internal/requestlog/` where it did the same thing but refused to return anyone else's calls.
 - [**Air**](https://github.com/air-verse/air) -- Live reloading for Go development. Change a file, see the result. The feedback loop is sacred.
 - [**Mage**](https://magefile.org/) -- Build tool written in Go, for Go. No Makefile syntax. No tab-versus-space wars. Just Go functions. The PENTAVERB does not address build tools but if it did, Mage would be compliant.
 
@@ -751,7 +860,7 @@ Code that used to live in-tree has been extracted into standalone libraries. The
 | Library | What it does | Used to be |
 |---------|-------------|------------|
 | [chuck](https://github.com/catgoose/chuck) | SQL dialect abstraction -- open by URL, get the right DDL | `internal/database/dialect/` |
-| [promolog](https://github.com/catgoose/promolog) | Per-request log capture, promote-on-error, error trace store | `internal/requestlog/` |
+| [promolog](https://github.com/catgoose/promolog) | Per-request log capture, policy-driven promotion, trace store | `internal/requestlog/` |
 
 ## Template Setup
 
