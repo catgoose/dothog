@@ -108,9 +108,11 @@ document.addEventListener('alpine:init', function () {
         }
       },
       _syncSelect: function () {
+        var current = this.current;
         var select = this.$el.querySelector('select');
-        if (select) {
-          select.value = this.current;
+        if (select && select.value !== current) {
+          select.value = current;
+          select.dispatchEvent(new Event('input', { bubbles: false }));
         }
       }
     };
