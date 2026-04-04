@@ -22,7 +22,7 @@ import (
 
 const loggingBase = "/demo/logging"
 
-func (ar *appRoutes) initLoggingRoutes() {
+func (ar *appRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 	// Client beacon endpoint — fire-and-forget analytics via navigator.sendBeacon.
 	ar.e.POST("/log/beacon", func(c echo.Context) error {
 		var entry struct {
@@ -46,8 +46,6 @@ func (ar *appRoutes) initLoggingRoutes() {
 	})
 
 	// setup:feature:sse:start
-	broker := tavern.NewSSEBroker()
-
 	// Wire up SSE broadcasting on error trace promotion.
 	if ar.repos.ReqLogStore != nil {
 		ar.repos.ReqLogStore.SetOnPromote(func(summary promolog.TraceSummary) {

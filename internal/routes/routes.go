@@ -168,7 +168,6 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:demo:start
 	ar.initPwaRoutes()
 	ar.initReportDemoRoutes()
-	ar.initLoggingRoutes()
 	ar.initControlsGalleryRoutes()
 	ar.initComponentsRoutes()
 	ar.initComponents2Routes()
@@ -181,6 +180,10 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:session_settings:start
 	ar.initThemeRoutes(ar.broker)
 	// setup:feature:session_settings:end
+
+	// setup:feature:demo:start
+	ar.initLoggingRoutes(ar.broker)
+	// setup:feature:demo:end
 
 	// setup:feature:demo:start
 	ar.initHypermediaRoutes()
