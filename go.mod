@@ -8,10 +8,10 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.14
-	github.com/catgoose/linkwell v0.2.15
-	github.com/catgoose/porter v0.4.5
-	github.com/catgoose/promolog/sqlite v0.0.0-20260403193042-a59a25dd4dd6
-	github.com/catgoose/tavern v0.4.32
+	github.com/catgoose/linkwell v0.2.19
+	github.com/catgoose/porter v0.4.8
+	github.com/catgoose/promolog/sqlite v0.0.0-20260404022206-acbd381ca1c5
+	github.com/catgoose/tavern v0.4.36
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/jmoiron/sqlx v1.4.0
@@ -45,8 +45,8 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bep/godartsass/v2 v2.5.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
-	github.com/catgoose/chuck v0.1.4
-	github.com/catgoose/promolog v0.2.18
+	github.com/catgoose/chuck v0.1.10
+	github.com/catgoose/promolog v0.2.21
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
