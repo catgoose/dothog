@@ -87,14 +87,14 @@ func themeDropdown(currentTheme string) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div x-data=\"themePicker\" data-current-theme=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<script>\n\t(function() {\n\t  console.debug('[themePicker] script executing, Alpine available:', !!window.Alpine);\n\t  if (window.Alpine) {\n\t    console.debug('[themePicker] Alpine version:', Alpine.version);\n\t    console.debug('[themePicker] Alpine.data keys:', Object.keys(Alpine._data || {}));\n\t  }\n\t  var def = function() {\n\t    return {\n\t      current: '',\n\t      init: function() {\n\t        console.debug('[themePicker] init called, currentTheme:', this.$el.dataset.currentTheme);\n\t        this.current = this.$el.dataset.currentTheme || 'dark';\n\t      },\n\t      setTheme: function(theme) {\n\t        this.current = theme;\n\t        document.documentElement.dataset.theme = theme;\n\t        this._highlightSwatch();\n\t        this._updatePreviewSwatch();\n\t        this._syncSelect();\n\t        var t = document.querySelector('meta[name=\"csrf-token\"]');\n\t        fetch('/settings/theme', {\n\t          method: 'POST',\n\t          headers: {\n\t            'Content-Type': 'application/x-www-form-urlencoded',\n\t            'X-CSRF-Token': t ? t.content : ''\n\t          },\n\t          body: 'theme=' + theme\n\t        });\n\t        if (window.appChannel) {\n\t          window.appChannel.postMessage({ type: 'theme-change', theme: theme });\n\t        }\n\t      },\n\t      pickSwatch: function(event) {\n\t        console.debug('[themePicker] pickSwatch called');\n\t        var btn = event.target.closest('.theme-swatch');\n\t        if (!btn) return;\n\t        var theme = btn.dataset.themeValue;\n\t        if (theme) {\n\t          this.setTheme(theme);\n\t        }\n\t      },\n\t      pickFromSelect: function(event) {\n\t        console.debug('[themePicker] pickFromSelect called, value:', event.target.value);\n\t        var theme = event.target.value;\n\t        if (theme) {\n\t          this.setTheme(theme);\n\t        }\n\t      },\n\t      _highlightSwatch: function() {\n\t        var current = this.current;\n\t        this.$el.querySelectorAll('.theme-swatch').forEach(function(btn) {\n\t          if (btn.dataset.themeValue === current) {\n\t            btn.classList.add('ring-2', 'ring-primary', 'ring-offset-1');\n\t          } else {\n\t            btn.classList.remove('ring-2', 'ring-primary', 'ring-offset-1');\n\t          }\n\t        });\n\t      },\n\t      _updatePreviewSwatch: function() {\n\t        var preview = this.$el.querySelector('.theme-preview-swatch');\n\t        if (preview) {\n\t          preview.dataset.theme = this.current;\n\t        }\n\t      },\n\t      _syncSelect: function() {\n\t        var select = this.$el.querySelector('select');\n\t        if (select) {\n\t          select.value = this.current;\n\t        }\n\t      }\n\t    };\n\t  };\n\t  if (window.Alpine) {\n\t    Alpine.data('themePicker', def);\n\t    console.debug('[themePicker] registered via Alpine.data() (Alpine already loaded)');\n\t    console.debug('[themePicker] Alpine.data type:', typeof Alpine.data);\n\t  } else {\n\t    document.addEventListener('alpine:init', function() {\n\t      console.debug('[themePicker] alpine:init fired, Alpine.data type:', typeof Alpine.data);\n\t      Alpine.data('themePicker', def);\n\t      // Verify registration stuck\n\t      var testRetrieve = Alpine.data('themePicker');\n\t      console.debug('[themePicker] registered, retrieve check:', typeof testRetrieve);\n\t      console.debug('[themePicker] Alpine version:', Alpine.version);\n\t      // Also register as global fallback for debugging\n\t      window.themePicker = def;\n\t      console.debug('[themePicker] also set window.themePicker as fallback');\n\t    });\n\t    console.debug('[themePicker] waiting for alpine:init event');\n\t  }\n\t})();\n\t</script><div x-data=\"themePicker()\" data-current-theme=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(currentTheme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 53, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 146, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -107,7 +107,7 @@ func themeDropdown(currentTheme string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(currentTheme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 55, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 148, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -125,7 +125,7 @@ func themeDropdown(currentTheme string) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(cat.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 65, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 158, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -143,7 +143,7 @@ func themeDropdown(currentTheme string) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 67, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 160, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -166,7 +166,7 @@ func themeDropdown(currentTheme string) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 67, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 160, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -194,7 +194,7 @@ func themeDropdown(currentTheme string) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(cat.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 77, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 170, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -231,7 +231,7 @@ func themeDropdown(currentTheme string) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 84, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 177, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -244,7 +244,7 @@ func themeDropdown(currentTheme string) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 85, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 178, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -257,7 +257,7 @@ func themeDropdown(currentTheme string) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 87, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/settings_app.templ`, Line: 180, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {

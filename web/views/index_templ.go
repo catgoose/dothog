@@ -189,7 +189,7 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string) t
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\"><link rel=\"preload\" href=\"/public/css/tailwind.css\" as=\"style\"><link rel=\"preload\" href=\"/public/js/_hyperscript.min.js\" as=\"script\"><link rel=\"preload\" href=\"/public/js/htmx.min.js\" as=\"script\"><script>\n\t\t\tif (window.trustedTypes) {\n\t\t\t\ttrustedTypes.createPolicy('default', {\n\t\t\t\t\tcreateHTML: function(value) { return value; }\n\t\t\t\t});\n\t\t\t}\n\t\t</script><script defer src=\"/public/js/htmx.min.js\"></script><script src=\"/public/js/interval-control.js\"></script><script defer src=\"/public/js/_hyperscript.min.js\"></script><script defer src=\"/public/js/htmx.alpine-morph.js\"></script><script defer src=\"/public/js/alpine.morph.min.js\"></script><script defer src=\"/public/js/offline-indicator.js\"></script><script defer src=\"/public/js/beacon.js\"></script><script defer src=\"/public/js/broadcast.js\"></script><script defer src=\"/public/js/alpine-components.js\"></script><script defer src=\"/public/js/alpine.min.js\"></script><script defer src=\"/public/js/htmx.ext.sse.js\"></script><link rel=\"stylesheet\" href=\"/public/css/tailwind.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"/public/css/daisyui.css\" type=\"text/css\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\"><link rel=\"preload\" href=\"/public/css/tailwind.css\" as=\"style\"><link rel=\"preload\" href=\"/public/js/_hyperscript.min.js\" as=\"script\"><link rel=\"preload\" href=\"/public/js/htmx.min.js\" as=\"script\"><!-- Trusted Types disabled for debugging --><!-- <script>\n\t\t\tif (window.trustedTypes) {\n\t\t\t\ttrustedTypes.createPolicy('default', {\n\t\t\t\t\tcreateHTML: function(value) { return value; }\n\t\t\t\t});\n\t\t\t}\n\t\t</script> --><script defer src=\"/public/js/htmx.min.js\"></script><script src=\"/public/js/interval-control.js\"></script><script defer src=\"/public/js/_hyperscript.min.js\"></script><script defer src=\"/public/js/htmx.alpine-morph.js\"></script><script defer src=\"/public/js/alpine.morph.min.js\"></script><script defer src=\"/public/js/offline-indicator.js\"></script><script defer src=\"/public/js/beacon.js\"></script><script defer src=\"/public/js/broadcast.js\"></script><script defer src=\"/public/js/alpine-components.js\"></script><script defer src=\"/public/js/alpine.min.js\"></script><script defer src=\"/public/js/htmx.ext.sse.js\"></script><link rel=\"stylesheet\" href=\"/public/css/tailwind.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"/public/css/daisyui.css\" type=\"text/css\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -201,7 +201,7 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string) t
 			var templ_7745c5c3_Var7 templ.SafeURL
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 98, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 99, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -219,7 +219,7 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string) t
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(appName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 125, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 126, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -320,7 +320,7 @@ func ThemeChanged(theme string) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(theme)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 200, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/index.templ`, Line: 201, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {

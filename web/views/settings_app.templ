@@ -52,10 +52,16 @@ templ AppSettingsPage(currentTheme string) {
 templ themeDropdown(currentTheme string) {
 	<script>
 	(function() {
+	  console.debug('[themePicker] script executing, Alpine available:', !!window.Alpine);
+	  if (window.Alpine) {
+	    console.debug('[themePicker] Alpine version:', Alpine.version);
+	    console.debug('[themePicker] Alpine.data keys:', Object.keys(Alpine._data || {}));
+	  }
 	  var def = function() {
 	    return {
 	      current: '',
 	      init: function() {
+	        console.debug('[themePicker] init called, currentTheme:', this.$el.dataset.currentTheme);
 	        this.current = this.$el.dataset.currentTheme || 'dark';
 	      },
 	      setTheme: function(theme) {
@@ -78,6 +84,7 @@ templ themeDropdown(currentTheme string) {
 	        }
 	      },
 	      pickSwatch: function(event) {
+	        console.debug('[themePicker] pickSwatch called');
 	        var btn = event.target.closest('.theme-swatch');
 	        if (!btn) return;
 	        var theme = btn.dataset.themeValue;
@@ -86,6 +93,7 @@ templ themeDropdown(currentTheme string) {
 	        }
 	      },
 	      pickFromSelect: function(event) {
+	        console.debug('[themePicker] pickFromSelect called, value:', event.target.value);
 	        var theme = event.target.value;
 	        if (theme) {
 	          this.setTheme(theme);
@@ -117,14 +125,25 @@ templ themeDropdown(currentTheme string) {
 	  };
 	  if (window.Alpine) {
 	    Alpine.data('themePicker', def);
+	    console.debug('[themePicker] registered via Alpine.data() (Alpine already loaded)');
+	    console.debug('[themePicker] Alpine.data type:', typeof Alpine.data);
 	  } else {
 	    document.addEventListener('alpine:init', function() {
+	      console.debug('[themePicker] alpine:init fired, Alpine.data type:', typeof Alpine.data);
 	      Alpine.data('themePicker', def);
+	      // Verify registration stuck
+	      var testRetrieve = Alpine.data('themePicker');
+	      console.debug('[themePicker] registered, retrieve check:', typeof testRetrieve);
+	      console.debug('[themePicker] Alpine version:', Alpine.version);
+	      // Also register as global fallback for debugging
+	      window.themePicker = def;
+	      console.debug('[themePicker] also set window.themePicker as fallback');
 	    });
+	    console.debug('[themePicker] waiting for alpine:init event');
 	  }
 	})();
 	</script>
-	<div x-data="themePicker" data-current-theme={ currentTheme }>
+	<div x-data="themePicker()" data-current-theme={ currentTheme }>
 		<div class="flex items-center gap-3">
 			<div class="theme-preview-swatch flex gap-0.5 shrink-0" data-theme={ currentTheme }>
 				<span class="w-2 h-4 rounded-sm bg-primary"></span>

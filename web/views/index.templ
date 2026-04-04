@@ -66,13 +66,14 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		<link rel="preload" href="/public/css/tailwind.css" as="style"/>
 		<link rel="preload" href="/public/js/_hyperscript.min.js" as="script"/>
 		<link rel="preload" href="/public/js/htmx.min.js" as="script"/>
-		<script>
+		<!-- Trusted Types disabled for debugging -->
+		<!-- <script>
 			if (window.trustedTypes) {
 				trustedTypes.createPolicy('default', {
 					createHTML: function(value) { return value; }
 				});
 			}
-		</script>
+		</script> -->
 		<script defer src="/public/js/htmx.min.js"></script>
 		// setup:feature:demo:start
 		<script src="/public/js/interval-control.js"></script>

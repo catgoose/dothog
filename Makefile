@@ -14,7 +14,7 @@ watch:
 
 # Build Docker image tagged with commit SHA and latest
 docker-build:
-	docker build --build-arg APP_VERSION=$(SHA) -t $(IMAGE):$(SHA) -t $(IMAGE):latest .
+	docker build --no-cache --build-arg APP_VERSION=$(SHA) -t $(IMAGE):$(SHA) -t $(IMAGE):latest .
 
 # Log in to GHCR using gh CLI token
 docker-login:

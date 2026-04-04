@@ -289,6 +289,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	e.Use(echo.WrapMiddleware(porter.SecurityHeaders(porter.SecurityHeadersConfig{
 		PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
 		CrossOriginOpenerPolicy: "same-origin",
+		ContentSecurityPolicy:   "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:",
 	})))
 	// Skip gzip when running behind the templ proxy (mage watch).
 	// Echo's chunked gzip responses cause h2 framing errors through

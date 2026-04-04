@@ -10,7 +10,7 @@ RUN go mod download
 
 COPY . .
 RUN go tool templ generate
-RUN CGO_ENABLED=1 go build -ldflags="-w -s -X catgoose/dothog/internal/version.Version=${APP_VERSION} -X catgoose/dothog/internal/version.BuildDate=$(date -u +%Y-%m-%d)" -o /dothog .
+RUN CGO_ENABLED=1 go build -ldflags="-w -s -X catgoose/dothog/internal/version.Version=${APP_VERSION} -X catgoose/dothog/internal/version.BuildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o /dothog .
 
 FROM alpine:latest
 

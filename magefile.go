@@ -46,7 +46,7 @@ var (
 	htmxSSEURL             = "https://unpkg.com/htmx-ext-sse"
 	// setup:feature:sse:end
 	hyperscriptURL         = "https://unpkg.com/hyperscript.org"
-	alpineURL              = "https://unpkg.com/@alpinejs/csp@3/dist/cdn.min.js"
+	alpineURL              = "https://unpkg.com/alpinejs@3/dist/cdn.min.js"
 	alpineMorphURL         = "https://unpkg.com/@alpinejs/morph@3/dist/cdn.min.js"
 	htmxAlpineMorphURL     = "https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js"
 	publicSourceDir        = "web/assets/public"
@@ -435,7 +435,7 @@ func CopyFiles() error {
 
 // Compile builds the Go project
 func Compile() error {
-	ldflags := "-w -X catgoose/dothog/internal/version.BuildDate=" + time.Now().UTC().Format("2006-01-02")
+	ldflags := "-w -X catgoose/dothog/internal/version.BuildDate=" + time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	return sh.Run("go", "build",
 		"-ldflags", ldflags,
 		"-o", filepath.Join(buildPath, binaryName),

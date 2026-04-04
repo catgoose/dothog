@@ -6,9 +6,9 @@ package version
 //	go build -ldflags="-X catgoose/dothog/internal/version.Version=v1.2.3"
 var Version = "dev"
 
-// BuildDate is the date the binary was built. Override at build time with:
+// BuildDate is the date and time the binary was built. Override at build time with:
 //
-//	go build -ldflags="-X catgoose/dothog/internal/version.BuildDate=2024-01-15"
+//	go build -ldflags="-X catgoose/dothog/internal/version.BuildDate=2024-01-15T14:30:00Z"
 var BuildDate = ""
 
 // Display returns the version string with build date if available.
