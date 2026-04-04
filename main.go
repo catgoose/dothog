@@ -77,8 +77,9 @@ func main() {
 	appCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Error trace store — persists error request logs to SQLite for debugging.
-	traceDB, _, err := dialect.OpenSQLite(appCtx, "db/error_traces.db")
+	// Error trace store — in-memory for demo (seeded on each start),
+	// file-backed for persistent deployments.
+	traceDB, _, err := dialect.OpenSQLite(appCtx, ":memory:")
 	if err != nil {
 		logger.Fatal("Failed to open error traces database", "error", err)
 	}
@@ -89,13 +90,7 @@ func main() {
 	}()
 	reqLogStore := promologsqlite.NewStore(traceDB)
 	if err := reqLogStore.InitSchema(); err != nil {
-		logger.Error("Failed to init error traces schema, recreating", "error", err)
-		traceDB.Exec("DROP TABLE IF EXISTS error_traces")
-		traceDB.Exec("DROP TABLE IF EXISTS retention_rules")
-		traceDB.Exec("DROP TABLE IF EXISTS filter_rules")
-		if err := reqLogStore.InitSchema(); err != nil {
-			logger.Fatal("Failed to init error traces schema after recreate", "error", err)
-		}
+		logger.Fatal("Failed to init error traces schema", "error", err)
 	}
 	reqLogStore.StartCleanup(appCtx, 90*24*time.Hour, 1*time.Hour)
 	// setup:feature:demo:start
