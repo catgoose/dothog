@@ -137,7 +137,7 @@ func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Con
 					logger.WithContext(c.Request().Context()).Warn("Error trace missing UserID: azureId not set on echo context")
 				}
 				// setup:feature:auth:end
-				if promoteErr := reqLogStore.Promote(c.Request().Context(), promolog.ErrorTrace{
+				if promoteErr := reqLogStore.Promote(c.Request().Context(), promolog.Trace{
 					RequestID:  requestID,
 					ErrorChain: err.Error(),
 					StatusCode: statusCode,

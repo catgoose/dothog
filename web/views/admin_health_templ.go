@@ -41,7 +41,6 @@ func AdminHealthPage(h health.Response) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		// setup:feature:demo:start
 		templ_7745c5c3_Err = components.IntervalSlider(components.IntervalSliderCfg{
 			TargetKey: "section", TargetValue: "health",
 			IntervalMs: 5000, Scale: "s", PostURL: "/admin/settings/interval",
@@ -49,7 +48,6 @@ func AdminHealthPage(h health.Response) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		// setup:feature:demo:end
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<a href=\"/health\" target=\"_blank\" class=\"btn btn-sm btn-ghost font-mono\">GET /health</a></div></div><div id=\"health-content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
