@@ -14,9 +14,11 @@ func ServerTimingMiddleware() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			start := time.Now()
 			err := next(c)
-			dur := time.Since(start).Milliseconds()
-			c.Response().Header().Set("Server-Timing",
-				fmt.Sprintf("total;dur=%d;desc=\"Total\"", dur))
+			if !c.Response().Committed {
+				dur := time.Since(start).Milliseconds()
+				c.Response().Header().Set("Server-Timing",
+					fmt.Sprintf("total;dur=%d;desc=\"Total\"", dur))
+			}
 			return err
 		}
 	}

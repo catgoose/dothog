@@ -40,11 +40,78 @@ document.addEventListener('alpine:init', function () {
         this.expanded = !this.expanded;
         if (this.expanded && !this.loaded) {
           this.loaded = true;
-          htmx.trigger(this.$el.querySelector('[hx-get]'), 'expand');
+          // $el is the <tr> with x-on:click (the evaluation element),
+          // which is also the element carrying hx-get and hx-trigger="expand".
+          htmx.trigger(this.$el, 'expand');
         }
       },
       collapse: function () {
         this.expanded = false;
+      }
+    };
+  });
+
+  // -- Theme picker (settings_app.templ) ---------------------------------
+  Alpine.data('themePicker', function () {
+    return {
+      current: '',
+      init: function () {
+        this.current = this.$el.dataset.currentTheme || 'dark';
+      },
+      setTheme: function (theme) {
+        this.current = theme;
+        document.documentElement.dataset.theme = theme;
+        this._highlightSwatch();
+        this._updatePreviewSwatch();
+        this._syncSelect();
+        var t = document.querySelector('meta[name="csrf-token"]');
+        fetch('/settings/theme', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': t ? t.content : ''
+          },
+          body: 'theme=' + theme
+        });
+        if (window.appChannel) {
+          window.appChannel.postMessage({ type: 'theme-change', theme: theme });
+        }
+      },
+      pickSwatch: function (event) {
+        var btn = event.target.closest('.theme-swatch');
+        if (!btn) return;
+        var theme = btn.dataset.themeValue;
+        if (theme) {
+          this.setTheme(theme);
+        }
+      },
+      pickFromSelect: function (event) {
+        var theme = event.target.value;
+        if (theme) {
+          this.setTheme(theme);
+        }
+      },
+      _highlightSwatch: function () {
+        var current = this.current;
+        this.$el.querySelectorAll('.theme-swatch').forEach(function (btn) {
+          if (btn.dataset.themeValue === current) {
+            btn.classList.add('ring-2', 'ring-primary', 'ring-offset-1');
+          } else {
+            btn.classList.remove('ring-2', 'ring-primary', 'ring-offset-1');
+          }
+        });
+      },
+      _updatePreviewSwatch: function () {
+        var preview = this.$el.querySelector('.theme-preview-swatch');
+        if (preview) {
+          preview.dataset.theme = this.current;
+        }
+      },
+      _syncSelect: function () {
+        var select = this.$el.querySelector('select');
+        if (select) {
+          select.value = this.current;
+        }
       }
     };
   });
