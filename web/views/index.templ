@@ -175,15 +175,17 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:session_settings:end
 		// setup:feature:sse:end
 		// setup:feature:offline:start
-		if !devMode {
-			<script>
-				if ('serviceWorker' in navigator) {
-					navigator.serviceWorker.register('/sw.js').catch(function(err) {
-						console.warn('ServiceWorker registration failed:', err);
-					});
-				}
-			</script>
-		}
+		<script>
+			// Unregister any existing service worker and clear caches
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.getRegistrations().then(function(regs) {
+					regs.forEach(function(r) { r.unregister(); });
+				});
+				caches.keys().then(function(keys) {
+					keys.forEach(function(k) { caches.delete(k); });
+				});
+			}
+		</script>
 		// setup:feature:offline:end
 	</head>
 }

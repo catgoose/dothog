@@ -3,23 +3,26 @@ package views
 import (
 	"fmt"
 	"strconv"
-	"strings"
+	"sort"
 
 	"github.com/catgoose/promolog"
 	"github.com/catgoose/linkwell"
 	components "catgoose/dothog/web/components/core"
 )
 
-// parseAttrs splits a "key=value key2=value2" string into pairs.
-func parseAttrs(attrs string) [][]string {
-	if attrs == "" {
+// sortedAttrs returns map entries as sorted key-value pairs for display.
+func sortedAttrs(attrs map[string]string) [][]string {
+	if len(attrs) == 0 {
 		return nil
 	}
-	var pairs [][]string
-	for _, part := range strings.Fields(attrs) {
-		if k, v, ok := strings.Cut(part, "="); ok {
-			pairs = append(pairs, []string{k, v})
-		}
+	keys := make([]string, 0, len(attrs))
+	for k := range attrs {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	pairs := make([][]string, len(keys))
+	for i, k := range keys {
+		pairs[i] = []string{k, attrs[k]}
 	}
 	return pairs
 }
@@ -103,7 +106,7 @@ templ statusBadge(code int) {
 }
 
 // ErrorTraceDetailContent renders the expandable detail panel.
-templ ErrorTraceDetailContent(trace *promolog.ErrorTrace) {
+templ ErrorTraceDetailContent(trace *promolog.Trace) {
 	<td colspan="7" class="bg-base-200 p-4">
 		<div class="space-y-4">
 			<div class="flex items-start justify-between">
@@ -180,7 +183,7 @@ templ ErrorTraceDetailContent(trace *promolog.ErrorTrace) {
 					<span class="font-medium text-sm text-base-content/60">Log Entries ({ strconv.Itoa(len(trace.Entries)) })</span>
 					<div class="mt-1 space-y-1">
 						for _, entry := range trace.Entries {
-							{{ pairs := parseAttrs(entry.Attrs) }}
+							{{ pairs := sortedAttrs(entry.Attrs) }}
 							<div
 								class={ "rounded-lg border p-2", templ.KV("border-error/30 bg-error/5", entry.Level == "ERROR"), templ.KV("border-warning/30 bg-warning/5", entry.Level == "WARN"), templ.KV("border-base-300 bg-base-200", entry.Level != "ERROR" && entry.Level != "WARN") }
 								if len(pairs) > 0 {

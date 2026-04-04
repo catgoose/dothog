@@ -180,7 +180,7 @@ templ loggingStatusBadge(code int) {
 }
 
 // LoggingReportOutput renders the simulated support report as formatted JSON.
-templ LoggingReportOutput(trace *promolog.ErrorTrace, jsonPayload string) {
+templ LoggingReportOutput(trace *promolog.Trace, jsonPayload string) {
 	<div class="card bg-base-100 shadow border border-base-300 mt-4">
 		<div class="card-body p-4">
 			<div class="flex items-center justify-between">
