@@ -53,17 +53,28 @@ document.addEventListener('alpine:init', function () {
 
   // -- Theme picker (settings_app.templ) ---------------------------------
   Alpine.data('themePicker', function () {
+    var root = null;
     return {
       current: '',
       init: function () {
-        this.current = this.$el.dataset.currentTheme || 'dark';
+        root = this.$el;
+        this.current = root.dataset.currentTheme || 'dark';
       },
       setTheme: function (theme) {
         this.current = theme;
         document.documentElement.dataset.theme = theme;
-        this._highlightSwatch();
-        this._updatePreviewSwatch();
-        this._syncSelect();
+        // Update all visual indicators
+        var select = root.querySelector('select');
+        if (select) select.value = theme;
+        var preview = root.querySelector('.theme-preview-swatch');
+        if (preview) preview.dataset.theme = theme;
+        root.querySelectorAll('.theme-swatch').forEach(function (btn) {
+          if (btn.dataset.themeValue === theme) {
+            btn.classList.add('ring-2', 'ring-primary', 'ring-offset-1');
+          } else {
+            btn.classList.remove('ring-2', 'ring-primary', 'ring-offset-1');
+          }
+        });
         var t = document.querySelector('meta[name="csrf-token"]');
         fetch('/settings/theme', {
           method: 'POST',
@@ -81,39 +92,11 @@ document.addEventListener('alpine:init', function () {
         var btn = event.target.closest('.theme-swatch');
         if (!btn) return;
         var theme = btn.dataset.themeValue;
-        if (theme) {
-          this.setTheme(theme);
-        }
+        if (theme) this.setTheme(theme);
       },
       pickFromSelect: function (event) {
         var theme = event.target.value;
-        if (theme) {
-          this.setTheme(theme);
-        }
-      },
-      _highlightSwatch: function () {
-        var current = this.current;
-        this.$el.querySelectorAll('.theme-swatch').forEach(function (btn) {
-          if (btn.dataset.themeValue === current) {
-            btn.classList.add('ring-2', 'ring-primary', 'ring-offset-1');
-          } else {
-            btn.classList.remove('ring-2', 'ring-primary', 'ring-offset-1');
-          }
-        });
-      },
-      _updatePreviewSwatch: function () {
-        var preview = this.$el.querySelector('.theme-preview-swatch');
-        if (preview) {
-          preview.dataset.theme = this.current;
-        }
-      },
-      _syncSelect: function () {
-        var current = this.current;
-        var select = this.$el.querySelector('select');
-        if (select && select.value !== current) {
-          select.value = current;
-          select.dispatchEvent(new Event('input', { bubbles: false }));
-        }
+        if (theme) this.setTheme(theme);
       }
     };
   });
