@@ -25,20 +25,22 @@ import (
 // and reading them in buildConfig().
 type AppConfig struct {
 	// setup:feature:auth:start
-	SessionMgr      crooner.SessionManager
-	CroonerConfig   *crooner.AuthConfigParams
-	CroonerDisabled bool
+	SessionMgr    crooner.SessionManager
+	CroonerConfig *crooner.AuthConfigParams
 	// setup:feature:auth:end
+	ServerPort                string
 	DatabaseURL               string
 	SessionSecret             string
 	AppName                   string
-	ServerPort                string
 	CSRFPerRequestPaths       []string
 	CSRFExemptPaths           []string
 	GraphUserCacheRefreshHour int
-	EnableDatabase            bool
-	InitRepo                  bool
-	CSRFRotatePerRequest      bool
+	// setup:feature:auth:start
+	CroonerDisabled bool
+	// setup:feature:auth:end
+	EnableDatabase       bool
+	InitRepo             bool
+	CSRFRotatePerRequest bool
 }
 
 func buildConfig() (*AppConfig, error) {

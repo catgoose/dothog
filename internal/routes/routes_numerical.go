@@ -23,20 +23,19 @@ import (
 // ── Simulation state ────────────────────────────────────────────────────────
 
 type numSim struct {
-	txnSec    float64
-	revenue   float64
-	users     float64
+	uptime    time.Time
+	mem       float64
+	sla       float64
 	queue     float64
 	cacheHit  float64
 	errors    float64
 	p99       float64
 	cpu       float64
-	mem       float64
-	uptime    time.Time
+	txnSec    float64
+	users     float64
+	revenue   float64
 	deploys   int
-	sla       float64
 	incidents int
-
 	prevTxn   float64
 	prevUsers float64
 	prevQueue float64

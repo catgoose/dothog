@@ -11,20 +11,20 @@ import (
 	"github.com/catgoose/tavern"
 	// setup:feature:sse:end
 	"catgoose/dothog/internal/health"
+	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/version"
 	"github.com/catgoose/promolog"
-	"catgoose/dothog/internal/routes/handler"
 	// setup:feature:demo:start
 	"github.com/catgoose/linkwell"
 	// setup:feature:demo:end
-	"catgoose/dothog/web/views"
 	"catgoose/dothog/internal/routes/middleware"
+	"catgoose/dothog/web/views"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
-	"github.com/catgoose/porter"
 	"context"
 	"fmt"
+	"github.com/catgoose/porter"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -72,20 +72,20 @@ type Repos struct {
 
 // appRoutes implements AppRoutes
 type appRoutes struct {
-	e         *echo.Echo
-	ctx       context.Context
 	repos     Repos
 	startTime time.Time
-	healthCfg health.Config
+	ctx       context.Context
 	// setup:feature:sync:start
 	versionChecker VersionChecker
 	// setup:feature:sync:end
+	e *echo.Echo
 	// setup:feature:demo:start
 	demoDB *demo.DB
 	// setup:feature:demo:end
 	// setup:feature:sse:start
 	broker *tavern.SSEBroker
 	// setup:feature:sse:end
+	healthCfg health.Config
 }
 
 // Close shuts down the SSE broker and releases resources.
@@ -403,4 +403,3 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 
 	return e, nil
 }
-
