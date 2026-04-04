@@ -112,6 +112,16 @@ func handleErrorWithContext(c echo.Context, ec linkwell.ErrorContext) error {
 // shared store on error so it can be retrieved for issue reports.
 func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Context) {
 	return func(err error, c echo.Context) {
+		// The error handler runs after the middleware chain returns. If the
+		// httpcompression middleware has already finalized its writer, rendering
+		// the error page can panic (nil pointer in compressWriter.Write).
+		// Recover here so the connection isn't killed outright.
+		defer func() {
+			if r := recover(); r != nil {
+				logger.WithContext(c.Request().Context()).Error("Panic in error handler (response writer likely finalized)",
+					"panic", r, "route", c.Request().URL.Path)
+			}
+		}()
 		// Determine status code from error type before promoting.
 		statusCode := http.StatusInternalServerError
 		var hhe *linkwell.HTTPError

@@ -82,6 +82,11 @@ func main() {
 	if err != nil {
 		logger.Fatal("Failed to open error traces database", "error", err)
 	}
+	// In-memory SQLite databases are destroyed when the connection closes.
+	// Override chuck's default ConnMaxLifetime/ConnMaxIdleTime so the single
+	// connection is never recycled.
+	traceDB.SetConnMaxLifetime(0)
+	traceDB.SetConnMaxIdleTime(0)
 	defer func() {
 		if closeErr := traceDB.Close(); closeErr != nil {
 			logger.Info("Error closing error traces database", "error", closeErr)

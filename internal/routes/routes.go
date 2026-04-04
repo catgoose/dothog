@@ -284,10 +284,10 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		}
 	})
 
+	e.Use(echoMiddleware.Recover())
 	e.Use(middleware.ServerTimingMiddleware())
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
 	e.Use(echoMiddleware.RequestLogger())
-	e.Use(echoMiddleware.Recover())
 	e.Use(echo.WrapMiddleware(porter.SecurityHeaders(porter.SecurityHeadersConfig{
 		PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
 		CrossOriginOpenerPolicy: "same-origin",

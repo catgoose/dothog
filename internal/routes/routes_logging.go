@@ -165,7 +165,10 @@ func handleErrorTracesSSE(broker *tavern.SSEBroker) echo.HandlerFunc {
 		c.Response().Header().Set("Connection", "keep-alive")
 		c.Response().WriteHeader(http.StatusOK)
 
-		flusher := c.Response().Writer.(http.Flusher)
+		flusher, ok := c.Response().Writer.(http.Flusher)
+		if !ok {
+			return fmt.Errorf("streaming unsupported")
+		}
 		ch, unsub := broker.Subscribe(TopicErrorTraces)
 		defer unsub()
 
