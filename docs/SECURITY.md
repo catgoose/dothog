@@ -144,7 +144,7 @@ Dev mode supports `StartTLS` with local certificates. Production assumes deploym
 
 ### Session Cookie Secure Flag
 
-The `Secure` flag is not set on session cookies (it would break local development over HTTP). Set it in production if your app is served exclusively over HTTPS.
+The `Secure` flag is set automatically in production (`!appenv.Dev()`). In development mode it is disabled so local HTTP works. No action needed for production deployments behind TLS.
 
 ### Encryption at Rest
 

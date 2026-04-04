@@ -1,4 +1,4 @@
-FROM golang:alpine AS build
+FROM golang:1.24-alpine3.21 AS build
 
 ARG APP_VERSION=dev
 
@@ -12,7 +12,7 @@ COPY . .
 RUN go tool templ generate
 RUN CGO_ENABLED=1 go build -ldflags="-w -s -X catgoose/dothog/internal/version.Version=${APP_VERSION} -X catgoose/dothog/internal/version.BuildDate=$(date -u +%Y-%m-%d)" -o /dothog .
 
-FROM alpine:latest
+FROM alpine:3.21
 
 RUN apk add --no-cache ca-certificates tzdata
 COPY --from=build /dothog /usr/local/bin/dothog

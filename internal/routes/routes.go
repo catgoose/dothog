@@ -25,10 +25,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/catgoose/porter"
+	"io"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 	// setup:feature:auth:start
 	"github.com/catgoose/crooner"
@@ -402,9 +404,14 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 			return echo.NewHTTPError(http.StatusNotFound)
 		}
 		defer func() { _ = f.Close() }()
-		c.Response().Header().Set("Content-Type", "application/javascript")
+		raw, err := io.ReadAll(f)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError)
+		}
+		content := strings.ReplaceAll(string(raw), "{{APP_VERSION}}", version.Version)
 		c.Response().Header().Set("Service-Worker-Allowed", "/")
-		return c.Stream(http.StatusOK, "application/javascript", f)
+		c.Response().Header().Set("Cache-Control", "no-cache")
+		return c.String(http.StatusOK, content)
 	})
 	// setup:feature:offline:end
 

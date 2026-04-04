@@ -8,9 +8,9 @@
  * - Static assets (/public/): cache-first (they're immutable with long max-age)
  */
 
-importScripts('/public/js/sync.js');
+importScripts('/public/js/sync.js?v={{APP_VERSION}}');
 
-const CACHE_NAME = '{{BINARY_NAME}}-v1';
+const CACHE_NAME = '{{BINARY_NAME}}-{{APP_VERSION}}';
 
 // Connectivity state — updated by the main thread via postMessage
 self._isOnline = true;
@@ -33,15 +33,15 @@ self.addEventListener('message', (event) => {
 
 // Static assets to pre-cache on install
 const PRECACHE_URLS = [
-  '/public/css/app-layout.css',
-  '/public/js/htmx.min.js',
-  '/public/js/_hyperscript.min.js',
-  '/public/js/alpine-components.js',
-  '/public/js/alpine.min.js',
-  '/public/js/alpine.morph.min.js',
-  '/public/js/htmx.alpine-morph.js',
-  '/public/js/beacon.js',
-  '/public/js/broadcast.js',
+  '/public/css/app-layout.css?v={{APP_VERSION}}',
+  '/public/js/htmx.min.js?v={{APP_VERSION}}',
+  '/public/js/_hyperscript.min.js?v={{APP_VERSION}}',
+  '/public/js/alpine-components.js?v={{APP_VERSION}}',
+  '/public/js/alpine.min.js?v={{APP_VERSION}}',
+  '/public/js/alpine.morph.min.js?v={{APP_VERSION}}',
+  '/public/js/htmx.alpine-morph.js?v={{APP_VERSION}}',
+  '/public/js/beacon.js?v={{APP_VERSION}}',
+  '/public/js/broadcast.js?v={{APP_VERSION}}',
   '/pwa',
   '/pwa/inspection',
   '/pwa/report',
