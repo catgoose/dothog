@@ -26,10 +26,10 @@ Request
   ├─ Request Logger (structured access log)
   ├─ Recover (panic recovery)
   ├─ Security Headers (porter.SecurityHeaders — X-Frame-Options, HSTS, Permissions-Policy, etc.)
-  ├─ Gzip (skipped when behind templ proxy; Caddy handles compression)
+  ├─ Compression (zstd/brotli/gzip via httpcompression; skipped behind templ proxy)
   ├─ Session (crooner/SCS — loads session, wraps LoadAndSave)
   ├─ Auth (crooner — OAuth/OIDC flow, login redirect)
-  ├─ CSRF (porter.CSRFProtect — HMAC-SHA256 double-submit cookie)
+  ├─ CSRF (porter.CSRFProtect — Sec-Fetch-Site fast-path, HMAC-SHA256 fallback)
   ├─ Session Settings (loads per-session preferences → request context)
   ├─ Link Relations (resolves linkwell.LinksFor(path) → echo context + Link HTTP header)
   ├─ Vary: HX-Request header

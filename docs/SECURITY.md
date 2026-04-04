@@ -68,6 +68,7 @@ These are available in the scaffold but only included when the feature is enable
 ### CSRF Protection (`setup:feature:csrf`)
 
 - Token generation and rotation via `porter.CSRFProtect()`
+- Sec-Fetch-Site fast-path: modern browsers (94%+ coverage) skip token validation entirely when `Sec-Fetch-Site: same-origin` is present
 - Double-submit cookie pattern with configurable key from `SESSION_SECRET`
 - Automatic HTMX header injection via `htmx:configRequest` listener
 - Meta tag `<meta name="csrf-token">` for client-side access
@@ -111,15 +112,15 @@ script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; conne
 
 ### Strict-Transport-Security (HSTS)
 
-Not set. Expected to be handled by your reverse proxy (nginx, Caddy, Cloudflare). If you terminate TLS at the app, add this yourself.
+Disabled by default in porter (can break dev environments without TLS). Enable with `porter.DefaultHSTSConfig()` when serving over HTTPS, or handle at the reverse proxy layer.
 
 ### X-Frame-Options / frame-ancestors
 
-Not set. Add `X-Frame-Options: DENY` or CSP `frame-ancestors 'none'` if your app should not be embedded in iframes.
+Set to `SAMEORIGIN` by default via `porter.SecurityHeaders()`. Override with CSP `frame-ancestors` if you need stricter control.
 
 ### X-Content-Type-Options
 
-Not set. Add `X-Content-Type-Options: nosniff` via your proxy or porter configuration.
+Set to `nosniff` by default via `porter.SecurityHeaders()`. No action needed.
 
 ### Rate Limiting
 
