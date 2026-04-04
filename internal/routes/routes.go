@@ -262,9 +262,9 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			preloadLinks := []string{
-				"</public/css/tailwind.css>; rel=preload; as=style; fetchpriority=high",
-				"</public/css/daisyui.css>; rel=preload; as=style",
-				"</public/js/htmx.min.js>; rel=preload; as=script; fetchpriority=high",
+				"<" + version.Asset("/public/css/tailwind.css") + ">; rel=preload; as=style; fetchpriority=high",
+				"<" + version.Asset("/public/css/daisyui.css") + ">; rel=preload; as=style",
+				"<" + version.Asset("/public/js/htmx.min.js") + ">; rel=preload; as=script; fetchpriority=high",
 			}
 			if !behindProxy && c.Request().ProtoMajor >= 2 {
 				w := c.Response().Writer

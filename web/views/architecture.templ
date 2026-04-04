@@ -1,8 +1,10 @@
 // setup:feature:demo
 package views
 
+import "catgoose/dothog/internal/version"
+
 templ ArchitecturePage() {
-	<link rel="stylesheet" href="/public/css/charts.min.css" type="text/css"/>
+	<link rel="stylesheet" href={ version.Asset("/public/css/charts.min.css") } type="text/css"/>
 	<div class="max-w-6xl mx-auto p-4 space-y-16 pb-16">
 		<!-- Hero -->
 		<div class="hero bg-base-200 rounded-box py-12">

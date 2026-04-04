@@ -3,13 +3,14 @@ package views
 
 import (
 	"catgoose/dothog/internal/health"
+	"catgoose/dothog/internal/version"
 	components "catgoose/dothog/web/components/core"
 	"fmt"
 )
 
 // RealtimePage is the full-page layout for /hypermedia/realtime.
 templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []ServiceStatus, svcLatencies []ServiceLatency, tiles []NumTile, masterEnabled bool, masterMs int) {
-	<link rel="stylesheet" href="/public/css/charts.min.css"/>
+	<link rel="stylesheet" href={ version.Asset("/public/css/charts.min.css") }/>
 	<style>
 		/* Charts.css transition smoothing */
 		.charts-css.area tbody td { transition: --size 0.6s ease; }

@@ -1,6 +1,7 @@
 package views
 
 import (
+	"catgoose/dothog/internal/version"
 	"github.com/catgoose/linkwell"
 	components "catgoose/dothog/web/components/core"
 )
@@ -63,9 +64,9 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<meta name="description" content={ appName + " - IT operations dashboard for managing infrastructure, inventory, and real-time monitoring" }/>
-		<link rel="preload" href="/public/css/tailwind.css" as="style" fetchpriority="high"/>
-		<link rel="preload" href="/public/js/htmx.min.js" as="script" fetchpriority="high"/>
-		<link rel="preload" href="/public/js/_hyperscript.min.js" as="script"/>
+		<link rel="preload" href={ version.Asset("/public/css/tailwind.css") } as="style" fetchpriority="high"/>
+		<link rel="preload" href={ version.Asset("/public/js/htmx.min.js") } as="script" fetchpriority="high"/>
+		<link rel="preload" href={ version.Asset("/public/js/_hyperscript.min.js") } as="script"/>
 		<script>
 			if (window.trustedTypes) {
 				trustedTypes.createPolicy('default', {
@@ -73,36 +74,36 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 				});
 			}
 		</script>
-		<script defer src="/public/js/htmx.min.js"></script>
+		<script defer src={ version.Asset("/public/js/htmx.min.js") }></script>
 		// setup:feature:demo:start
-		<script src="/public/js/interval-control.js"></script>
+		<script src={ version.Asset("/public/js/interval-control.js") }></script>
 		// setup:feature:demo:end
-		<script defer src="/public/js/_hyperscript.min.js"></script>
-		<script defer src="/public/js/htmx.alpine-morph.js"></script>
-		<script defer src="/public/js/alpine.morph.min.js"></script>
+		<script defer src={ version.Asset("/public/js/_hyperscript.min.js") }></script>
+		<script defer src={ version.Asset("/public/js/htmx.alpine-morph.js") }></script>
+		<script defer src={ version.Asset("/public/js/alpine.morph.min.js") }></script>
 		// setup:feature:offline:start
-		<script defer src="/public/js/offline-indicator.js"></script>
+		<script defer src={ version.Asset("/public/js/offline-indicator.js") }></script>
 		// setup:feature:offline:end
 		// setup:feature:demo:start
-		<script defer src="/public/js/beacon.js"></script>
-		<script defer src="/public/js/broadcast.js"></script>
+		<script defer src={ version.Asset("/public/js/beacon.js") }></script>
+		<script defer src={ version.Asset("/public/js/broadcast.js") }></script>
 		// setup:feature:demo:end
-		<script defer src="/public/js/alpine-components.js"></script>
-		<script defer src="/public/js/alpine.min.js"></script>
+		<script defer src={ version.Asset("/public/js/alpine-components.js") }></script>
+		<script defer src={ version.Asset("/public/js/alpine.min.js") }></script>
 		// setup:feature:sse:start
-		<script defer src="/public/js/htmx.ext.sse.js"></script>
+		<script defer src={ version.Asset("/public/js/htmx.ext.sse.js") }></script>
 		// setup:feature:sse:end
-		<link rel="stylesheet" href="/public/css/tailwind.css" type="text/css"/>
-		<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
+		<link rel="stylesheet" href={ version.Asset("/public/css/tailwind.css") } type="text/css"/>
+		<link rel="stylesheet" href={ version.Asset("/public/css/daisyui.css") } type="text/css"/>
 		for _, href := range extraCSS {
 			<link rel="stylesheet" href={ href } type="text/css"/>
 		}
-		<link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg"/>
-		<link rel="icon" type="image/png" sizes="32x32" href="/public/images/favicon-32x32.png"/>
-		<link rel="icon" type="image/png" sizes="16x16" href="/public/images/favicon-16x16.png"/>
-		<link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png"/>
+		<link rel="icon" type="image/svg+xml" href={ version.Asset("/public/images/favicon.svg") }/>
+		<link rel="icon" type="image/png" sizes="32x32" href={ version.Asset("/public/images/favicon-32x32.png") }/>
+		<link rel="icon" type="image/png" sizes="16x16" href={ version.Asset("/public/images/favicon-16x16.png") }/>
+		<link rel="apple-touch-icon" sizes="180x180" href={ version.Asset("/public/images/apple-touch-icon.png") }/>
 		// setup:feature:demo:start
-		<link rel="manifest" href="/public/images/site.webmanifest"/>
+		<link rel="manifest" href={ version.Asset("/public/images/site.webmanifest") }/>
 		// setup:feature:demo:end
 		// setup:feature:demo:start
 		<script type="speculationrules">
@@ -124,7 +125,7 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:demo:end
 		<title>{ appName }</title>
 		if devMode {
-			<script src="/public/js/dev-logging.js"></script>
+			<script src={ version.Asset("/public/js/dev-logging.js") }></script>
 		}
 		<script>
 			/**

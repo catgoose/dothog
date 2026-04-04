@@ -1,6 +1,9 @@
 package components
 
-import "github.com/catgoose/linkwell"
+import (
+	"catgoose/dothog/internal/version"
+	"github.com/catgoose/linkwell"
+)
 
 // ErrorPage renders a self-contained HTML error page for non-HTMX requests.
 // It includes its own HTML shell with Tailwind, DaisyUI, HTMX, and HyperScript
@@ -11,11 +14,11 @@ templ ErrorPage(ec linkwell.ErrorContext) {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<script src="/public/js/htmx.min.js"></script>
-			<script src="/public/js/_hyperscript.min.js"></script>
-			<link rel="stylesheet" href="/public/css/tailwind.css" type="text/css"/>
-			<link rel="stylesheet" href="/public/css/daisyui.css" type="text/css"/>
-			<link rel="icon" href="/public/images/favicon.svg" type="image/x-svg+xml"/>
+			<script src={ version.Asset("/public/js/htmx.min.js") }></script>
+			<script src={ version.Asset("/public/js/_hyperscript.min.js") }></script>
+			<link rel="stylesheet" href={ version.Asset("/public/css/tailwind.css") } type="text/css"/>
+			<link rel="stylesheet" href={ version.Asset("/public/css/daisyui.css") } type="text/css"/>
+			<link rel="icon" href={ version.Asset("/public/images/favicon.svg") } type="image/x-svg+xml"/>
 			<title>Error</title>
 			if ec.Theme == "" {
 				<script>
