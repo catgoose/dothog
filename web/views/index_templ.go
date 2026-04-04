@@ -168,7 +168,7 @@ func header(csrfToken string, devMode bool, appName string, extraCSS []string) t
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<head><title>DEBUG BUILD</title><style>body::before { content: \"DEBUG BUILD - THEME TEST\"; display: block; background: red; color: white; text-align: center; font-size: 24px; font-weight: bold; padding: 10px; position: fixed; top: 0; left: 0; right: 0; z-index: 99999; }</style>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<head><title>DEBUG BUILD</title><style>body::before { content: \"DEBUG v2 - ALPINE COMPONENTS JS\"; display: block; background: blue; color: white; text-align: center; font-size: 24px; font-weight: bold; padding: 10px; position: fixed; top: 0; left: 0; right: 0; z-index: 99999; }</style>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
