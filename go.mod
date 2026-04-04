@@ -10,7 +10,7 @@ require (
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.15
 	github.com/catgoose/linkwell v0.2.20
-	github.com/catgoose/porter v0.4.8
+	github.com/catgoose/porter v0.4.9
 	github.com/catgoose/promolog/sqlite v0.0.0-20260404022206-acbd381ca1c5
 	github.com/catgoose/tavern v0.4.36
 	github.com/charmbracelet/huh v1.0.0
