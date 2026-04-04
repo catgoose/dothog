@@ -23,7 +23,7 @@ func (ar *appRoutes) initReportIssueRoutes() {
 	reportHandler := func(c echo.Context) error {
 		requestID := c.Param("requestID")
 		description := c.FormValue("description")
-		var trace *promolog.ErrorTrace
+		var trace *promolog.Trace
 		if ar.repos.ReqLogStore != nil && requestID != "" {
 			var err error
 			trace, err = ar.repos.ReqLogStore.Get(c.Request().Context(), requestID)

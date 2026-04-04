@@ -10,24 +10,27 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
-	"strings"
 
 	components "catgoose/dothog/web/components/core"
 	"github.com/catgoose/linkwell"
 	"github.com/catgoose/promolog"
 )
 
-// parseAttrs splits a "key=value key2=value2" string into pairs.
-func parseAttrs(attrs string) [][]string {
-	if attrs == "" {
+// sortedAttrs returns map entries as sorted key-value pairs for display.
+func sortedAttrs(attrs map[string]string) [][]string {
+	if len(attrs) == 0 {
 		return nil
 	}
-	var pairs [][]string
-	for _, part := range strings.Fields(attrs) {
-		if k, v, ok := strings.Cut(part, "="); ok {
-			pairs = append(pairs, []string{k, v})
-		}
+	keys := make([]string, 0, len(attrs))
+	for k := range attrs {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	pairs := make([][]string, len(keys))
+	for i, k := range keys {
+		pairs[i] = []string{k, attrs[k]}
 	}
 	return pairs
 }
@@ -383,7 +386,7 @@ func statusBadge(code int) templ.Component {
 }
 
 // ErrorTraceDetailContent renders the expandable detail panel.
-func ErrorTraceDetailContent(trace *promolog.ErrorTrace) templ.Component {
+func ErrorTraceDetailContent(trace *promolog.Trace) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -572,7 +575,7 @@ func ErrorTraceDetailContent(trace *promolog.ErrorTrace) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, entry := range trace.Entries {
-				pairs := parseAttrs(entry.Attrs)
+				pairs := sortedAttrs(entry.Attrs)
 				var templ_7745c5c3_Var29 = []any{"rounded-lg border p-2", templ.KV("border-error/30 bg-error/5", entry.Level == "ERROR"), templ.KV("border-warning/30 bg-warning/5", entry.Level == "WARN"), templ.KV("border-base-300 bg-base-200", entry.Level != "ERROR" && entry.Level != "WARN")}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var29...)
 				if templ_7745c5c3_Err != nil {
