@@ -5,40 +5,25 @@ How security works across the full deployment stack, from the browser to the app
 ## Architecture
 
 ```
-Browser ──H3/HTTPS──> Cloudflare Edge ──H2/TLS──> nginx (443) ──HTTP──> app (:port)
+Browser ──HTTPS──> nginx (443) ──HTTP──> app (:port)
 ```
 
-Three layers, each with a role:
+Two layers, each with a role:
 
 | Layer | Handles | Examples |
 |-------|---------|----------|
-| **Cloudflare** | Edge security, TLS termination to browser, origin encryption, caching, rate limiting | HSTS, ECH, Early Hints, CSP (baseline), WAF, X-Robots-Tag |
-| **nginx** | TLS termination from Cloudflare (origin cert), reverse proxy, SSE buffering | SSL with Cloudflare Origin Certificate, HTTP/2, proxy headers |
+| **nginx** | TLS termination, reverse proxy, SSE buffering, H3/QUIC | SSL with wildcard certificate, HTTP/2, HTTP/3, proxy headers |
 | **App (porter)** | Application security, session management, CSRF, per-app CSP | Security headers, CSRF tokens, auth middleware, correlation IDs |
 
 ## What each layer does
-
-### Cloudflare (edge)
-
-Configured via API (`vopts harden` or TUI `H` key). Settings live in Cloudflare's dashboard, not in code.
-
-| Setting | What it does |
-|---------|-------------|
-| SSL Full Strict | Encrypts Cloudflare-to-origin traffic and validates the origin certificate |
-| HSTS (preload, 2yr) | Tells browsers to always use HTTPS. `includeSubDomains` covers all `*.dothog.org` |
-| ECH | Encrypts the SNI field in TLS handshake so observers can't see which subdomain was requested |
-| Early Hints | Cloudflare caches your `Link` headers and replays them as 103 responses before hitting origin |
-| CSP header | Baseline Content-Security-Policy on all responses as a fallback |
-| X-Robots-Tag | `noindex, nofollow` on the demo subdomain to prevent search engine indexing |
-| Rate limiting | Blocks IPs exceeding 5 POST requests per 10 seconds on the demo subdomain |
 
 ### nginx (origin proxy)
 
 Configured in `deploy/cloud-init.yml`. Each app gets a server block.
 
-- Listens on port 443 with a Cloudflare Origin CA wildcard certificate (`*.dothog.org`)
-- HTTP/2 enabled (`listen 443 ssl http2`) so Cloudflare can multiplex requests and Early Hints fire in the app
-- Port 80 kept for Cloudflare health checks and HTTP-to-HTTPS redirect at the edge
+- Listens on port 443 with a wildcard certificate
+- HTTP/2 enabled (`listen 443 ssl http2`) for multiplexed requests
+- Port 80 kept for health checks and HTTP-to-HTTPS redirect
 - SSE endpoints get dedicated config: buffering off, 300s timeouts, HTTP/1.1 upstream
 - `X-Forwarded-Proto`, `X-Real-IP`, `X-Forwarded-For` headers passed through
 
@@ -54,19 +39,13 @@ Configured in each app's `routes.go`. This is what ships with the scaffold.
 | Correlation IDs | Per-request trace IDs via promolog |
 | `crooner` session/auth | OIDC, PKCE, session management (when auth feature enabled) |
 
-## Why both Cloudflare and porter set CSP
+## Corporate / Self-Hosted Deployment
 
-Cloudflare's CSP is a baseline that covers everything behind `*.dothog.org`, including static sites (`dothog.org`, `org.dothog.org`) that don't run through porter. Porter's CSP can be more specific per-app (e.g., allowing Cloudflare Insights `script-src`). If an app misconfigures its headers, the edge rule still applies.
+For corporate networks, local deployments, and self-hosted setups behind your own infrastructure.
 
-If they conflict, Cloudflare's header and the app's header both arrive at the browser. The browser uses the **most restrictive** combination.
+### Wildcard certificate setup (corporate CA, Let's Encrypt)
 
-## Deploying without Cloudflare
-
-For environments where Cloudflare is not in the picture -- corporate networks, local deployments, self-hosted setups behind your own infrastructure.
-
-### With your own wildcard certificate (e.g., corporate CA, Let's Encrypt)
-
-Replace the Cloudflare Origin Certificate with your own cert on nginx:
+Configure your wildcard certificate on nginx:
 
 ```nginx
 # /etc/nginx/snippets/ssl.conf
@@ -85,9 +64,11 @@ ssl_ciphers HIGH:!aNULL:!MD5;
 
 Everything else stays the same. The app doesn't care who terminates TLS -- it sees `X-Forwarded-Proto: https` from nginx either way.
 
-### What you lose without Cloudflare
+### Features that require a CDN / edge proxy
 
-| Feature | Without Cloudflare | Replacement |
+If you later add a CDN like Cloudflare, these features become available at the edge. Without one, here's how to cover them:
+
+| Feature | Without edge proxy | Replacement |
 |---------|-------------------|-------------|
 | HSTS | Not set at edge | Enable in porter: `porter.DefaultHSTSConfig()` |
 | CSP (baseline) | No edge fallback | Set in porter (already done per-app) |
@@ -164,7 +145,7 @@ server {
     # Browsers discover H3 via this header and upgrade on subsequent requests
     add_header Alt-Svc 'h3=":443"; ma=86400' always;
 
-    # HSTS — since there's no Cloudflare to set it at the edge
+    # HSTS — set at the nginx layer
     add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
 
     # Rate limiting on POST (protects demo/mutation endpoints)
@@ -293,24 +274,3 @@ server {
     }
 }
 ```
-
-## Origin certificate management
-
-The Cloudflare Origin CA certificate is generated via the `cf_origin_ca_key` in `deploy/config.json`. It's a wildcard cert for `*.dothog.org` valid for 15 years.
-
-During provisioning (`provision.sh`), a new origin cert is generated and deployed to `/etc/nginx/ssl/` automatically. The `vopts harden` command does not manage the origin cert -- it's a provisioning concern.
-
-To manually regenerate: create a new cert in **Cloudflare dashboard > SSL/TLS > Origin Server > Create Certificate**, then replace the files on the server and `sudo systemctl reload nginx`.
-
-## Token reference
-
-Each Cloudflare API capability uses its own least-privilege token:
-
-| Config field | Cloudflare permission | Purpose |
-|---|---|---|
-| `cf_token_zone_read_dns_edit` | Zone > DNS > Edit | Zone lookup, DNS updates, provisioning |
-| `cf_token_cache_purge` | Zone > Cache Purge | Per-app cache purge from TUI |
-| `cf_token_zone_settings_edit` | Zone > Zone Settings > Edit | SSL mode, HSTS, ECH, Early Hints |
-| `cf_token_transform_rules_edit` | Zone > Transform Rules > Edit | CSP header, X-Robots-Tag |
-| `cf_token_waf_edit` | Zone > Zone WAF > Edit | Rate limiting rules |
-| `cf_origin_ca_key` | Origin CA Key (user-level) | Origin certificate generation |
