@@ -844,7 +844,7 @@ test.describe("Navigation: all pages load without 500 errors", () => {
     "/components/widgets",
     "/components/cards",
     "/components/advanced",
-    "/realtime/dashboard",
+    "/realtime",
   ];
 
   for (const path of pages) {
