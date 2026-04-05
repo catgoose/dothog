@@ -112,16 +112,12 @@ func handleErrorWithContext(c echo.Context, ec linkwell.ErrorContext) error {
 // shared store on error so it can be retrieved for issue reports.
 func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Context) {
 	return func(err error, c echo.Context) {
-		// Bypass finalized compression writer by unwrapping to the raw
-		// http.ResponseWriter. The httpcompression middleware may have
-		// closed its writer by the time the error handler runs, so we
-		// write directly to the underlying writer.
-		for {
-			if u, ok := c.Response().Writer.(interface{ Unwrap() http.ResponseWriter }); ok {
-				c.Response().Writer = u.Unwrap()
-			} else {
-				break
-			}
+		// Restore the raw response writer saved before the compression
+		// middleware wrapped it. The httpcompression writer is finalized
+		// (closed) by the time the error handler runs, so writing through
+		// it panics. Using the raw writer bypasses the closed compressor.
+		if rw, ok := c.Get(rawWriterKey).(http.ResponseWriter); ok {
+			c.Response().Writer = rw
 		}
 		// Determine status code from error type before promoting.
 		statusCode := http.StatusInternalServerError

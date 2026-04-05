@@ -301,6 +301,11 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
 		CrossOriginOpenerPolicy: "same-origin",
 	})))
+	// Save the raw response writer before the compression middleware wraps it.
+	// The error handler needs the unwrapped writer because httpcompression
+	// finalizes (closes) its writer when the middleware chain unwinds, making
+	// it unusable by the time Echo's HTTPErrorHandler runs.
+	e.Use(middleware.RawWriterMiddleware())
 	// Skip compression when running behind the templ proxy (mage watch).
 	// Chunked compressed responses cause h2 framing errors through
 	// the templ-proxy → Caddy chain. Caddy handles compression instead.
