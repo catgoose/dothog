@@ -10,9 +10,9 @@ require (
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.15
 	github.com/catgoose/linkwell v0.2.21
-	github.com/catgoose/porter v0.4.9
+	github.com/catgoose/porter v0.4.10
 	github.com/catgoose/promolog/sqlite v0.0.0-20260404160355-64d49720300a
-	github.com/catgoose/tavern v0.4.36
+	github.com/catgoose/tavern v0.4.37
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/jmoiron/sqlx v1.4.0
