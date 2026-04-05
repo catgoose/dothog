@@ -13,7 +13,7 @@ test.describe("Inventory: silent parse failures", () => {
   test("price input is type=number (prevents non-numeric at HTML level)", async ({
     page,
   }) => {
-    await navigateTo(page, "/demo/inventory");
+    await navigateTo(page, "/apps/inventory");
     const addBtn = page.locator('button:has-text("+ Add Item")');
     await addBtn.click();
     await waitForHtmx(page);
@@ -31,7 +31,7 @@ test.describe("Inventory: silent parse failures", () => {
   }) => {
     // BUG: If the HTML type=number is bypassed (API call), server silently
     // converts invalid price to 0 via strconv.ParseFloat defaulting
-    const resp = await request.post("/demo/inventory/items", {
+    const resp = await request.post("/apps/inventory/items", {
       form: {
         name: "Bug Test Item",
         price: "not-a-number",
@@ -47,7 +47,7 @@ test.describe("Inventory: silent parse failures", () => {
   test("creating item with empty name succeeds (missing validation)", async ({
     page,
   }) => {
-    await navigateTo(page, "/demo/inventory");
+    await navigateTo(page, "/apps/inventory");
     const addBtn = page.locator('button:has-text("+ Add Item")');
     await addBtn.click();
     await waitForHtmx(page);
@@ -79,20 +79,20 @@ test.describe("Inventory: delete and update edge cases", () => {
 
   test("delete item via API removes it", async ({ request }) => {
     // First get inventory to verify items exist
-    const listResp = await request.get("/demo/inventory/items");
+    const listResp = await request.get("/apps/inventory/items");
     expect(listResp.ok()).toBe(true);
 
     // Delete item 1
-    const resp = await request.delete("/demo/inventory/items/1");
+    const resp = await request.delete("/apps/inventory/items/1");
     expect(resp.ok()).toBe(true);
 
     // Verify item 1 is gone
-    const getResp = await request.get("/demo/inventory/items/1");
+    const getResp = await request.get("/apps/inventory/items/1");
     expect(getResp.status()).toBe(404);
   });
 
   test("editing item preserves values after save", async ({ page }) => {
-    await navigateTo(page, "/demo/inventory");
+    await navigateTo(page, "/apps/inventory");
 
     // Click edit on first visible item
     const editBtn = page.locator(
@@ -127,7 +127,7 @@ test.describe("Bulk: silent failures on invalid operations", () => {
   });
 
   test("bulk activate changes status badges", async ({ page }) => {
-    await navigateTo(page, "/demo/bulk");
+    await navigateTo(page, "/apps/bulk");
 
     // Select a few rows
     const checkboxes = page.locator('tbody input[type="checkbox"]');
@@ -150,7 +150,7 @@ test.describe("Bulk: silent failures on invalid operations", () => {
   });
 
   test("bulk deactivate changes status badges", async ({ page }) => {
-    await navigateTo(page, "/demo/bulk");
+    await navigateTo(page, "/apps/bulk");
 
     const checkboxes = page.locator('tbody input[type="checkbox"]');
     const count = await checkboxes.count();
@@ -169,7 +169,7 @@ test.describe("Bulk: silent failures on invalid operations", () => {
   });
 
   test("bulk delete removes selected rows", async ({ page }) => {
-    await navigateTo(page, "/demo/bulk");
+    await navigateTo(page, "/apps/bulk");
 
     const rowsBefore = await page.locator("tbody tr").count();
     const checkboxes = page.locator('tbody input[type="checkbox"]');
@@ -187,7 +187,7 @@ test.describe("Bulk: silent failures on invalid operations", () => {
   });
 
   test("bulk action with no selection does nothing", async ({ page }) => {
-    await navigateTo(page, "/demo/bulk");
+    await navigateTo(page, "/apps/bulk");
 
     const rowsBefore = await page.locator("tbody tr").count();
     // Try activate without selecting anything
@@ -210,7 +210,7 @@ test.describe("People: missing field validation", () => {
     page,
   }) => {
     // Navigate to a person detail page
-    await navigateTo(page, "/demo/people");
+    await navigateTo(page, "/apps/people");
     const personRow = page.locator("tbody tr[hx-get]").first();
     if (await personRow.isVisible()) {
       await personRow.click();
@@ -252,7 +252,7 @@ test.describe("Kanban: edge cases", () => {
   });
 
   test("move task through all columns", async ({ page }) => {
-    await navigateTo(page, "/demo/kanban");
+    await navigateTo(page, "/apps/kanban");
 
     // Find first movable card and keep moving it right
     for (let i = 0; i < 4; i++) {
@@ -270,7 +270,7 @@ test.describe("Kanban: edge cases", () => {
   });
 
   test("move task left from first column does nothing", async ({ page }) => {
-    await navigateTo(page, "/demo/kanban");
+    await navigateTo(page, "/apps/kanban");
 
     // Find a card in the Backlog column and try to move left
     const backlogCol = page.locator('#kanban-col-backlog, [id*="backlog"]').first();
@@ -291,7 +291,7 @@ test.describe("Approvals: state transitions", () => {
   });
 
   test("approve then try to approve again (idempotency)", async ({ page }) => {
-    await navigateTo(page, "/demo/approvals");
+    await navigateTo(page, "/apps/approvals");
 
     const approveBtn = page.locator('button:has-text("Approve")').first();
     if (await approveBtn.isVisible()) {
@@ -306,7 +306,7 @@ test.describe("Approvals: state transitions", () => {
   });
 
   test("escalate then resubmit cycle", async ({ page }) => {
-    await navigateTo(page, "/demo/approvals");
+    await navigateTo(page, "/apps/approvals");
 
     const escalateBtn = page.locator('button:has-text("Escalate")').first();
     if (await escalateBtn.isVisible()) {
@@ -332,7 +332,7 @@ test.describe("Controls Gallery: error recovery flows", () => {
   test("transient error: first attempt fails, second succeeds", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     // Find the transient error trigger button
     const triggerBtn = page.locator('[hx-post*="errors/transient"]').first();
@@ -357,7 +357,7 @@ test.describe("Controls Gallery: error recovery flows", () => {
   });
 
   test("validation error with short name triggers 422", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     // Find validation trigger
     const triggerBtn = page.locator('[hx-post*="errors/validate"]').first();
@@ -372,7 +372,7 @@ test.describe("Controls Gallery: error recovery flows", () => {
   test("resource delete and re-view recovers automatically", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     // Find resource delete button
     const deleteBtn = page.locator('[hx-delete*="controls/resource"]').first();
@@ -394,7 +394,7 @@ test.describe("Controls Gallery: error recovery flows", () => {
     request,
   }) => {
     // API-level test: delete non-existent row
-    const resp = await request.delete("/hypermedia/controls/rows/99999");
+    const resp = await request.delete("/patterns/controls/rows/99999");
     // BUG: Returns 200 even though row 99999 doesn't exist
     expect(resp.status()).toBe(200);
     console.log(
@@ -403,7 +403,7 @@ test.describe("Controls Gallery: error recovery flows", () => {
   });
 
   test("stale data version mismatch triggers 412", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     const staleBtn = page.locator('[hx-post*="errors/stale"]').first();
     if (await staleBtn.isVisible()) {
@@ -412,7 +412,7 @@ test.describe("Controls Gallery: error recovery flows", () => {
       await waitForHtmx(page);
 
       // Re-navigate to reset UI state but keep server version incremented
-      await navigateTo(page, "/hypermedia/controls");
+      await navigateTo(page, "/patterns/controls");
 
       // Second submit with old version should fail with 412
       const staleBtn2 = page.locator('[hx-post*="errors/stale"]').first();
@@ -430,19 +430,19 @@ test.describe("CRUD: edge cases", () => {
   test("delete non-existent item via API returns 204 (idempotent)", async ({
     request,
   }) => {
-    const resp = await request.delete("/hypermedia/crud/items/99999");
+    const resp = await request.delete("/patterns/crud/items/99999");
     // DELETE is idempotent: returns 204 No Content regardless of existence
     expect(resp.status()).toBe(204);
   });
 
   test("update item with empty name returns 400", async ({ request }) => {
     // Create an item first
-    await request.post("/hypermedia/crud/items", {
+    await request.post("/patterns/crud/items", {
       form: { name: "Test Item", notes: "test" },
     });
 
     // Try to update with empty name
-    const resp = await request.put("/hypermedia/crud/items/1", {
+    const resp = await request.put("/patterns/crud/items/1", {
       form: { name: "", notes: "test" },
     });
     // This should return 400 (name is required)
@@ -452,7 +452,7 @@ test.describe("CRUD: edge cases", () => {
   test("create item with empty name defaults to 'New Item'", async ({
     request,
   }) => {
-    const resp = await request.post("/hypermedia/crud/items", {
+    const resp = await request.post("/patterns/crud/items", {
       form: { name: "", notes: "" },
     });
     expect(resp.ok()).toBe(true);
@@ -467,7 +467,7 @@ test.describe("CRUD: edge cases", () => {
   test("toggle item status flips between active and inactive", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/crud");
+    await navigateTo(page, "/patterns/crud");
     await waitForHtmx(page);
 
     // Find a toggle button
@@ -491,7 +491,7 @@ test.describe("CRUD: edge cases", () => {
 
 test.describe("Components: chat and timeline edge cases", () => {
   test("chat with empty message returns 204", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components");
+    await navigateTo(page, "/components/widgets");
     await waitForHtmx(page);
 
     const chatWindow = page.locator("#chat-window");
@@ -513,7 +513,7 @@ test.describe("Components: chat and timeline edge cases", () => {
   });
 
   test("chat appends user and bot messages", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components");
+    await navigateTo(page, "/components/widgets");
     await waitForHtmx(page);
 
     const chatWindow = page.locator("#chat-window");
@@ -543,39 +543,39 @@ test.describe("Components: chat and timeline edge cases", () => {
 
   test("steps wizard validates step boundaries", async ({ request }) => {
     // Step 0 should be invalid
-    const resp0 = await request.get("/hypermedia/components/steps/0");
+    const resp0 = await request.get("/components/widgets/steps/0");
     expect(resp0.status()).toBe(400);
 
     // Step 5 should be invalid (max is 4)
-    const resp5 = await request.get("/hypermedia/components/steps/5");
+    const resp5 = await request.get("/components/widgets/steps/5");
     expect(resp5.status()).toBe(400);
 
     // Step 1 should be valid
-    const resp1 = await request.get("/hypermedia/components/steps/1");
+    const resp1 = await request.get("/components/widgets/steps/1");
     expect(resp1.ok()).toBe(true);
 
     // Step 4 should be valid
-    const resp4 = await request.get("/hypermedia/components/steps/4");
+    const resp4 = await request.get("/components/widgets/steps/4");
     expect(resp4.ok()).toBe(true);
   });
 
   test("tabs reject invalid tab name", async ({ request }) => {
     const resp = await request.get(
-      "/hypermedia/components/tabs/nonexistent",
+      "/components/widgets/tabs/nonexistent",
     );
     expect(resp.status()).toBe(400);
   });
 
   test("rating rejects out of range values", async ({ request }) => {
     // Rating > 5 should be clamped or rejected
-    const resp = await request.post("/hypermedia/components/rating", {
+    const resp = await request.post("/components/widgets/rating", {
       form: { rating: "10" },
     });
     // If it silently clamps to 5, that's not ideal but acceptable
     expect(resp.ok()).toBe(true);
 
     // Rating of -1
-    const respNeg = await request.post("/hypermedia/components/rating", {
+    const respNeg = await request.post("/components/widgets/rating", {
       form: { rating: "-1" },
     });
     expect(respNeg.ok()).toBe(true);
@@ -586,7 +586,7 @@ test.describe("Components2: carousel and cascading", () => {
   test("carousel boundary: index beyond range is clamped", async ({
     request,
   }) => {
-    const resp = await request.get("/hypermedia/components2/carousel/999");
+    const resp = await request.get("/components/cards/carousel/999");
     // BUG: Returns 200 with clamped content instead of 400/404
     expect(resp.ok()).toBe(true);
     console.log(
@@ -597,7 +597,7 @@ test.describe("Components2: carousel and cascading", () => {
   test("BUG: carousel accepts negative index (should be 400)", async ({
     request,
   }) => {
-    const resp = await request.get("/hypermedia/components2/carousel/-1");
+    const resp = await request.get("/components/cards/carousel/-1");
     // BUG: Returns 200 with clamped content instead of 400
     // Negative index is silently clamped to 0
     expect(resp.status()).toBe(200);
@@ -605,7 +605,7 @@ test.describe("Components2: carousel and cascading", () => {
 
   test("cascading select with invalid country", async ({ request }) => {
     const resp = await request.get(
-      "/hypermedia/components2/cascading/Narnia",
+      "/components/cards/cascading/Narnia",
     );
     expect(resp.status()).toBe(400);
   });
@@ -613,7 +613,7 @@ test.describe("Components2: carousel and cascading", () => {
   test("BUG: dropdown search creates duplicate #dropdown-results elements", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/components2");
+    await navigateTo(page, "/components/cards");
     await waitForHtmx(page);
 
     const searchInput = page.locator('input[name="q"]').first();
@@ -638,13 +638,13 @@ test.describe("Components2: carousel and cascading", () => {
   });
 
   test("file upload without file returns 400", async ({ request }) => {
-    const resp = await request.post("/hypermedia/components2/upload");
+    const resp = await request.post("/components/cards/upload");
     expect(resp.status()).toBe(400);
   });
 
   test("accordion panel out of range returns 400", async ({ request }) => {
     const resp = await request.get(
-      "/hypermedia/components2/accordion/999",
+      "/components/cards/accordion/999",
     );
     expect(resp.status()).toBe(400);
   });
@@ -652,7 +652,7 @@ test.describe("Components2: carousel and cascading", () => {
 
 test.describe("Components3: soft delete edge cases", () => {
   test("favorite toggle works via UI", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components3");
+    await navigateTo(page, "/components/advanced");
     await waitForHtmx(page);
 
     // Find a favorite/heart button
@@ -668,7 +668,7 @@ test.describe("Components3: soft delete edge cases", () => {
   });
 
   test("soft delete and restore cycle", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components3");
+    await navigateTo(page, "/components/advanced");
     await waitForHtmx(page);
 
     // Find a delete button
@@ -695,10 +695,10 @@ test.describe("Components3: soft delete edge cases", () => {
     request,
   }) => {
     // Reset state by visiting the page
-    await request.get("/hypermedia/components3");
+    await request.get("/components/advanced");
 
     const resp = await request.get(
-      "/hypermedia/components3/feed?page=9999",
+      "/components/advanced/feed?page=9999",
     );
     // BUG: Returns 200 instead of expected 204 for out-of-bounds page
     // The server returns an empty response with 200 status
@@ -712,7 +712,7 @@ test.describe("Settings: field type handling", () => {
   });
 
   test("save settings and verify persistence", async ({ page }) => {
-    await navigateTo(page, "/demo/settings");
+    await navigateTo(page, "/platform/settings");
 
     // Find a toggle and change it
     const toggle = page.locator('input[type="checkbox"]').first();
@@ -726,7 +726,7 @@ test.describe("Settings: field type handling", () => {
         await waitForHtmx(page);
 
         // Reload page and check toggle state persisted
-        await navigateTo(page, "/demo/settings");
+        await navigateTo(page, "/platform/settings");
         const toggleAfter = page.locator('input[type="checkbox"]').first();
         const isAfter = await toggleAfter.isChecked();
         expect(isAfter).not.toBe(wasBefore);
@@ -740,7 +740,7 @@ test.describe("Admin: database reset", () => {
     request,
   }) => {
     // Create some items first
-    await request.post("/hypermedia/crud/items", {
+    await request.post("/patterns/crud/items", {
       form: { name: "Item to be wiped", notes: "test" },
     });
 
@@ -749,7 +749,7 @@ test.describe("Admin: database reset", () => {
     expect(resetResp.ok()).toBe(true);
 
     // Verify inventory has fresh data (not empty)
-    const invResp = await request.get("/demo/inventory");
+    const invResp = await request.get("/apps/inventory");
     expect(invResp.ok()).toBe(true);
     const body = await invResp.text();
     // Should have seeded items
@@ -781,41 +781,41 @@ test.describe("Admin: database reset", () => {
 
 test.describe("API: invalid ID handling across endpoints", () => {
   test("inventory: non-numeric ID returns 400", async ({ request }) => {
-    const resp = await request.get("/demo/inventory/items/abc");
+    const resp = await request.get("/apps/inventory/items/abc");
     expect(resp.status()).toBe(400);
   });
 
   test("inventory: negative ID returns 400", async ({ request }) => {
-    const resp = await request.get("/demo/inventory/items/-1");
+    const resp = await request.get("/apps/inventory/items/-1");
     expect(resp.status()).toBe(400);
   });
 
   test("inventory: ID 0 returns 400", async ({ request }) => {
-    const resp = await request.get("/demo/inventory/items/0");
+    const resp = await request.get("/apps/inventory/items/0");
     expect(resp.status()).toBe(400);
   });
 
   test("people: non-numeric ID returns 400", async ({ request }) => {
-    const resp = await request.get("/demo/people/abc");
+    const resp = await request.get("/apps/people/abc");
     expect(resp.status()).toBe(400);
   });
 
   test("people: missing person returns 404", async ({ request }) => {
-    const resp = await request.get("/demo/people/99999");
+    const resp = await request.get("/apps/people/99999");
     expect(resp.status()).toBe(404);
   });
 
   test("kanban move without status sets empty status on task", async ({
     request,
   }) => {
-    // PATCH /demo/kanban/tasks/:id with status in form body (V4 compliance)
+    // PATCH /apps/kanban/tasks/:id with status in form body (V4 compliance)
     // Missing status is accepted — MoveTask sets empty status on the task
-    const resp = await request.patch("/demo/kanban/tasks/1");
+    const resp = await request.patch("/apps/kanban/tasks/1");
     expect(resp.status()).toBe(200);
   });
 
   test("settings: non-existent section returns 404", async ({ request }) => {
-    const resp = await request.get("/demo/settings/nonexistent");
+    const resp = await request.get("/platform/settings/nonexistent");
     expect(resp.status()).toBe(404);
   });
 });
@@ -826,25 +826,25 @@ test.describe("Navigation: all pages load without 500 errors", () => {
     "/health",
     "/admin",
     "/dashboard",
-    "/demo/inventory",
-    "/demo/catalog",
-    "/demo/bulk",
-    "/demo/people",
-    "/demo/people/list",
-    "/demo/kanban",
-    "/demo/approvals",
-    "/demo/feed",
-    "/demo/settings",
-    "/demo/vendors",
-    "/hypermedia/controls",
-    "/hypermedia/crud",
-    "/hypermedia/lists",
-    "/hypermedia/interactions",
-    "/hypermedia/state",
-    "/hypermedia/components",
-    "/hypermedia/components2",
-    "/hypermedia/components3",
-    "/hypermedia/realtime",
+    "/apps/inventory",
+    "/apps/catalog",
+    "/apps/bulk",
+    "/apps/people",
+    "/apps/people/list",
+    "/apps/kanban",
+    "/apps/approvals",
+    "/realtime/feed",
+    "/platform/settings",
+    "/apps/vendors",
+    "/patterns/controls",
+    "/patterns/crud",
+    "/patterns/lists",
+    "/patterns/interactions",
+    "/patterns/state",
+    "/components/widgets",
+    "/components/cards",
+    "/components/advanced",
+    "/realtime/dashboard",
   ];
 
   for (const path of pages) {

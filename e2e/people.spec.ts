@@ -7,20 +7,20 @@ test.describe("People Directory", () => {
   });
 
   test("renders page with title and table", async ({ page }) => {
-    await navigateTo(page, "/demo/people");
+    await navigateTo(page, "/apps/people");
     await expect(page.locator("h1")).toContainText("People Directory");
     await expect(page.locator("#people-table-container")).toBeVisible();
   });
 
   test("table has expected columns", async ({ page }) => {
-    await navigateTo(page, "/demo/people");
+    await navigateTo(page, "/apps/people");
     for (const col of ["Name", "Department", "Title", "Location", "Email"]) {
       await expect(page.locator(`th:has-text("${col}")`)).toBeVisible();
     }
   });
 
   test("search filters people", async ({ page }) => {
-    await navigateTo(page, "/demo/people");
+    await navigateTo(page, "/apps/people");
     const searchInput = page.locator('input[name="q"]');
     if (await searchInput.isVisible()) {
       await searchInput.fill("Engineering");
@@ -31,7 +31,7 @@ test.describe("People Directory", () => {
   });
 
   test("click person row loads profile", async ({ page }) => {
-    await navigateTo(page, "/demo/people");
+    await navigateTo(page, "/apps/people");
     // Click the first row that has hx-get for a person detail
     const personRow = page.locator("tbody tr[hx-get]").first();
     if (await personRow.isVisible()) {
@@ -41,7 +41,7 @@ test.describe("People Directory", () => {
   });
 
   test("people list route loads", async ({ page }) => {
-    await navigateTo(page, "/demo/people/list");
+    await navigateTo(page, "/apps/people/list");
     await expect(page.locator("#people-table-container")).toBeVisible();
   });
 });

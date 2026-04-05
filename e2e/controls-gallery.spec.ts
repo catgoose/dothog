@@ -7,17 +7,17 @@ test.describe("Controls Gallery", () => {
   });
 
   test("renders page with title", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     await expect(page.locator("h1")).toContainText("Controls Gallery");
   });
 
   test("button variants section is present", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     await expect(page.locator("text=Button Variants").first()).toBeVisible();
   });
 
   test("clicking variant button echoes response", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     const primaryBtn = page
       .locator('button:has-text("Primary")')
       .first();
@@ -28,7 +28,7 @@ test.describe("Controls Gallery", () => {
   });
 
   test("all variant buttons respond", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     for (const variant of [
       "Primary",
       "Secondary",
@@ -50,7 +50,7 @@ test.describe("Controls Gallery", () => {
   });
 
   test("retry button works", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     const retryBtn = page.locator('button:has-text("Retry")').first();
     if (await retryBtn.isVisible()) {
       await retryBtn.click();
@@ -60,7 +60,7 @@ test.describe("Controls Gallery", () => {
   });
 
   test("resource CRUD section works", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     // Look for the resource section
     const resourceSection = page.locator("text=Resource CRUD").first();
     if (await resourceSection.isVisible()) {
@@ -69,17 +69,17 @@ test.describe("Controls Gallery", () => {
   });
 
   test("form demo section exists", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     await expect(page.locator("text=Form").first()).toBeVisible();
   });
 
   test("filter controls section exists", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     await expect(page.locator("text=Filter").first()).toBeVisible();
   });
 
   test("error recovery sections exist", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     for (const section of ["Transient", "Validation", "Conflict", "Stale"]) {
       await expect(
         page.locator(`text=${section}`).first(),
@@ -88,7 +88,7 @@ test.describe("Controls Gallery", () => {
   });
 
   test("transient error triggers retry UI", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     const transientBtn = page
       .locator('[hx-post*="errors/transient"], button:has-text("Trigger 500")')
       .first();
@@ -100,7 +100,7 @@ test.describe("Controls Gallery", () => {
   });
 
   test("validation error shows fix button", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     const validateBtn = page
       .locator('[hx-post*="errors/validate"], button:has-text("Trigger 422")')
       .first();
@@ -111,7 +111,7 @@ test.describe("Controls Gallery", () => {
   });
 
   test("inline row CRUD works", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
     // Look for row editing
     const editBtn = page
       .locator('[hx-get*="/rows/"] button:has-text("Edit"), [hx-get*="edit"]')

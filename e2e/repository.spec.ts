@@ -7,7 +7,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("renders page with title and table", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     await expect(page.locator("h1")).toContainText("Repository Pattern Demo");
     await expect(page.locator("#repo-table-container")).toBeVisible();
     // Should have seeded task rows
@@ -19,7 +19,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("table has expected columns", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     for (const col of [
       "Title",
       "Description",
@@ -35,7 +35,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("status badges render for seeded data", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     const badges = page.locator(".badge");
     const count = await badges.count();
     expect(count).toBeGreaterThan(0);
@@ -51,14 +51,14 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("version badges show v1+ for seeded data", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     const versionBadges = page.locator('.badge:has-text("v")');
     const count = await versionBadges.count();
     expect(count).toBeGreaterThan(0);
   });
 
   test("filter by search narrows results", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     const searchInput = page.locator('input[name="q"]');
     await expect(searchInput).toBeVisible();
     await searchInput.fill("schema");
@@ -70,7 +70,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("filter by status dropdown", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     const statusSelect = page.locator('select[name="status"]');
     if (await statusSelect.isVisible()) {
       await statusSelect.selectOption("active");
@@ -80,7 +80,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("sorting by column header", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     const titleHeader = page.locator("th >> text=Title");
     if (await titleHeader.isVisible()) {
       const sortLink = titleHeader.locator("a").first();
@@ -93,7 +93,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("add new task form appears and cancel works", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     const addBtn = page.locator('button:has-text("+ New Task")');
     await expect(addBtn).toBeVisible();
     await addBtn.click();
@@ -110,7 +110,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("create new task via inline form", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     const addBtn = page.locator('button:has-text("+ New Task")');
     await addBtn.click();
     await waitForHtmx(page);
@@ -131,7 +131,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("inline edit shows form and saves", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     const editBtn = page.locator('button:has-text("Edit")').first();
     await editBtn.click();
     await waitForHtmx(page);
@@ -143,7 +143,7 @@ test.describe("Repository Demo Page", () => {
   test("soft delete shows deleted badge when show deleted is on", async ({
     page,
   }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     // Handle confirmation dialog before triggering it
     page.on("dialog", (dialog) => dialog.accept());
     // Delete the first task
@@ -166,7 +166,7 @@ test.describe("Repository Demo Page", () => {
   test("archive task shows archived badge when show archived is on", async ({
     page,
   }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     // Archive the first task
     const archiveBtn = page.locator('button:has-text("Archive")').first();
     await archiveBtn.click();
@@ -185,7 +185,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("restore deleted task brings it back", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     // Handle confirmation dialog before triggering it
     page.on("dialog", (dialog) => dialog.accept());
     // Count initial visible rows
@@ -215,7 +215,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("info cards show repository pattern features", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     await expect(page.locator('text="Schema"')).toBeVisible();
     await expect(page.locator('text="Query"')).toBeVisible();
     await expect(page.locator('text="Filters"')).toBeVisible();
@@ -223,7 +223,7 @@ test.describe("Repository Demo Page", () => {
   });
 
   test("navigation includes Demo link", async ({ page }) => {
-    await navigateTo(page, "/demo/repository");
+    await navigateTo(page, "/platform/repository");
     const navLink = page.locator('nav a:has-text("Demo")');
     await expect(navLink).toBeVisible();
   });
