@@ -5,10 +5,15 @@
  * Fire-and-forget — guaranteed to complete even during page unload.
  */
 (function() {
-  var endpoint = '/log/beacon';
+  const endpoint = '/log/beacon';
 
+  /**
+   * Send an analytics event via navigator.sendBeacon.
+   * @param {string} event - The event name (e.g. 'page_view', 'navigation').
+   * @param {Object} [data={}] - Additional event-specific data.
+   */
   function send(event, data) {
-    var payload = JSON.stringify({
+    const payload = JSON.stringify({
       event: event,
       path: window.location.pathname,
       referrer: document.referrer || '',
@@ -27,7 +32,7 @@
   });
 
   // Log page unload with time spent
-  var loadTime = Date.now();
+  const loadTime = Date.now();
   window.addEventListener('pagehide', function() {
     send('page_leave', { duration_ms: Date.now() - loadTime });
   });

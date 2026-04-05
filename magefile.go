@@ -767,6 +767,16 @@ func Lint() error {
 		return err
 	}
 
+	// oxlint is optional — warn if not installed
+	if _, err := sh.Exec(nil, nil, nil, "which", "oxlint"); err != nil {
+		fmt.Println("Warning: oxlint not found, skipping JS lint. Install: curl -sSf https://oxc.rs/install.sh | sh")
+	} else {
+		fmt.Println("Running oxlint...")
+		if err := sh.RunV("oxlint", "web/assets/public/js/"); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

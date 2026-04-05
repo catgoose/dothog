@@ -5,7 +5,7 @@
  */
 (function() {
 	/** @type {EventSource} */
-	var es = new EventSource("/sse/theme");
+	const es = new EventSource("/sse/theme");
 	es.addEventListener("theme-change", function(/** @type {MessageEvent} */ e) {
 		document.documentElement.dataset.theme = e.data;
 		if (window.appChannel) window.appChannel.postMessage({type:'theme-change',theme:e.data});

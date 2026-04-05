@@ -77,7 +77,7 @@
       if (stored) {
         return Object.assign({}, DEFAULTS, JSON.parse(stored));
       }
-    } catch (_) {
+    } catch (_e) {
       /* ignore corrupt data */
     }
     return Object.assign({}, DEFAULTS);
