@@ -7,12 +7,12 @@ test.describe("Component Patterns", () => {
   });
 
   test("page 1 loads with title", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components");
+    await navigateTo(page, "/components/widgets");
     await expect(page.locator("h1")).toContainText("Component Patterns");
   });
 
   test("tabs switch content", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components");
+    await navigateTo(page, "/components/widgets");
     // Wait for initial tab load
     await waitForHtmx(page);
     // Click "Details" tab (role="tab")
@@ -25,7 +25,7 @@ test.describe("Component Patterns", () => {
   });
 
   test("steps wizard navigates forward", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components");
+    await navigateTo(page, "/components/widgets");
     const nextBtn = page.locator('button:has-text("Next")').first();
     if (await nextBtn.isVisible()) {
       await nextBtn.click();
@@ -36,12 +36,12 @@ test.describe("Component Patterns", () => {
 
 test.describe("Component Patterns 2", () => {
   test("page loads with title", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components2");
+    await navigateTo(page, "/components/cards");
     await expect(page.locator("h1")).toContainText("Component Patterns 2");
   });
 
   test("carousel navigation works", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components2");
+    await navigateTo(page, "/components/cards");
     const carouselPanel = page.locator("#carousel-panel").first();
     await expect(carouselPanel).toBeVisible();
     // The "Next →" button — scroll to it and click
@@ -54,7 +54,7 @@ test.describe("Component Patterns 2", () => {
   });
 
   test("dropdown search input exists", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components2");
+    await navigateTo(page, "/components/cards");
     const searchInput = page.locator("#dropdown-results, input[hx-trigger*='keyup']").first();
     if (await searchInput.isVisible()) {
       await expect(searchInput).toBeVisible();
@@ -64,12 +64,12 @@ test.describe("Component Patterns 2", () => {
 
 test.describe("Component Patterns 3", () => {
   test("page loads with title", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components3");
+    await navigateTo(page, "/components/advanced");
     await expect(page.locator("h1")).toContainText("Component Patterns 3");
   });
 
   test("feed container exists", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/components3");
+    await navigateTo(page, "/components/advanced");
     await expect(page.locator("#feed-container")).toBeVisible();
   });
 });

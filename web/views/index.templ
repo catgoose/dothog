@@ -17,6 +17,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			x-data="alertListener"
 			x-on:show-alert.window="showAlert($event)"
 		>
+			<meta name="page-theme" content={ theme }/>
 			<div id="error-status" class="sticky top-0 z-40" aria-live="assertive"></div>
 			if len(crumbs) > 0 {
 				<meta name="page-title" content={ crumbs[len(crumbs)-1].Label }/>
@@ -67,13 +68,7 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		<link rel="preload" href={ version.Asset("/public/css/tailwind.css") } as="style" fetchpriority="high"/>
 		<link rel="preload" href={ version.Asset("/public/js/htmx.min.js") } as="script" fetchpriority="high"/>
 		<link rel="preload" href={ version.Asset("/public/js/_hyperscript.min.js") } as="script"/>
-		<script>
-			if (window.trustedTypes) {
-				trustedTypes.createPolicy('default', {
-					createHTML: function(value) { return value; }
-				});
-			}
-		</script>
+		<script src={ version.Asset("/public/js/trusted-types.js") }></script>
 		<script defer src={ version.Asset("/public/js/htmx.min.js") }></script>
 		// setup:feature:demo:start
 		<script src={ version.Asset("/public/js/interval-control.js") }></script>
@@ -127,65 +122,15 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		if devMode {
 			<script src={ version.Asset("/public/js/dev-logging.js") }></script>
 		}
-		<script>
-			/**
-			 * Restore persisted debug toggles from localStorage on every page load.
-			 * The admin debug page writes { "htmx-log": true, ... } to app_debug.
-			 * Waits for DOMContentLoaded so htmx/hyperscript are available.
-			 */
-			document.addEventListener('DOMContentLoaded', function() {
-				var state;
-				try { state = JSON.parse(localStorage.getItem('app_debug')) || {}; } catch(e) { return; }
-				if (state['htmx-log'] && typeof htmx !== 'undefined') { htmx.logAll(); }
-				if (state['htmx-events'] && typeof htmx !== 'undefined') {
-					window._htmxDbg = function(e) {
-						console.debug('%c[htmx:' + e.type.replace('htmx:','') + ']', 'color:#38bdf8;font-weight:bold', e.detail);
-					};
-					var evts = ['htmx:beforeRequest','htmx:afterRequest','htmx:beforeSwap','htmx:afterSwap','htmx:oobErrorNoTarget','htmx:sseMessage','htmx:sseError'];
-					evts.forEach(function(t) { document.body.addEventListener(t, window._htmxDbg); });
-					window._htmxDbgEvts = evts;
-				}
-				if (state['hs-beep']) {
-					window._hsDbg = function(e) { console.debug('%c[_hs:beep]', 'color:#a78bfa;font-weight:bold', e.detail); };
-					document.body.addEventListener('hyperscript:beep', window._hsDbg);
-				}
-				if (state['alpine-events']) {
-					window._alpineDbg = function(e) { console.debug('%c[alpine:' + e.type + ']', 'color:#34d399;font-weight:bold', e.detail); };
-					document.addEventListener('alpine:initialized', window._alpineDbg);
-					document.addEventListener('alpine:init', window._alpineDbg);
-				}
-			});
-		</script>
+		<script src={ version.Asset("/public/js/theme-sync.js") }></script>
+		<script defer src={ version.Asset("/public/js/debug-restore.js") }></script>
 		// setup:feature:sse:start
 		// setup:feature:session_settings:start
-		<script defer>
-			/**
-			 * Listen for server-sent theme-change events and apply them to the
-			 * document so all open browsers stay in sync.
-			 * @listens theme-change
-			 */
-			(function() {
-				/** @type {EventSource} */
-				var es = new EventSource("/sse/theme");
-				es.addEventListener("theme-change", function(/** @type {MessageEvent} */ e) {
-					document.documentElement.dataset.theme = e.data;
-					if (window.appChannel) window.appChannel.postMessage({type:'theme-change',theme:e.data});
-				});
-			})();
-		</script>
+		<script defer src={ version.Asset("/public/js/theme-sse.js") }></script>
 		// setup:feature:session_settings:end
 		// setup:feature:sse:end
 		// setup:feature:offline:start
-		<script>
-			if ('serviceWorker' in navigator) {
-				navigator.serviceWorker.getRegistrations().then(function(regs) {
-					regs.forEach(function(r) { r.unregister(); });
-				});
-				caches.keys().then(function(keys) {
-					keys.forEach(function(k) { caches.delete(k); });
-				});
-			}
-		</script>
+		<script src={ version.Asset("/public/js/sw-cleanup.js") }></script>
 		// setup:feature:offline:end
 	</head>
 }

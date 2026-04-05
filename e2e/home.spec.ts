@@ -10,7 +10,7 @@ test.describe("Home Page", () => {
     ).toHaveAttribute("href", "/dashboard");
     await expect(
       page.locator('a:has-text("Controls Gallery")'),
-    ).toHaveAttribute("href", "/hypermedia/controls");
+    ).toHaveAttribute("href", "/patterns/controls");
   });
 
   test("renders reach-up pyramid sections", async ({ page }) => {

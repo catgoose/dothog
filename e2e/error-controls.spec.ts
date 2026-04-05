@@ -1,7 +1,7 @@
 import { test, expect, Page } from "@playwright/test";
 import { navigateTo, waitForHtmx, resetDB } from "./helpers";
 
-// ─── Error Patterns Page (/hypermedia/errors) ────────────────────────────────
+// ─── Error Patterns Page (/patterns/errors) ────────────────────────────────
 // Tests the error handling philosophy: every error is a navigable state with
 // hypermedia controls and proper recovery paths. Report Issue appears on 5xx
 // errors and inline error panels.
@@ -20,7 +20,7 @@ test.describe("Error Patterns Page", () => {
   });
 
   test("page loads with all error pattern sections", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
     await expect(page.locator("h1")).toContainText("Error Patterns");
     await expect(page.locator("text=Banner Errors").first()).toBeVisible();
     await expect(page.locator("text=Inline Form Errors").first()).toBeVisible();
@@ -37,7 +37,7 @@ test.describe("Error Patterns Page", () => {
   test("trigger 404 shows banner with Close control", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
     await page.locator('button:has-text("Trigger 404")').click();
     await waitForHtmx(page);
 
@@ -61,7 +61,7 @@ test.describe("Error Patterns Page", () => {
   test("trigger 400 shows banner with Close control", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
     await page.locator('button:has-text("Trigger 400")').click();
     await waitForHtmx(page);
 
@@ -83,7 +83,7 @@ test.describe("Error Patterns Page", () => {
   test("trigger 500 shows banner with Close and Report Issue controls", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
     await page.locator('button:has-text("Trigger 500")').click();
     await waitForHtmx(page);
 
@@ -107,7 +107,7 @@ test.describe("Error Patterns Page", () => {
   test("trigger 403 shows banner with Close control", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
     await page.locator('button:has-text("Trigger 403")').click();
     await waitForHtmx(page);
 
@@ -127,7 +127,7 @@ test.describe("Error Patterns Page", () => {
   });
 
   test("close button clears the error banner", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
 
     // Trigger a 400 (has Close)
     await page.locator('button:has-text("Trigger 400")').click();
@@ -154,7 +154,7 @@ test.describe("Error Patterns Page", () => {
   });
 
   test("error banner shows request ID with copy button", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
     await page.locator('button:has-text("Trigger 404")').click();
     await waitForHtmx(page);
 
@@ -172,7 +172,7 @@ test.describe("Error Patterns Page", () => {
   test("form with empty fields shows inline 422 validation errors", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
 
     // Submit with both fields empty/invalid
     const form = page.locator('form[hx-post*="errors/form"]');
@@ -194,7 +194,7 @@ test.describe("Error Patterns Page", () => {
   });
 
   test("form with valid fields shows success", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
 
     const form = page.locator('form[hx-post*="errors/form"]');
     await form.locator('input[name="name"]').fill("Jane Doe");
@@ -215,7 +215,7 @@ test.describe("Error Patterns Page", () => {
   });
 
   test("form with only missing email shows single error", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
 
     const form = page.locator('form[hx-post*="errors/form"]');
     await form.locator('input[name="name"]').fill("Jane");
@@ -234,7 +234,7 @@ test.describe("Error Patterns Page", () => {
   test("OOB warning shows success content AND error banner simultaneously", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
 
     await page.locator('button:has-text("Load with Warning")').click();
     await waitForHtmx(page);
@@ -265,7 +265,7 @@ test.describe("Error Patterns Page", () => {
   test("flaky endpoint: first call fails with retry button, second succeeds", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
 
     // First call — should fail (odd attempt)
     await page.locator('button:has-text("Call Flaky Endpoint")').click();
@@ -302,7 +302,7 @@ test.describe("Error Patterns Page", () => {
   // ─── Report Issue Modal ────────────────────────────────────────────────────
 
   test("Report Issue button opens report modal", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
 
     // Trigger an error to get a Report Issue button
     await page.locator('button:has-text("Trigger 500")').click();
@@ -328,7 +328,7 @@ test.describe("Error Patterns Page", () => {
   // ─── Pattern Summary Cards ─────────────────────────────────────────────────
 
   test("pattern summary cards are visible", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/errors");
+    await navigateTo(page, "/patterns/errors");
 
     for (const title of [
       "Banner",
@@ -346,7 +346,7 @@ test.describe("Error Patterns Page", () => {
 });
 
 // ─── Controls Gallery: Strengthened Error Recovery Tests ─────────────────────
-// These test the error controls in /hypermedia/controls more thoroughly than
+// These test the error controls in /patterns/controls more thoroughly than
 // the existing controls-gallery.spec.ts.
 
 test.describe("Error Controls: transient error recovery", () => {
@@ -357,7 +357,7 @@ test.describe("Error Controls: transient error recovery", () => {
   test("transient error shows inline error with Retry and Report Issue", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     const trigger = page.locator('[hx-post*="errors/transient"]').first();
     await trigger.click();
@@ -380,7 +380,7 @@ test.describe("Error Controls: transient error recovery", () => {
   });
 
   test("transient retry succeeds on second attempt", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     // First attempt fails
     await page.locator('[hx-post*="errors/transient"]').first().click();
@@ -412,7 +412,7 @@ test.describe("Error Controls: validation error recovery", () => {
   test("validation error shows inline error with Fix and Report Issue", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     // The hx-post is on the <form> — click the Submit button inside it
     const form = page.locator('form[hx-post*="errors/validate"]').first();
@@ -438,7 +438,7 @@ test.describe("Error Controls: conflict error", () => {
   });
 
   test("conflict error shows 409 with recovery controls", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     const trigger = page.locator('[hx-post*="errors/conflict"]').first();
     if (await trigger.isVisible()) {
@@ -467,7 +467,7 @@ test.describe("Error Controls: stale data error", () => {
   test("stale data shows 412 with Load Fresh and Report Issue", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     const trigger = page.locator('[hx-post*="errors/stale"]').first();
     if (await trigger.isVisible()) {
@@ -505,7 +505,7 @@ test.describe("Error Controls: cascade delete", () => {
   test("cascade delete shows 409 with reassign and force delete controls", async ({
     page,
   }) => {
-    await navigateTo(page, "/hypermedia/controls");
+    await navigateTo(page, "/patterns/controls");
 
     const trigger = page.locator('[hx-delete*="errors/cascade"]').first();
     if (await trigger.isVisible()) {

@@ -82,7 +82,9 @@ templ PinButton(section string, pinURL string, pinned bool, oob bool) {
 			hx-swap-oob="outerHTML"
 		}
 		title={ pinTitle(pinned) }
-		_={ fmt.Sprintf("on click fetch %s with method:'POST' and headers:{Content-Type:'application/x-www-form-urlencoded', X-CSRF-Token: (document.querySelector('meta[name=csrf-token]') ?? {}).content ?? ''} and body:'section=%s'", pinURL, section) }
+		hx-post={ pinURL }
+		hx-vals={ fmt.Sprintf(`{"section":"%s"}`, section) }
+		hx-swap="none"
 	>
 		if pinned {
 			<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

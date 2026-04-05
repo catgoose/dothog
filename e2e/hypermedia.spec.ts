@@ -7,19 +7,19 @@ test.describe("CRUD Patterns", () => {
   });
 
   test("page loads with title", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/crud");
+    await navigateTo(page, "/patterns/crud");
     await expect(page.locator("h1")).toContainText("CRUD Patterns");
   });
 
   test("table has expected columns", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/crud");
+    await navigateTo(page, "/patterns/crud");
     for (const col of ["ID", "Name", "Status", "Notes", "Actions"]) {
       await expect(page.locator(`th:has-text("${col}")`)).toBeVisible();
     }
   });
 
   test("add item button creates new row", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/crud");
+    await navigateTo(page, "/patterns/crud");
     const addBtn = page.locator('button:has-text("+ Add Item")').first();
     await expect(addBtn).toBeVisible();
     // Count rows before adding
@@ -32,7 +32,7 @@ test.describe("CRUD Patterns", () => {
   });
 
   test("inline edit works", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/crud");
+    await navigateTo(page, "/patterns/crud");
     await waitForHtmx(page);
     const editBtn = page.locator('button:has-text("Edit")').first();
     await expect(editBtn).toBeVisible();
@@ -50,24 +50,24 @@ test.describe("List Patterns", () => {
   });
 
   test("page loads with title", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/lists");
+    await navigateTo(page, "/patterns/lists");
     await expect(page.locator("h1")).toContainText("List Patterns");
   });
 
   test("table and filters load", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/lists");
+    await navigateTo(page, "/patterns/lists");
     await expect(page.locator("#lists-table-container")).toBeVisible();
     await expect(page.locator("#filter-form").first()).toBeVisible();
   });
 
   test("search input exists", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/lists");
+    await navigateTo(page, "/patterns/lists");
     const searchInput = page.locator('input[name="q"]').first();
     await expect(searchInput).toBeVisible();
   });
 
   test("category filter works", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/lists");
+    await navigateTo(page, "/patterns/lists");
     const catSelect = page.locator("select").first();
     if (await catSelect.isVisible()) {
       await catSelect.selectOption({ index: 1 });
@@ -78,12 +78,12 @@ test.describe("List Patterns", () => {
 
 test.describe("Interaction Patterns", () => {
   test("page loads with title", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/interactions");
+    await navigateTo(page, "/patterns/interactions");
     await expect(page.locator("h1")).toContainText("Interaction Patterns");
   });
 
   test("contact form has required fields", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/interactions");
+    await navigateTo(page, "/patterns/interactions");
     const form = page.locator("#interaction-form, form").first();
     if (await form.isVisible()) {
       await expect(form).toBeVisible();
@@ -91,7 +91,7 @@ test.describe("Interaction Patterns", () => {
   });
 
   test("form submission works", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/interactions");
+    await navigateTo(page, "/patterns/interactions");
     const nameInput = page.locator("#contact-name, input[name='name']").first();
     const emailInput = page.locator("#contact-email, input[name='email']").first();
     const msgInput = page.locator("#contact-message, textarea[name='message']").first();
@@ -112,12 +112,12 @@ test.describe("Interaction Patterns", () => {
 
 test.describe("State Patterns", () => {
   test("page loads with title", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/state");
+    await navigateTo(page, "/patterns/state");
     await expect(page.locator("h1")).toContainText("State Patterns");
   });
 
   test("like counter increments", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/state");
+    await navigateTo(page, "/patterns/state");
     const likeBtn = page
       .locator('button:has-text("Like"), button:has-text("♡"), button:has-text("❤")')
       .first();
@@ -128,7 +128,7 @@ test.describe("State Patterns", () => {
   });
 
   test("toggle state button works", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/state");
+    await navigateTo(page, "/patterns/state");
     const toggleBtn = page
       .locator('button:has-text("Toggle")')
       .first();
@@ -139,7 +139,7 @@ test.describe("State Patterns", () => {
   });
 
   test("reveal panel shows/hides", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/state");
+    await navigateTo(page, "/patterns/state");
     const revealBtn = page
       .locator('button:has-text("Show"), button:has-text("Reveal"), button:has-text("Load")')
       .first();
@@ -152,18 +152,18 @@ test.describe("State Patterns", () => {
 
 test.describe("Realtime Dashboard", () => {
   test("page loads with title", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/realtime");
+    await navigateTo(page, "/realtime/dashboard");
     await expect(page.locator("h1")).toContainText("Live Operations Dashboard");
   });
 
   test("SSE connection wrapper exists", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/realtime");
+    await navigateTo(page, "/realtime/dashboard");
     const sseWrapper = page.locator("#dashboard-sse, #sse-connect-wrapper");
     await expect(sseWrapper.first()).toBeVisible();
   });
 
   test("frequency slider exists", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/realtime");
+    await navigateTo(page, "/realtime/dashboard");
     const slider = page.locator("#freq-slider");
     if (await slider.isVisible()) {
       await expect(slider).toBeVisible();
@@ -171,7 +171,7 @@ test.describe("Realtime Dashboard", () => {
   });
 
   test("event feed container exists", async ({ page }) => {
-    await navigateTo(page, "/hypermedia/realtime");
+    await navigateTo(page, "/realtime/dashboard");
     const feed = page.locator("#event-feed");
     if (await feed.isVisible()) {
       await expect(feed).toBeVisible();
