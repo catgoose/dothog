@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	let state;
 	try {
 		state = JSON.parse(localStorage.getItem('app_debug')) || {};
-	} catch(e) {
+	} catch (_e) {
 		return;
 	}
 

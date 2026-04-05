@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxlint-config/refs/heads/oxlint-v1/schema.json",
+  "ignorePatterns": [
+    "web/assets/public/js/htmx.min.js",
+    "web/assets/public/js/htmx.ext.sse.js",
+    "web/assets/public/js/htmx.response-targets.js",
+    "web/assets/public/js/alpine.min.js",
+    "web/assets/public/js/alpine.morph.min.js",
+    "web/assets/public/js/_hyperscript.min.js"
+  ]
+}

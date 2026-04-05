@@ -50,6 +50,7 @@ function openSyncDB() {
  * @param {number|null} op.version - Row version for conflict detection
  * @returns {Promise<void>}
  */
+// oxlint-disable-next-line no-unused-vars
 async function queueWrite(op) {
   const db = await openSyncDB();
   return new Promise((resolve, reject) => {
@@ -72,6 +73,7 @@ async function queueWrite(op) {
  * Get the count of pending writes in the queue.
  * @returns {Promise<number>}
  */
+// oxlint-disable-next-line no-unused-vars
 async function getPendingCount() {
   const db = await openSyncDB();
   return new Promise((resolve, reject) => {
@@ -150,6 +152,7 @@ async function clearSynced() {
  * Called when connectivity is restored.
  * @returns {Promise<{applied: number, conflicts: number, rejected: number}>}
  */
+// oxlint-disable-next-line no-unused-vars
 async function flushQueue() {
   const ops = await getPendingOperations();
   if (ops.length === 0) {

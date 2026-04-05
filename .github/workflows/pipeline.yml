@@ -131,6 +131,20 @@ jobs:
       - name: Integration tests
         run: go test -timeout 15m ./tests/
 
+  js-lint:
+    needs: [update-deps]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.update-deps.outputs.sha }}
+
+      - name: Install oxlint
+        run: curl -sSf https://oxc.rs/install.sh | sh
+
+      - name: Lint JavaScript
+        run: oxlint web/assets/public/js/
+
   e2e-test:
     needs: [update-deps]
     runs-on: ubuntu-latest
@@ -177,7 +191,7 @@ jobs:
 
   # ── Stage 3: Post-test (parallel, after both tests pass) ───────────────────
   docs:
-    needs: [update-deps, go-test, e2e-test]
+    needs: [update-deps, go-test, e2e-test, js-lint]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -222,7 +236,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
   sync-harmony:
-    needs: [update-deps, go-test, e2e-test]
+    needs: [update-deps, go-test, e2e-test, js-lint]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout dothog
@@ -288,7 +302,7 @@ jobs:
   # ── Notify on pipeline failure ──────────────────────────────────────────────
   notify-failure:
     if: ${{ failure() }}
-    needs: [update-deps, go-test, e2e-test, docs, sync-harmony]
+    needs: [update-deps, go-test, e2e-test, js-lint, docs, sync-harmony]
     runs-on: ubuntu-latest
     steps:
       - name: Notify CI failure

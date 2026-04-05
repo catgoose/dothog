@@ -129,7 +129,7 @@ async function networkFirst(request) {
       cache.put(cacheKey, response.clone());
     }
     return response;
-  } catch (err) {
+  } catch (_err) {
     // Network failed — try cache
     const cached = await caches.match(cacheKey);
     if (cached) {

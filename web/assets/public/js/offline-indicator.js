@@ -5,6 +5,7 @@
  * When transitioning from offline to online, flushes the sync queue.
  * @returns {AlpineComponent}
  */
+// oxlint-disable-next-line no-unused-vars
 function offlineIndicator() {
   return {
     online: navigator.onLine,
