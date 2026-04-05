@@ -71,7 +71,7 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 		csrfToken = t
 	}
 	// setup:feature:csrf:end
-	var theme string //nolint:gosimple // declared before setup:feature gate
+	var theme string //nolint:staticcheck // declared before setup:feature gate
 	// setup:feature:session_settings:start
 	theme = session.GetSettings(c.Request()).Theme
 	// setup:feature:session_settings:end

@@ -7,5 +7,8 @@
     "web/assets/public/js/alpine.min.js",
     "web/assets/public/js/alpine.morph.min.js",
     "web/assets/public/js/_hyperscript.min.js"
-  ]
+  ],
+  "rules": {
+    "no-unused-vars": ["warn", { "caughtErrors": "none" }]
+  }
 }

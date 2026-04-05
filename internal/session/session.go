@@ -1,4 +1,5 @@
 // setup:feature:session_settings
+
 package session
 
 import (
@@ -17,10 +18,10 @@ type settingsKeyType struct{}
 
 var settingsCtxKey settingsKeyType
 
-// SessionSettings holds per-session user preferences keyed by a browser UUID
+// Settings holds per-session user preferences keyed by a browser UUID
 // cookie. The struct is designed to be stored in a database row; the db tags
 // match the expected column names.
-type SessionSettings struct {
+type Settings struct {
 	UpdatedAt   time.Time         `db:"UpdatedAt"`
 	Extra       map[string]string `db:"Extra" json:"extra,omitempty"`
 	SessionUUID string            `db:"SessionUUID"`
@@ -30,7 +31,7 @@ type SessionSettings struct {
 }
 
 // GetExtra returns the value for key, or empty string if not set.
-func (s *SessionSettings) GetExtra(key string) string {
+func (s *Settings) GetExtra(key string) string {
 	if s.Extra == nil {
 		return ""
 	}
@@ -38,7 +39,7 @@ func (s *SessionSettings) GetExtra(key string) string {
 }
 
 // SetExtra sets a key-value pair in Extra, initializing the map if nil.
-func (s *SessionSettings) SetExtra(key, value string) {
+func (s *Settings) SetExtra(key, value string) {
 	if s.Extra == nil {
 		s.Extra = make(map[string]string)
 	}
@@ -46,7 +47,7 @@ func (s *SessionSettings) SetExtra(key, value string) {
 }
 
 // MarshalExtra returns the Extra map serialized as a JSON string.
-func (s *SessionSettings) MarshalExtra() (string, error) {
+func (s *Settings) MarshalExtra() (string, error) {
 	if s.Extra == nil {
 		return "{}", nil
 	}
@@ -58,7 +59,7 @@ func (s *SessionSettings) MarshalExtra() (string, error) {
 }
 
 // UnmarshalExtra populates the Extra map from a JSON string.
-func (s *SessionSettings) UnmarshalExtra(data string) error {
+func (s *Settings) UnmarshalExtra(data string) error {
 	if data == "" {
 		s.Extra = make(map[string]string)
 		return nil
@@ -71,15 +72,16 @@ func (s *SessionSettings) UnmarshalExtra(data string) error {
 	return nil
 }
 
+// Session settings defaults.
 const (
 	DefaultTheme  = "light"
 	DefaultLayout = "classic"
 	LayoutApp     = "app"
 )
 
-// NewDefaultSettings returns a SessionSettings with defaults for the given UUID.
-func NewDefaultSettings(uuid string) *SessionSettings {
-	return &SessionSettings{
+// NewDefaultSettings returns a Settings with defaults for the given UUID.
+func NewDefaultSettings(uuid string) *Settings {
+	return &Settings{
 		SessionUUID: uuid,
 		Theme:       DefaultTheme,
 		Layout:      DefaultLayout,
@@ -87,20 +89,20 @@ func NewDefaultSettings(uuid string) *SessionSettings {
 	}
 }
 
-// SessionConfig holds session middleware configuration.
-type SessionConfig struct {
+// Config holds session middleware configuration.
+type Config struct {
 	Logger     *slog.Logger
 	CookieName string
 }
 
-func (cfg SessionConfig) cookieName() string {
+func (cfg Config) cookieName() string {
 	if cfg.CookieName != "" {
 		return cfg.CookieName
 	}
 	return "session_id"
 }
 
-func (cfg SessionConfig) logger() *slog.Logger {
+func (cfg Config) logger() *slog.Logger {
 	if cfg.Logger != nil {
 		return cfg.Logger
 	}
@@ -109,8 +111,8 @@ func (cfg SessionConfig) logger() *slog.Logger {
 
 // Provider is the interface for session-settings persistence.
 type Provider interface {
-	GetByUUID(ctx context.Context, uuid string) (*SessionSettings, error)
-	Upsert(ctx context.Context, s *SessionSettings) error
+	GetByUUID(ctx context.Context, uuid string) (*Settings, error)
+	Upsert(ctx context.Context, s *Settings) error
 	Touch(ctx context.Context, uuid string) error
 }
 
@@ -119,8 +121,8 @@ type IDFunc func(r *http.Request) string
 
 // Middleware returns middleware that loads per-session settings and stores
 // them on the request context for downstream handlers.
-func Middleware(repo Provider, idFunc IDFunc, cfgs ...SessionConfig) func(http.Handler) http.Handler {
-	var cfg SessionConfig
+func Middleware(repo Provider, idFunc IDFunc, cfgs ...Config) func(http.Handler) http.Handler {
+	var cfg Config
 	if len(cfgs) > 0 {
 		cfg = cfgs[0]
 	}
@@ -165,8 +167,8 @@ func Middleware(repo Provider, idFunc IDFunc, cfgs ...SessionConfig) func(http.H
 }
 
 // GetSettings returns the session settings from the request context.
-func GetSettings(r *http.Request) *SessionSettings {
-	if s, ok := r.Context().Value(settingsCtxKey).(*SessionSettings); ok {
+func GetSettings(r *http.Request) *Settings {
+	if s, ok := r.Context().Value(settingsCtxKey).(*Settings); ok {
 		return s
 	}
 	return NewDefaultSettings("")

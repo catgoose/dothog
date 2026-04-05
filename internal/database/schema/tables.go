@@ -4,14 +4,17 @@ import (
 	s "github.com/catgoose/chuck/schema"
 )
 
-// Re-export chuck/schema types so consumers can continue to import
-// this package for both table definitions and schema types.
 type (
-	TableDef  = s.TableDef
+	// TableDef is a re-exported chuck/schema table definition.
+	TableDef = s.TableDef
+	// ColumnDef is a re-exported chuck/schema column definition.
 	ColumnDef = s.ColumnDef
-	IndexDef  = s.IndexDef
-	SeedRow   = s.SeedRow
-	TypeFunc  = s.TypeFunc
+	// IndexDef is a re-exported chuck/schema index definition.
+	IndexDef = s.IndexDef
+	// SeedRow is a re-exported chuck/schema seed row.
+	SeedRow = s.SeedRow
+	// TypeFunc is a re-exported chuck/schema type constructor.
+	TypeFunc = s.TypeFunc
 )
 
 // Re-export chuck/schema constructors.
@@ -40,6 +43,7 @@ var (
 
 // setup:feature:session_settings:start
 
+// SessionSettingsTable defines the session_settings schema.
 var SessionSettingsTable = NewTable("SessionSettings").
 	Columns(
 		AutoIncrCol("Id"),
@@ -53,6 +57,7 @@ var SessionSettingsTable = NewTable("SessionSettings").
 
 // setup:feature:graph:start
 
+// UsersTable defines the users schema.
 var UsersTable = NewTable("Users").
 	Columns(
 		AutoIncrCol("ID"),

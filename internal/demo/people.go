@@ -40,6 +40,7 @@ var allowedPeopleSort = map[string]string{
 	"title":      "job_title",
 }
 
+// ListPeople returns a paginated list of people matching optional search and department filters.
 func (d *DB) ListPeople(ctx context.Context, search, department, sortBy, sortDir string, page, perPage int) ([]Person, int, error) {
 	col, ok := allowedPeopleSort[sortBy]
 	if !ok {
@@ -98,6 +99,7 @@ func (d *DB) ListPeople(ctx context.Context, search, department, sortBy, sortDir
 	return people, total, rows.Err()
 }
 
+// GetPerson returns a single person by ID.
 func (d *DB) GetPerson(ctx context.Context, id int) (Person, error) {
 	var p Person
 	err := d.db.QueryRowContext(ctx,
@@ -109,6 +111,7 @@ func (d *DB) GetPerson(ctx context.Context, id int) (Person, error) {
 	return p, nil
 }
 
+// UpdatePerson updates a person row.
 func (d *DB) UpdatePerson(ctx context.Context, p Person) error {
 	res, err := d.db.ExecContext(ctx,
 		"UPDATE people SET first_name=@FirstName, last_name=@LastName, email=@Email, phone=@Phone, city=@City, state=@State, department=@Department, job_title=@JobTitle, bio=@Bio WHERE id=@ID",

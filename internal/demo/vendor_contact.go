@@ -9,12 +9,14 @@ import (
 	"strings"
 )
 
+// Vendor represents a vendor in the demo dataset.
 type Vendor struct {
 	Name     string
 	Category string
 	ID       int
 }
 
+// Contact represents a vendor contact in the demo dataset.
 type Contact struct {
 	Name     string
 	Email    string
@@ -24,6 +26,7 @@ type Contact struct {
 	VendorID int
 }
 
+// ListVendors returns vendors matching the optional search and category filters.
 func (d *DB) ListVendors(ctx context.Context, search, category string) ([]Vendor, error) {
 	var conds []string
 	var args []any
@@ -55,12 +58,14 @@ func (d *DB) ListVendors(ctx context.Context, search, category string) ([]Vendor
 	return vendors, rows.Err()
 }
 
+// GetVendor returns a single vendor by ID.
 func (d *DB) GetVendor(ctx context.Context, id int) (Vendor, error) {
 	var v Vendor
 	err := d.db.QueryRowContext(ctx, "SELECT id,name,category FROM vendors WHERE id = @ID", sql.Named("ID", id)).Scan(&v.ID, &v.Name, &v.Category)
 	return v, err
 }
 
+// ListContacts returns all contacts for a vendor.
 func (d *DB) ListContacts(ctx context.Context, vendorID int) ([]Contact, error) {
 	rows, err := d.db.QueryContext(ctx, "SELECT id,vendor_id,name,email,phone,role FROM contacts WHERE vendor_id = @VendorID ORDER BY name", sql.Named("VendorID", vendorID))
 	if err != nil {
@@ -78,12 +83,14 @@ func (d *DB) ListContacts(ctx context.Context, vendorID int) ([]Contact, error) 
 	return contacts, rows.Err()
 }
 
+// GetContact returns a single contact by ID.
 func (d *DB) GetContact(ctx context.Context, id int) (Contact, error) {
 	var c Contact
 	err := d.db.QueryRowContext(ctx, "SELECT id,vendor_id,name,email,phone,role FROM contacts WHERE id = @ID", sql.Named("ID", id)).Scan(&c.ID, &c.VendorID, &c.Name, &c.Email, &c.Phone, &c.Role)
 	return c, err
 }
 
+// UpdateContact updates a contact row.
 func (d *DB) UpdateContact(ctx context.Context, c Contact) error {
 	res, err := d.db.ExecContext(ctx, "UPDATE contacts SET name=@Name, email=@Email, phone=@Phone, role=@Role WHERE id=@ID",
 		sql.Named("Name", c.Name), sql.Named("Email", c.Email), sql.Named("Phone", c.Phone), sql.Named("Role", c.Role), sql.Named("ID", c.ID))

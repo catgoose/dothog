@@ -56,8 +56,8 @@ type AppRoutes interface {
 // SessionSettingsStore is the subset of session-settings operations that route
 // handlers need: listing all rows and upserting a single row.
 type SessionSettingsStore interface {
-	ListAll(ctx context.Context) ([]session.SessionSettings, error)
-	Upsert(ctx context.Context, s *session.SessionSettings) error
+	ListAll(ctx context.Context) ([]session.Settings, error)
+	Upsert(ctx context.Context, s *session.Settings) error
 }
 
 // setup:feature:session_settings:end
@@ -370,7 +370,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 
 	// setup:feature:session_settings:start
 	if settingsRepo != nil {
-		var sessCfg session.SessionConfig
+		var sessCfg session.Config
 		if cfg != nil && cfg.AppName != "" {
 			sessCfg.CookieName = cfg.AppName + "_session_id"
 		}

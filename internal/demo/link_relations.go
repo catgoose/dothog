@@ -1,4 +1,5 @@
 // setup:feature:demo
+
 package demo
 
 import "fmt"

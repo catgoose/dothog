@@ -444,7 +444,7 @@ func handleSSENumerical(broker *tavern.SSEBroker) echo.HandlerFunc {
 				if !ok {
 					return nil
 				}
-				fmt.Fprint(c.Response(), msg)
+				fmt.Fprint(c.Response(), msg) //nolint:errcheck // SSE stream; client disconnect handled by context
 				flusher.Flush()
 			}
 		}

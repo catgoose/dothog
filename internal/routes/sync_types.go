@@ -1,4 +1,5 @@
 // setup:feature:sync
+
 package routes
 
 import "time"
@@ -22,6 +23,7 @@ type SyncRequest struct {
 // SyncResultStatus represents the outcome of a sync operation.
 type SyncResultStatus string
 
+// Sync result statuses.
 const (
 	SyncApplied  SyncResultStatus = "applied"
 	SyncConflict SyncResultStatus = "conflict"

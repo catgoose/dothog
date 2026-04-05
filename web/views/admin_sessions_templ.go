@@ -18,7 +18,7 @@ import (
 )
 
 // AdminSessionsPage displays all session settings rows with live SSE updates.
-func AdminSessionsPage(sessions []session.SessionSettings) templ.Component {
+func AdminSessionsPage(sessions []session.Settings) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -56,7 +56,7 @@ func AdminSessionsPage(sessions []session.SessionSettings) templ.Component {
 }
 
 // AdminSessionsTable renders just the sessions table for HTMX fragment swaps.
-func AdminSessionsTable(sessions []session.SessionSettings) templ.Component {
+func AdminSessionsTable(sessions []session.Settings) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

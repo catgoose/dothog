@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/catgoose/chuck/driver/sqlite"
+	_ "github.com/catgoose/chuck/driver/sqlite" // register SQLite driver
 )
 
 // OpenMemoryDB opens a new in-memory SQLite database for admin/seed operations.

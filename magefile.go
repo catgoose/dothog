@@ -738,41 +738,46 @@ func parseFeatureFlag(val string) []string {
 
 // setup:feature:demo:end
 
+// runQuiet runs a command with stdout/stderr piped through without the verbose exec: prefix.
+func runQuiet(name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
 // Lint runs static analysis and style checks on the codebase.
 func Lint() error {
-	// Check if golangci-lint is available
-	if _, err := sh.Exec(nil, nil, nil, "which", "golangci-lint"); err != nil {
+	if _, err := exec.LookPath("golangci-lint"); err != nil {
 		return errors.New("golangci-lint not found. Please install it: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest")
 	}
 	fmt.Println("Running golangci-lint...")
-	if err := sh.RunV("golangci-lint", "run"); err != nil {
+	if err := runQuiet("golangci-lint", "run"); err != nil {
 		return err
 	}
 
-	// Check if golint is available
-	if _, err := sh.Exec(nil, nil, nil, "which", "golint"); err != nil {
+	if _, err := exec.LookPath("golint"); err != nil {
 		return errors.New("golint not found. Please install it: go install golang.org/x/lint/golint@latest")
 	}
 	fmt.Println("Running golint...")
-	if err := sh.RunV("golint", "./..."); err != nil {
+	if err := runQuiet("golint", "./..."); err != nil {
 		return err
 	}
 
-	// Check if fieldalignment is available
-	if _, err := sh.Exec(nil, nil, nil, "which", "fieldalignment"); err != nil {
+	if _, err := exec.LookPath("fieldalignment"); err != nil {
 		return errors.New("fieldalignment not found. Please install it: go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest")
 	}
 	fmt.Println("Running fieldalignment...")
-	if err := sh.RunV("fieldalignment", "./..."); err != nil {
+	if err := runFilteredFieldAlignment(); err != nil {
 		return err
 	}
 
 	// oxlint is optional — warn if not installed
-	if _, err := sh.Exec(nil, nil, nil, "which", "oxlint"); err != nil {
+	if _, err := exec.LookPath("oxlint"); err != nil {
 		fmt.Println("Warning: oxlint not found, skipping JS lint. Install: curl -sSf https://oxc.rs/install.sh | sh")
 	} else {
 		fmt.Println("Running oxlint...")
-		if err := sh.RunV("oxlint", "web/assets/public/js/"); err != nil {
+		if err := runQuiet("oxlint", "web/assets/public/js/"); err != nil {
 			return err
 		}
 	}
@@ -780,14 +785,33 @@ func Lint() error {
 	return nil
 }
 
+// runFilteredFieldAlignment runs fieldalignment and filters out _templ.go generated files.
+func runFilteredFieldAlignment() error {
+	out, err := exec.Command("fieldalignment", "./...").CombinedOutput()
+	if err == nil {
+		return nil
+	}
+	var lines []string
+	for _, line := range strings.Split(string(out), "\n") {
+		if line == "" || strings.Contains(line, "_templ.go") {
+			continue
+		}
+		lines = append(lines, line)
+	}
+	if len(lines) == 0 {
+		return nil
+	}
+	fmt.Println(strings.Join(lines, "\n"))
+	return errors.New("fieldalignment issues found")
+}
+
 // FixFieldAlignment runs fieldalignment with the -fix flag to automatically fix field alignment issues
 func FixFieldAlignment() error {
-	// Check if fieldalignment is available
-	if _, err := sh.Exec(nil, nil, nil, "which", "fieldalignment"); err != nil {
+	if _, err := exec.LookPath("fieldalignment"); err != nil {
 		return errors.New("fieldalignment not found. Please install it: go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest")
 	}
 	fmt.Println("Running fieldalignment with -fix...")
-	return sh.RunV("fieldalignment", "-fix", "./...")
+	return runQuiet("fieldalignment", "-fix", "./...")
 }
 
 // LintWatch runs Air with lint configuration for automatic linting on file changes
