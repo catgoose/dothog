@@ -222,9 +222,9 @@ test.describe("Repository Demo Page", () => {
     await expect(page.locator('text="Audit"')).toBeVisible();
   });
 
-  test("navigation includes Demo link", async ({ page }) => {
+  test("navigation includes Platform link", async ({ page }) => {
     await navigateTo(page, "/platform/repository");
-    const navLink = page.locator('nav a:has-text("Demo")');
+    const navLink = page.locator('nav a:has-text("Platform")');
     await expect(navLink).toBeVisible();
   });
 });
