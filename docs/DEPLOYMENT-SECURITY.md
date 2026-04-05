@@ -66,7 +66,7 @@ Everything else stays the same. The app doesn't care who terminates TLS -- it se
 
 ### Features that require a CDN / edge proxy
 
-If you later add a CDN like Cloudflare, these features become available at the edge. Without one, here's how to cover them:
+If deploying without a CDN or edge proxy, here's how to cover common security features:
 
 | Feature | Without edge proxy | Replacement |
 |---------|-------------------|-------------|
@@ -74,7 +74,7 @@ If you later add a CDN like Cloudflare, these features become available at the e
 | CSP (baseline) | No edge fallback | Set in porter (already done per-app) |
 | Rate limiting | None | Add Go middleware (`golang.org/x/time/rate`) or nginx `limit_req` |
 | Early Hints (edge cache) | No edge replay | App still sends 103s if nginx uses H2 upstream, but no edge caching |
-| ECH | Not available | N/A -- only works with Cloudflare or other supporting CDNs |
+| ECH | Not available | N/A -- requires a supporting edge proxy |
 | X-Robots-Tag | Not set | Add in porter or nginx if needed |
 | DDoS protection | None | Firewall rules, fail2ban, or upstream provider |
 | Bot management | None | Consider Caddy with crowdsec or similar |
@@ -222,7 +222,7 @@ server {
 
 **Multi-app setup:**
 
-For multiple apps behind one nginx instance (like vopts), extract the shared config into snippets:
+For multiple apps behind one nginx instance, extract the shared config into snippets:
 
 ```nginx
 # /etc/nginx/snippets/ssl.conf
