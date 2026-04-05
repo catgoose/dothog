@@ -139,12 +139,8 @@ jobs:
         with:
           ref: ${{ needs.update-deps.outputs.sha }}
 
-      - name: Install oxlint
-        run: |
-          curl -sSf https://oxc.rs/install.sh | sh
-
       - name: Lint JavaScript
-        run: $HOME/.local/bin/oxlint web/assets/public/js/
+        run: npx oxlint web/assets/public/js/
 
   e2e-test:
     needs: [update-deps]
