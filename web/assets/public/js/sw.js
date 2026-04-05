@@ -40,7 +40,6 @@ const PRECACHE_URLS = [
   '/public/js/alpine.min.js?v={{APP_VERSION}}',
   '/public/js/alpine.morph.min.js?v={{APP_VERSION}}',
   '/public/js/htmx.alpine-morph.js?v={{APP_VERSION}}',
-  '/public/js/beacon.js?v={{APP_VERSION}}',
   '/public/js/broadcast.js?v={{APP_VERSION}}',
   '/pwa',
   '/pwa/inspection',

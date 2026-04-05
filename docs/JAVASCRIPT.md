@@ -95,7 +95,6 @@ Example from `interval-control.js`:
 | File | Description |
 |------|-------------|
 | `alpine-components.js` | Alpine.js CSP-compatible component registrations |
-| `beacon.js` | Client analytics via `navigator.sendBeacon` (demo feature) |
 | `broadcast.js` | BroadcastChannel for cross-tab sync (demo feature) |
 | `csrf-header.js` | Attaches CSRF token to HTMX requests |
 | `debug-restore.js` | Restores debug toggles from localStorage |
