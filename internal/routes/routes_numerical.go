@@ -420,37 +420,6 @@ func broadcastTileSlider(tileID string, ms int, unit string) {
 	numBroker.Publish(TopicNumericalDash, msg)
 }
 
-func handleSSENumerical(broker *tavern.SSEBroker) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Response().Header().Set("Content-Type", "text/event-stream")
-		c.Response().Header().Set("Cache-Control", "no-cache")
-		c.Response().Header().Set("Connection", "keep-alive")
-		c.Response().WriteHeader(200)
-		flusher, ok := c.Response().Writer.(http.Flusher)
-		if !ok {
-			return fmt.Errorf("streaming not supported")
-		}
-		flusher.Flush()
-
-		ch, unsub := broker.Subscribe(TopicNumericalDash)
-		defer unsub()
-
-		ctx := c.Request().Context()
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case msg, ok := <-ch:
-				if !ok {
-					return nil
-				}
-				fmt.Fprint(c.Response(), msg) //nolint:errcheck // SSE stream; client disconnect handled by context
-				flusher.Flush()
-			}
-		}
-	}
-}
-
 // ── Publisher ────────────────────────────────────────────────────────────────
 
 func (ar *appRoutes) publishNumerical(broker *tavern.SSEBroker) {

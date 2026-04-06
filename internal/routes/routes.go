@@ -181,7 +181,7 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:demo:end
 
 	// setup:feature:sse:start
-	ar.broker = tavern.NewSSEBroker()
+	ar.broker = tavern.NewSSEBroker(tavern.WithKeepalive(30 * time.Second))
 	// setup:feature:sse:end
 	// setup:feature:session_settings:start
 	ar.initThemeRoutes(ar.broker)

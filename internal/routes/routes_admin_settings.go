@@ -5,7 +5,6 @@ package routes
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
@@ -51,7 +50,7 @@ func (ar *appRoutes) initAdminSettingsRoutes(broker *tavern.SSEBroker) {
 	initAdminIntervals()
 	ar.e.GET("/admin/settings", ar.handleAdminSettings(broker))
 	ar.e.POST("/admin/settings/interval", handleAdminInterval)
-	ar.e.GET("/sse/admin", handleSSEAdmin(broker))
+	ar.e.GET("/sse/admin", echo.WrapHandler(broker.SSEHandler(TopicAdminPanel)))
 
 	go ar.publishAdminPanel(broker)
 }
@@ -75,37 +74,6 @@ func handleAdminInterval(c echo.Context) error {
 	adminIntervals.intervals[section] = ms
 	adminIntervals.mu.Unlock()
 	return c.NoContent(http.StatusNoContent)
-}
-
-func handleSSEAdmin(broker *tavern.SSEBroker) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Response().Header().Set("Content-Type", "text/event-stream")
-		c.Response().Header().Set("Cache-Control", "no-cache")
-		c.Response().Header().Set("Connection", "keep-alive")
-		c.Response().WriteHeader(http.StatusOK)
-		flusher, ok := c.Response().Writer.(http.Flusher)
-		if !ok {
-			return fmt.Errorf("streaming not supported")
-		}
-		flusher.Flush()
-
-		ch, unsub := broker.Subscribe(TopicAdminPanel)
-		defer unsub()
-
-		ctx := c.Request().Context()
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case msg, ok := <-ch:
-				if !ok {
-					return nil
-				}
-				fmt.Fprint(c.Response(), msg) //nolint:errcheck // SSE stream; client disconnect handled by context
-				flusher.Flush()
-			}
-		}
-	}
 }
 
 // ── Publisher ────────────────────────────────────────────────────────────────
