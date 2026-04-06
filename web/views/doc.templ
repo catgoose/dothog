@@ -36,10 +36,10 @@ templ DocumentPage(content string, wordCount, charCount int, sentiment string, r
 				<span class="loading loading-spinner loading-xs"></span>
 				Reconnecting...
 			</div>
-			<div sse-swap="content" hx-target="#doc-content-display" hx-swap="innerHTML" style="display:none"></div>
-			<div sse-swap="stats" hx-target="#doc-stats" hx-swap="innerHTML" style="display:none"></div>
-			<div sse-swap="sentiment" hx-target="#doc-sentiment" hx-swap="innerHTML" style="display:none"></div>
-			<div sse-swap="history" hx-target="#doc-history" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="doc/content" hx-target="#doc-content-display" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="doc/stats" hx-target="#doc-stats" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="doc/sentiment" hx-target="#doc-sentiment" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="doc/history" hx-target="#doc-history" hx-swap="innerHTML" style="display:none"></div>
 			<div class="flex gap-6">
 				<!-- Left column: editor -->
 				<div class="flex-[2] min-w-0 space-y-4">
