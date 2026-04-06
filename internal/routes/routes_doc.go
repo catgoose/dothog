@@ -101,16 +101,9 @@ func (d *docRoutes) handleEdit(c echo.Context) error {
 
 func (d *docRoutes) handleBatchEdit(c echo.Context) error {
 	action := c.FormValue("action")
-	newContent := d.doc.BatchEdit(action)
-
-	batch := d.broker.Batch()
-	batch.Publish(topicDocContent, renderDocContent(d.doc))
-	batch.Publish(topicDocStats, renderDocStats(d.doc))
-	batch.Publish(topicDocSentiment, renderDocSentiment(d.doc))
-	batch.Publish(topicDocHistory, renderDocHistory(d.doc))
-	batch.Flush()
-
-	_ = newContent
+	d.doc.BatchEdit(action)
+	// Publish to content topic; the After hook cascades to stats/sentiment/history.
+	d.broker.Publish(topicDocContent, renderDocContent(d.doc))
 	return c.NoContent(http.StatusNoContent)
 }
 
