@@ -39,7 +39,11 @@ func (ar *appRoutes) initCanvasRoutes(canvas *demo.PixelCanvas, broker *tavern.S
 	ar.e.POST("/realtime/canvas/reset", cr.handleReset)
 	ar.e.GET("/sse/canvas", cr.handleCanvasSSE)
 
-	go cr.runTicker()
+	broker.SetOrdered(TopicCanvasUpdate, true)
+
+	broker.RunPublisher(ar.ctx, func(ctx context.Context) {
+		cr.runTicker()
+	})
 }
 
 func (cr *canvasRoutes) handleCanvasPage(c echo.Context) error {
