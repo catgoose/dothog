@@ -37,14 +37,14 @@ func DocumentPage(content string, wordCount, charCount int, sentiment string, re
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-6xl mx-auto p-4 space-y-4\"><div class=\"flex items-center justify-between flex-wrap gap-2\"><div><h1 class=\"text-2xl font-bold\">Collaborative Document</h1><p class=\"text-xs text-base-content/50\">Edits cascade through After hooks to derived panels. The POST handler only calls NotifyMutate.</p></div><div id=\"middleware-stats\" hx-get=\"/realtime/document/stats-badge\" hx-trigger=\"load, every 3s\" hx-swap=\"innerHTML\"><span class=\"badge badge-ghost badge-sm font-mono\">loading...</span></div></div><div hx-ext=\"sse\" sse-connect=\"/sse/document\"><div sse-swap=\"content\" hx-target=\"#doc-content-display\" hx-swap=\"innerHTML\" style=\"display:none\"></div><div sse-swap=\"stats\" hx-target=\"#doc-stats\" hx-swap=\"innerHTML\" style=\"display:none\"></div><div sse-swap=\"sentiment\" hx-target=\"#doc-sentiment\" hx-swap=\"innerHTML\" style=\"display:none\"></div><div sse-swap=\"history\" hx-target=\"#doc-history\" hx-swap=\"innerHTML\" style=\"display:none\"></div><div class=\"flex gap-6\"><!-- Left column: editor --><div class=\"flex-[2] min-w-0 space-y-4\"><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Editor</h2><textarea name=\"content\" class=\"textarea textarea-bordered w-full h-48 font-mono text-sm leading-relaxed\" hx-post=\"/realtime/document/edit\" hx-trigger=\"keyup changed delay:300ms\" hx-swap=\"none\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-6xl mx-auto p-4 space-y-4\"><div class=\"flex items-center justify-between flex-wrap gap-2\"><div><h1 class=\"text-2xl font-bold\">Collaborative Document</h1><p class=\"text-xs text-base-content/50\">Edits cascade through After hooks to derived panels. The POST handler only calls NotifyMutate.</p></div><div id=\"middleware-stats\" hx-get=\"/realtime/document/stats-badge\" hx-trigger=\"load, every 3s\" hx-swap=\"innerHTML\"><span class=\"badge badge-ghost badge-sm font-mono\">loading...</span></div></div><div hx-ext=\"sse\" sse-connect=\"/sse/document\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"reload\"><div data-tavern-status class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span class=\"loading loading-spinner loading-xs\"></span> Reconnecting...</div><div sse-swap=\"content\" hx-target=\"#doc-content-display\" hx-swap=\"innerHTML\" style=\"display:none\"></div><div sse-swap=\"stats\" hx-target=\"#doc-stats\" hx-swap=\"innerHTML\" style=\"display:none\"></div><div sse-swap=\"sentiment\" hx-target=\"#doc-sentiment\" hx-swap=\"innerHTML\" style=\"display:none\"></div><div sse-swap=\"history\" hx-target=\"#doc-history\" hx-swap=\"innerHTML\" style=\"display:none\"></div><div class=\"flex gap-6\"><!-- Left column: editor --><div class=\"flex-[2] min-w-0 space-y-4\"><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Editor</h2><textarea name=\"content\" class=\"textarea textarea-bordered w-full h-48 font-mono text-sm leading-relaxed\" hx-post=\"/realtime/document/edit\" hx-trigger=\"keyup changed delay:300ms\" hx-swap=\"none\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(content)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 46, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 55, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -118,7 +118,7 @@ func DocContentDisplay(content string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(content)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 117, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 126, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func DocStatsPanel(wordCount, charCount int) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(wordCount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 124, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 133, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -173,7 +173,7 @@ func DocStatsPanel(wordCount, charCount int) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(charCount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 128, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 137, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -233,7 +233,7 @@ func DocSentimentBadge(sentiment string) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(sentiment)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 134, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 143, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -282,7 +282,7 @@ func DocHistoryList(revisions []demo.DocRevision) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(rev.Timestamp.Format("15:04:05"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 144, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 153, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -295,7 +295,7 @@ func DocHistoryList(revisions []demo.DocRevision) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(rev.Summary)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 146, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 155, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -330,7 +330,7 @@ func DocHistoryList(revisions []demo.DocRevision) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(formatDelta(rev.WordDelta))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 148, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/doc.templ`, Line: 157, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {

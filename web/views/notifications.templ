@@ -45,7 +45,18 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 		<div class="flex gap-6">
 			<!-- Main: notification list -->
 			<div class="flex-1 min-w-0">
-				<div id="notifications-container" hx-ext="sse" sse-connect="/sse/notifications">
+				<div
+					id="notifications-container"
+					hx-ext="sse"
+					sse-connect="/sse/notifications"
+					data-tavern-reconnecting-class="opacity-50 pointer-events-none"
+					data-tavern-gap-action="banner"
+					data-tavern-gap-banner-text="Some notifications may have been missed during disconnection."
+				>
+					<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+						<span class="loading loading-spinner loading-xs"></span>
+						Reconnecting...
+					</div>
 					<div sse-swap="notification" hx-swap="afterbegin" hx-target="#notification-list" style="display:none"></div>
 					<div sse-swap="presence" hx-swap="innerHTML" hx-target="#presence-list" style="display:none"></div>
 					<div id="notification-list" class="space-y-2">
@@ -108,10 +119,9 @@ templ notificationsScript() {
 			const container = document.getElementById('notifications-container');
 			if (!container) return;
 
-			// Remove the SSE connection by removing hx-ext and sse-connect
+			// Remove the SSE connection — tavern-js handles the reconnecting visual state
 			const sseConnect = container.getAttribute('sse-connect');
 			container.removeAttribute('sse-connect');
-			// Force HTMX to close the connection
 			htmx.process(container);
 
 			btn.classList.remove('btn-warning');

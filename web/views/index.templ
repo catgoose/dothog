@@ -87,6 +87,9 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:sse:start
 		<script defer src={ version.Asset("/public/js/htmx.ext.sse.js") }></script>
 		// setup:feature:sse:end
+		// setup:feature:demo:start
+		<script defer src={ version.Asset("/public/js/tavern.min.js") }></script>
+		// setup:feature:demo:end
 		<link rel="stylesheet" href={ version.Asset("/public/css/tailwind.css") } type="text/css"/>
 		<link rel="stylesheet" href={ version.Asset("/public/css/daisyui.css") } type="text/css"/>
 		for _, href := range extraCSS {

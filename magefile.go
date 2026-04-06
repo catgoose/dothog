@@ -45,6 +45,9 @@ var (
 	// setup:feature:sse:start
 	htmxSSEURL             = "https://unpkg.com/htmx-ext-sse"
 	// setup:feature:sse:end
+	// setup:feature:demo:start
+	tavernJSURL            = "https://cdn.jsdelivr.net/gh/catgoose/tavern-js@latest/dist/tavern.min.js"
+	// setup:feature:demo:end
 	hyperscriptURL         = "https://unpkg.com/hyperscript.org"
 	alpineURL              = "https://unpkg.com/@alpinejs/csp@3/dist/cdn.min.js"
 	alpineMorphURL         = "https://unpkg.com/@alpinejs/morph@3/dist/cdn.min.js"
@@ -293,6 +296,15 @@ func HyperscriptUpdate() error {
 	return downloadFile(hyperscriptURL, filepath.Join(publicJSDir, "_hyperscript.min.js"))
 }
 
+// setup:feature:demo:start
+
+// TavernJSUpdate downloads the tavern-js SSE companion library.
+func TavernJSUpdate() error {
+	return downloadFile(tavernJSURL, filepath.Join(publicJSDir, "tavern.min.js"))
+}
+
+// setup:feature:demo:end
+
 // AlpineUpdate downloads Alpine.js core, the morph plugin, and the htmx alpine-morph extension.
 func AlpineUpdate() error {
 	mg.Deps(PrepareDirs)
@@ -322,6 +334,11 @@ func UpdateAssets() error {
 	if err := TailwindUpdate(); err != nil {
 		return fmt.Errorf("tailwind update failed: %v", err)
 	}
+	// setup:feature:demo:start
+	if err := TavernJSUpdate(); err != nil {
+		return fmt.Errorf("tavern-js update failed: %v", err)
+	}
+	// setup:feature:demo:end
 	return nil
 }
 
