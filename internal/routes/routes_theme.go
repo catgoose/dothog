@@ -3,7 +3,6 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 
 	"catgoose/dothog/internal/logger"
@@ -24,7 +23,7 @@ import (
 func (ar *appRoutes) initThemeRoutes(broker *tavern.SSEBroker) {
 	ar.e.POST("/settings/theme", ar.handleTheme(broker))
 	ar.e.POST("/settings/layout", ar.handleLayout())
-	ar.e.GET("/sse/theme", handleSSETheme(broker))
+	ar.e.GET("/sse/theme", echo.WrapHandler(broker.SSEHandler(TopicThemeChange)))
 }
 
 // handleTheme updates the shared theme setting and broadcasts to all browsers.
@@ -83,35 +82,3 @@ func (ar *appRoutes) handleLayout() echo.HandlerFunc {
 }
 
 // setup:feature:session_settings:end
-
-// handleSSETheme streams theme-change events to all connected browsers.
-func handleSSETheme(broker *tavern.SSEBroker) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Response().Header().Set("Content-Type", "text/event-stream")
-		c.Response().Header().Set("Cache-Control", "no-cache")
-		c.Response().Header().Set("Connection", "keep-alive")
-		c.Response().WriteHeader(http.StatusOK)
-
-		flusher, ok := c.Response().Writer.(http.Flusher)
-		if !ok {
-			return fmt.Errorf("streaming unsupported")
-		}
-
-		ch, unsub := broker.Subscribe(TopicThemeChange)
-		defer unsub()
-
-		ctx := c.Request().Context()
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case msg, ok := <-ch:
-				if !ok {
-					return nil
-				}
-				_, _ = fmt.Fprint(c.Response(), msg)
-				flusher.Flush()
-			}
-		}
-	}
-}

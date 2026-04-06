@@ -89,13 +89,13 @@ func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 	ar.e.POST("/realtime/dashboard/interval-all", handleRTIntervalAll)
 	ar.e.POST("/realtime/dashboard/interval-restore", handleRTIntervalRestore)
 	ar.e.POST("/realtime/dashboard/pin", handleRTPin)
-	ar.e.GET("/sse/system", handleSSESystem(broker))
-	ar.e.GET("/sse/dashboard", handleSSEDashboard(broker))
+	ar.e.GET("/sse/system", echo.WrapHandler(broker.SSEHandler(TopicSystemStats)))
+	ar.e.GET("/sse/dashboard", echo.WrapHandler(broker.SSEHandler(TopicDashMetrics)))
 
 	// Numerical tile publisher (shares the page, separate SSE stream)
 	initTileIntervals()
 	ar.e.POST("/realtime/dashboard/tile-interval", handleNumericalInterval)
-	ar.e.GET("/sse/numerical", handleSSENumerical(broker))
+	ar.e.GET("/sse/numerical", echo.WrapHandler(broker.SSEHandler(TopicNumericalDash)))
 
 	go ar.publishSystemStats(broker)
 	go ar.publishRealtimeDashboard(broker)
@@ -274,69 +274,6 @@ func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
 		}
 
 		return handler.RenderBaseLayout(c, views.RealtimePage(stats, snap, services, svcLatencies, tiles, masterEnabled, masterMs))
-	}
-}
-
-func handleSSESystem(broker *tavern.SSEBroker) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Response().Header().Set("Content-Type", "text/event-stream")
-		c.Response().Header().Set("Cache-Control", "no-cache")
-		c.Response().Header().Set("Connection", "keep-alive")
-		c.Response().WriteHeader(http.StatusOK)
-
-		flusher, ok := c.Response().Writer.(http.Flusher)
-		if !ok {
-			return fmt.Errorf("streaming unsupported")
-		}
-
-		ch, unsub := broker.Subscribe(TopicSystemStats)
-		defer unsub()
-
-		ctx := c.Request().Context()
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case msg, ok := <-ch:
-				if !ok {
-					return nil
-				}
-				_, _ = fmt.Fprint(c.Response(), msg)
-				flusher.Flush()
-			}
-		}
-	}
-}
-
-// handleSSEDashboard streams dashboard card updates from the unified publisher.
-func handleSSEDashboard(broker *tavern.SSEBroker) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Response().Header().Set("Content-Type", "text/event-stream")
-		c.Response().Header().Set("Cache-Control", "no-cache")
-		c.Response().Header().Set("Connection", "keep-alive")
-		c.Response().WriteHeader(http.StatusOK)
-
-		flusher, ok := c.Response().Writer.(http.Flusher)
-		if !ok {
-			return fmt.Errorf("streaming unsupported")
-		}
-
-		ch, unsub := broker.Subscribe(TopicDashMetrics)
-		defer unsub()
-
-		ctx := c.Request().Context()
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case msg, ok := <-ch:
-				if !ok {
-					return nil
-				}
-				_, _ = fmt.Fprint(c.Response(), msg)
-				flusher.Flush()
-			}
-		}
 	}
 }
 

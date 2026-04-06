@@ -5,9 +5,7 @@ package routes
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"math/rand/v2"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -22,14 +20,13 @@ import (
 
 type feedRoutes struct {
 	actLog *demo.ActivityLog
-	broker *tavern.SSEBroker
 }
 
 func (ar *appRoutes) initFeedRoutes(actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
-	f := &feedRoutes{actLog: actLog, broker: broker}
+	f := &feedRoutes{actLog: actLog}
 	ar.e.GET("/realtime/feed", f.handleFeedPage)
 	ar.e.GET("/realtime/feed/more", f.handleFeedMore)
-	ar.e.GET("/sse/activity", f.handleActivitySSE)
+	ar.e.GET("/sse/activity", echo.WrapHandler(broker.SSEHandler(TopicActivityFeed)))
 
 	// Seed some initial events so the feed isn't empty on first load.
 	seedFeedEvents(actLog)
@@ -66,35 +63,6 @@ func (f *feedRoutes) handleFeedMore(c echo.Context) error {
 	}
 	hasMore := len(filtered) == 20
 	return handler.RenderComponent(c, views.FeedMoreItems(filtered, lastID, hasMore))
-}
-
-func (f *feedRoutes) handleActivitySSE(c echo.Context) error {
-	c.Response().Header().Set("Content-Type", "text/event-stream")
-	c.Response().Header().Set("Cache-Control", "no-cache")
-	c.Response().Header().Set("Connection", "keep-alive")
-	c.Response().WriteHeader(http.StatusOK)
-
-	flusher, ok := c.Response().Writer.(http.Flusher)
-	if !ok {
-		return fmt.Errorf("streaming unsupported")
-	}
-
-	ch, unsub := f.broker.Subscribe(TopicActivityFeed)
-	defer unsub()
-
-	ctx := c.Request().Context()
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case msg, ok := <-ch:
-			if !ok {
-				return nil
-			}
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
-		}
-	}
 }
 
 // BroadcastActivity publishes an activity event to the SSE feed.
