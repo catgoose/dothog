@@ -32,7 +32,9 @@ func (ar *appRoutes) initFeedRoutes(actLog *demo.ActivityLog, broker *tavern.SSE
 	// Seed some initial events so the feed isn't empty on first load.
 	seedFeedEvents(actLog)
 	// Start background publisher for simulated activity.
-	go ar.publishActivityEvents(actLog, broker)
+	broker.RunPublisher(ar.ctx, func(ctx context.Context) {
+		ar.publishActivityEvents(actLog, broker)
+	})
 }
 
 func (f *feedRoutes) handleFeedPage(c echo.Context) error {

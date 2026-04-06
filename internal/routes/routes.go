@@ -181,7 +181,31 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:demo:end
 
 	// setup:feature:sse:start
-	ar.broker = tavern.NewSSEBroker(tavern.WithKeepalive(30 * time.Second))
+	ar.broker = tavern.NewSSEBroker(
+		tavern.WithKeepalive(30*time.Second),
+		tavern.WithSlowSubscriberCallback(func(topic string) {
+			logger.Warn("Slow subscriber evicted", "topic", topic)
+		}),
+	)
+	ar.broker.OnPublishDrop(func(topic string, count int) {
+		logger.Debug("Message dropped", "topic", topic, "subscribers", count)
+	})
+	// Wrap raw HTML publishes in SSE message format for topics that use
+	// ScheduledPublisher.  All publishers on these topics send raw HTML;
+	// the middleware adds the event:/data: envelope before delivery.
+	for _, topic := range []string{
+		TopicDashMetrics,
+		TopicNumericalDash,
+		TopicAdminPanel,
+		TopicSystemStats,
+	} {
+		topic := topic // capture
+		ar.broker.UseTopics(topic, func(next tavern.PublishFunc) tavern.PublishFunc {
+			return func(t, msg string) {
+				next(t, tavern.NewSSEMessage(topic, msg).String())
+			}
+		})
+	}
 	// setup:feature:sse:end
 	// setup:feature:session_settings:start
 	ar.initThemeRoutes(ar.broker)

@@ -15,7 +15,6 @@ import (
 
 	"catgoose/dothog/internal/health"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/shared"
 	components "catgoose/dothog/web/components/core"
 	"catgoose/dothog/web/views"
 
@@ -43,9 +42,8 @@ var rtCardDefaults = map[string]int{
 var rtIntervals struct {
 	intervals map[string]int
 	units     map[string]string // client-chosen unit per section
-	lastSent  map[string]time.Time
-	saved     map[string]int  // snapshot before master override
-	pinned    map[string]bool // pinned sections are excluded from master override
+	saved     map[string]int    // snapshot before master override
+	pinned    map[string]bool   // pinned sections are excluded from master override
 	mu        sync.RWMutex
 }
 
@@ -55,29 +53,19 @@ var rtMaster struct {
 	intervalMs int
 }
 
-var rtBroker *tavern.SSEBroker
+var (
+	rtBroker  *tavern.SSEBroker
+	rtDashPub *tavern.ScheduledPublisher
+)
 
 func initRTIntervals() {
 	rtIntervals.intervals = make(map[string]int, len(rtCardDefaults))
 	rtIntervals.units = make(map[string]string, len(rtCardDefaults))
-	rtIntervals.lastSent = make(map[string]time.Time, len(rtCardDefaults))
 	rtIntervals.pinned = make(map[string]bool, len(rtCardDefaults))
 	for id, iv := range rtCardDefaults {
 		rtIntervals.intervals[id] = iv
 		rtIntervals.units[id] = components.AutoScale(iv)
 	}
-}
-
-func isDue(cardID string, now time.Time) bool {
-	ms := rtIntervals.intervals[cardID]
-	if ms < 100 {
-		ms = 100
-	}
-	if now.Sub(rtIntervals.lastSent[cardID]) >= time.Duration(ms)*time.Millisecond {
-		rtIntervals.lastSent[cardID] = now
-		return true
-	}
-	return false
 }
 
 func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
@@ -97,9 +85,14 @@ func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 	ar.e.POST("/realtime/dashboard/tile-interval", handleNumericalInterval)
 	ar.e.GET("/sse/numerical", echo.WrapHandler(broker.SSEHandler(TopicNumericalDash)))
 
-	go ar.publishSystemStats(broker)
-	go ar.publishRealtimeDashboard(broker)
-	go ar.publishNumerical(broker)
+	sysPub := ar.newSystemStatsPublisher(broker)
+	broker.RunPublisher(ar.ctx, sysPub.Start)
+
+	rtDashPub = ar.newDashboardPublisher(broker)
+	broker.RunPublisher(ar.ctx, rtDashPub.Start)
+
+	numPub := ar.newNumericalPublisher(broker)
+	broker.RunPublisher(ar.ctx, numPub.Start)
 }
 
 func handleRTIntervalAll(c echo.Context) error {
@@ -109,6 +102,8 @@ func handleRTIntervalAll(c echo.Context) error {
 	} else if ms > 86400000 {
 		ms = 86400000
 	}
+
+	dur := time.Duration(ms) * time.Millisecond
 
 	// Save individual intervals before overriding (skip pinned)
 	rtIntervals.mu.Lock()
@@ -121,6 +116,9 @@ func handleRTIntervalAll(c echo.Context) error {
 	for id := range rtIntervals.intervals {
 		if !rtIntervals.pinned[id] {
 			rtIntervals.intervals[id] = ms
+			if rtDashPub != nil {
+				rtDashPub.SetInterval(id, dur)
+			}
 		}
 	}
 	rtIntervals.mu.Unlock()
@@ -135,6 +133,9 @@ func handleRTIntervalAll(c echo.Context) error {
 	for id := range numTileIntervals.intervals {
 		if !numTileIntervals.pinned[id] {
 			numTileIntervals.intervals[id] = ms
+			if numDashPub != nil {
+				numDashPub.SetInterval(id, dur)
+			}
 		}
 	}
 	numTileIntervals.mu.Unlock()
@@ -157,6 +158,9 @@ func handleRTIntervalRestore(c echo.Context) error {
 		for id, iv := range rtIntervals.saved {
 			if !rtIntervals.pinned[id] {
 				rtIntervals.intervals[id] = iv
+				if rtDashPub != nil {
+					rtDashPub.SetInterval(id, time.Duration(iv)*time.Millisecond)
+				}
 			}
 		}
 		rtIntervals.saved = nil
@@ -168,6 +172,9 @@ func handleRTIntervalRestore(c echo.Context) error {
 		for id, iv := range numTileIntervals.saved {
 			if !numTileIntervals.pinned[id] {
 				numTileIntervals.intervals[id] = iv
+				if numDashPub != nil {
+					numDashPub.SetInterval(id, time.Duration(iv)*time.Millisecond)
+				}
 			}
 		}
 		numTileIntervals.saved = nil
@@ -201,6 +208,10 @@ func handleRTInterval(c echo.Context) error {
 	rtIntervals.intervals[section] = ms
 	rtIntervals.units[section] = unit
 	rtIntervals.mu.Unlock()
+
+	if rtDashPub != nil {
+		rtDashPub.SetInterval(section, time.Duration(ms)*time.Millisecond)
+	}
 
 	// Broadcast OOB slider update to all dashboard clients
 	broadcastCardSlider(section, ms, unit)
@@ -252,9 +263,9 @@ func broadcastPinButton(section string, pinned bool) {
 		statsBufPool.Put(buf)
 		return
 	}
-	msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
+	html := buf.String()
 	statsBufPool.Put(buf)
-	rtBroker.Publish(TopicDashMetrics, msg)
+	rtBroker.Publish(TopicDashMetrics, html)
 }
 
 func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
@@ -299,9 +310,9 @@ func broadcastCardSlider(section string, ms int, unit string) {
 		statsBufPool.Put(buf)
 		return
 	}
-	msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
+	html := buf.String()
 	statsBufPool.Put(buf)
-	rtBroker.Publish(TopicDashMetrics, msg)
+	rtBroker.Publish(TopicDashMetrics, html)
 }
 
 // broadcastMasterState renders the master toggle OOB and (when enabled) the
@@ -331,39 +342,23 @@ func broadcastMasterState(enabled bool, ms int) {
 			return
 		}
 	}
-	msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
+	html := buf.String()
 	statsBufPool.Put(buf)
-	rtBroker.Publish(TopicDashMetrics, msg)
+	rtBroker.Publish(TopicDashMetrics, html)
 }
 
 var statsBufPool = sync.Pool{
 	New: func() any { return new(bytes.Buffer) },
 }
 
-func (ar *appRoutes) publishSystemStats(broker *tavern.SSEBroker) {
-	ticker := time.NewTicker(2 * time.Second)
-	defer ticker.Stop()
+func (ar *appRoutes) newSystemStatsPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
+	pub := broker.NewScheduledPublisher(TopicSystemStats, tavern.WithBaseTick(2*time.Second))
 	start := time.Now()
-	for {
-		select {
-		case <-ar.ctx.Done():
-			return
-		case <-ticker.C:
-			if !broker.HasSubscribers(TopicSystemStats) {
-				continue
-			}
-			stats := health.CollectRuntimeStats(start)
-			buf := statsBufPool.Get().(*bytes.Buffer)
-			buf.Reset()
-			if err := views.SystemStatsOOB(stats).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "publish system stats"), buf); err != nil {
-				statsBufPool.Put(buf)
-				continue
-			}
-			msg := tavern.NewSSEMessage("system-stats", buf.String()).String()
-			statsBufPool.Put(buf)
-			broker.Publish(TopicSystemStats, msg)
-		}
-	}
+	pub.Register("system-stats", 2*time.Second, func(ctx context.Context, buf *bytes.Buffer) error {
+		stats := health.CollectRuntimeStats(start)
+		return views.SystemStatsOOB(stats).Render(ctx, buf)
+	})
+	return pub
 }
 
 // --- Simulation data initializers ---
@@ -463,288 +458,308 @@ var eventTemplates = []eventTemplate{
 	}},
 }
 
-// --- Unified dashboard publisher ---
+// ── Dashboard simulation state ─────────────────────────────────────────────
 
-func (ar *appRoutes) publishRealtimeDashboard(broker *tavern.SSEBroker) {
-	ticker := time.NewTicker(500 * time.Millisecond)
-	defer ticker.Stop()
+type dashSim struct {
+	snap         *views.MetricsSnapshot
+	services     []views.ServiceStatus
+	svcLatencies []views.ServiceLatency
+	rps          float64
+	errPct       float64
+	p99          float64
+	cpu          float64
+	mem          float64
+	netIn        float64
+	netOut       float64
+	p50          float64
+	p90          float64
+	diskRead     float64
+	diskWrite    float64
+	maxSvcMs     float64
+	connActive   int
+	connIdle     int
+	connWait     int
+}
 
-	// Initialize metrics simulation state
+func newDashSim() *dashSim {
 	snap := initialMetrics()
-	rps := snap.RPS
-	errPct := snap.ErrorPct
-	p99 := snap.P99Ms
-	cpu := snap.CPUPercent
-	mem := snap.MemPercent
-	netIn := 12.5
-	netOut := 8.3
-	connActive := snap.ConnActive
-	connIdle := snap.ConnIdle
-	connWait := snap.ConnWait
-	p50 := 15.0
-	p90 := 35.0
-	diskRead := 50.0
-	diskWrite := 30.0
+	return &dashSim{
+		snap:         &snap,
+		rps:          snap.RPS,
+		errPct:       snap.ErrorPct,
+		p99:          snap.P99Ms,
+		cpu:          snap.CPUPercent,
+		mem:          snap.MemPercent,
+		netIn:        12.5,
+		netOut:       8.3,
+		connActive:   snap.ConnActive,
+		connIdle:     snap.ConnIdle,
+		connWait:     snap.ConnWait,
+		p50:          15.0,
+		p90:          35.0,
+		diskRead:     50.0,
+		diskWrite:    30.0,
+		services:     initialServices(),
+		svcLatencies: initialServiceLatencies(),
+	}
+}
 
-	// Initialize services simulation state
-	services := initialServices()
-	svcLatencies := initialServiceLatencies()
+func (s *dashSim) advance() {
+	s.rps += (rand.Float64() - 0.48) * 60
+	if rand.Float64() < 0.025 {
+		s.rps += 200 + rand.Float64()*150
+		s.errPct += 0.75 + rand.Float64()
+	}
+	s.rps = math.Max(200, math.Min(3000, s.rps))
 
-	ctx := context.Background()
+	s.errPct += (rand.Float64() - 0.55) * 0.2
+	s.errPct = math.Max(0.1, math.Min(8.0, s.errPct))
 
-	for {
-		select {
-		case <-ar.ctx.Done():
-			return
-		case <-ticker.C:
-			if !broker.HasSubscribers(TopicDashMetrics) {
-				continue
-			}
+	s.p99 += (rand.Float64() - 0.5) * 7.5
+	if s.rps > 2000 {
+		s.p99 += 5
+	}
+	s.p99 = math.Max(10, math.Min(300, s.p99))
 
-			// --- Advance metrics simulation (scaled 0.5x for 500ms ticks) ---
+	s.cpu += (rand.Float64() - 0.48) * 2.5
+	s.cpu = math.Max(5, math.Min(98, s.cpu))
+	s.mem += (rand.Float64() - 0.5) * 1.5
+	s.mem = math.Max(15, math.Min(95, s.mem))
 
-			rps += (rand.Float64() - 0.48) * 60
-			if rand.Float64() < 0.025 {
-				rps += 200 + rand.Float64()*150
-				errPct += 0.75 + rand.Float64()
-			}
-			rps = math.Max(200, math.Min(3000, rps))
+	s.netIn += (rand.Float64() - 0.48) * 4
+	s.netIn = math.Max(1, math.Min(80, s.netIn))
+	s.netOut += (rand.Float64() - 0.5) * 3
+	s.netOut = math.Max(0.5, math.Min(60, s.netOut))
 
-			errPct += (rand.Float64() - 0.55) * 0.2
-			errPct = math.Max(0.1, math.Min(8.0, errPct))
+	pt := views.NetworkPoint{
+		InMBps:  math.Round(s.netIn*10) / 10,
+		OutMBps: math.Round(s.netOut*10) / 10,
+	}
+	s.snap.Network = append(s.snap.Network, pt)
+	if len(s.snap.Network) > 15 {
+		s.snap.Network = s.snap.Network[len(s.snap.Network)-15:]
+	}
+	maxNet := 0.0
+	for _, p := range s.snap.Network {
+		combined := p.InMBps + p.OutMBps
+		if combined > maxNet {
+			maxNet = combined
+		}
+	}
+	s.snap.MaxNetwork = maxNet * 1.1
 
-			p99 += (rand.Float64() - 0.5) * 7.5
-			if rps > 2000 {
-				p99 += 5
-			}
-			p99 = math.Max(10, math.Min(300, p99))
+	total := s.connActive + s.connIdle + s.connWait
+	shift := rand.IntN(5) - 2
+	s.connActive += shift
+	if s.connActive < 3 {
+		s.connActive = 3
+	}
+	if s.connActive > total-4 {
+		s.connActive = total - 4
+	}
+	remaining := total - s.connActive
+	s.connIdle = remaining/2 + rand.IntN(3) - 1
+	if s.connIdle < 1 {
+		s.connIdle = 1
+	}
+	if s.connIdle > remaining-1 {
+		s.connIdle = remaining - 1
+	}
+	s.connWait = remaining - s.connIdle
 
-			cpu += (rand.Float64() - 0.48) * 2.5
-			cpu = math.Max(5, math.Min(98, cpu))
-			mem += (rand.Float64() - 0.5) * 1.5
-			mem = math.Max(15, math.Min(95, mem))
+	s.p50 += (rand.Float64() - 0.5) * 4
+	s.p50 = math.Max(5, math.Min(s.p90-5, s.p50))
+	s.p90 += (rand.Float64() - 0.5) * 6
+	s.p90 = math.Max(s.p50+5, math.Min(s.p99-5, s.p90))
 
-			netIn += (rand.Float64() - 0.48) * 4
-			netIn = math.Max(1, math.Min(80, netIn))
-			netOut += (rand.Float64() - 0.5) * 3
-			netOut = math.Max(0.5, math.Min(60, netOut))
+	s.snap.LatencyHist = append(s.snap.LatencyHist, views.LatencyBucket{
+		P50: math.Round(s.p50*10) / 10,
+		P90: math.Round(s.p90*10) / 10,
+		P99: math.Round(s.p99*10) / 10,
+	})
+	if len(s.snap.LatencyHist) > 10 {
+		s.snap.LatencyHist = s.snap.LatencyHist[len(s.snap.LatencyHist)-10:]
+	}
+	maxLat := 0.0
+	for _, b := range s.snap.LatencyHist {
+		if b.P99 > maxLat {
+			maxLat = b.P99
+		}
+	}
+	s.snap.MaxLatency = maxLat * 1.1
 
-			pt := views.NetworkPoint{
-				InMBps:  math.Round(netIn*10) / 10,
-				OutMBps: math.Round(netOut*10) / 10,
-			}
-			snap.Network = append(snap.Network, pt)
-			if len(snap.Network) > 15 {
-				snap.Network = snap.Network[len(snap.Network)-15:]
-			}
+	s.snap.ErrorHistory = append(s.snap.ErrorHistory, views.ErrorRatePoint{Value: math.Round(s.errPct*10) / 10})
+	if len(s.snap.ErrorHistory) > 30 {
+		s.snap.ErrorHistory = s.snap.ErrorHistory[len(s.snap.ErrorHistory)-30:]
+	}
 
-			maxNet := 0.0
-			for _, p := range snap.Network {
-				combined := p.InMBps + p.OutMBps
-				if combined > maxNet {
-					maxNet = combined
-				}
-			}
-			snap.MaxNetwork = maxNet * 1.1
+	s.diskRead += (rand.Float64() - 0.48) * 6
+	s.diskRead = math.Max(1, math.Min(200, s.diskRead))
+	s.diskWrite += (rand.Float64() - 0.5) * 5
+	s.diskWrite = math.Max(1, math.Min(150, s.diskWrite))
+	s.snap.DiskIO = append(s.snap.DiskIO, views.DiskIOPoint{
+		ReadMBps:  math.Round(s.diskRead*10) / 10,
+		WriteMBps: math.Round(s.diskWrite*10) / 10,
+	})
+	if len(s.snap.DiskIO) > 15 {
+		s.snap.DiskIO = s.snap.DiskIO[len(s.snap.DiskIO)-15:]
+	}
+	maxDisk := 0.0
+	for _, d := range s.snap.DiskIO {
+		combined := d.ReadMBps + d.WriteMBps
+		if combined > maxDisk {
+			maxDisk = combined
+		}
+	}
+	s.snap.MaxDiskIO = maxDisk * 1.1
 
-			total := connActive + connIdle + connWait
-			shift := rand.IntN(5) - 2
-			connActive += shift
-			if connActive < 3 {
-				connActive = 3
-			}
-			if connActive > total-4 {
-				connActive = total - 4
-			}
-			remaining := total - connActive
-			connIdle = remaining/2 + rand.IntN(3) - 1
-			if connIdle < 1 {
-				connIdle = 1
-			}
-			if connIdle > remaining-1 {
-				connIdle = remaining - 1
-			}
-			connWait = remaining - connIdle
+	reqTotal := int(math.Round(s.rps))
+	s5xx := int(math.Round(s.errPct / 100 * float64(reqTotal)))
+	s4xx := int(float64(reqTotal) * (0.02 + rand.Float64()*0.02))
+	s3xx := int(float64(reqTotal) * (0.02 + rand.Float64()*0.02))
+	s2xx := reqTotal - s3xx - s4xx - s5xx
+	if s2xx < 0 {
+		s2xx = 0
+	}
+	s.snap.StatusDist = views.StatusDistribution{S2xx: s2xx, S3xx: s3xx, S4xx: s4xx, S5xx: s5xx}
 
-			p50 += (rand.Float64() - 0.5) * 4
-			p50 = math.Max(5, math.Min(p90-5, p50))
-			p90 += (rand.Float64() - 0.5) * 6
-			p90 = math.Max(p50+5, math.Min(p99-5, p90))
+	s.snap.RPS = math.Round(s.rps)
+	s.snap.ErrorPct = math.Round(s.errPct*10) / 10
+	s.snap.P99Ms = math.Round(s.p99*10) / 10
+	s.snap.CPUPercent = math.Round(s.cpu*10) / 10
+	s.snap.MemPercent = math.Round(s.mem*10) / 10
+	s.snap.ConnActive = s.connActive
+	s.snap.ConnIdle = s.connIdle
+	s.snap.ConnWait = s.connWait
 
-			snap.LatencyHist = append(snap.LatencyHist, views.LatencyBucket{
-				P50: math.Round(p50*10) / 10,
-				P90: math.Round(p90*10) / 10,
-				P99: math.Round(p99*10) / 10,
-			})
-			if len(snap.LatencyHist) > 10 {
-				snap.LatencyHist = snap.LatencyHist[len(snap.LatencyHist)-10:]
-			}
-			maxLat := 0.0
-			for _, b := range snap.LatencyHist {
-				if b.P99 > maxLat {
-					maxLat = b.P99
-				}
-			}
-			snap.MaxLatency = maxLat * 1.1
+	// Advance services simulation
+	s.maxSvcMs = 0.0
+	for i := range s.services {
+		s.services[i].Load += (rand.Float64() - 0.48) * 0.06
+		s.services[i].Load = math.Max(0.05, math.Min(1.0, s.services[i].Load))
+		s.services[i].Load = math.Round(s.services[i].Load*100) / 100
+		s.services[i].Status = statusFromLoad(s.services[i].Load)
 
-			snap.ErrorHistory = append(snap.ErrorHistory, views.ErrorRatePoint{Value: math.Round(errPct*10) / 10})
-			if len(snap.ErrorHistory) > 30 {
-				snap.ErrorHistory = snap.ErrorHistory[len(snap.ErrorHistory)-30:]
-			}
-
-			diskRead += (rand.Float64() - 0.48) * 6
-			diskRead = math.Max(1, math.Min(200, diskRead))
-			diskWrite += (rand.Float64() - 0.5) * 5
-			diskWrite = math.Max(1, math.Min(150, diskWrite))
-			snap.DiskIO = append(snap.DiskIO, views.DiskIOPoint{
-				ReadMBps:  math.Round(diskRead*10) / 10,
-				WriteMBps: math.Round(diskWrite*10) / 10,
-			})
-			if len(snap.DiskIO) > 15 {
-				snap.DiskIO = snap.DiskIO[len(snap.DiskIO)-15:]
-			}
-			maxDisk := 0.0
-			for _, d := range snap.DiskIO {
-				combined := d.ReadMBps + d.WriteMBps
-				if combined > maxDisk {
-					maxDisk = combined
-				}
-			}
-			snap.MaxDiskIO = maxDisk * 1.1
-
-			reqTotal := int(math.Round(rps))
-			s5xx := int(math.Round(errPct / 100 * float64(reqTotal)))
-			s4xx := int(float64(reqTotal) * (0.02 + rand.Float64()*0.02))
-			s3xx := int(float64(reqTotal) * (0.02 + rand.Float64()*0.02))
-			s2xx := reqTotal - s3xx - s4xx - s5xx
-			if s2xx < 0 {
-				s2xx = 0
-			}
-			snap.StatusDist = views.StatusDistribution{S2xx: s2xx, S3xx: s3xx, S4xx: s4xx, S5xx: s5xx}
-
-			snap.RPS = math.Round(rps)
-			snap.ErrorPct = math.Round(errPct*10) / 10
-			snap.P99Ms = math.Round(p99*10) / 10
-			snap.CPUPercent = math.Round(cpu*10) / 10
-			snap.MemPercent = math.Round(mem*10) / 10
-			snap.ConnActive = connActive
-			snap.ConnIdle = connIdle
-			snap.ConnWait = connWait
-
-			// --- Advance services simulation (scaled 0.5x) ---
-
-			maxMs := 0.0
-			for i := range services {
-				services[i].Load += (rand.Float64() - 0.48) * 0.06
-				services[i].Load = math.Max(0.05, math.Min(1.0, services[i].Load))
-				services[i].Load = math.Round(services[i].Load*100) / 100
-				services[i].Status = statusFromLoad(services[i].Load)
-
-				baseLat := 20 + services[i].Load*80
-				lat := baseLat + (rand.Float64()-0.5)*10
-				lat = math.Max(5, math.Min(300, lat))
-				lat = math.Round(lat*10) / 10
-				svcLatencies[i].History = append(svcLatencies[i].History, lat)
-				if len(svcLatencies[i].History) > 20 {
-					svcLatencies[i].History = svcLatencies[i].History[len(svcLatencies[i].History)-20:]
-				}
-				for _, v := range svcLatencies[i].History {
-					if v > maxMs {
-						maxMs = v
-					}
-				}
-			}
-
-			// --- Render due cards ---
-
-			now := time.Now()
-			stats := health.CollectRuntimeStats(ar.startTime)
-
-			buf := statsBufPool.Get().(*bytes.Buffer)
-			buf.Reset()
-			needsPublish := false
-
-			rtIntervals.mu.Lock()
-
-			// Each isDue block renders the section data AND resets the progress bar.
-			// The OOB progress bar replacement restarts the CSS fill animation,
-			// keeping it in sync with actual server timing.
-			if isDue("network", now) {
-				views.OOBNetworkChart(snap).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("network"), rtIntervals.intervals["network"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("latency", now) {
-				views.OOBLatencyHistChart(snap).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("latency"), rtIntervals.intervals["latency"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("error-spark", now) {
-				views.OOBErrorSparkline(snap).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("error-spark"), rtIntervals.intervals["error-spark"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("req-dist", now) {
-				views.OOBRequestDistChart(snap).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("req-dist"), rtIntervals.intervals["req-dist"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("throughput", now) {
-				views.OOBThroughputSplitChart(snap).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("throughput"), rtIntervals.intervals["throughput"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("gauges", now) {
-				views.OOBCpuMemGauges(snap).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("gauges"), rtIntervals.intervals["gauges"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("disk-io", now) {
-				views.OOBDiskIOChart(snap).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("disk-io"), rtIntervals.intervals["disk-io"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("conn-pool", now) {
-				views.OOBConnPool(snap).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("conn-pool"), rtIntervals.intervals["conn-pool"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("sys-stats", now) {
-				views.OOBDashboardStats(stats).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("sys-stats"), rtIntervals.intervals["sys-stats"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("services", now) {
-				views.OOBServicesChart(services).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("services"), rtIntervals.intervals["services"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("svc-latency", now) {
-				views.OOBServiceLatencyChart(svcLatencies, maxMs*1.1).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("svc-latency"), rtIntervals.intervals["svc-latency"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-			if isDue("events", now) {
-				tmpl := eventTemplates[rand.IntN(len(eventTemplates))]
-				evt := views.DashboardEvent{
-					Time:    now,
-					Kind:    tmpl.Kind,
-					Message: tmpl.Messages[rand.IntN(len(tmpl.Messages))],
-				}
-				views.OOBEventItem(evt).Render(ctx, buf) //nolint:errcheck // best-effort OOB render
-				components.IntervalProgress(components.ProgressID("events"), rtIntervals.intervals["events"]).Render(ctx, buf) //nolint:errcheck
-				needsPublish = true
-			}
-
-			rtIntervals.mu.Unlock()
-
-			if needsPublish {
-				msg := tavern.NewSSEMessage("dashboard-metrics", buf.String()).String()
-				statsBufPool.Put(buf)
-				broker.Publish(TopicDashMetrics, msg)
-			} else {
-				statsBufPool.Put(buf)
+		baseLat := 20 + s.services[i].Load*80
+		lat := baseLat + (rand.Float64()-0.5)*10
+		lat = math.Max(5, math.Min(300, lat))
+		lat = math.Round(lat*10) / 10
+		s.svcLatencies[i].History = append(s.svcLatencies[i].History, lat)
+		if len(s.svcLatencies[i].History) > 20 {
+			s.svcLatencies[i].History = s.svcLatencies[i].History[len(s.svcLatencies[i].History)-20:]
+		}
+		for _, v := range s.svcLatencies[i].History {
+			if v > s.maxSvcMs {
+				s.maxSvcMs = v
 			}
 		}
 	}
+}
+
+// ── ScheduledPublisher for dashboard ───────────────────────────────────────
+
+// getInterval returns the current interval in ms for a section, reading from
+// rtIntervals under its RWMutex.
+func getInterval(section string) int {
+	rtIntervals.mu.RLock()
+	iv := rtIntervals.intervals[section]
+	rtIntervals.mu.RUnlock()
+	if iv < 100 {
+		iv = 100
+	}
+	return iv
+}
+
+func (ar *appRoutes) newDashboardPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
+	pub := broker.NewScheduledPublisher(TopicDashMetrics, tavern.WithBaseTick(500*time.Millisecond))
+
+	sim := newDashSim()
+
+	// Simulation tick: advances state every 500ms, writes nothing to the buffer.
+	// Registered first so it runs before any chart section on every tick.
+	pub.Register("sim-tick", 500*time.Millisecond, func(_ context.Context, _ *bytes.Buffer) error {
+		sim.advance()
+		return nil
+	})
+
+	// Each section renders its OOB component + progress bar.
+	// The ScheduledPublisher handles the per-section interval check internally.
+	renderWithProgress := func(section string, render func(ctx context.Context, buf *bytes.Buffer) error) tavern.RenderFunc {
+		return func(ctx context.Context, buf *bytes.Buffer) error {
+			if err := render(ctx, buf); err != nil {
+				return err
+			}
+			iv := getInterval(section)
+			return components.IntervalProgress(components.ProgressID(section), iv).Render(ctx, buf)
+		}
+	}
+
+	pub.Register("network", time.Duration(rtCardDefaults["network"])*time.Millisecond,
+		renderWithProgress("network", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBNetworkChart(*sim.snap).Render(ctx, buf)
+		}))
+
+	pub.Register("latency", time.Duration(rtCardDefaults["latency"])*time.Millisecond,
+		renderWithProgress("latency", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBLatencyHistChart(*sim.snap).Render(ctx, buf)
+		}))
+
+	pub.Register("error-spark", time.Duration(rtCardDefaults["error-spark"])*time.Millisecond,
+		renderWithProgress("error-spark", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBErrorSparkline(*sim.snap).Render(ctx, buf)
+		}))
+
+	pub.Register("req-dist", time.Duration(rtCardDefaults["req-dist"])*time.Millisecond,
+		renderWithProgress("req-dist", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBRequestDistChart(*sim.snap).Render(ctx, buf)
+		}))
+
+	pub.Register("throughput", time.Duration(rtCardDefaults["throughput"])*time.Millisecond,
+		renderWithProgress("throughput", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBThroughputSplitChart(*sim.snap).Render(ctx, buf)
+		}))
+
+	pub.Register("gauges", time.Duration(rtCardDefaults["gauges"])*time.Millisecond,
+		renderWithProgress("gauges", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBCpuMemGauges(*sim.snap).Render(ctx, buf)
+		}))
+
+	pub.Register("disk-io", time.Duration(rtCardDefaults["disk-io"])*time.Millisecond,
+		renderWithProgress("disk-io", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBDiskIOChart(*sim.snap).Render(ctx, buf)
+		}))
+
+	pub.Register("conn-pool", time.Duration(rtCardDefaults["conn-pool"])*time.Millisecond,
+		renderWithProgress("conn-pool", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBConnPool(*sim.snap).Render(ctx, buf)
+		}))
+
+	pub.Register("sys-stats", time.Duration(rtCardDefaults["sys-stats"])*time.Millisecond,
+		renderWithProgress("sys-stats", func(ctx context.Context, buf *bytes.Buffer) error {
+			stats := health.CollectRuntimeStats(ar.startTime)
+			return views.OOBDashboardStats(stats).Render(ctx, buf)
+		}))
+
+	pub.Register("services", time.Duration(rtCardDefaults["services"])*time.Millisecond,
+		renderWithProgress("services", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBServicesChart(sim.services).Render(ctx, buf)
+		}))
+
+	pub.Register("svc-latency", time.Duration(rtCardDefaults["svc-latency"])*time.Millisecond,
+		renderWithProgress("svc-latency", func(ctx context.Context, buf *bytes.Buffer) error {
+			return views.OOBServiceLatencyChart(sim.svcLatencies, sim.maxSvcMs*1.1).Render(ctx, buf)
+		}))
+
+	pub.Register("events", time.Duration(rtCardDefaults["events"])*time.Millisecond,
+		renderWithProgress("events", func(ctx context.Context, buf *bytes.Buffer) error {
+			tmpl := eventTemplates[rand.IntN(len(eventTemplates))]
+			evt := views.DashboardEvent{
+				Time:    time.Now(),
+				Kind:    tmpl.Kind,
+				Message: tmpl.Messages[rand.IntN(len(tmpl.Messages))],
+			}
+			return views.OOBEventItem(evt).Render(ctx, buf)
+		}))
+
+	return pub
 }
