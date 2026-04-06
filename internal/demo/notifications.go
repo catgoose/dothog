@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strings"
 	"sync"
 )
 
@@ -159,5 +160,9 @@ func FormatNotification(cat NotificationCategory) string {
 	n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(msgs))))
 	tmpl := msgs[n.Int64()]
 	num, _ := rand.Int(rand.Reader, big.NewInt(9000))
-	return fmt.Sprintf(tmpl, num.Int64()+1000)
+	// Only pass the number arg if the template contains a format verb.
+	if strings.Contains(tmpl, "%d") {
+		return fmt.Sprintf(tmpl, num.Int64()+1000)
+	}
+	return tmpl
 }

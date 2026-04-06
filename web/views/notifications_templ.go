@@ -165,7 +165,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" hx-swap=\"none\" hx-on::before-request=\"this.closest('label').querySelector('input').name = this.checked ? 'enabled' : 'disabled'\"></label></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" hx-swap=\"none\" hx-on::before-request=\"event.detail.parameters.enabled = this.checked ? 'true' : 'false'\"></label></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
