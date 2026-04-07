@@ -382,7 +382,7 @@ The robustness principle isn't about being sloppy. It's about building systems t
 | Templates     | templ              | Type-safe HTML generation, composable components              |
 | Hypermedia    | HTMX + linkwell    | Extends HTML with AJAX; linkwell provides the HATEOAS controls, navigation, and link registry |
 | SQL           | chuck              | Multi-dialect schema DSL and query fragments (SQLite, Postgres, MSSQL) |
-| Auth          | crooner + porter   | crooner handles OIDC/OAuth2; porter handles authorization, CSRF, security headers |
+| Auth          | crooner + dorman   | crooner handles OIDC/OAuth2; dorman handles authorization, CSRF, security headers |
 | Logging       | promolog           | Per-request log capture with promote-on-error                 |
 | Real-time     | tavern             | Thread-safe SSE pub/sub broker                                |
 | Styling       | Tailwind + DaisyUI | Utility-first CSS, consistent design tokens                   |

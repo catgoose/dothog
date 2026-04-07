@@ -13,7 +13,7 @@ Two layers, each with a role:
 | Layer | Handles | Examples |
 |-------|---------|----------|
 | **nginx** | TLS termination, reverse proxy, SSE buffering, H3/QUIC | SSL with wildcard certificate, HTTP/2, HTTP/3, proxy headers |
-| **App (porter)** | Application security, session management, CSRF, per-app CSP | Security headers, CSRF tokens, auth middleware, correlation IDs |
+| **App (dorman)** | Application security, session management, CSRF, per-app CSP | Security headers, CSRF tokens, auth middleware, correlation IDs |
 
 ## What each layer does
 
@@ -27,14 +27,14 @@ Configured in `deploy/cloud-init.yml`. Each app gets a server block.
 - SSE endpoints get dedicated config: buffering off, 300s timeouts, HTTP/1.1 upstream
 - `X-Forwarded-Proto`, `X-Real-IP`, `X-Forwarded-For` headers passed through
 
-### App (porter middleware)
+### App (dorman middleware)
 
 Configured in each app's `routes.go`. This is what ships with the scaffold.
 
 | Middleware | What it does |
 |-----------|-------------|
-| `porter.SecurityHeaders()` | Permissions-Policy, COOP, X-Frame-Options, X-Content-Type-Options |
-| `porter.CSRFProtect()` | CSRF tokens with Sec-Fetch-Site fast-path, double-submit cookies |
+| `dorman.SecurityHeaders()` | Permissions-Policy, COOP, X-Frame-Options, X-Content-Type-Options |
+| `dorman.CSRFProtect()` | CSRF tokens with Sec-Fetch-Site fast-path, double-submit cookies |
 | Compression | Brotli + Gzip via httpcompression |
 | Correlation IDs | Per-request trace IDs via promolog |
 | `crooner` session/auth | OIDC, PKCE, session management (when auth feature enabled) |
@@ -70,12 +70,12 @@ If deploying without a CDN or edge proxy, here's how to cover common security fe
 
 | Feature | Without edge proxy | Replacement |
 |---------|-------------------|-------------|
-| HSTS | Not set at edge | Enable in porter: `porter.DefaultHSTSConfig()` |
-| CSP (baseline) | No edge fallback | Set in porter (already done per-app) |
+| HSTS | Not set at edge | Enable in dorman: `dorman.DefaultHSTSConfig()` |
+| CSP (baseline) | No edge fallback | Set in dorman (already done per-app) |
 | Rate limiting | None | Add Go middleware (`golang.org/x/time/rate`) or nginx `limit_req` |
 | Early Hints (edge cache) | No edge replay | App still sends 103s if nginx uses H2 upstream, but no edge caching |
 | ECH | Not available | N/A -- requires a supporting edge proxy |
-| X-Robots-Tag | Not set | Add in porter or nginx if needed |
+| X-Robots-Tag | Not set | Add in dorman or nginx if needed |
 | DDoS protection | None | Firewall rules, fail2ban, or upstream provider |
 | Bot management | None | Consider Caddy with crowdsec or similar |
 
@@ -84,9 +84,9 @@ If deploying without a CDN or edge proxy, here's how to cover common security fe
 When deploying behind a corporate reverse proxy or Azure Application Gateway:
 
 1. **TLS**: Use your corporate wildcard cert on nginx (or let the corporate proxy terminate TLS and proxy HTTP to nginx on port 80)
-2. **HSTS**: Enable in porter if the corporate proxy doesn't set it
-3. **CSP**: Already set by porter per-app -- no change needed
-4. **CSRF**: Already handled by porter -- no change needed
+2. **HSTS**: Enable in dorman if the corporate proxy doesn't set it
+3. **CSP**: Already set by dorman per-app -- no change needed
+4. **CSRF**: Already handled by dorman -- no change needed
 5. **Rate limiting**: Add nginx `limit_req` zone:
    ```nginx
    # In http block
@@ -100,7 +100,7 @@ When deploying behind a corporate reverse proxy or Azure Application Gateway:
    ```
 6. **Auth**: Enable the auth feature (`mage setup` with OIDC) -- crooner handles Azure AD/Entra ID natively
 7. **Session cookie Secure flag**: Set via environment variable when serving over HTTPS
-8. **X-Forwarded headers**: Ensure your corporate proxy passes `X-Forwarded-Proto`, `X-Real-IP`, and `X-Forwarded-For` -- porter and crooner rely on these
+8. **X-Forwarded headers**: Ensure your corporate proxy passes `X-Forwarded-Proto`, `X-Real-IP`, and `X-Forwarded-For` -- dorman and crooner rely on these
 
 ### Corporate nginx config with H3 and SSE (tavern)
 

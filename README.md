@@ -84,7 +84,7 @@ Each library exists because a single responsibility needed a home. None of them 
 
 - **Zero coupling** -- Libraries compose through Go interfaces and `net/http` middleware. No library imports another. Dothog wires them together; they do not wire themselves.
 - **Zero dependencies in core** -- Each library's core module imports only the Go standard library. Optional submodules (database drivers, test helpers) carry the weight so your binary doesn't.
-- **Server as source of truth** -- The server defines the schema ([chuck](https://github.com/catgoose/chuck)), manages identity ([crooner](https://github.com/catgoose/crooner)), enforces access ([porter](https://github.com/catgoose/porter)), declares navigation ([linkwell](https://github.com/catgoose/linkwell)), captures diagnostics ([promolog](https://github.com/catgoose/promolog)), and pushes state changes ([tavern](https://github.com/catgoose/tavern)). The client renders what it receives. This is the natural order.
+- **Server as source of truth** -- The server defines the schema ([chuck](https://github.com/catgoose/chuck)), manages identity ([crooner](https://github.com/catgoose/crooner)), enforces access ([dorman](https://github.com/catgoose/dorman)), declares navigation ([linkwell](https://github.com/catgoose/linkwell)), captures diagnostics ([promolog](https://github.com/catgoose/promolog)), and pushes state changes ([tavern](https://github.com/catgoose/tavern)). The client renders what it receives. This is the natural order.
 - **Reach up, not down** -- Start at HTML. Reach for a library only when the current layer cannot express what you need. Each library is one reach. If you are reaching more than once for the same problem, the problem is architectural, and the answer is in the [MANIFESTO](MANIFESTO.md).
 
 ## Architecture
@@ -108,11 +108,11 @@ graph TB
 
         subgraph pipeline ["Request Pipeline"]
             direction LR
-            PORTER["<b>porter</b><br/>security headers<br/>max body · CSRF · authz"]
+            DORMAN["<b>dorman</b><br/>security headers<br/>max body · CSRF · authz"]
             CROONER["<b>crooner</b><br/>OIDC sessions"]
             PROMOLOG["<b>promolog</b><br/>request capture<br/>policy-driven promotion"]
             HANDLER["handler"]
-            PORTER --> CROONER --> PROMOLOG --> HANDLER
+            DORMAN --> CROONER --> PROMOLOG --> HANDLER
         end
 
         subgraph response ["Response"]
@@ -151,7 +151,7 @@ graph TB
                              │         ▼                          ▼                         │
   ┌─────────────┐            │  REQUEST PIPELINE                          ┌──────────┐      │
   │   Browser   │            │  ┌──────────┐  ┌──────────┐  ┌──────────┐ │  SQLite  │      │
-  │             │  request   │  │  porter  ├─►│ crooner  ├─►│ promolog │ │          │      │
+  │             │  request   │  │  dorman  ├─►│ crooner  ├─►│ promolog │ │          │      │
   │  HTML+HTMX ─┼───────────┼─►│ security │  │   OIDC   │  │ request  │ └──────────┘      │
   │             │            │  │ headers  │  │ sessions │  │ capture  │      ▲             │
   │             │            │  │ CSRF     │  │          │  │ policy   │      │             │

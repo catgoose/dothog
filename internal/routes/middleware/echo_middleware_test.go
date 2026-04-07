@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/catgoose/porter"
+	"github.com/catgoose/dorman"
 	"github.com/catgoose/promolog"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
@@ -19,7 +19,7 @@ import (
 func setupFullEcho() *echo.Echo {
 	e := echo.New()
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
-	e.Use(echo.WrapMiddleware(porter.SecurityHeaders()))
+	e.Use(echo.WrapMiddleware(dorman.SecurityHeaders()))
 	e.Use(echoMiddleware.Gzip())
 	e.HTTPErrorHandler = NewHTTPErrorHandler(nil)
 	return e

@@ -1384,9 +1384,9 @@ func buildEnvTable(features []string, appName, appTLSPort string) string {
 		sb.WriteString("| `OIDC_CLIENT_SECRET` | OIDC client secret | -- |\n")
 	}
 
-	// CSRF — porter.CSRFProtect uses SESSION_SECRET as the auth key; no extra env vars needed.
+	// CSRF — dorman.CSRFProtect uses SESSION_SECRET as the auth key; no extra env vars needed.
 	if keep[FeatureCSRF] {
-		sb.WriteString("| | CSRF protection enabled (porter) — uses SESSION_SECRET | |\n")
+		sb.WriteString("| | CSRF protection enabled (dorman) — uses SESSION_SECRET | |\n")
 	}
 
 	// Graph
