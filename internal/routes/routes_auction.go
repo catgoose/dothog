@@ -5,10 +5,12 @@ package routes
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"math/rand/v2"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	appenv "catgoose/dothog/internal/env"
@@ -20,6 +22,8 @@ import (
 	"github.com/catgoose/tavern"
 	"github.com/labstack/echo/v4"
 )
+
+var auctionCounter atomic.Int64
 
 const auctionWatchCookie = "auction_watched"
 
@@ -85,7 +89,8 @@ func (a *auctionRoutes) handleBid(c echo.Context) error {
 
 	topic := a.house.Topic(itemID)
 	html := renderAuctionCardUpdateHTML(item)
-	a.broker.PublishWithReplay(topic, html)
+	eventID := fmt.Sprintf("ab%d", auctionCounter.Add(1))
+	a.broker.PublishWithID(topic, eventID, html)
 
 	return c.HTML(http.StatusOK, html)
 }
@@ -157,7 +162,8 @@ func (a *auctionRoutes) startBotBidder(ctx context.Context) {
 			}
 
 			html := renderAuctionCardUpdateHTML(item)
-			a.broker.PublishWithReplay(topic, html)
+			eventID := fmt.Sprintf("ab%d", auctionCounter.Add(1))
+			a.broker.PublishWithID(topic, eventID, html)
 		}
 	}
 }
