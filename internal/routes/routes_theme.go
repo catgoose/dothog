@@ -1,4 +1,4 @@
-// setup:feature:sse
+// setup:feature:session_settings
 
 package routes
 
