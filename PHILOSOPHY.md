@@ -3,7 +3,8 @@
 <!--toc:start-->
 
 - [Design Philosophy](#design-philosophy)
-  - [Go](#go)
+- [Go](#go)
+  - [Simple Internals, Complete Boundaries](#simple-internals-complete-boundaries)
   - [Hypermedia-Driven Architecture](#hypermedia-driven-architecture)
   - [Code-on-Demand](#code-on-demand)
   - [Uniform Interface](#uniform-interface)
@@ -72,6 +73,43 @@ This project is written in Go and follows Go's values. These principles, inspire
 **Design the architecture, name the components, document the details.** The architecture diagram and package names should tell you how the system works. Comments should tell you why a particular decision was made. Code that needs a comment to explain what it does should be rewritten until it doesn't.
 
 **Don't panic.** `panic` means the program cannot continue. A missing database row is not that. A malformed user input is not that. A timeout from an upstream service is not that. Return an error, let the caller decide, and keep the server running.
+
+### Simple Internals, Complete Boundaries
+
+Keep the internals simple. Plain strings, small interfaces, minimal state, and
+obvious control flow are virtues. A system does not become more correct by
+becoming more ornate internally.
+
+But internal simplicity does **not** excuse incomplete behavior at the boundary.
+When a public API claims to support a protocol feature, the built-in path must
+implement that feature completely from the caller's point of view. If support
+is partial, the API name and documentation must say so plainly.
+
+This is the distinction:
+
+- **Simple internals** means the implementation may use the smallest mechanism
+  that works.
+- **Complete boundaries** means callers still receive the full semantic contract
+  that the API advertises.
+
+An internal representation may omit protocol details for the sake of clarity,
+but the adapter at the boundary is responsible for restoring those details
+before data crosses the wire. Simplicity is for the implementation. Correctness
+is for the user.
+
+This is also a rule about naming. Do not give an API a name that implies a
+higher-level semantic than it actually delivers. If something is only replay
+bookkeeping, do not present it as full protocol-level event identity. If
+something is only transport-open, do not name it server-confirmed recovery.
+
+In practice:
+
+- If an API advertises a protocol feature, the default supported path should
+  satisfy that feature end to end.
+- If the implementation intentionally stops short, the limitation should be
+  explicit in the name and docs.
+- If a boundary adapter is needed to complete the contract, that adapter is not
+  accidental complexity. It is where protocol honesty lives.
 
 ## Hypermedia-Driven Architecture
 
