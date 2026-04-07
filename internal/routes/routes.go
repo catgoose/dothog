@@ -23,6 +23,7 @@ import (
 	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"github.com/catgoose/dorman"
 	"io"
@@ -369,10 +370,8 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		e.GET(cfg.CroonerConfig.AuthRoutes.Callback, echo.WrapHandler(authCfg.CallbackHandler()))
 		// setup:feature:csrf:start
 		if cfg.SessionSecret != "" {
-			csrfKey := []byte(cfg.SessionSecret)
-			if len(csrfKey) > 32 {
-				csrfKey = csrfKey[:32]
-			}
+			hash := sha256.Sum256([]byte(cfg.SessionSecret))
+			csrfKey := hash[:]
 			csrfMw := dorman.CSRFProtect(dorman.CSRFConfig{
 				Key:              csrfKey,
 				CookiePath:       "/",
