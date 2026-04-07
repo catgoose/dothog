@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync/atomic"
 
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
@@ -31,6 +32,7 @@ func (ar *appRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 		})
 	}
 
+	broker.SetReplayPolicy(TopicErrorTraces, 10)
 	broker.SetReplayGapPolicy(TopicErrorTraces, tavern.GapFallbackToSnapshot, nil)
 	ar.e.GET("/sse/error-traces", echo.WrapHandler(broker.SSEHandler(TopicErrorTraces)))
 	// setup:feature:sse:end
@@ -135,6 +137,8 @@ func (ar *appRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 
 // setup:feature:sse:start
 
+var traceCounter atomic.Int64
+
 func broadcastErrorTrace(broker *tavern.SSEBroker, summary promolog.TraceSummary) {
 	if !broker.HasSubscribers(TopicErrorTraces) {
 		return
@@ -144,8 +148,11 @@ func broadcastErrorTrace(broker *tavern.SSEBroker, summary promolog.TraceSummary
 	if err := views.LoggingTraceRowOOB(summary).Render(ctx, buf); err != nil {
 		return
 	}
-	msg := tavern.NewSSEMessage("error-trace", buf.String()).String()
-	broker.Publish(TopicErrorTraces, msg)
+	eventID := fmt.Sprintf("et%d", traceCounter.Add(1))
+	msg := tavern.NewSSEMessage("error-trace", buf.String()).
+		WithID(eventID).
+		String()
+	broker.PublishWithID(TopicErrorTraces, eventID, msg)
 }
 
 // setup:feature:sse:end

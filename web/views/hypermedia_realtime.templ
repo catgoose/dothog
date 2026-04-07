@@ -277,13 +277,11 @@ templ RealtimePage(initial health.SystemStats, snap MetricsSnapshot, services []
 		<!-- SSE connections — charts + numerical tiles -->
 		<div hx-ext="sse" sse-connect="/sse/dashboard" hx-swap="innerHTML settle:0 transition:false"
 			data-tavern-reconnecting-class="opacity-50"
-			data-tavern-gap-action="reload"
 		>
 			<div sse-swap="dashboard-metrics" style="display:none"></div>
 		</div>
 		<div hx-ext="sse" sse-connect="/sse/numerical" hx-swap="innerHTML settle:0 transition:false"
 			data-tavern-reconnecting-class="opacity-50"
-			data-tavern-gap-action="reload"
 		>
 			<div sse-swap="numerical-dash" style="display:none"></div>
 		</div>

@@ -49,7 +49,6 @@ func (ar *appRoutes) initAdminSettingsRoutes(broker *tavern.SSEBroker) {
 	initAdminIntervals()
 	ar.e.GET("/admin/settings", ar.handleAdminSettings(broker))
 	ar.e.POST("/admin/settings/interval", handleAdminInterval)
-	broker.SetReplayGapPolicy(TopicAdminPanel, tavern.GapFallbackToSnapshot, nil)
 	ar.e.GET("/sse/admin", echo.WrapHandler(broker.SSEHandler(TopicAdminPanel)))
 
 	adminPub = ar.newAdminPublisher(broker)

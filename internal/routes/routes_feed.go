@@ -5,8 +5,10 @@ package routes
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"math/rand/v2"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"catgoose/dothog/internal/demo"
@@ -18,6 +20,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var feedCounter atomic.Int64
+
 type feedRoutes struct {
 	actLog *demo.ActivityLog
 	broker *tavern.SSEBroker
@@ -27,6 +31,7 @@ func (ar *appRoutes) initFeedRoutes(actLog *demo.ActivityLog, broker *tavern.SSE
 	f := &feedRoutes{actLog: actLog, broker: broker}
 	ar.e.GET("/realtime/feed", f.handleFeedPage)
 	ar.e.GET("/realtime/feed/more", f.handleFeedMore)
+	broker.SetReplayPolicy(TopicActivityFeed, 20)
 	broker.SetReplayGapPolicy(TopicActivityFeed, tavern.GapFallbackToSnapshot, nil)
 	ar.e.GET("/sse/activity", echo.WrapHandler(broker.SSEHandler(TopicActivityFeed)))
 
@@ -80,9 +85,12 @@ func BroadcastActivity(broker *tavern.SSEBroker, e demo.ActivityEvent) {
 		statsBufPool.Put(buf)
 		return
 	}
-	msg := tavern.NewSSEMessage("activity-event", buf.String()).String()
+	eventID := fmt.Sprintf("af%d", feedCounter.Add(1))
+	msg := tavern.NewSSEMessage("activity-event", buf.String()).
+		WithID(eventID).
+		String()
 	statsBufPool.Put(buf)
-	broker.Publish(TopicActivityFeed, msg)
+	broker.PublishWithID(TopicActivityFeed, eventID, msg)
 }
 
 // --- Simulated activity ---

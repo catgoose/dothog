@@ -3,7 +3,9 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
+	"sync/atomic"
 
 	"catgoose/dothog/internal/logger"
 	// setup:feature:session_settings:start
@@ -20,9 +22,12 @@ import (
 
 // setup:feature:session_settings:start
 
+var themeCounter atomic.Int64
+
 func (ar *appRoutes) initThemeRoutes(broker *tavern.SSEBroker) {
 	ar.e.POST("/settings/theme", ar.handleTheme(broker))
 	ar.e.POST("/settings/layout", ar.handleLayout())
+	broker.SetReplayPolicy(TopicThemeChange, 1)
 	broker.SetReplayGapPolicy(TopicThemeChange, tavern.GapFallbackToSnapshot, nil)
 	ar.e.GET("/sse/theme", echo.WrapHandler(broker.SSEHandler(TopicThemeChange)))
 }
@@ -51,8 +56,11 @@ func (ar *appRoutes) handleTheme(broker *tavern.SSEBroker) echo.HandlerFunc {
 
 		// Broadcast theme change to all connected browsers.
 		if broker.HasSubscribers(TopicThemeChange) {
-			msg := tavern.NewSSEMessage("theme-change", theme).String()
-			broker.Publish(TopicThemeChange, msg)
+			eventID := fmt.Sprintf("tc%d", themeCounter.Add(1))
+			msg := tavern.NewSSEMessage("theme-change", theme).
+				WithID(eventID).
+				String()
+			broker.PublishWithID(TopicThemeChange, eventID, msg)
 		}
 
 		return handler.RenderComponent(c, views.ThemeChanged(theme))

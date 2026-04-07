@@ -74,7 +74,6 @@ func (ar *appRoutes) initObservatoryRoutes(mainBroker *tavern.SSEBroker) {
 	mainBroker.RunPublisher(ar.ctx, o.startMetricsPublisher)
 
 	ar.e.GET("/realtime/observatory", o.handlePage)
-	mainBroker.SetReplayGapPolicy(TopicObservatory, tavern.GapFallbackToSnapshot, nil)
 	ar.e.GET("/sse/observatory", echo.WrapHandler(mainBroker.SSEHandler(TopicObservatory)))
 	ar.e.POST("/realtime/observatory/stress", o.handleStressToggle)
 	ar.e.POST("/realtime/observatory/max-subscribers", o.handleMaxSubscribers)

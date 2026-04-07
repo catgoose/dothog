@@ -75,11 +75,6 @@ func (ar *appRoutes) initDocRoutes(broker *tavern.SSEBroker) {
 		broker.Publish(topicDocContent, html)
 	})
 
-	// Set gap policy so reconnecting clients see the gap UX.
-	for _, t := range []string{topicDocContent, topicDocStats, topicDocSentiment, topicDocHistory} {
-		broker.SetReplayGapPolicy(t, tavern.GapFallbackToSnapshot, nil)
-	}
-
 	// Define topic group for a single SSE endpoint.
 	broker.DefineGroup("doc-all", []string{topicDocContent, topicDocStats, topicDocSentiment, topicDocHistory})
 
