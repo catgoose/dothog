@@ -70,12 +70,7 @@ func (s *ObservatoryState) RecentTierChanges() []TierChangeEvent {
 	return out
 }
 
-// SetMaxPerTopic stores the subscriber cap used by the demo broker.
-func (s *ObservatoryState) SetMaxPerTopic(n int) {
-	s.maxPerTopic.Store(int32(n))
-}
-
-// MaxPerTopic returns the current per-topic subscriber cap.
+// MaxPerTopic returns the per-topic subscriber cap set at broker creation.
 func (s *ObservatoryState) MaxPerTopic() int {
 	return int(s.maxPerTopic.Load())
 }

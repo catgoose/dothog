@@ -134,18 +134,8 @@ templ observatoryPanels(data ObservatoryData) {
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="text-sm">Max Subscribers/Topic</span>
-						<input
-							type="range"
-							min="1"
-							max="50"
-							value={ fmt.Sprintf("%d", data.MaxPerTopic) }
-							class="range range-xs range-primary w-32"
-							name="max"
-							hx-post="/realtime/observatory/max-subscribers"
-							hx-trigger="change"
-							hx-swap="none"
-						/>
-						<span class="text-xs font-mono tabular-nums w-6 text-right">{ fmt.Sprintf("%d", data.MaxPerTopic) }</span>
+						<span class="badge badge-outline badge-sm font-mono">{ fmt.Sprintf("%d", data.MaxPerTopic) }</span>
+						<span class="text-xs text-base-content/50">(set at broker creation)</span>
 					</div>
 				</div>
 			</div>

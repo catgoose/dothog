@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
@@ -76,7 +75,6 @@ func (ar *appRoutes) initObservatoryRoutes(mainBroker *tavern.SSEBroker) {
 	ar.e.GET("/realtime/observatory", o.handlePage)
 	ar.e.GET("/sse/observatory", echo.WrapHandler(mainBroker.SSEHandler(TopicObservatory)))
 	ar.e.POST("/realtime/observatory/stress", o.handleStressToggle)
-	ar.e.POST("/realtime/observatory/max-subscribers", o.handleMaxSubscribers)
 }
 
 func (o *observatoryRoutes) handlePage(c echo.Context) error {
@@ -225,14 +223,3 @@ func (o *observatoryRoutes) handleStressToggle(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-// handleMaxSubscribers updates the per-topic subscriber cap on the demo broker.
-func (o *observatoryRoutes) handleMaxSubscribers(c echo.Context) error {
-	n, _ := strconv.Atoi(c.FormValue("max"))
-	if n < 1 {
-		n = 1
-	} else if n > 50 {
-		n = 50
-	}
-	o.state.SetMaxPerTopic(n)
-	return c.NoContent(http.StatusNoContent)
-}
