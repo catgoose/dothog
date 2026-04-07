@@ -16,7 +16,7 @@ Per-request log capture with promote-on-error semantics. During normal requests,
 
 OIDC/OAuth2 client with PKCE, session management, and pluggable backends. Handles the login/callback/logout flow and puts identity on the request context. Works with any OIDC-compliant provider (Azure AD, Google, Okta, Auth0, Keycloak).
 
-### [porter](https://github.com/catgoose/porter) — Security
+### [dorman](https://github.com/catgoose/dorman) — Security
 
 Authorization, CSRF protection, and security header middleware. `RequireAuth` and `RequireRole` enforce identity and role checks. `CSRFProtect` implements double-submit cookie with HMAC-SHA256 and BREACH protection. `SecurityHeaders` sets sensible defaults for X-Frame-Options, HSTS, Referrer-Policy, Permissions-Policy, and more.
 
@@ -35,7 +35,7 @@ Thread-safe, topic-based SSE pub/sub broker. Handlers publish events when state 
        │
        ▼
   ┌─────────────┐
-  │  porter      │  Security headers, CSRF validation
+  │  dorman      │  Security headers, CSRF validation
   └──────┬──────┘
          │
   ┌──────▼──────┐
@@ -43,7 +43,7 @@ Thread-safe, topic-based SSE pub/sub broker. Handlers publish events when state 
   └──────┬──────┘
          │
   ┌──────▼──────┐
-  │  porter      │  Role checks (RequireAuth, RequireRole)
+  │  dorman      │  Role checks (RequireAuth, RequireRole)
   └──────┬──────┘
          │
   ┌──────▼──────┐
@@ -65,8 +65,8 @@ Thread-safe, topic-based SSE pub/sub broker. Handlers publish events when state 
 Every library follows the [dothog design philosophy](PHILOSOPHY.md):
 
 - **The server drives state.** Libraries provide data and middleware. Templates are downstream.
-- **Zero or minimal dependencies.** promolog (core), linkwell, porter, and tavern have zero runtime dependencies. chuck has only database drivers. crooner has only OIDC/OAuth2 libraries.
-- **Interfaces over implementations.** `promolog.Storer`, `session.Provider`, `porter.IdentityProvider` — implement the interface, bring your own backend.
+- **Zero or minimal dependencies.** promolog (core), linkwell, dorman, and tavern have zero runtime dependencies. chuck has only database drivers. crooner has only OIDC/OAuth2 libraries.
+- **Interfaces over implementations.** `promolog.Storer`, `session.Provider`, `dorman.IdentityProvider` — implement the interface, bring your own backend.
 - **Standard signatures.** All middleware uses `func(http.Handler) http.Handler`. No framework lock-in.
 - **The struct is the interface.** linkwell's control types are pure data. Any template engine that can read Go struct fields can render them. No `Renderer` interface needed — the data flows one way.
 

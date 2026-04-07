@@ -33,7 +33,7 @@
 | [catgoose/chuck](https://github.com/catgoose/chuck) | SQL dialects, schema DSL, query builders | `"github.com/catgoose/chuck"` |
 | [catgoose/promolog](https://github.com/catgoose/promolog) | Error trace capture, promote-on-error | `"github.com/catgoose/promolog"` |
 | [catgoose/crooner](https://github.com/catgoose/crooner) | OIDC authentication | `"github.com/catgoose/crooner"` |
-| [catgoose/porter](https://github.com/catgoose/porter) | Auth, CSRF, security headers | `"github.com/catgoose/porter"` |
+| [catgoose/dorman](https://github.com/catgoose/dorman) | Auth, CSRF, security headers | `"github.com/catgoose/dorman"` |
 | [catgoose/linkwell](https://github.com/catgoose/linkwell) | HATEOAS controls, navigation, link registry | `"github.com/catgoose/linkwell"` |
 | [catgoose/tavern](https://github.com/catgoose/tavern) | SSE pub/sub broker | `"github.com/catgoose/tavern"` |
 

@@ -24,7 +24,7 @@ import (
 	// setup:feature:session_settings:end
 	"context"
 	"fmt"
-	"github.com/catgoose/porter"
+	"github.com/catgoose/dorman"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -326,7 +326,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	e.Use(middleware.ServerTimingMiddleware())
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
 	e.Use(echoMiddleware.RequestLogger())
-	e.Use(echo.WrapMiddleware(porter.SecurityHeaders(porter.SecurityHeadersConfig{
+	e.Use(echo.WrapMiddleware(dorman.SecurityHeaders(dorman.SecurityHeadersConfig{
 		PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
 		CrossOriginOpenerPolicy: "same-origin",
 	})))
@@ -373,7 +373,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 			if len(csrfKey) > 32 {
 				csrfKey = csrfKey[:32]
 			}
-			csrfMw := porter.CSRFProtect(porter.CSRFConfig{
+			csrfMw := dorman.CSRFProtect(dorman.CSRFConfig{
 				Key:              csrfKey,
 				CookiePath:       "/",
 				FieldName:        "csrf_token",
@@ -386,7 +386,7 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 			// Inject token into echo context for templates
 			e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 				return func(c echo.Context) error {
-					c.Set("csrf_token", porter.GetToken(c.Request()))
+					c.Set("csrf_token", dorman.GetToken(c.Request()))
 					return next(c)
 				}
 			})

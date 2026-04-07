@@ -15,7 +15,7 @@ These are active in every generated app by default.
 | Vary | `HX-Request` | Cache separation for HTMX partial vs full-page responses |
 | Cache-Control (static) | `public, max-age=31536000, immutable` | Long-lived cache for fingerprinted assets |
 
-Provided via `porter.SecurityHeaders()` middleware.
+Provided via `dorman.SecurityHeaders()` middleware.
 
 ### Alpine.js CSP Build
 
@@ -59,7 +59,7 @@ All database access uses `jmoiron/sqlx` with parameterized placeholders. No raw 
 ### Dependency Integrity
 
 - `go.sum` checksums for all module dependencies
-- Minimal dependency surface -- security-critical code in catgoose-maintained libraries (porter, crooner)
+- Minimal dependency surface -- security-critical code in catgoose-maintained libraries (dorman, crooner)
 
 ## Feature-gated (opt-in via setup)
 
@@ -67,7 +67,7 @@ These are available in the scaffold but only included when the feature is enable
 
 ### CSRF Protection (`setup:feature:csrf`)
 
-- Token generation and rotation via `porter.CSRFProtect()`
+- Token generation and rotation via `dorman.CSRFProtect()`
 - Sec-Fetch-Site fast-path: modern browsers (94%+ coverage) skip token validation entirely when `Sec-Fetch-Site: same-origin` is present
 - Double-submit cookie pattern with configurable key from `SESSION_SECRET`
 - Automatic HTMX header injection via `htmx:configRequest` listener
@@ -104,7 +104,7 @@ These are deliberate gaps -- things the scaffold does not implement. Depending o
 
 ### Content-Security-Policy header
 
-No CSP header is set by default. The Alpine CSP build means you can set a strict policy without `unsafe-eval`, but you need to configure the header yourself (via porter or your reverse proxy). A recommended starting point:
+No CSP header is set by default. The Alpine CSP build means you can set a strict policy without `unsafe-eval`, but you need to configure the header yourself (via dorman or your reverse proxy). A recommended starting point:
 
 ```
 script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self';
@@ -112,15 +112,15 @@ script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; conne
 
 ### Strict-Transport-Security (HSTS)
 
-Disabled by default in porter (can break dev environments without TLS). Enable with `porter.DefaultHSTSConfig()` when serving over HTTPS, or handle at the reverse proxy layer.
+Disabled by default in dorman (can break dev environments without TLS). Enable with `dorman.DefaultHSTSConfig()` when serving over HTTPS, or handle at the reverse proxy layer.
 
 ### X-Frame-Options / frame-ancestors
 
-Set to `SAMEORIGIN` by default via `porter.SecurityHeaders()`. Override with CSP `frame-ancestors` if you need stricter control.
+Set to `SAMEORIGIN` by default via `dorman.SecurityHeaders()`. Override with CSP `frame-ancestors` if you need stricter control.
 
 ### X-Content-Type-Options
 
-Set to `nosniff` by default via `porter.SecurityHeaders()`. No action needed.
+Set to `nosniff` by default via `dorman.SecurityHeaders()`. No action needed.
 
 ### Rate Limiting
 
@@ -128,7 +128,7 @@ No rate limiting middleware. For public-facing apps, add rate limiting at the re
 
 ### Authorization / RBAC
 
-No role-based access control. Authentication (who are you?) is provided via crooner, but authorization (what can you do?) is left to the application. Porter is designed for this but the scaffold does not wire up permission checks -- your app defines its own authorization rules.
+No role-based access control. Authentication (who are you?) is provided via crooner, but authorization (what can you do?) is left to the application. Dorman is designed for this but the scaffold does not wire up permission checks -- your app defines its own authorization rules.
 
 ### Input Validation
 

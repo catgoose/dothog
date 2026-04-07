@@ -9,8 +9,8 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.15
+	github.com/catgoose/dorman v0.0.1
 	github.com/catgoose/linkwell v0.2.21
-	github.com/catgoose/porter v0.4.13
 	github.com/catgoose/promolog/sqlite v0.0.0-20260404160355-64d49720300a
 	github.com/catgoose/tavern v0.4.59
 	github.com/charmbracelet/huh v1.0.0

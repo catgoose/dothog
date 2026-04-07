@@ -9,7 +9,7 @@ This document describes how dothog processes requests, resolves navigation, and 
 | [chuck](https://github.com/catgoose/chuck) | Multi-dialect SQL schema and query fragments |
 | [promolog](https://github.com/catgoose/promolog) | Per-request log capture with promote-on-error |
 | [crooner](https://github.com/catgoose/crooner) | OIDC/OAuth2 authentication and session management |
-| [porter](https://github.com/catgoose/porter) | Authorization, CSRF protection, security headers |
+| [dorman](https://github.com/catgoose/dorman) | Authorization, CSRF protection, security headers |
 | [linkwell](https://github.com/catgoose/linkwell) | HATEOAS link registry, navigation, hypermedia controls |
 | [tavern](https://github.com/catgoose/tavern) | Thread-safe SSE pub/sub broker |
 
@@ -25,11 +25,11 @@ Request
   ├─ Correlation ID (promolog.CorrelationMiddleware → X-Request-ID)
   ├─ Request Logger (structured access log)
   ├─ Recover (panic recovery)
-  ├─ Security Headers (porter.SecurityHeaders — X-Frame-Options, HSTS, Permissions-Policy, etc.)
+  ├─ Security Headers (dorman.SecurityHeaders — X-Frame-Options, HSTS, Permissions-Policy, etc.)
   ├─ Compression (zstd/brotli/gzip via httpcompression; skipped behind templ proxy)
   ├─ Session (crooner/SCS — loads session, wraps LoadAndSave)
   ├─ Auth (crooner — OAuth/OIDC flow, login redirect)
-  ├─ CSRF (porter.CSRFProtect — Sec-Fetch-Site fast-path, HMAC-SHA256 fallback)
+  ├─ CSRF (dorman.CSRFProtect — Sec-Fetch-Site fast-path, HMAC-SHA256 fallback)
   ├─ Session Settings (loads per-session preferences → request context)
   ├─ Link Relations (resolves linkwell.LinksFor(path) → echo context + Link HTTP header)
   ├─ Vary: HX-Request header
@@ -228,17 +228,17 @@ When `reqLogStore` is non-nil, the error handler promotes the per-request log bu
 
 OIDC/OAuth2 with PKCE flow. Crooner manages the login/callback/logout routes and puts identity on the request context.
 
-### Authorization (porter)
+### Authorization (dorman)
 
-`porter.RequireAuth` rejects unauthenticated requests (401). `porter.RequireRole` / `porter.RequireAnyRole` enforce role-based access (403). Identity is read from context via `porter.GetIdentity(r)`.
+`dorman.RequireAuth` rejects unauthenticated requests (401). `dorman.RequireRole` / `dorman.RequireAnyRole` enforce role-based access (403). Identity is read from context via `dorman.GetIdentity(r)`.
 
-### CSRF (porter)
+### CSRF (dorman)
 
-`porter.CSRFProtect` implements double-submit cookie with HMAC-SHA256 and one-time-pad masking (BREACH protection). Token injected via `porter.GetToken(r)` → `<meta name="csrf-token">` → HTMX configRequest listener.
+`dorman.CSRFProtect` implements double-submit cookie with HMAC-SHA256 and one-time-pad masking (BREACH protection). Token injected via `dorman.GetToken(r)` → `<meta name="csrf-token">` → HTMX configRequest listener.
 
-### Security Headers (porter)
+### Security Headers (dorman)
 
-`porter.SecurityHeaders` sets X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy, and optionally HSTS and CSP.
+`dorman.SecurityHeaders` sets X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy, and optionally HSTS and CSP.
 
 ## File Organization
 

@@ -7,7 +7,7 @@ Go + HTMX + Templ demo with batteries included.
 | Document | Description |
 |----------|-------------|
 | [Security](SECURITY.md) | What the scaffold provides and where gaps exist |
-| [Deployment Security](DEPLOYMENT-SECURITY.md) | Full-stack security: nginx + porter, SSE/H3 configuration, corporate deployment |
+| [Deployment Security](DEPLOYMENT-SECURITY.md) | Full-stack security: nginx + dorman, SSE/H3 configuration, corporate deployment |
 | [Architecture](ARCHITECTURE.md) | Request lifecycle, package structure, middleware chain |
 | [Setup](SETUP.md) | Setup wizard and feature gates |
 
