@@ -97,7 +97,7 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 	// Each user gets a dedicated topic so that replay via Last-Event-ID is
 	// inherently scoped — no risk of leaking another user's notifications.
 	userTopic := notifUserTopic(identity.ID)
-	n.broker.SetReplayPolicy(userTopic, 20)
+	n.broker.SetReplayPolicy(userTopic, 50)
 
 	// Build a filter that checks the user's current category preferences.
 	// The rendered HTML includes data-cat="<category>" so we can detect it.
@@ -187,11 +187,10 @@ func (n *notificationRoutes) startSimulator(ctx context.Context) {
 				WithID(notifID).
 				String()
 
-			n.broker.PublishWithTTL(
+			n.broker.PublishWithID(
 				notifUserTopic(target.UserID),
+				notifID,
 				sseMsg,
-				60*time.Second,
-				tavern.WithAutoRemove("notif-"+notifID),
 			)
 		}
 	}
