@@ -110,7 +110,11 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 		return true
 	}
 
-	// Check for Last-Event-ID for replay
+	// Check for Last-Event-ID for replay.
+	// Both paths apply the same filterFn: SubscribeWith uses it natively for
+	// live messages, while SubscribeFromID doesn't support filters so we apply
+	// the filter in the write loop below. This ensures category preferences
+	// survive SSE reconnections.
 	lastEventID := c.Request().Header.Get("Last-Event-ID")
 	var msgs <-chan string
 	var unsub func()
@@ -134,6 +138,9 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 		case msg, ok := <-msgs:
 			if !ok {
 				return nil
+			}
+			if !filterFn(msg) {
+				continue
 			}
 			_, _ = fmt.Fprint(c.Response(), msg)
 			flusher.Flush()
