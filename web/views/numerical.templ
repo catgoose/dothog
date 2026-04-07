@@ -12,7 +12,7 @@ import (
 templ numTileWrapper(t NumTile) {
 	<div class="bg-base-200 rounded-lg p-4 relative">
 		<div class="absolute top-2 right-2">
-			@components.PinButton(t.ID, "/realtime/dashboard/pin", false, false)
+			@components.PinButton(t.ID, "/realtime/dashboard/pin", t.Pinned, false)
 		</div>
 		@numTileData(t)
 		@components.IntervalSlider(components.IntervalSliderCfg{

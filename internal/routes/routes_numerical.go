@@ -113,6 +113,7 @@ func (s *numSim) buildTiles() []views.NumTile {
 		t.ID = id
 		t.IntervalMs = getTileInterval(id)
 		t.Scale = getTileScale(id)
+		t.Pinned = getTilePinned(id)
 		return t
 	}
 
@@ -359,6 +360,12 @@ func getTileScale(id string) string {
 		return u
 	}
 	return components.AutoScale(getTileInterval(id))
+}
+
+func getTilePinned(id string) bool {
+	numTileIntervals.mu.RLock()
+	defer numTileIntervals.mu.RUnlock()
+	return numTileIntervals.pinned[id]
 }
 
 // ── Routes ──────────────────────────────────────────────────────────────────
