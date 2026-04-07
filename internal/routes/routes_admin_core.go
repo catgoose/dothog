@@ -181,7 +181,11 @@ func defaultStr(s, fallback string) string {
 
 func (ar *appRoutes) handleAdminHealth(c echo.Context) error {
 	h := health.Check(c.Request().Context(), ar.healthCfg)
-	return handler.RenderBaseLayout(c, views.AdminHealthPage(h, snapshotAdminIntervals()))
+	var intervals map[string]int //nolint:staticcheck // declared before setup:feature gate
+	// setup:feature:demo:start
+	intervals = snapshotAdminIntervals()
+	// setup:feature:demo:end
+	return handler.RenderBaseLayout(c, views.AdminHealthPage(h, intervals))
 }
 
 func (ar *appRoutes) handleAdminHealthCheck(c echo.Context) error {
