@@ -252,7 +252,7 @@ func AdminSettingsPage(data AdminPanelData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</tbody></table></div></div></div></div><!-- SSE connection --><div hx-ext=\"sse\" sse-connect=\"/sse/admin\" hx-swap=\"innerHTML settle:0 transition:false\"><div sse-swap=\"admin-panel\" style=\"display:none\"></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</tbody></table></div></div></div></div><!-- SSE connection --><div hx-ext=\"sse\" sse-connect=\"/sse/admin\" hx-swap=\"innerHTML settle:0 transition:false\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"reload\"><div sse-swap=\"admin-panel\" style=\"display:none\"></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -497,7 +497,7 @@ func adminSSECounts(counts map[string]int) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(topic)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 209, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 212, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -532,7 +532,7 @@ func adminSSECounts(counts map[string]int) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts[topic]))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 210, Col: 112}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 213, Col: 112}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -580,7 +580,7 @@ func panelStat(label, value string) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 219, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 222, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -593,7 +593,7 @@ func panelStat(label, value string) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 220, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 223, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -635,7 +635,7 @@ func metricCard(label, value string) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 226, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 229, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -648,7 +648,7 @@ func metricCard(label, value string) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 227, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 230, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {

@@ -154,7 +154,10 @@ templ AdminSettingsPage(data AdminPanelData) {
 		</div>
 	</div>
 	<!-- SSE connection -->
-	<div hx-ext="sse" sse-connect="/sse/admin" hx-swap="innerHTML settle:0 transition:false">
+	<div hx-ext="sse" sse-connect="/sse/admin" hx-swap="innerHTML settle:0 transition:false"
+		data-tavern-reconnecting-class="opacity-50"
+		data-tavern-gap-action="reload"
+	>
 		<div sse-swap="admin-panel" style="display:none"></div>
 	</div>
 	@debugScript()

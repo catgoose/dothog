@@ -39,7 +39,7 @@ func AdminSessionsPage(sessions []session.Settings) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><h1 class=\"text-2xl font-bold\">Session Settings</h1><p class=\"text-sm text-base-content/60\">Each session is identified by a UUID stored in a browser cookie. This lets the server manage per-session settings like theme and layout. The table below shows all active session settings entries.</p><div hx-ext=\"sse\" sse-connect=\"/sse/theme\"><div id=\"admin-sessions-table\" hx-get=\"/admin/sessions/table\" hx-trigger=\"sse:theme-change\" hx-swap=\"innerHTML\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><h1 class=\"text-2xl font-bold\">Session Settings</h1><p class=\"text-sm text-base-content/60\">Each session is identified by a UUID stored in a browser cookie. This lets the server manage per-session settings like theme and layout. The table below shows all active session settings entries.</p><div hx-ext=\"sse\" sse-connect=\"/sse/theme\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"reload\"><div id=\"admin-sessions-table\" hx-get=\"/admin/sessions/table\" hx-trigger=\"sse:theme-change\" hx-swap=\"innerHTML\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -89,7 +89,7 @@ func AdminSessionsTable(sessions []session.Settings) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", s.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_sessions.templ`, Line: 46, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_sessions.templ`, Line: 49, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -102,7 +102,7 @@ func AdminSessionsTable(sessions []session.Settings) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(s.SessionUUID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_sessions.templ`, Line: 47, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_sessions.templ`, Line: 50, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -115,7 +115,7 @@ func AdminSessionsTable(sessions []session.Settings) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(s.Theme)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_sessions.templ`, Line: 49, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_sessions.templ`, Line: 52, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -128,7 +128,7 @@ func AdminSessionsTable(sessions []session.Settings) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(formatAge(s.UpdatedAt))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_sessions.templ`, Line: 51, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_sessions.templ`, Line: 54, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {

@@ -56,7 +56,7 @@ func AdminHealthPage(h health.Response) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- SSE connection (shared admin stream) --><div hx-ext=\"sse\" sse-connect=\"/sse/admin\" hx-swap=\"innerHTML settle:0 transition:false\"><div sse-swap=\"admin-panel\" style=\"display:none\"></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- SSE connection (shared admin stream) --><div hx-ext=\"sse\" sse-connect=\"/sse/admin\" hx-swap=\"innerHTML settle:0 transition:false\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"reload\"><div sse-swap=\"admin-panel\" style=\"display:none\"></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -147,7 +147,7 @@ func healthContent(h health.Response) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(h.Status)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 54, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 57, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func healthContent(h health.Response) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(h.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 60, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 63, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -173,7 +173,7 @@ func healthContent(h health.Response) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(h.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 64, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 67, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -186,7 +186,7 @@ func healthContent(h health.Response) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(h.Uptime)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 68, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 71, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -230,7 +230,7 @@ func healthContent(h health.Response) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(h.Database)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 76, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_health.templ`, Line: 79, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
