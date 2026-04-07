@@ -64,8 +64,6 @@ func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
 	ar.e.GET("/sse/notifications", n.handleSSE)
 	ar.e.POST("/realtime/notifications/filter", n.handleFilterUpdate)
 
-	broker.SetReplayPolicy(TopicNotifications, 20)
-
 	broker.RunPublisher(ar.ctx, n.startSimulator)
 }
 
@@ -96,6 +94,11 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 	})
 	defer n.tracker.Leave(TopicNotifications, identity.ID)
 
+	// Each user gets a dedicated topic so that replay via Last-Event-ID is
+	// inherently scoped — no risk of leaking another user's notifications.
+	userTopic := notifUserTopic(identity.ID)
+	n.broker.SetReplayPolicy(userTopic, 20)
+
 	// Build a filter that checks the user's current category preferences.
 	// The rendered HTML includes data-cat="<category>" so we can detect it.
 	filterFn := func(msg string) bool {
@@ -112,10 +115,9 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 	var msgs <-chan string
 	var unsub func()
 	if lastEventID != "" {
-		msgs, unsub = n.broker.SubscribeFromID(TopicNotifications, lastEventID)
+		msgs, unsub = n.broker.SubscribeFromID(userTopic, lastEventID)
 	} else {
-		msgs, unsub = n.broker.SubscribeWith(TopicNotifications,
-			tavern.SubWithScope(identity.ID),
+		msgs, unsub = n.broker.SubscribeWith(userTopic,
 			tavern.SubWithFilter(filterFn),
 		)
 	}
@@ -178,9 +180,8 @@ func (n *notificationRoutes) startSimulator(ctx context.Context) {
 				WithID(notifID).
 				String()
 
-			n.broker.PublishToWithTTL(
-				TopicNotifications,
-				target.UserID,
+			n.broker.PublishWithTTL(
+				notifUserTopic(target.UserID),
 				sseMsg,
 				60*time.Second,
 				tavern.WithAutoRemove("notif-"+notifID),
@@ -205,6 +206,12 @@ func renderPresenceHTML(users []views.NotifPresenceUser, currentUserID string) s
 		return ""
 	}
 	return buf.String()
+}
+
+// notifUserTopic returns a per-user notification topic so that publish, subscribe,
+// and Last-Event-ID replay are all inherently scoped to a single user.
+func notifUserTopic(userID string) string {
+	return TopicNotifications + "-" + userID
 }
 
 func getOrCreateNotifIdentity(c echo.Context) demo.NotificationIdentity {
