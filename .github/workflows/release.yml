@@ -225,35 +225,55 @@ jobs:
     steps:
       - name: Notify CI failure
         run: |
+          TITLE="CI: ${{ github.workflow }} failure"
           BODY="**Workflow:** \`${{ github.workflow }}\`
           **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           **Branch:** \`${{ github.ref_name }}\`
           **Commit:** \`${{ github.sha }}\`
           **Triggered by:** ${{ github.actor }}"
 
-          EXISTING=$(gh issue list \
+          ISSUE=$(gh issue list \
             --repo "${{ github.repository }}" \
             --label "ci" \
-            --state all \
-            --limit 1 \
-            --json number,state \
-            --jq '.[0]')
+            --state open \
+            --search "in:title $TITLE" \
+            --json number \
+            --jq '.[0].number // empty')
 
-          if [ -z "$EXISTING" ] || [ "$EXISTING" = "null" ]; then
+          if [ -z "$ISSUE" ]; then
             gh issue create \
               --repo "${{ github.repository }}" \
-              --title "Pipeline failure: ${{ github.workflow }}" \
+              --title "$TITLE" \
               --label "ci" \
               --body "$BODY"
           else
-            NUMBER=$(echo "$EXISTING" | jq -r '.number')
-            STATE=$(echo "$EXISTING" | jq -r '.state')
-            if [ "$STATE" = "CLOSED" ]; then
-              gh issue reopen "$NUMBER" --repo "${{ github.repository }}"
-            fi
-            gh issue comment "$NUMBER" \
+            gh issue comment "$ISSUE" \
               --repo "${{ github.repository }}" \
               --body "$BODY"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  notify-success:
+    if: ${{ success() }}
+    needs: [check, release, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close CI issue on success
+        run: |
+          TITLE="CI: ${{ github.workflow }} failure"
+          ISSUE=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "ci" \
+            --state open \
+            --search "in:title $TITLE" \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -n "$ISSUE" ]; then
+            gh issue close "$ISSUE" \
+              --repo "${{ github.repository }}" \
+              --comment "${{ github.workflow }} is green again. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           fi
         env:
           GH_TOKEN: ${{ github.token }}
