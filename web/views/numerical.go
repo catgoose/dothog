@@ -14,4 +14,5 @@ type NumTile struct {
 	IntervalMs int    // update interval in milliseconds (canonical)
 	DeltaUp    bool   // true = positive direction
 	Neutral    bool   // delta is informational, not good/bad
+	Pinned     bool   // tile is pinned (excluded from master override)
 }
