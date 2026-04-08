@@ -122,9 +122,9 @@ func (bp *tavernBackpressRoutes) handleStreamSSE(c echo.Context) error {
 				flusher.Flush()
 			}
 		} else {
-			// Batch mode: collect during window, flush once.
+			// Batch mode: collect during window, emit one swap.
 			timer := time.NewTimer(bw)
-			var batch bytes.Buffer
+			var rows bytes.Buffer
 			collecting := true
 			for collecting {
 				select {
@@ -138,13 +138,13 @@ func (bp *tavernBackpressRoutes) handleStreamSSE(c echo.Context) error {
 					}
 					simplified := strings.HasPrefix(tm.Data, "[simplified] ")
 					html := renderBPStreamEvent(tm.Topic, tm.Data, simplified)
-					batch.WriteString(tavern.NewSSEMessage("bp-stream", html).String())
+					rows.WriteString(html)
 				case <-timer.C:
 					collecting = false
 				}
 			}
-			if batch.Len() > 0 {
-				_, _ = batch.WriteTo(w)
+			if rows.Len() > 0 {
+				_, _ = fmt.Fprint(w, tavern.NewSSEMessage("bp-stream-batch", rows.String()).String())
 				flusher.Flush()
 			}
 		}

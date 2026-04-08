@@ -108,13 +108,17 @@ templ backpressurePanels(data TavernBackpressureData, batchWindow time.Duration)
 					hx-ext="sse"
 					sse-connect="/sse/tavern/backpressure/stream"
 				>
-					<div sse-swap="bp-stream" hx-target="#bp-stream-log" hx-swap="afterbegin settle:0 transition:false" style="display:none"></div>
+					<!-- Raw mode: one event per swap (append) -->
+					<div sse-swap="bp-stream" hx-target="#bp-stream-log" hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
+					<!-- Batch mode: one swap per window (append) -->
+					<div sse-swap="bp-stream-batch" hx-target="#bp-stream-log" hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
 					<div id="bp-stream-log" class="max-h-72 overflow-y-auto overflow-x-hidden space-y-0.5" style="contain:paint;isolation:isolate" data-testid="stream-log">
-						<p class="text-xs text-base-content/30 py-2">Waiting for stream events...</p>
+						<p id="bp-stream-empty" class="text-xs text-base-content/30 py-2">Waiting for stream events...</p>
 					</div>
 				</div>
 			</div>
 		</div>
+		@backpressureStreamScript()
 
 		<!-- Controls + Metrics (compact row) -->
 		<div class="flex gap-4">
@@ -287,6 +291,33 @@ func bpTopicDrop(m tavern.BrokerMetrics, topic string) int64 {
 		return ts.Dropped
 	}
 	return 0
+}
+
+templ backpressureStreamScript() {
+	<script>
+		(function() {
+			var log = document.getElementById('bp-stream-log');
+			if (!log) return;
+			var MAX_ROWS = 50;
+
+			// Remove empty-state message on first event.
+			document.body.addEventListener('htmx:sseMessage', function onFirst(evt) {
+				if (evt.detail.type === 'bp-stream' || evt.detail.type === 'bp-stream-batch') {
+					var empty = document.getElementById('bp-stream-empty');
+					if (empty) empty.remove();
+					document.body.removeEventListener('htmx:sseMessage', onFirst);
+				}
+			});
+
+			// After each swap: trim oldest rows, auto-scroll to bottom.
+			log.addEventListener('htmx:afterSettle', function() {
+				while (log.children.length > MAX_ROWS) {
+					log.removeChild(log.firstElementChild);
+				}
+				log.scrollTop = log.scrollHeight;
+			});
+		})();
+	</script>
 }
 
 func bpBatchLabel(d time.Duration) string {
