@@ -28,10 +28,10 @@ type tavernReplayRoutes struct {
 }
 
 func (ar *appRoutes) initTavernReplayRoutes(broker *tavern.SSEBroker) {
-	lab := demo.NewReplayLab(10)
+	lab := demo.NewReplayLab(50)
 	r := &tavernReplayRoutes{broker: broker, lab: lab}
-	r.lifetime.Store(int64(30 * time.Second))
-	r.reconnectDelay.Store(int64(1 * time.Second))
+	r.lifetime.Store(int64(10 * time.Second))
+	r.reconnectDelay.Store(int64(5 * time.Second))
 
 	broker.SetReplayPolicy(TopicTavernReplay, lab.ReplayWindow())
 
