@@ -156,8 +156,7 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 func (n *notificationRoutes) handleFilterUpdate(c echo.Context) error {
 	identity := getOrCreateNotifIdentity(c)
 	cat := demo.NotificationCategory(c.FormValue("category"))
-	// Toggle: if "disabled" is set, turn off; otherwise turn on
-	enabled := c.FormValue("disabled") == ""
+	enabled := c.FormValue("enabled") == "true"
 	n.filters.SetFilter(identity.ID, cat, enabled)
 	return c.NoContent(http.StatusNoContent)
 }

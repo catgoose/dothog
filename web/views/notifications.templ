@@ -95,7 +95,7 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 									hx-post="/realtime/notifications/filter"
 									hx-vals={ fmt.Sprintf(`{"category":"%s"}`, string(cat)) }
 									hx-swap="none"
-									hx-on::before-request="this.closest('label').querySelector('input').name = this.checked ? 'enabled' : 'disabled'"
+									hx-on::before-request="event.detail.parameters.enabled = this.checked ? 'true' : 'false'"
 								/>
 							</label>
 						</div>
