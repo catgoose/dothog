@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"catgoose/dothog/internal/demo"
@@ -21,21 +21,15 @@ import (
 )
 
 type tavernReplayRoutes struct {
-	broker *tavern.SSEBroker
-	lab    *demo.ReplayLab
-	conns  map[string]context.CancelFunc
-
-	// mu guards conns.
-	mu sync.Mutex
+	broker   *tavern.SSEBroker
+	lab      *demo.ReplayLab
+	lifetime atomic.Int64 // nanoseconds; 0 = no limit
 }
 
 func (ar *appRoutes) initTavernReplayRoutes(broker *tavern.SSEBroker) {
 	lab := demo.NewReplayLab(10)
-	r := &tavernReplayRoutes{
-		broker: broker,
-		lab:    lab,
-		conns:  make(map[string]context.CancelFunc),
-	}
+	r := &tavernReplayRoutes{broker: broker, lab: lab}
+	r.lifetime.Store(int64(30 * time.Second))
 
 	broker.SetReplayPolicy(TopicTavernReplay, lab.ReplayWindow())
 
@@ -55,62 +49,27 @@ func (ar *appRoutes) initTavernReplayRoutes(broker *tavern.SSEBroker) {
 	ar.e.POST("/realtime/tavern/replay/emit", r.handleEmit)
 	ar.e.POST("/realtime/tavern/replay/burst", r.handleBurst)
 	ar.e.POST("/realtime/tavern/replay/window", r.handleWindow)
-	ar.e.POST("/realtime/tavern/replay/drop", r.handleDrop)
+	ar.e.POST("/realtime/tavern/replay/lifetime", r.handleLifetime)
 
 	broker.RunPublisher(ar.ctx, r.startPublisher)
 }
 
 func (r *tavernReplayRoutes) handlePage(c echo.Context) error {
-	return handler.RenderBaseLayout(c, views.TavernReplayPage(r.lab.ReplayWindow()))
+	d := time.Duration(r.lifetime.Load())
+	return handler.RenderBaseLayout(c, views.TavernReplayPage(r.lab.ReplayWindow(), d))
 }
 
-// handleSSE is a custom SSE handler that tracks connections for forced drops.
+// handleSSE delegates to tavern's built-in SSEHandler with the current
+// max connection duration. Each new connection picks up the latest lifetime.
 func (r *tavernReplayRoutes) handleSSE(c echo.Context) error {
-	w := c.Response().Writer
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-
-	lastID := c.Request().Header.Get("Last-Event-ID")
-	ch, unsub := r.broker.SubscribeFromID(TopicTavernReplay, lastID)
-	if ch == nil {
-		return c.String(http.StatusServiceUnavailable, "Service Unavailable")
+	d := time.Duration(r.lifetime.Load())
+	var opts []tavern.SSEHandlerOption
+	if d > 0 {
+		opts = append(opts, tavern.WithMaxConnectionDuration(d))
 	}
-	defer unsub()
-
-	// Create a cancellable context for this connection.
-	connID := shared.GenerateContextID()
-	ctx, cancel := context.WithCancel(c.Request().Context())
-	defer cancel()
-
-	r.mu.Lock()
-	r.conns[connID] = cancel
-	r.mu.Unlock()
-	defer func() {
-		r.mu.Lock()
-		delete(r.conns, connID)
-		r.mu.Unlock()
-	}()
-
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		return c.String(http.StatusInternalServerError, "Streaming not supported")
-	}
-
-	for {
-		select {
-		case msg, ok := <-ch:
-			if !ok {
-				return nil
-			}
-			if _, err := fmt.Fprint(w, msg); err != nil {
-				return nil
-			}
-			flusher.Flush()
-		case <-ctx.Done():
-			return nil
-		}
-	}
+	h := r.broker.SSEHandler(TopicTavernReplay, opts...)
+	h.ServeHTTP(c.Response().Writer, c.Request())
+	return nil
 }
 
 func (r *tavernReplayRoutes) handleEmit(c echo.Context) error {
@@ -135,16 +94,13 @@ func (r *tavernReplayRoutes) handleWindow(c echo.Context) error {
 	return c.HTML(http.StatusOK, fmt.Sprintf("%d", n))
 }
 
-// handleDrop forcibly closes all SSE connections, causing the browser
-// to auto-reconnect with Last-Event-ID.
-func (r *tavernReplayRoutes) handleDrop(c echo.Context) error {
-	r.mu.Lock()
-	for id, cancel := range r.conns {
-		cancel()
-		delete(r.conns, id)
+func (r *tavernReplayRoutes) handleLifetime(c echo.Context) error {
+	s, err := strconv.Atoi(c.FormValue("seconds"))
+	if err != nil || s < 1 {
+		return c.String(http.StatusBadRequest, "invalid lifetime")
 	}
-	r.mu.Unlock()
-	return c.NoContent(http.StatusNoContent)
+	r.lifetime.Store(int64(time.Duration(s) * time.Second))
+	return c.HTML(http.StatusOK, fmt.Sprintf("%ds", s))
 }
 
 func (r *tavernReplayRoutes) publishEvent() {
