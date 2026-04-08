@@ -365,7 +365,7 @@ templ ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDet
 		if !gapDetected {
 			<div class="flex items-center gap-2">
 				<span class="text-base-content/50 w-24 shrink-0">Replayed:</span>
-				<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-missed">{ fmt.Sprintf("%d events", missedCount) }</span>
+				<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-missed">{ formatReplayRange(lastEventID, missedCount) }</span>
 			</div>
 			<div class="flex items-center gap-2">
 				<span class="text-base-content/50 w-24 shrink-0">Disconnect:</span>
@@ -377,6 +377,18 @@ templ ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDet
 
 func formatLifetime(d time.Duration) string {
 	return fmt.Sprintf("%ds", int(d.Seconds()))
+}
+
+func formatReplayRange(lastEventID string, count int) string {
+	if count == 0 {
+		return "0 events"
+	}
+	// Parse base seq from "replay-63" → 63
+	var base int
+	if _, err := fmt.Sscanf(lastEventID, "replay-%d", &base); err != nil {
+		return fmt.Sprintf("%d events", count)
+	}
+	return fmt.Sprintf("%d events (#%d..#%d)", count, base+1, base+count)
 }
 
 func formatReplayGap(d time.Duration) string {

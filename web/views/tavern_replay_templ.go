@@ -465,9 +465,9 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDete
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var25 string
-			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d events", missedCount))
+			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayRange(lastEventID, missedCount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 368, Col: 122}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 368, Col: 128}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -501,6 +501,18 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDete
 
 func formatLifetime(d time.Duration) string {
 	return fmt.Sprintf("%ds", int(d.Seconds()))
+}
+
+func formatReplayRange(lastEventID string, count int) string {
+	if count == 0 {
+		return "0 events"
+	}
+	// Parse base seq from "replay-63" → 63
+	var base int
+	if _, err := fmt.Sscanf(lastEventID, "replay-%d", &base); err != nil {
+		return fmt.Sprintf("%d events", count)
+	}
+	return fmt.Sprintf("%d events (#%d..#%d)", count, base+1, base+count)
 }
 
 func formatReplayGap(d time.Duration) string {

@@ -141,9 +141,6 @@ func (r *tavernReplayRoutes) startPublisher(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if !r.broker.HasSubscribers(TopicTavernReplay) {
-				continue
-			}
 			r.publishEvent()
 		}
 	}
