@@ -1,0 +1,100 @@
+// setup:feature:demo
+
+package views
+
+import "fmt"
+
+// TavernPublishData holds counters for each publish method.
+type TavernPublishData struct {
+	RawCount       int64
+	DebouncedCount int64
+	ThrottledCount int64
+	IfChangedCount int64
+}
+
+templ TavernPublishPage(data TavernPublishData) {
+	<div class="max-w-6xl mx-auto p-4 space-y-4">
+		<div class="flex items-center justify-between flex-wrap gap-2">
+			<div>
+				<h1 class="text-2xl font-bold">Publish Lab</h1>
+				<p class="text-xs text-base-content/50">
+					Compare publish methods side by side. Same input, different delivery behavior.
+				</p>
+			</div>
+		</div>
+
+		<div class="flex gap-2 flex-wrap">
+			<button
+				class="btn btn-sm btn-primary"
+				hx-post="/realtime/tavern/publish/spam"
+				hx-vals='{"mode":"identical"}'
+				hx-swap="none"
+			>
+				Spam 20 Identical
+			</button>
+			<button
+				class="btn btn-sm btn-secondary"
+				hx-post="/realtime/tavern/publish/spam"
+				hx-vals='{"mode":"varied"}'
+				hx-swap="none"
+			>
+				Spam 20 Varied
+			</button>
+			<button
+				class="btn btn-sm btn-ghost"
+				hx-post="/realtime/tavern/publish/reset"
+				hx-swap="none"
+			>
+				Reset
+			</button>
+		</div>
+
+		<div
+			hx-ext="sse"
+			sse-connect="/sse/tavern/publish"
+			data-tavern-reconnecting-class="opacity-50"
+		>
+			<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+				<span class="loading loading-spinner loading-xs"></span>
+				Reconnecting...
+			</div>
+
+			<div sse-swap="tavern/pub/raw" hx-target="#pub-raw-log" hx-swap="afterbegin" style="display:none"></div>
+			<div sse-swap="tavern/pub/debounced" hx-target="#pub-debounce-log" hx-swap="afterbegin" style="display:none"></div>
+			<div sse-swap="tavern/pub/throttled" hx-target="#pub-throttle-log" hx-swap="afterbegin" style="display:none"></div>
+			<div sse-swap="tavern/pub/ifchanged" hx-target="#pub-changed-log" hx-swap="afterbegin" style="display:none"></div>
+
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+				@publishPanel("Raw", "Publish", "Every message arrives. No filtering or dedup.", "pub-raw-log", data.RawCount)
+				@publishPanel("Debounced", "PublishDebounced", "Waits 500ms of quiet, then delivers the last value only.", "pub-debounce-log", data.DebouncedCount)
+				@publishPanel("Throttled", "PublishThrottled", "At most once per 200ms. First call immediate, then rate-limited.", "pub-throttle-log", data.ThrottledCount)
+				@publishPanel("If-Changed", "PublishIfChanged", "FNV-64a content hash. Only publishes when the message actually differs.", "pub-changed-log", data.IfChangedCount)
+			</div>
+		</div>
+	</div>
+}
+
+templ publishPanel(title string, apiName string, description string, logID string, count int64) {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body p-4 space-y-2">
+			<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">{ title }</h2>
+			<p class="text-xs text-base-content/40">{ description }</p>
+			<div class="text-xs">
+				<span class="font-mono text-primary">{ apiName }</span>
+				<span class="badge badge-xs badge-ghost font-mono ml-1" data-testid={ "count-" + logID }>{ fmt.Sprintf("%d", count) }</span>
+			</div>
+			<div id={ logID } class="max-h-48 overflow-y-auto font-mono text-xs space-y-0.5" data-testid={ logID }>
+				<p class="text-base-content/30">Waiting...</p>
+			</div>
+		</div>
+	</div>
+}
+
+// PubEventEntry renders a single publish lab event.
+templ PubEventEntry(seq int, message string, timestamp string) {
+	<div class="flex items-center gap-2 py-0.5 border-b border-base-300 last:border-0">
+		<span class="badge badge-xs badge-primary font-mono">{ fmt.Sprintf("#%d", seq) }</span>
+		<span class="text-base-content/40 tabular-nums shrink-0">{ timestamp }</span>
+		<span class="text-base-content/60 truncate">{ message }</span>
+	</div>
+}

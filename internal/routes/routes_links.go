@@ -46,6 +46,7 @@ func (ar *appRoutes) initLinkRelations() {
 		linkwell.Rel("/realtime/dashboard", "Dashboard"),
 		linkwell.Rel("/realtime/feed", "Feed"),
 		linkwell.Rel("/realtime/canvas", "Canvas"),
+		linkwell.Rel("/realtime/tavern", "Tavern Gallery"),
 	)
 
 	linkwell.Hub("/api", "API",

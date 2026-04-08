@@ -14,4 +14,17 @@ const (
 	TopicNumericalDash    = "numerical-dash"
 	TopicNotifications    = "notifications"
 	TopicObservatory      = "observatory"
+
+	// Tavern gallery lab topics.
+	TopicTavernReplay      = "tavern/replay"
+	TopicTavernBackpress   = "tavern/backpressure"
+	TopicTavernPubRaw      = "tavern/pub/raw"
+	TopicTavernPubDebounce = "tavern/pub/debounced"
+	TopicTavernPubThrottle = "tavern/pub/throttled"
+	TopicTavernPubChanged  = "tavern/pub/ifchanged"
+	TopicTavernPubTTL      = "tavern/pub/ttl"
+	TopicTavernHooksSource = "tavern/hooks/source"
+	TopicTavernHooksDeriv  = "tavern/hooks/derived"
+	TopicTavernHooksLog    = "tavern/hooks/log"
+	TopicTavernHooksStats  = "tavern/hooks/stats"
 )

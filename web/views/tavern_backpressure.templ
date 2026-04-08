@@ -1,0 +1,212 @@
+// setup:feature:demo
+
+package views
+
+import (
+	"catgoose/dothog/internal/demo"
+	"fmt"
+	"github.com/catgoose/tavern"
+)
+
+// TavernBackpressureData holds the view-model for the backpressure lab.
+type TavernBackpressureData struct {
+	ActivePreset string
+	Metrics      tavern.BrokerMetrics
+	Topics       []string
+	TierChanges  []demo.TierChange
+}
+
+templ TavernBackpressurePage(data TavernBackpressureData) {
+	<div class="max-w-5xl mx-auto p-4 space-y-4">
+		<div class="flex items-center justify-between flex-wrap gap-2">
+			<div>
+				<h1 class="text-2xl font-bold">Backpressure Lab</h1>
+				<p class="text-xs text-base-content/50">
+					Adaptive backpressure tiers, slow subscriber eviction, and stress presets.
+					Select a preset and watch tier transitions happen.
+				</p>
+			</div>
+		</div>
+
+		<div
+			hx-ext="sse"
+			sse-connect="/sse/tavern/backpressure"
+			data-tavern-reconnecting-class="opacity-50"
+		>
+			<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+				<span class="loading loading-spinner loading-xs"></span>
+				Reconnecting...
+			</div>
+			<div sse-swap="bp-metrics" hx-target="#bp-metrics" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="bp-tier-log" hx-target="#bp-tier-log" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="bp-preset" hx-target="#bp-active-preset" hx-swap="innerHTML" style="display:none"></div>
+			@backpressurePanels(data)
+		</div>
+	</div>
+}
+
+// TavernBackpressureMetrics renders just the metrics grid.
+templ TavernBackpressureMetrics(data TavernBackpressureData) {
+	@backpressureMetrics(data)
+}
+
+// TavernBackpressureTierLog renders just the tier change log entries.
+templ TavernBackpressureTierLog(data TavernBackpressureData) {
+	@backpressureTierLog(data)
+}
+
+// TavernBackpressurePreset renders just the active preset badge.
+templ TavernBackpressurePreset(preset string) {
+	{ preset }
+}
+
+templ backpressurePanels(data TavernBackpressureData) {
+	<div class="space-y-4">
+		<!-- Tier Explanation (static) -->
+		<div class="card bg-base-200 shadow-sm">
+			<div class="card-body p-4">
+				<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Backpressure Tiers</h2>
+				<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+					<div class="rounded p-2 bg-success/10 border border-success/20">
+						<div class="text-xs font-semibold text-success">Normal (0)</div>
+						<div class="text-xs text-base-content/50">Full-fidelity delivery. All messages arrive as-is.</div>
+					</div>
+					<div class="rounded p-2 bg-warning/10 border border-warning/20">
+						<div class="text-xs font-semibold text-warning">Throttle (1)</div>
+						<div class="text-xs text-base-content/50">Buffer filling. Delivery continues but subscriber is lagging.</div>
+					</div>
+					<div class="rounded p-2 bg-orange-500/10 border border-orange-500/20">
+						<div class="text-xs font-semibold text-orange-500">Simplify (2)</div>
+						<div class="text-xs text-base-content/50">Degraded delivery. Messages run through simplified renderer.</div>
+					</div>
+					<div class="rounded p-2 bg-error/10 border border-error/20">
+						<div class="text-xs font-semibold text-error">Disconnect (3)</div>
+						<div class="text-xs text-base-content/50">Subscriber evicted. Too far behind to recover.</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Controls (static — never swapped by SSE) + Metrics (swapped) -->
+		<div class="flex gap-4">
+			<div class="flex-1 card bg-base-200 shadow-sm">
+				<div class="card-body p-4 space-y-3">
+					<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Stress Preset</h2>
+					<div class="flex gap-2 flex-wrap">
+						for _, preset := range []string{"calm", "moderate", "heavy", "overwhelming"} {
+							<button
+								class="btn btn-sm btn-outline"
+								hx-post="/realtime/tavern/backpressure/preset"
+								hx-vals={ fmt.Sprintf(`{"preset":"%s"}`, preset) }
+								hx-swap="none"
+								data-testid={ "preset-" + preset }
+							>
+								{ preset }
+							</button>
+						}
+					</div>
+					<p class="text-xs text-base-content/40">
+						Active: <span id="bp-active-preset" class="font-mono badge badge-ghost badge-xs" data-testid="active-preset">{ data.ActivePreset }</span>
+					</p>
+				</div>
+			</div>
+
+			<div class="flex-1 card bg-base-200 shadow-sm">
+				<div class="card-body p-4">
+					<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Demo Broker Metrics</h2>
+					<div id="bp-metrics">
+						@backpressureMetrics(data)
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Tier Change Log (swapped) -->
+		<div class="card bg-base-200 shadow-sm">
+			<div class="card-body p-4">
+				<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Tier Change Log</h2>
+				<div id="bp-tier-log" class="max-h-64 overflow-y-auto space-y-1" data-testid="tier-log">
+					@backpressureTierLog(data)
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ backpressureMetrics(data TavernBackpressureData) {
+	<div class="grid grid-cols-2 gap-2 text-xs">
+		for _, topic := range data.Topics {
+			<div class="stat p-0">
+				<div class="stat-title text-xs truncate">{ topic }</div>
+				<div class="stat-value text-sm tabular-nums" data-testid={ "metric-pub-" + topic }>{ fmt.Sprintf("%d", bpTopicPub(data.Metrics, topic)) }</div>
+				<div class="stat-desc tabular-nums">
+					{ fmt.Sprintf("%d dropped", bpTopicDrop(data.Metrics, topic)) }
+				</div>
+			</div>
+		}
+	</div>
+}
+
+templ backpressureTierLog(data TavernBackpressureData) {
+	if len(data.TierChanges) == 0 {
+		<p class="text-xs text-base-content/30">No tier changes yet. Try a heavier stress preset.</p>
+	} else {
+		for i := len(data.TierChanges) - 1; i >= 0; i-- {
+			@tierChangeEntry(data.TierChanges[i])
+		}
+	}
+}
+
+templ tierChangeEntry(tc demo.TierChange) {
+	<div class="flex items-center gap-2 py-0.5 border-b border-base-300 last:border-0 text-xs">
+		<span class="text-base-content/40 tabular-nums font-mono shrink-0">{ tc.Timestamp.Format("15:04:05") }</span>
+		<span class="truncate">{ tc.Topic }</span>
+		<span class={ "badge badge-xs", bpTierBadgeClass(tc.OldTier) }>{ bpTierName(tc.OldTier) }</span>
+		<span class="text-base-content/30">-&gt;</span>
+		<span class={ "badge badge-xs", bpTierBadgeClass(tc.NewTier) }>{ bpTierName(tc.NewTier) }</span>
+	</div>
+}
+
+func bpTierName(tier int) string {
+	switch tier {
+	case 0:
+		return "normal"
+	case 1:
+		return "throttle"
+	case 2:
+		return "simplify"
+	case 3:
+		return "disconnect"
+	default:
+		return fmt.Sprintf("tier-%d", tier)
+	}
+}
+
+func bpTierBadgeClass(tier int) string {
+	switch tier {
+	case 0:
+		return "badge-success"
+	case 1:
+		return "badge-warning"
+	case 2:
+		return "badge-accent"
+	case 3:
+		return "badge-error"
+	default:
+		return "badge-ghost"
+	}
+}
+
+func bpTopicPub(m tavern.BrokerMetrics, topic string) int64 {
+	if ts, ok := m.TopicStats[topic]; ok {
+		return ts.Published
+	}
+	return 0
+}
+
+func bpTopicDrop(m tavern.BrokerMetrics, topic string) int64 {
+	if ts, ok := m.TopicStats[topic]; ok {
+		return ts.Dropped
+	}
+	return 0
+}

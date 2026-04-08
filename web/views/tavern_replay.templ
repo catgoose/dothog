@@ -1,0 +1,578 @@
+// setup:feature:demo
+
+package views
+
+import (
+	"fmt"
+	"time"
+)
+
+// TavernReplayPage renders the replay lab.
+templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay time.Duration, publishRate time.Duration) {
+	<style>
+		#replay-log, #replay-log * {
+			transition: none !important;
+			animation: none !important;
+		}
+		[data-tavern-gap-banner] {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem 0.75rem;
+			margin-bottom: 0.5rem;
+			border-radius: var(--rounded-btn, 0.375rem);
+			font-size: 0.75rem;
+			background-color: color-mix(in oklab, var(--color-error) 15%, transparent);
+			color: var(--color-error);
+			border: 1px solid color-mix(in oklab, var(--color-error) 25%, transparent);
+		}
+		[data-tavern-gap-banner] button {
+			margin-left: auto;
+			padding: 0.25rem 0.75rem;
+			border-radius: var(--rounded-btn, 0.25rem);
+			font-size: 0.75rem;
+			font-weight: 600;
+			cursor: pointer;
+			background-color: var(--color-error);
+			color: var(--color-error-content);
+			border: none;
+			white-space: nowrap;
+		}
+		[data-tavern-gap-banner] button:hover {
+			opacity: 0.85;
+		}
+	</style>
+	<div class="max-w-5xl mx-auto p-4 space-y-4">
+		<div class="flex items-center justify-between flex-wrap gap-2">
+			<div>
+				<h1 class="text-2xl font-bold">Replay Lab</h1>
+				<p class="text-xs text-base-content/50">
+					Test Last-Event-ID replay. The server closes each SSE connection after
+					the configured lifetime, then the browser waits the reconnect delay
+					before reconnecting with Last-Event-ID. Missed events replay from the buffer.
+				</p>
+			</div>
+		</div>
+
+		<!-- Single stable SSE container — never replaced. Browser EventSource
+		     handles reconnection natively with Last-Event-ID.
+		     tavern.js attaches control event listeners (tavern-reconnected,
+		     tavern-replay-gap) directly to the EventSource via htmx:sseOpen. -->
+		<div
+			id="replay-sse"
+			hx-ext="sse"
+			sse-connect="/sse/tavern/replay"
+			data-tavern-reconnecting-class="opacity-50"
+			data-tavern-gap-action="banner"
+			data-tavern-gap-banner-text="Replay gap — some events were missed."
+			data-tavern-debug
+		>
+			<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+				<span class="loading loading-spinner loading-xs"></span>
+				Reconnecting...
+			</div>
+
+			<div sse-swap="replay-event" hx-target="#replay-log" hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="replay-snapshot" hx-target="#replay-log" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="replay-debug" hx-target="#replay-debug-panel" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+		</div>
+
+		<div class="flex gap-4">
+			<!-- Left: Event Log -->
+			<div class="flex-[2] min-w-0 space-y-4">
+				<div class="card bg-base-200 shadow-sm overflow-hidden">
+					<div class="card-body p-4">
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Event Log</h2>
+						<div id="replay-log" class="max-h-96 overflow-y-auto overflow-x-hidden font-mono text-xs" style="contain:paint;isolation:isolate" data-testid="replay-log">
+							<p class="text-base-content/30">Waiting for events...</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Right: Controls + Debug -->
+			<div class="flex-1 min-w-0 space-y-4">
+				<div class="card bg-base-200 shadow-sm">
+					<div class="card-body p-4 space-y-3">
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Controls</h2>
+						<button
+							class="btn btn-sm btn-primary w-full"
+							hx-post="/realtime/tavern/replay/emit"
+							hx-swap="none"
+						>
+							Emit Event
+						</button>
+						<button
+							class="btn btn-sm btn-warning w-full"
+							hx-post="/realtime/tavern/replay/burst"
+							hx-swap="none"
+						>
+							Burst 30 Events
+						</button>
+					</div>
+				</div>
+
+				<div class="card bg-base-200 shadow-sm">
+					<div class="card-body p-4 space-y-3">
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Publish Rate</h2>
+						<div class="flex items-center gap-3">
+							<input
+								type="range"
+								name="ms"
+								min="100"
+								max="5000"
+								step="100"
+								value={ fmt.Sprintf("%d", publishRate.Milliseconds()) }
+								class="range range-xs flex-1"
+								hx-post="/realtime/tavern/replay/rate"
+								hx-trigger="change"
+								hx-target="#replay-rate-val"
+								hx-swap="innerHTML"
+							/>
+							<span id="replay-rate-val" data-testid="replay-rate" class="font-mono badge badge-ghost badge-sm w-14 text-center">{ formatRate(publishRate) }</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="card bg-base-200 shadow-sm">
+					<div class="card-body p-4 space-y-3">
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Connection Lifetime</h2>
+						<div class="flex items-center gap-3">
+							<input
+								type="range"
+								name="seconds"
+								min="3"
+								max="60"
+								value={ fmt.Sprintf("%d", int(lifetime.Seconds())) }
+								class="range range-xs range-primary flex-1"
+								hx-post="/realtime/tavern/replay/lifetime"
+								hx-trigger="change"
+								hx-target="#replay-lifetime-val"
+								hx-swap="innerHTML"
+							/>
+							<span id="replay-lifetime-val" data-testid="replay-lifetime" class="font-mono badge badge-ghost badge-sm w-12 text-center">{ formatLifetime(lifetime) }</span>
+						</div>
+						<div class="flex items-center gap-2 text-xs text-base-content/40">
+							<span>Closes in:</span>
+							<span id="replay-conn-age" class="font-mono tabular-nums" data-testid="replay-conn-age">-</span>
+						</div>
+						<progress id="replay-conn-progress" class="progress progress-primary w-full" value="0" max="100"></progress>
+					</div>
+				</div>
+
+				<div class="card bg-base-200 shadow-sm">
+					<div class="card-body p-4 space-y-3">
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Reconnect Delay</h2>
+						<div class="flex items-center gap-3">
+							<input
+								type="range"
+								name="seconds"
+								min="1"
+								max="30"
+								value={ fmt.Sprintf("%d", int(reconnectDelay.Seconds())) }
+								class="range range-xs range-secondary flex-1"
+								hx-post="/realtime/tavern/replay/delay"
+								hx-trigger="change"
+								hx-target="#replay-delay-val"
+								hx-swap="innerHTML"
+							/>
+							<span id="replay-delay-val" data-testid="replay-delay" class="font-mono badge badge-ghost badge-sm w-12 text-center">{ formatLifetime(reconnectDelay) }</span>
+						</div>
+						<p class="text-xs text-base-content/40">
+							How long the browser waits before reconnecting (SSE retry: directive).
+						</p>
+						<div id="replay-reconnect-countdown" class="hidden text-xs text-warning flex items-center gap-1">
+							<span class="loading loading-spinner loading-xs"></span>
+							Reconnecting in <span id="replay-reconnect-remaining" class="font-mono tabular-nums">-</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="card bg-base-200 shadow-sm">
+					<div class="card-body p-4 space-y-3">
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Replay Window</h2>
+						<div class="flex items-center gap-3">
+							<input
+								type="range"
+								name="window"
+								min="5"
+								max="100"
+								step="5"
+								value={ fmt.Sprintf("%d", replayWindow) }
+								class="range range-xs range-accent flex-1"
+								hx-post="/realtime/tavern/replay/window"
+								hx-trigger="change"
+								hx-target="#replay-window-val"
+								hx-swap="innerHTML"
+							/>
+							<span id="replay-window-val" data-testid="replay-window" class="font-mono badge badge-ghost badge-sm w-12 text-center">{ fmt.Sprintf("%d", replayWindow) }</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="card bg-base-200 shadow-sm">
+					<div class="card-body p-4 space-y-2">
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Last Reconnect</h2>
+						<div id="replay-debug-panel" data-testid="replay-debug">
+							<p class="text-xs text-base-content/30">No reconnections yet.</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="card bg-base-200 shadow-sm">
+					<div class="card-body p-4 space-y-3">
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">How to Test</h2>
+						<p class="text-xs text-base-content/40">
+							Events auto-publish every 2s. Account for this when sizing the replay window.
+						</p>
+						<div class="flex gap-2">
+							<button
+								class="btn btn-sm btn-success btn-outline flex-1"
+								hx-post="/realtime/tavern/replay/preset"
+								hx-vals='{"preset":"replay"}'
+								hx-swap="none"
+								data-testid="preset-replay"
+							>
+								Replay Success
+							</button>
+							<button
+								class="btn btn-sm btn-error btn-outline flex-1"
+								hx-post="/realtime/tavern/replay/preset"
+								hx-vals='{"preset":"gap"}'
+								hx-swap="none"
+								data-testid="preset-gap"
+							>
+								Gap Fallback
+							</button>
+						</div>
+						<div class="text-xs text-base-content/50 space-y-2">
+							<div>
+								<p class="font-semibold text-base-content/70">Replay success:</p>
+								<ol class="list-decimal list-inside space-y-0.5 ml-1">
+									<li>Window 50, lifetime 3s, delay 5s</li>
+									<li>Wait for disconnect + reconnect cycle</li>
+									<li>Debug panel shows green "Replay success" with replayed count</li>
+								</ol>
+							</div>
+							<div>
+								<p class="font-semibold text-base-content/70">Gap fallback:</p>
+								<ol class="list-decimal list-inside space-y-0.5 ml-1">
+									<li>Window 5, lifetime 3s, delay 5s</li>
+									<li>Click "Burst 30" during the reconnect delay</li>
+									<li>Debug panel shows red "Gap detected"</li>
+									<li>Gap banner appears in the SSE container</li>
+								</ol>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	@replayCountdownScript()
+}
+
+// replayCountdownScript drives both countdowns:
+// 1. Connection age — counts up toward lifetime, resets on htmx:sseOpen
+// 2. Reconnect delay — counts down from delay, shown on disconnect, hidden on open
+templ replayCountdownScript() {
+	<script>
+		(function() {
+			var sse = document.getElementById('replay-sse');
+			var replayLog = document.getElementById('replay-log');
+			var MAX_LOG_ROWS = 200;
+			var scrollPending = false;
+			var userScrolled = false;
+
+			// Pause auto-scroll when user scrolls away from bottom.
+			replayLog.addEventListener('scroll', function() {
+				var atBottom = replayLog.scrollHeight - replayLog.scrollTop - replayLog.clientHeight < 30;
+				userScrolled = !atBottom;
+			});
+
+			// Auto-scroll log to bottom and cap row count.
+			new MutationObserver(function() {
+				// Trim old rows to keep DOM small.
+				while (replayLog.children.length > MAX_LOG_ROWS) {
+					replayLog.removeChild(replayLog.firstElementChild);
+				}
+				// Coalesce scroll updates into a single rAF.
+				if (!userScrolled && !scrollPending) {
+					scrollPending = true;
+					requestAnimationFrame(function() {
+						replayLog.scrollTop = replayLog.scrollHeight;
+						scrollPending = false;
+					});
+				}
+			}).observe(replayLog, { childList: true });
+
+			var ageEl = document.getElementById('replay-conn-age');
+			var progressEl = document.getElementById('replay-conn-progress');
+			var lifetimeValEl = document.getElementById('replay-lifetime-val');
+			var delayValEl = document.getElementById('replay-delay-val');
+			var reconnCountdown = document.getElementById('replay-reconnect-countdown');
+			var reconnRemaining = document.getElementById('replay-reconnect-remaining');
+			var connTimer = null;
+			var reconnTimer = null;
+			var connStart = 0;
+
+			function parseSeconds(el) {
+				return parseInt(el.textContent.trim(), 10) || 1;
+			}
+
+			// --- Connection age countdown ---
+			function connTick() {
+				var elapsed = (Date.now() - connStart) / 1000;
+				var limit = parseSeconds(lifetimeValEl);
+				var remaining = Math.max(0, limit - elapsed);
+				ageEl.textContent = remaining.toFixed(1) + 's';
+				var pct = Math.min(100, (elapsed / limit) * 100);
+				progressEl.value = pct;
+				progressEl.classList.remove('progress-primary', 'progress-warning', 'progress-error');
+				if (pct >= 100) progressEl.classList.add('progress-error');
+				else if (pct >= 80) progressEl.classList.add('progress-warning');
+				else progressEl.classList.add('progress-primary');
+			}
+
+			function startConnTimer() {
+				stopConnTimer();
+				connStart = Date.now();
+				connTick();
+				connTimer = setInterval(connTick, 200);
+			}
+
+			function stopConnTimer() {
+				if (connTimer) { clearInterval(connTimer); connTimer = null; }
+			}
+
+			// --- Reconnect delay countdown ---
+			var reconnDisconnAt = 0;
+
+			function startReconnCountdown() {
+				stopReconnCountdown();
+				reconnDisconnAt = Date.now();
+				reconnCountdown.classList.remove('hidden');
+				reconnTick();
+				reconnTimer = setInterval(reconnTick, 200);
+			}
+
+			function reconnTick() {
+				var delay = parseSeconds(delayValEl);
+				var elapsed = (Date.now() - reconnDisconnAt) / 1000;
+				var remaining = Math.max(0, delay - elapsed);
+				reconnRemaining.textContent = remaining.toFixed(1) + 's';
+				if (remaining <= 0) stopReconnCountdown();
+			}
+
+			function stopReconnCountdown() {
+				if (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }
+				reconnCountdown.classList.add('hidden');
+			}
+
+			// --- Preset sync ---
+			// When a preset is applied, the server sends an HX-Trigger with
+			// slider values. Sync the sliders and their display labels.
+			document.body.addEventListener('replay-preset', function(e) {
+				var d = e.detail;
+				var sliders = {
+					window: document.querySelector('input[name="window"]'),
+					seconds_lt: document.querySelector('input[hx-post$="/lifetime"]'),
+					seconds_dl: document.querySelector('input[hx-post$="/delay"]'),
+					ms: document.querySelector('input[name="ms"]')
+				};
+				if (sliders.window) { sliders.window.value = d.window; }
+				if (sliders.seconds_lt) { sliders.seconds_lt.value = d.lifetime; }
+				if (sliders.seconds_dl) { sliders.seconds_dl.value = d.delay; }
+				if (sliders.ms) { sliders.ms.value = d.rate; }
+				// Update display labels.
+				document.getElementById('replay-window-val').textContent = d.window;
+				document.getElementById('replay-lifetime-val').textContent = d.lifetime + 's';
+				document.getElementById('replay-delay-val').textContent = d.delay + 's';
+				var rateMs = d.rate;
+				document.getElementById('replay-rate-val').textContent = rateMs >= 1000
+					? (rateMs / 1000).toFixed(1) + 's'
+					: rateMs + 'ms';
+			});
+
+			// --- Events ---
+			sse.addEventListener('htmx:sseOpen', function() {
+				startConnTimer();
+				stopReconnCountdown();
+			});
+
+			sse.addEventListener('tavern:disconnected', function() {
+				stopConnTimer();
+				ageEl.textContent = '-';
+				progressEl.value = 100;
+				progressEl.classList.remove('progress-primary', 'progress-warning');
+				progressEl.classList.add('progress-error');
+				startReconnCountdown();
+			});
+
+			// Sync countdowns when lifetime/delay values change via hx-target swap.
+			if (lifetimeValEl) {
+				new MutationObserver(function() {
+					if (connTimer) connTick();
+				}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });
+			}
+			if (delayValEl) {
+				new MutationObserver(function() {
+					if (reconnTimer) reconnTick();
+				}).observe(delayValEl, { childList: true, characterData: true, subtree: true });
+			}
+
+			// --- Replay badge ---
+			// When replay-debug arrives, it may land before all replayed events
+			// are in the DOM (goroutine race). So we badge in two passes:
+			// 1. Immediately badge any matching entries already present.
+			// 2. Watch #replay-log for new entries and badge matches as they arrive.
+			var debugPanel = document.getElementById('replay-debug-panel');
+			var replayFromSeq = 0;
+			var replayToSeq = 0;
+			var logObserver = null;
+
+			function badgeEntry(entry) {
+				if (entry.querySelector('.replay-badge')) return;
+				var badge = document.createElement('span');
+				badge.className = 'replay-badge badge badge-xs badge-warning';
+				badge.textContent = 'replayed';
+				entry.appendChild(badge);
+			}
+
+			function badgeExisting() {
+				for (var s = replayFromSeq; s <= replayToSeq; s++) {
+					var entry = replayLog.querySelector('[data-replay-seq="' + s + '"]');
+					if (entry) badgeEntry(entry);
+				}
+			}
+
+			function startLogObserver() {
+				if (logObserver) logObserver.disconnect();
+				logObserver = new MutationObserver(function(mutations) {
+					for (var i = 0; i < mutations.length; i++) {
+						var nodes = mutations[i].addedNodes;
+						for (var j = 0; j < nodes.length; j++) {
+							var node = nodes[j];
+							if (node.nodeType !== 1) continue;
+							var seq = parseInt(node.getAttribute('data-replay-seq'), 10);
+							if (seq >= replayFromSeq && seq <= replayToSeq) badgeEntry(node);
+						}
+					}
+				});
+				logObserver.observe(replayLog, { childList: true });
+			}
+
+			// When replay-debug panel updates, parse the range and start badging.
+			new MutationObserver(function() {
+				var wrapper = debugPanel.querySelector('[data-replay-count]');
+				if (!wrapper) return;
+				var count = parseInt(wrapper.getAttribute('data-replay-count'), 10);
+				var fromID = wrapper.getAttribute('data-replay-from') || '';
+				if (!count || !fromID) return;
+
+				var parts = fromID.match(/(\d+)$/);
+				if (!parts) return;
+				var base = parseInt(parts[1], 10);
+
+				// Clear old badges.
+				replayLog.querySelectorAll('.replay-badge').forEach(function(b) { b.remove(); });
+
+				// Set range and badge.
+				replayFromSeq = base + 1;
+				replayToSeq = base + count;
+				badgeExisting();
+				startLogObserver();
+			}).observe(debugPanel, { childList: true, subtree: true });
+		})();
+	</script>
+}
+
+// ReplayEvent renders a single event entry in the log.
+templ ReplayEvent(seq int64, id string, timestamp string) {
+	<div class="flex items-center gap-2 py-0.5 min-w-0" data-testid="replay-event" data-replay-id={ id } data-replay-seq={ fmt.Sprintf("%d", seq) }>
+		<span class="badge badge-xs badge-primary font-mono">{ fmt.Sprintf("#%d", seq) }</span>
+		<span class="text-base-content/40 tabular-nums shrink-0">{ timestamp }</span>
+		<span class="text-base-content/60 truncate">{ id }</span>
+	</div>
+}
+
+// ReplaySnapshot renders the gap fallback snapshot.
+templ ReplaySnapshot(message string) {
+	<div class="py-2 px-3 rounded bg-warning/10 text-warning text-xs">
+		{ message }
+	</div>
+}
+
+// ReplayDebug renders the debug info from the last reconnection.
+templ ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Duration, gapDetected bool) {
+	<div class="space-y-1.5 text-xs" data-replay-count={ fmt.Sprintf("%d", delivered) } data-replay-from={ lastEventID }>
+		if gapDetected {
+			<div class="py-1.5 px-2 rounded bg-error/10 text-error" data-testid="replay-gap-status">
+				Gap detected — Last-Event-ID not found in replay window
+			</div>
+		} else if dropped > 0 {
+			<div class="py-1.5 px-2 rounded bg-warning/10 text-warning" data-testid="replay-gap-status">
+				Replay truncated — { fmt.Sprintf("%d delivered, %d dropped (buffer full)", delivered, dropped) }
+			</div>
+		} else {
+			<div class="py-1.5 px-2 rounded bg-success/10 text-success" data-testid="replay-gap-status">
+				Replay success — { fmt.Sprintf("%d", delivered) } missed events replayed
+			</div>
+		}
+		<div class="flex items-center gap-2">
+			<span class="text-base-content/50 w-24 shrink-0">Last-Event-ID:</span>
+			<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-last-id">{ lastEventID }</span>
+		</div>
+		if !gapDetected {
+			<div class="flex items-center gap-2">
+				<span class="text-base-content/50 w-24 shrink-0">Delivered:</span>
+				<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-missed">{ formatReplayRange(lastEventID, delivered) }</span>
+			</div>
+			if dropped > 0 {
+				<div class="flex items-center gap-2">
+					<span class="text-base-content/50 w-24 shrink-0">Dropped:</span>
+					<span class="font-mono badge badge-error badge-xs" data-testid="replay-dropped">{ fmt.Sprintf("%d events", dropped) }</span>
+				</div>
+			}
+			<div class="flex items-center gap-2">
+				<span class="text-base-content/50 w-24 shrink-0">Disconnect:</span>
+				<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-gap-duration">{ formatReplayGap(gap) }</span>
+			</div>
+		}
+	</div>
+}
+
+func formatRate(d time.Duration) string {
+	ms := d.Milliseconds()
+	if ms >= 1000 {
+		return fmt.Sprintf("%.1fs", float64(ms)/1000)
+	}
+	return fmt.Sprintf("%dms", ms)
+}
+
+func formatLifetime(d time.Duration) string {
+	return fmt.Sprintf("%ds", int(d.Seconds()))
+}
+
+func formatReplayRange(lastEventID string, count int) string {
+	if count == 0 {
+		return "0 events"
+	}
+	// Parse base seq from "replay-63" → 63
+	var base int
+	if _, err := fmt.Sscanf(lastEventID, "replay-%d", &base); err != nil {
+		return fmt.Sprintf("%d events", count)
+	}
+	return fmt.Sprintf("%d events (#%d..#%d)", count, base+1, base+count)
+}
+
+func formatReplayGap(d time.Duration) string {
+	switch {
+	case d >= time.Minute:
+		return fmt.Sprintf("%.1fm", d.Minutes())
+	case d >= time.Second:
+		return fmt.Sprintf("%.1fs", d.Seconds())
+	default:
+		return fmt.Sprintf("%dms", d.Milliseconds())
+	}
+}

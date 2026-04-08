@@ -1,0 +1,177 @@
+// setup:feature:demo
+
+package views
+
+import (
+	"catgoose/dothog/internal/demo"
+	"fmt"
+)
+
+// TavernHooksData holds the view-model for the hooks lab.
+type TavernHooksData struct {
+	Source    string
+	Derived  string
+	HookLog  []demo.HookEvent
+	PubCount int64
+	PubBytes int64
+}
+
+templ TavernHooksPage(data TavernHooksData) {
+	<div class="max-w-5xl mx-auto p-4 space-y-4">
+		<div class="flex items-center justify-between flex-wrap gap-2">
+			<div>
+				<h1 class="text-2xl font-bold">Hooks Lab</h1>
+				<p class="text-xs text-base-content/50">
+					Before/After hooks, OnMutate, UseTopics middleware, and snapshot-on-subscribe.
+					Type in the source to trigger the mutation chain.
+				</p>
+			</div>
+		</div>
+
+		<div
+			hx-ext="sse"
+			sse-connect="/sse/tavern/hooks"
+			data-tavern-reconnecting-class="opacity-50"
+		>
+			<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+				<span class="loading loading-spinner loading-xs"></span>
+				Reconnecting...
+			</div>
+
+			<div sse-swap="tavern/hooks/source" hx-target="#hooks-source-display" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="tavern/hooks/derived" hx-target="#hooks-derived-display" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="tavern/hooks/log" hx-target="#hooks-log" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="tavern/hooks/stats" hx-target="#hooks-stats" hx-swap="innerHTML" style="display:none"></div>
+
+			<div class="flex gap-4">
+				<!-- Left: Source + Derived -->
+				<div class="flex-[2] min-w-0 space-y-4">
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-4">
+							<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Source (OnMutate trigger)</h2>
+							<textarea
+								name="content"
+								class="textarea textarea-bordered w-full h-24 font-mono text-sm"
+								hx-post="/realtime/tavern/hooks/mutate"
+								hx-trigger="keyup changed delay:300ms"
+								hx-swap="none"
+							>{ data.Source }</textarea>
+						</div>
+					</div>
+
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-4">
+							<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Source Display (via OnMutate)</h2>
+							<div id="hooks-source-display" data-testid="hooks-source">
+								@HooksSourceDisplay(data.Source)
+							</div>
+						</div>
+					</div>
+
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-4">
+							<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Derived (via After hook)</h2>
+							<div id="hooks-derived-display" data-testid="hooks-derived">
+								@HooksDerivedDisplay(data.Derived)
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Right: Log + Stats -->
+				<div class="flex-1 min-w-0 space-y-4">
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-4">
+							<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Hook Log</h2>
+							<div id="hooks-log" class="max-h-64 overflow-y-auto space-y-0.5" data-testid="hooks-log">
+								@HooksLogEntries(data.HookLog)
+							</div>
+						</div>
+					</div>
+
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-4">
+							<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Middleware Stats</h2>
+							<div id="hooks-stats" data-testid="hooks-stats">
+								@HooksStatsDisplay(data.PubCount, data.PubBytes)
+							</div>
+						</div>
+					</div>
+
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-4">
+							<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">How It Works</h2>
+							<ol class="text-xs text-base-content/50 list-decimal list-inside space-y-1">
+								<li>Type in the source textarea</li>
+								<li>POST triggers NotifyMutate("tavern-hooks")</li>
+								<li>OnMutate handler updates source, publishes to source topic</li>
+								<li>After hook fires, computes derived value, publishes to derived topic</li>
+								<li>UseTopics middleware counts all publishes on tavern/hooks/*</li>
+								<li>Open a new tab to see snapshot-on-subscribe deliver initial state</li>
+							</ol>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ HooksSourceDisplay(source string) {
+	<p class="whitespace-pre-wrap text-sm text-base-content/80 font-mono">{ source }</p>
+}
+
+templ HooksDerivedDisplay(derived string) {
+	<p class="whitespace-pre-wrap text-sm text-base-content/80">{ derived }</p>
+}
+
+templ HooksLogEntries(events []demo.HookEvent) {
+	if len(events) == 0 {
+		<p class="text-xs text-base-content/30">No hooks fired yet.</p>
+	} else {
+		for i := len(events) - 1; i >= 0; i-- {
+			<div class="flex items-center gap-2 py-0.5 border-b border-base-300 last:border-0 text-xs">
+				<span class="text-base-content/40 tabular-nums font-mono shrink-0">{ events[i].Timestamp.Format("15:04:05") }</span>
+				<span class={ "badge badge-xs", hookBadgeClass(events[i].HookType) }>{ events[i].HookType }</span>
+				<span class="text-base-content/60 truncate">{ events[i].Detail }</span>
+			</div>
+		}
+	}
+}
+
+templ HooksStatsDisplay(pubCount, pubBytes int64) {
+	<div class="flex gap-4">
+		<div class="stat p-0">
+			<div class="stat-title text-xs">Publishes</div>
+			<div class="stat-value text-lg tabular-nums">{ fmt.Sprintf("%d", pubCount) }</div>
+		</div>
+		<div class="stat p-0">
+			<div class="stat-title text-xs">Bytes</div>
+			<div class="stat-value text-lg tabular-nums">{ formatHooksBytes(pubBytes) }</div>
+		</div>
+	</div>
+}
+
+func hookBadgeClass(hookType string) string {
+	switch hookType {
+	case "before":
+		return "badge-info"
+	case "after":
+		return "badge-success"
+	case "on-mutate":
+		return "badge-warning"
+	default:
+		return "badge-ghost"
+	}
+}
+
+func formatHooksBytes(b int64) string {
+	switch {
+	case b >= 1024*1024:
+		return fmt.Sprintf("%.1f MB", float64(b)/(1024*1024))
+	case b >= 1024:
+		return fmt.Sprintf("%.1f KB", float64(b)/1024)
+	default:
+		return fmt.Sprintf("%d B", b)
+	}
+}
