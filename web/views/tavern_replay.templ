@@ -231,19 +231,22 @@ templ replayCountdownScript() {
 			}
 
 			// --- Reconnect delay countdown ---
+			var reconnDisconnAt = 0;
+
 			function startReconnCountdown() {
 				stopReconnCountdown();
-				var delay = parseSeconds(delayValEl);
-				var disconnAt = Date.now();
+				reconnDisconnAt = Date.now();
 				reconnCountdown.classList.remove('hidden');
-				function tick() {
-					var elapsed = (Date.now() - disconnAt) / 1000;
-					var remaining = Math.max(0, delay - elapsed);
-					reconnRemaining.textContent = remaining.toFixed(1) + 's';
-					if (remaining <= 0) stopReconnCountdown();
-				}
-				tick();
-				reconnTimer = setInterval(tick, 200);
+				reconnTick();
+				reconnTimer = setInterval(reconnTick, 200);
+			}
+
+			function reconnTick() {
+				var delay = parseSeconds(delayValEl);
+				var elapsed = (Date.now() - reconnDisconnAt) / 1000;
+				var remaining = Math.max(0, delay - elapsed);
+				reconnRemaining.textContent = remaining.toFixed(1) + 's';
+				if (remaining <= 0) stopReconnCountdown();
 			}
 
 			function stopReconnCountdown() {
@@ -257,7 +260,7 @@ templ replayCountdownScript() {
 				stopReconnCountdown();
 			});
 
-			sse.addEventListener('htmx:sseError', function() {
+			sse.addEventListener('tavern:disconnected', function() {
 				stopConnTimer();
 				ageEl.textContent = '-';
 				progressEl.value = 100;
@@ -266,11 +269,16 @@ templ replayCountdownScript() {
 				startReconnCountdown();
 			});
 
-			// Sync delay display when lifetime/delay values change via hx-target swap.
+			// Sync countdowns when lifetime/delay values change via hx-target swap.
 			if (lifetimeValEl) {
 				new MutationObserver(function() {
 					if (connTimer) connTick();
 				}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });
+			}
+			if (delayValEl) {
+				new MutationObserver(function() {
+					if (reconnTimer) reconnTick();
+				}).observe(delayValEl, { childList: true, characterData: true, subtree: true });
 			}
 		})();
 	</script>

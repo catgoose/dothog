@@ -220,7 +220,7 @@ func replayCountdownScript() templ.Component {
 			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<script>\n\t\t(function() {\n\t\t\tvar sse = document.getElementById('replay-sse');\n\t\t\tvar ageEl = document.getElementById('replay-conn-age');\n\t\t\tvar progressEl = document.getElementById('replay-conn-progress');\n\t\t\tvar lifetimeValEl = document.getElementById('replay-lifetime-val');\n\t\t\tvar delayValEl = document.getElementById('replay-delay-val');\n\t\t\tvar reconnCountdown = document.getElementById('replay-reconnect-countdown');\n\t\t\tvar reconnRemaining = document.getElementById('replay-reconnect-remaining');\n\t\t\tvar connTimer = null;\n\t\t\tvar reconnTimer = null;\n\t\t\tvar connStart = 0;\n\n\t\t\tfunction parseSeconds(el) {\n\t\t\t\treturn parseInt(el.textContent.trim(), 10) || 1;\n\t\t\t}\n\n\t\t\t// --- Connection age countdown ---\n\t\t\tfunction connTick() {\n\t\t\t\tvar elapsed = (Date.now() - connStart) / 1000;\n\t\t\t\tvar limit = parseSeconds(lifetimeValEl);\n\t\t\t\tvar remaining = Math.max(0, limit - elapsed);\n\t\t\t\tageEl.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tvar pct = Math.min(100, (elapsed / limit) * 100);\n\t\t\t\tprogressEl.value = pct;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) progressEl.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) progressEl.classList.add('progress-warning');\n\t\t\t\telse progressEl.classList.add('progress-primary');\n\t\t\t}\n\n\t\t\tfunction startConnTimer() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tconnStart = Date.now();\n\t\t\t\tconnTick();\n\t\t\t\tconnTimer = setInterval(connTick, 200);\n\t\t\t}\n\n\t\t\tfunction stopConnTimer() {\n\t\t\t\tif (connTimer) { clearInterval(connTimer); connTimer = null; }\n\t\t\t}\n\n\t\t\t// --- Reconnect delay countdown ---\n\t\t\tfunction startReconnCountdown() {\n\t\t\t\tstopReconnCountdown();\n\t\t\t\tvar delay = parseSeconds(delayValEl);\n\t\t\t\tvar disconnAt = Date.now();\n\t\t\t\treconnCountdown.classList.remove('hidden');\n\t\t\t\tfunction tick() {\n\t\t\t\t\tvar elapsed = (Date.now() - disconnAt) / 1000;\n\t\t\t\t\tvar remaining = Math.max(0, delay - elapsed);\n\t\t\t\t\treconnRemaining.textContent = remaining.toFixed(1) + 's';\n\t\t\t\t\tif (remaining <= 0) stopReconnCountdown();\n\t\t\t\t}\n\t\t\t\ttick();\n\t\t\t\treconnTimer = setInterval(tick, 200);\n\t\t\t}\n\n\t\t\tfunction stopReconnCountdown() {\n\t\t\t\tif (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }\n\t\t\t\treconnCountdown.classList.add('hidden');\n\t\t\t}\n\n\t\t\t// --- Events ---\n\t\t\tsse.addEventListener('htmx:sseOpen', function() {\n\t\t\t\tstartConnTimer();\n\t\t\t\tstopReconnCountdown();\n\t\t\t});\n\n\t\t\tsse.addEventListener('htmx:sseError', function() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tageEl.textContent = '-';\n\t\t\t\tprogressEl.value = 100;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning');\n\t\t\t\tprogressEl.classList.add('progress-error');\n\t\t\t\tstartReconnCountdown();\n\t\t\t});\n\n\t\t\t// Sync delay display when lifetime/delay values change via hx-target swap.\n\t\t\tif (lifetimeValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (connTimer) connTick();\n\t\t\t\t}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<script>\n\t\t(function() {\n\t\t\tvar sse = document.getElementById('replay-sse');\n\t\t\tvar ageEl = document.getElementById('replay-conn-age');\n\t\t\tvar progressEl = document.getElementById('replay-conn-progress');\n\t\t\tvar lifetimeValEl = document.getElementById('replay-lifetime-val');\n\t\t\tvar delayValEl = document.getElementById('replay-delay-val');\n\t\t\tvar reconnCountdown = document.getElementById('replay-reconnect-countdown');\n\t\t\tvar reconnRemaining = document.getElementById('replay-reconnect-remaining');\n\t\t\tvar connTimer = null;\n\t\t\tvar reconnTimer = null;\n\t\t\tvar connStart = 0;\n\n\t\t\tfunction parseSeconds(el) {\n\t\t\t\treturn parseInt(el.textContent.trim(), 10) || 1;\n\t\t\t}\n\n\t\t\t// --- Connection age countdown ---\n\t\t\tfunction connTick() {\n\t\t\t\tvar elapsed = (Date.now() - connStart) / 1000;\n\t\t\t\tvar limit = parseSeconds(lifetimeValEl);\n\t\t\t\tvar remaining = Math.max(0, limit - elapsed);\n\t\t\t\tageEl.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tvar pct = Math.min(100, (elapsed / limit) * 100);\n\t\t\t\tprogressEl.value = pct;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) progressEl.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) progressEl.classList.add('progress-warning');\n\t\t\t\telse progressEl.classList.add('progress-primary');\n\t\t\t}\n\n\t\t\tfunction startConnTimer() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tconnStart = Date.now();\n\t\t\t\tconnTick();\n\t\t\t\tconnTimer = setInterval(connTick, 200);\n\t\t\t}\n\n\t\t\tfunction stopConnTimer() {\n\t\t\t\tif (connTimer) { clearInterval(connTimer); connTimer = null; }\n\t\t\t}\n\n\t\t\t// --- Reconnect delay countdown ---\n\t\t\tvar reconnDisconnAt = 0;\n\n\t\t\tfunction startReconnCountdown() {\n\t\t\t\tstopReconnCountdown();\n\t\t\t\treconnDisconnAt = Date.now();\n\t\t\t\treconnCountdown.classList.remove('hidden');\n\t\t\t\treconnTick();\n\t\t\t\treconnTimer = setInterval(reconnTick, 200);\n\t\t\t}\n\n\t\t\tfunction reconnTick() {\n\t\t\t\tvar delay = parseSeconds(delayValEl);\n\t\t\t\tvar elapsed = (Date.now() - reconnDisconnAt) / 1000;\n\t\t\t\tvar remaining = Math.max(0, delay - elapsed);\n\t\t\t\treconnRemaining.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tif (remaining <= 0) stopReconnCountdown();\n\t\t\t}\n\n\t\t\tfunction stopReconnCountdown() {\n\t\t\t\tif (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }\n\t\t\t\treconnCountdown.classList.add('hidden');\n\t\t\t}\n\n\t\t\t// --- Events ---\n\t\t\tsse.addEventListener('htmx:sseOpen', function() {\n\t\t\t\tstartConnTimer();\n\t\t\t\tstopReconnCountdown();\n\t\t\t});\n\n\t\t\tsse.addEventListener('tavern:disconnected', function() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tageEl.textContent = '-';\n\t\t\t\tprogressEl.value = 100;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning');\n\t\t\t\tprogressEl.classList.add('progress-error');\n\t\t\t\tstartReconnCountdown();\n\t\t\t});\n\n\t\t\t// Sync countdowns when lifetime/delay values change via hx-target swap.\n\t\t\tif (lifetimeValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (connTimer) connTick();\n\t\t\t\t}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t\tif (delayValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (reconnTimer) reconnTick();\n\t\t\t\t}).observe(delayValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -257,7 +257,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", seq))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 282, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 290, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -270,7 +270,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(timestamp)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 283, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 291, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -283,7 +283,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 284, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 292, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -326,7 +326,7 @@ func ReplaySnapshot(message string) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 291, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 299, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -369,7 +369,7 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration) templ.C
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 300, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 308, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -382,7 +382,7 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration) templ.C
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d events", missedCount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 304, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 312, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -395,7 +395,7 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration) templ.C
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayGap(gap))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 308, Col: 101}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 316, Col: 101}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
