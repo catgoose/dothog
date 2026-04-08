@@ -378,15 +378,19 @@ templ ReplaySnapshot(message string) {
 }
 
 // ReplayDebug renders the debug info from the last reconnection.
-templ ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDetected bool) {
-	<div class="space-y-1.5 text-xs" data-replay-count={ fmt.Sprintf("%d", missedCount) } data-replay-from={ lastEventID }>
+templ ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Duration, gapDetected bool) {
+	<div class="space-y-1.5 text-xs" data-replay-count={ fmt.Sprintf("%d", delivered) } data-replay-from={ lastEventID }>
 		if gapDetected {
 			<div class="py-1.5 px-2 rounded bg-error/10 text-error" data-testid="replay-gap-status">
 				Gap detected — Last-Event-ID not found in replay window
 			</div>
+		} else if dropped > 0 {
+			<div class="py-1.5 px-2 rounded bg-warning/10 text-warning" data-testid="replay-gap-status">
+				Replay truncated — { fmt.Sprintf("%d delivered, %d dropped (buffer full)", delivered, dropped) }
+			</div>
 		} else {
 			<div class="py-1.5 px-2 rounded bg-success/10 text-success" data-testid="replay-gap-status">
-				Replay success — { fmt.Sprintf("%d", missedCount) } missed events replayed
+				Replay success — { fmt.Sprintf("%d", delivered) } missed events replayed
 			</div>
 		}
 		<div class="flex items-center gap-2">
@@ -395,9 +399,15 @@ templ ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDet
 		</div>
 		if !gapDetected {
 			<div class="flex items-center gap-2">
-				<span class="text-base-content/50 w-24 shrink-0">Replayed:</span>
-				<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-missed">{ formatReplayRange(lastEventID, missedCount) }</span>
+				<span class="text-base-content/50 w-24 shrink-0">Delivered:</span>
+				<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-missed">{ formatReplayRange(lastEventID, delivered) }</span>
 			</div>
+			if dropped > 0 {
+				<div class="flex items-center gap-2">
+					<span class="text-base-content/50 w-24 shrink-0">Dropped:</span>
+					<span class="font-mono badge badge-error badge-xs" data-testid="replay-dropped">{ fmt.Sprintf("%d events", dropped) }</span>
+				</div>
+			}
 			<div class="flex items-center gap-2">
 				<span class="text-base-content/50 w-24 shrink-0">Disconnect:</span>
 				<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-gap-duration">{ formatReplayGap(gap) }</span>
