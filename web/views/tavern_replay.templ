@@ -82,21 +82,20 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 				<div class="card bg-base-200 shadow-sm">
 					<div class="card-body p-4 space-y-3">
 						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Connection Lifetime</h2>
-						<p class="text-xs text-base-content/40">
-							Current: <span id="replay-lifetime-val" data-testid="replay-lifetime" class="font-mono badge badge-ghost badge-xs">{ formatLifetime(lifetime) }</span>
-						</p>
-						<div class="flex gap-2 flex-wrap">
-							for _, s := range []int{3, 10, 30} {
-								<button
-									class="btn btn-xs btn-outline"
-									hx-post="/realtime/tavern/replay/lifetime"
-									hx-vals={ fmt.Sprintf(`{"seconds":"%d"}`, s) }
-									hx-target="#replay-lifetime-val"
-									hx-swap="innerHTML"
-								>
-									{ fmt.Sprintf("%ds", s) }
-								</button>
-							}
+						<div class="flex items-center gap-3">
+							<input
+								type="range"
+								name="seconds"
+								min="3"
+								max="60"
+								value={ fmt.Sprintf("%d", int(lifetime.Seconds())) }
+								class="range range-xs range-primary flex-1"
+								hx-post="/realtime/tavern/replay/lifetime"
+								hx-trigger="change"
+								hx-target="#replay-lifetime-val"
+								hx-swap="innerHTML"
+							/>
+							<span id="replay-lifetime-val" data-testid="replay-lifetime" class="font-mono badge badge-ghost badge-sm w-12 text-center">{ formatLifetime(lifetime) }</span>
 						</div>
 						<div class="flex items-center gap-2 text-xs text-base-content/40">
 							<span>Closes in:</span>
@@ -109,25 +108,24 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 				<div class="card bg-base-200 shadow-sm">
 					<div class="card-body p-4 space-y-3">
 						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Reconnect Delay</h2>
-						<p class="text-xs text-base-content/40">
-							Current: <span id="replay-delay-val" data-testid="replay-delay" class="font-mono badge badge-ghost badge-xs">{ formatLifetime(reconnectDelay) }</span>
-						</p>
+						<div class="flex items-center gap-3">
+							<input
+								type="range"
+								name="seconds"
+								min="1"
+								max="30"
+								value={ fmt.Sprintf("%d", int(reconnectDelay.Seconds())) }
+								class="range range-xs range-secondary flex-1"
+								hx-post="/realtime/tavern/replay/delay"
+								hx-trigger="change"
+								hx-target="#replay-delay-val"
+								hx-swap="innerHTML"
+							/>
+							<span id="replay-delay-val" data-testid="replay-delay" class="font-mono badge badge-ghost badge-sm w-12 text-center">{ formatLifetime(reconnectDelay) }</span>
+						</div>
 						<p class="text-xs text-base-content/40">
 							How long the browser waits before reconnecting (SSE retry: directive).
 						</p>
-						<div class="flex gap-2 flex-wrap">
-							for _, s := range []int{1, 3, 5, 10} {
-								<button
-									class="btn btn-xs btn-outline"
-									hx-post="/realtime/tavern/replay/delay"
-									hx-vals={ fmt.Sprintf(`{"seconds":"%d"}`, s) }
-									hx-target="#replay-delay-val"
-									hx-swap="innerHTML"
-								>
-									{ fmt.Sprintf("%ds", s) }
-								</button>
-							}
-						</div>
 						<div id="replay-reconnect-countdown" class="hidden text-xs text-warning flex items-center gap-1">
 							<span class="loading loading-spinner loading-xs"></span>
 							Reconnecting in <span id="replay-reconnect-remaining" class="font-mono tabular-nums">-</span>
@@ -138,19 +136,21 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 				<div class="card bg-base-200 shadow-sm">
 					<div class="card-body p-4 space-y-3">
 						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Replay Window</h2>
-						<p class="text-xs text-base-content/40">Current: <span id="replay-window-val" data-testid="replay-window" class="font-mono badge badge-ghost badge-xs">{ fmt.Sprintf("%d", replayWindow) }</span></p>
-						<div class="flex gap-2 flex-wrap">
-							for _, n := range []int{5, 10, 20, 50} {
-								<button
-									class="btn btn-xs btn-outline"
-									hx-post="/realtime/tavern/replay/window"
-									hx-vals={ fmt.Sprintf(`{"window":"%d"}`, n) }
-									hx-target="#replay-window-val"
-									hx-swap="innerHTML"
-								>
-									{ fmt.Sprintf("%d", n) }
-								</button>
-							}
+						<div class="flex items-center gap-3">
+							<input
+								type="range"
+								name="window"
+								min="5"
+								max="100"
+								step="5"
+								value={ fmt.Sprintf("%d", replayWindow) }
+								class="range range-xs range-accent flex-1"
+								hx-post="/realtime/tavern/replay/window"
+								hx-trigger="change"
+								hx-target="#replay-window-val"
+								hx-swap="innerHTML"
+							/>
+							<span id="replay-window-val" data-testid="replay-window" class="font-mono badge badge-ghost badge-sm w-12 text-center">{ fmt.Sprintf("%d", replayWindow) }</span>
 						</div>
 					</div>
 				</div>
