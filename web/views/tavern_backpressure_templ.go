@@ -373,7 +373,7 @@ func backpressurePanels(data TavernBackpressureData, batchWindow time.Duration) 
 			templ_7745c5c3_Var19 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"space-y-4\"><!-- Current Tier Indicator --><div id=\"bp-current-tier\" style=\"contain:layout paint;isolation:isolate;overflow:hidden\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"space-y-4\"><!-- Current Tier Indicator (fixed height prevents mid-swap overflow) --><div id=\"bp-current-tier\" class=\"h-10 overflow-hidden\" style=\"contain:layout paint;isolation:isolate\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
