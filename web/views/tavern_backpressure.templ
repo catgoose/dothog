@@ -37,21 +37,32 @@ templ TavernBackpressurePage(data TavernBackpressureData) {
 				<span class="loading loading-spinner loading-xs"></span>
 				Reconnecting...
 			</div>
-			<div sse-swap="bp-update" hx-target="#bp-panels" hx-swap="innerHTML" style="display:none"></div>
-			<div id="bp-panels">
-				@backpressurePanels(data)
-			</div>
+			<div sse-swap="bp-metrics" hx-target="#bp-metrics" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="bp-tier-log" hx-target="#bp-tier-log" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="bp-preset" hx-target="#bp-active-preset" hx-swap="innerHTML" style="display:none"></div>
+			@backpressurePanels(data)
 		</div>
 	</div>
 }
 
-templ TavernBackpressureUpdate(data TavernBackpressureData) {
-	@backpressurePanels(data)
+// TavernBackpressureMetrics renders just the metrics grid.
+templ TavernBackpressureMetrics(data TavernBackpressureData) {
+	@backpressureMetrics(data)
+}
+
+// TavernBackpressureTierLog renders just the tier change log entries.
+templ TavernBackpressureTierLog(data TavernBackpressureData) {
+	@backpressureTierLog(data)
+}
+
+// TavernBackpressurePreset renders just the active preset badge.
+templ TavernBackpressurePreset(preset string) {
+	{ preset }
 }
 
 templ backpressurePanels(data TavernBackpressureData) {
 	<div class="space-y-4">
-		<!-- Tier Explanation -->
+		<!-- Tier Explanation (static) -->
 		<div class="card bg-base-200 shadow-sm">
 			<div class="card-body p-4">
 				<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Backpressure Tiers</h2>
@@ -76,7 +87,7 @@ templ backpressurePanels(data TavernBackpressureData) {
 			</div>
 		</div>
 
-		<!-- Controls + Metrics -->
+		<!-- Controls (static — never swapped by SSE) + Metrics (swapped) -->
 		<div class="flex gap-4">
 			<div class="flex-1 card bg-base-200 shadow-sm">
 				<div class="card-body p-4 space-y-3">
@@ -84,7 +95,7 @@ templ backpressurePanels(data TavernBackpressureData) {
 					<div class="flex gap-2 flex-wrap">
 						for _, preset := range []string{"calm", "moderate", "heavy", "overwhelming"} {
 							<button
-								class={ "btn btn-sm", templ.KV("btn-primary", data.ActivePreset == preset), templ.KV("btn-outline", data.ActivePreset != preset) }
+								class="btn btn-sm btn-outline"
 								hx-post="/realtime/tavern/backpressure/preset"
 								hx-vals={ fmt.Sprintf(`{"preset":"%s"}`, preset) }
 								hx-swap="none"
@@ -95,7 +106,7 @@ templ backpressurePanels(data TavernBackpressureData) {
 						}
 					</div>
 					<p class="text-xs text-base-content/40">
-						Active: <span class="font-mono badge badge-ghost badge-xs" data-testid="active-preset">{ data.ActivePreset }</span>
+						Active: <span id="bp-active-preset" class="font-mono badge badge-ghost badge-xs" data-testid="active-preset">{ data.ActivePreset }</span>
 					</p>
 				</div>
 			</div>
@@ -103,37 +114,47 @@ templ backpressurePanels(data TavernBackpressureData) {
 			<div class="flex-1 card bg-base-200 shadow-sm">
 				<div class="card-body p-4">
 					<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Demo Broker Metrics</h2>
-					<div class="grid grid-cols-2 gap-2 text-xs">
-						for _, topic := range data.Topics {
-							<div class="stat p-0">
-								<div class="stat-title text-xs truncate">{ topic }</div>
-								<div class="stat-value text-sm tabular-nums" data-testid={ "metric-pub-" + topic }>{ fmt.Sprintf("%d", bpTopicPub(data.Metrics, topic)) }</div>
-								<div class="stat-desc tabular-nums">
-									{ fmt.Sprintf("%d dropped", bpTopicDrop(data.Metrics, topic)) }
-								</div>
-							</div>
-						}
+					<div id="bp-metrics">
+						@backpressureMetrics(data)
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Tier Change Log -->
+		<!-- Tier Change Log (swapped) -->
 		<div class="card bg-base-200 shadow-sm">
 			<div class="card-body p-4">
 				<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Tier Change Log</h2>
-				<div class="max-h-64 overflow-y-auto space-y-1" data-testid="tier-log">
-					if len(data.TierChanges) == 0 {
-						<p class="text-xs text-base-content/30">No tier changes yet. Try a heavier stress preset.</p>
-					} else {
-						for i := len(data.TierChanges) - 1; i >= 0; i-- {
-							@tierChangeEntry(data.TierChanges[i])
-						}
-					}
+				<div id="bp-tier-log" class="max-h-64 overflow-y-auto space-y-1" data-testid="tier-log">
+					@backpressureTierLog(data)
 				</div>
 			</div>
 		</div>
 	</div>
+}
+
+templ backpressureMetrics(data TavernBackpressureData) {
+	<div class="grid grid-cols-2 gap-2 text-xs">
+		for _, topic := range data.Topics {
+			<div class="stat p-0">
+				<div class="stat-title text-xs truncate">{ topic }</div>
+				<div class="stat-value text-sm tabular-nums" data-testid={ "metric-pub-" + topic }>{ fmt.Sprintf("%d", bpTopicPub(data.Metrics, topic)) }</div>
+				<div class="stat-desc tabular-nums">
+					{ fmt.Sprintf("%d dropped", bpTopicDrop(data.Metrics, topic)) }
+				</div>
+			</div>
+		}
+	</div>
+}
+
+templ backpressureTierLog(data TavernBackpressureData) {
+	if len(data.TierChanges) == 0 {
+		<p class="text-xs text-base-content/30">No tier changes yet. Try a heavier stress preset.</p>
+	} else {
+		for i := len(data.TierChanges) - 1; i >= 0; i-- {
+			@tierChangeEntry(data.TierChanges[i])
+		}
+	}
 }
 
 templ tierChangeEntry(tc demo.TierChange) {

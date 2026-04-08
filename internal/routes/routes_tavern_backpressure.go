@@ -109,6 +109,7 @@ func (bp *tavernBackpressRoutes) startTrafficGenerator(ctx context.Context) {
 func (bp *tavernBackpressRoutes) startMetricsPublisher(ctx context.Context) {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
+	var lastPreset string
 	for {
 		select {
 		case <-ctx.Done():
@@ -118,17 +119,34 @@ func (bp *tavernBackpressRoutes) startMetricsPublisher(ctx context.Context) {
 				continue
 			}
 			data := bp.buildData()
-			html := renderBackpressureUpdate(data)
-			msg := tavern.NewSSEMessage("bp-update", html).String()
-			bp.mainBroker.Publish(TopicTavernBackpress, msg)
+
+			metricsHTML := renderBPMetrics(data)
+			bp.mainBroker.Publish(TopicTavernBackpress, tavern.NewSSEMessage("bp-metrics", metricsHTML).String())
+
+			tierLogHTML := renderBPTierLog(data)
+			bp.mainBroker.Publish(TopicTavernBackpress, tavern.NewSSEMessage("bp-tier-log", tierLogHTML).String())
+
+			if data.ActivePreset != lastPreset {
+				lastPreset = data.ActivePreset
+				bp.mainBroker.Publish(TopicTavernBackpress, tavern.NewSSEMessage("bp-preset", data.ActivePreset).String())
+			}
 		}
 	}
 }
 
-func renderBackpressureUpdate(data views.TavernBackpressureData) string {
+func renderBPMetrics(data views.TavernBackpressureData) string {
 	buf := &bytes.Buffer{}
-	ctx := shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "render bp update")
-	if err := views.TavernBackpressureUpdate(data).Render(ctx, buf); err != nil {
+	ctx := shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "render bp metrics")
+	if err := views.TavernBackpressureMetrics(data).Render(ctx, buf); err != nil {
+		return ""
+	}
+	return buf.String()
+}
+
+func renderBPTierLog(data views.TavernBackpressureData) string {
+	buf := &bytes.Buffer{}
+	ctx := shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "render bp tier log")
+	if err := views.TavernBackpressureTierLog(data).Render(ctx, buf); err != nil {
 		return ""
 	}
 	return buf.String()
