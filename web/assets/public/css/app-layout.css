@@ -64,6 +64,7 @@
 		position: sticky;
 		top: 0;
 		z-index: 50;
+		transform: translateZ(0);
 		border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
 		background-color: var(--color-base-100);
 		box-shadow: 0 1px 3px color-mix(in oklab, var(--color-base-content) 5%, transparent);
