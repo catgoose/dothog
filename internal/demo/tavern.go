@@ -45,6 +45,7 @@ func (rl *ReplayLab) Reset() {
 
 // BackpressureLab tracks stress presets and tier changes.
 type BackpressureLab struct {
+	currentTiers map[string]int
 	activePreset string
 	tierChanges  []TierChange
 	mu           sync.RWMutex
@@ -61,7 +62,10 @@ type TierChange struct {
 
 // NewBackpressureLab creates a new backpressure lab in calm state.
 func NewBackpressureLab() *BackpressureLab {
-	return &BackpressureLab{activePreset: "calm"}
+	return &BackpressureLab{
+		activePreset: "calm",
+		currentTiers: make(map[string]int),
+	}
 }
 
 // BackpressurePresets maps preset names to publish intervals.
@@ -88,7 +92,7 @@ func (bl *BackpressureLab) SetPreset(name string) {
 	}
 }
 
-// RecordTierChange logs a backpressure tier transition.
+// RecordTierChange logs a backpressure tier transition and updates live state.
 func (bl *BackpressureLab) RecordTierChange(topic, subID string, oldTier, newTier int) {
 	bl.mu.Lock()
 	defer bl.mu.Unlock()
@@ -103,19 +107,21 @@ func (bl *BackpressureLab) RecordTierChange(topic, subID string, oldTier, newTie
 	if len(bl.tierChanges) > 30 {
 		bl.tierChanges = bl.tierChanges[len(bl.tierChanges)-30:]
 	}
+	key := topic + "/" + subID
+	if newTier == 3 { // disconnect = evicted
+		delete(bl.currentTiers, key)
+	} else {
+		bl.currentTiers[key] = newTier
+	}
 }
 
-// HighestTier returns the highest tier from recent tier changes, or 0 (normal)
-// if no changes have been recorded.
+// HighestTier returns the highest tier among live subscribers, or 0 (normal)
+// if no subscribers are in an elevated tier.
 func (bl *BackpressureLab) HighestTier() int {
 	bl.mu.RLock()
 	defer bl.mu.RUnlock()
 	highest := 0
-	seen := make(map[string]int)
-	for _, tc := range bl.tierChanges {
-		seen[tc.Topic+"/"+tc.SubID] = tc.NewTier
-	}
-	for _, tier := range seen {
+	for _, tier := range bl.currentTiers {
 		if tier > highest {
 			highest = tier
 		}
