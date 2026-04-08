@@ -47,10 +47,10 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 		<div class="flex gap-4">
 			<!-- Left: Event Log -->
 			<div class="flex-[2] min-w-0 space-y-4">
-				<div class="card bg-base-200 shadow-sm">
+				<div class="card bg-base-200 shadow-sm overflow-hidden">
 					<div class="card-body p-4">
 						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Event Log</h2>
-						<div id="replay-log" class="max-h-96 overflow-y-auto space-y-1 font-mono text-xs" data-testid="replay-log">
+						<div id="replay-log" class="max-h-96 overflow-y-auto overflow-x-hidden font-mono text-xs" style="contain:paint" data-testid="replay-log">
 							<p class="text-base-content/30">Waiting for events...</p>
 						</div>
 					</div>
@@ -369,7 +369,7 @@ templ replayCountdownScript() {
 
 // ReplayEvent renders a single event entry in the log.
 templ ReplayEvent(seq int64, id string, timestamp string) {
-	<div class="flex items-center gap-2 py-0.5 border-b border-base-300 last:border-0" data-testid="replay-event" data-replay-id={ id } data-replay-seq={ fmt.Sprintf("%d", seq) }>
+	<div class="flex items-center gap-2 py-0.5 min-w-0" data-testid="replay-event" data-replay-id={ id } data-replay-seq={ fmt.Sprintf("%d", seq) }>
 		<span class="badge badge-xs badge-primary font-mono">{ fmt.Sprintf("#%d", seq) }</span>
 		<span class="text-base-content/40 tabular-nums shrink-0">{ timestamp }</span>
 		<span class="text-base-content/60 truncate">{ id }</span>
