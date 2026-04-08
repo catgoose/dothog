@@ -220,7 +220,7 @@ func replayCountdownScript() templ.Component {
 			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<script>\n\t\t(function() {\n\t\t\tvar sse = document.getElementById('replay-sse');\n\t\t\tvar ageEl = document.getElementById('replay-conn-age');\n\t\t\tvar progressEl = document.getElementById('replay-conn-progress');\n\t\t\tvar lifetimeValEl = document.getElementById('replay-lifetime-val');\n\t\t\tvar delayValEl = document.getElementById('replay-delay-val');\n\t\t\tvar reconnCountdown = document.getElementById('replay-reconnect-countdown');\n\t\t\tvar reconnRemaining = document.getElementById('replay-reconnect-remaining');\n\t\t\tvar connTimer = null;\n\t\t\tvar reconnTimer = null;\n\t\t\tvar connStart = 0;\n\n\t\t\tfunction parseSeconds(el) {\n\t\t\t\treturn parseInt(el.textContent.trim(), 10) || 1;\n\t\t\t}\n\n\t\t\t// --- Connection age countdown ---\n\t\t\tfunction connTick() {\n\t\t\t\tvar elapsed = (Date.now() - connStart) / 1000;\n\t\t\t\tvar limit = parseSeconds(lifetimeValEl);\n\t\t\t\tvar remaining = Math.max(0, limit - elapsed);\n\t\t\t\tageEl.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tvar pct = Math.min(100, (elapsed / limit) * 100);\n\t\t\t\tprogressEl.value = pct;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) progressEl.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) progressEl.classList.add('progress-warning');\n\t\t\t\telse progressEl.classList.add('progress-primary');\n\t\t\t}\n\n\t\t\tfunction startConnTimer() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tconnStart = Date.now();\n\t\t\t\tconnTick();\n\t\t\t\tconnTimer = setInterval(connTick, 200);\n\t\t\t}\n\n\t\t\tfunction stopConnTimer() {\n\t\t\t\tif (connTimer) { clearInterval(connTimer); connTimer = null; }\n\t\t\t}\n\n\t\t\t// --- Reconnect delay countdown ---\n\t\t\tvar reconnDisconnAt = 0;\n\n\t\t\tfunction startReconnCountdown() {\n\t\t\t\tstopReconnCountdown();\n\t\t\t\treconnDisconnAt = Date.now();\n\t\t\t\treconnCountdown.classList.remove('hidden');\n\t\t\t\treconnTick();\n\t\t\t\treconnTimer = setInterval(reconnTick, 200);\n\t\t\t}\n\n\t\t\tfunction reconnTick() {\n\t\t\t\tvar delay = parseSeconds(delayValEl);\n\t\t\t\tvar elapsed = (Date.now() - reconnDisconnAt) / 1000;\n\t\t\t\tvar remaining = Math.max(0, delay - elapsed);\n\t\t\t\treconnRemaining.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tif (remaining <= 0) stopReconnCountdown();\n\t\t\t}\n\n\t\t\tfunction stopReconnCountdown() {\n\t\t\t\tif (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }\n\t\t\t\treconnCountdown.classList.add('hidden');\n\t\t\t}\n\n\t\t\t// --- Events ---\n\t\t\tsse.addEventListener('htmx:sseOpen', function() {\n\t\t\t\tstartConnTimer();\n\t\t\t\tstopReconnCountdown();\n\t\t\t});\n\n\t\t\tsse.addEventListener('tavern:disconnected', function() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tageEl.textContent = '-';\n\t\t\t\tprogressEl.value = 100;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning');\n\t\t\t\tprogressEl.classList.add('progress-error');\n\t\t\t\tstartReconnCountdown();\n\t\t\t});\n\n\t\t\t// Sync countdowns when lifetime/delay values change via hx-target swap.\n\t\t\tif (lifetimeValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (connTimer) connTick();\n\t\t\t\t}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t\tif (delayValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (reconnTimer) reconnTick();\n\t\t\t\t}).observe(delayValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\n\t\t\t// --- Replay badge ---\n\t\t\t// When replay-debug swaps in with a replayed count, retroactively\n\t\t\t// badge the entries that were replayed by sequence range.\n\t\t\tvar debugPanel = document.getElementById('replay-debug-panel');\n\t\t\tvar replayLog = document.getElementById('replay-log');\n\n\t\t\tnew MutationObserver(function() {\n\t\t\t\tvar wrapper = debugPanel.querySelector('[data-replay-count]');\n\t\t\t\tif (!wrapper) return;\n\t\t\t\tvar count = parseInt(wrapper.getAttribute('data-replay-count'), 10);\n\t\t\t\tvar fromID = wrapper.getAttribute('data-replay-from') || '';\n\t\t\t\tif (!count || !fromID) return;\n\n\t\t\t\t// Parse the base sequence from the last-event-id (e.g. \"replay-63\" → 63).\n\t\t\t\tvar parts = fromID.match(/(\\d+)$/);\n\t\t\t\tif (!parts) return;\n\t\t\t\tvar fromSeq = parseInt(parts[1], 10);\n\n\t\t\t\t// Clear old badges first.\n\t\t\t\treplayLog.querySelectorAll('.replay-badge').forEach(function(b) { b.remove(); });\n\n\t\t\t\t// Badge entries with sequences fromSeq+1 through fromSeq+count.\n\t\t\t\tfor (var s = fromSeq + 1; s <= fromSeq + count; s++) {\n\t\t\t\t\tvar entry = replayLog.querySelector('[data-replay-seq=\"' + s + '\"]');\n\t\t\t\t\tif (entry && !entry.querySelector('.replay-badge')) {\n\t\t\t\t\t\tvar badge = document.createElement('span');\n\t\t\t\t\t\tbadge.className = 'replay-badge badge badge-xs badge-warning';\n\t\t\t\t\t\tbadge.textContent = 'replayed';\n\t\t\t\t\t\tentry.appendChild(badge);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}).observe(debugPanel, { childList: true, subtree: true });\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<script>\n\t\t(function() {\n\t\t\tvar sse = document.getElementById('replay-sse');\n\t\t\tvar ageEl = document.getElementById('replay-conn-age');\n\t\t\tvar progressEl = document.getElementById('replay-conn-progress');\n\t\t\tvar lifetimeValEl = document.getElementById('replay-lifetime-val');\n\t\t\tvar delayValEl = document.getElementById('replay-delay-val');\n\t\t\tvar reconnCountdown = document.getElementById('replay-reconnect-countdown');\n\t\t\tvar reconnRemaining = document.getElementById('replay-reconnect-remaining');\n\t\t\tvar connTimer = null;\n\t\t\tvar reconnTimer = null;\n\t\t\tvar connStart = 0;\n\n\t\t\tfunction parseSeconds(el) {\n\t\t\t\treturn parseInt(el.textContent.trim(), 10) || 1;\n\t\t\t}\n\n\t\t\t// --- Connection age countdown ---\n\t\t\tfunction connTick() {\n\t\t\t\tvar elapsed = (Date.now() - connStart) / 1000;\n\t\t\t\tvar limit = parseSeconds(lifetimeValEl);\n\t\t\t\tvar remaining = Math.max(0, limit - elapsed);\n\t\t\t\tageEl.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tvar pct = Math.min(100, (elapsed / limit) * 100);\n\t\t\t\tprogressEl.value = pct;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) progressEl.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) progressEl.classList.add('progress-warning');\n\t\t\t\telse progressEl.classList.add('progress-primary');\n\t\t\t}\n\n\t\t\tfunction startConnTimer() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tconnStart = Date.now();\n\t\t\t\tconnTick();\n\t\t\t\tconnTimer = setInterval(connTick, 200);\n\t\t\t}\n\n\t\t\tfunction stopConnTimer() {\n\t\t\t\tif (connTimer) { clearInterval(connTimer); connTimer = null; }\n\t\t\t}\n\n\t\t\t// --- Reconnect delay countdown ---\n\t\t\tvar reconnDisconnAt = 0;\n\n\t\t\tfunction startReconnCountdown() {\n\t\t\t\tstopReconnCountdown();\n\t\t\t\treconnDisconnAt = Date.now();\n\t\t\t\treconnCountdown.classList.remove('hidden');\n\t\t\t\treconnTick();\n\t\t\t\treconnTimer = setInterval(reconnTick, 200);\n\t\t\t}\n\n\t\t\tfunction reconnTick() {\n\t\t\t\tvar delay = parseSeconds(delayValEl);\n\t\t\t\tvar elapsed = (Date.now() - reconnDisconnAt) / 1000;\n\t\t\t\tvar remaining = Math.max(0, delay - elapsed);\n\t\t\t\treconnRemaining.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tif (remaining <= 0) stopReconnCountdown();\n\t\t\t}\n\n\t\t\tfunction stopReconnCountdown() {\n\t\t\t\tif (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }\n\t\t\t\treconnCountdown.classList.add('hidden');\n\t\t\t}\n\n\t\t\t// --- Events ---\n\t\t\tsse.addEventListener('htmx:sseOpen', function() {\n\t\t\t\tstartConnTimer();\n\t\t\t\tstopReconnCountdown();\n\t\t\t});\n\n\t\t\tsse.addEventListener('tavern:disconnected', function() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tageEl.textContent = '-';\n\t\t\t\tprogressEl.value = 100;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning');\n\t\t\t\tprogressEl.classList.add('progress-error');\n\t\t\t\tstartReconnCountdown();\n\t\t\t});\n\n\t\t\t// Sync countdowns when lifetime/delay values change via hx-target swap.\n\t\t\tif (lifetimeValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (connTimer) connTick();\n\t\t\t\t}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t\tif (delayValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (reconnTimer) reconnTick();\n\t\t\t\t}).observe(delayValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\n\t\t\t// --- Replay badge ---\n\t\t\t// When replay-debug arrives, it may land before all replayed events\n\t\t\t// are in the DOM (goroutine race). So we badge in two passes:\n\t\t\t// 1. Immediately badge any matching entries already present.\n\t\t\t// 2. Watch #replay-log for new entries and badge matches as they arrive.\n\t\t\tvar debugPanel = document.getElementById('replay-debug-panel');\n\t\t\tvar replayLog = document.getElementById('replay-log');\n\t\t\tvar replayFromSeq = 0;\n\t\t\tvar replayToSeq = 0;\n\t\t\tvar logObserver = null;\n\n\t\t\tfunction badgeEntry(entry) {\n\t\t\t\tif (entry.querySelector('.replay-badge')) return;\n\t\t\t\tvar badge = document.createElement('span');\n\t\t\t\tbadge.className = 'replay-badge badge badge-xs badge-warning';\n\t\t\t\tbadge.textContent = 'replayed';\n\t\t\t\tentry.appendChild(badge);\n\t\t\t}\n\n\t\t\tfunction badgeExisting() {\n\t\t\t\tfor (var s = replayFromSeq; s <= replayToSeq; s++) {\n\t\t\t\t\tvar entry = replayLog.querySelector('[data-replay-seq=\"' + s + '\"]');\n\t\t\t\t\tif (entry) badgeEntry(entry);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction startLogObserver() {\n\t\t\t\tif (logObserver) logObserver.disconnect();\n\t\t\t\tlogObserver = new MutationObserver(function(mutations) {\n\t\t\t\t\tfor (var i = 0; i < mutations.length; i++) {\n\t\t\t\t\t\tvar nodes = mutations[i].addedNodes;\n\t\t\t\t\t\tfor (var j = 0; j < nodes.length; j++) {\n\t\t\t\t\t\t\tvar node = nodes[j];\n\t\t\t\t\t\t\tif (node.nodeType !== 1) continue;\n\t\t\t\t\t\t\tvar seq = parseInt(node.getAttribute('data-replay-seq'), 10);\n\t\t\t\t\t\t\tif (seq >= replayFromSeq && seq <= replayToSeq) badgeEntry(node);\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\tlogObserver.observe(replayLog, { childList: true });\n\t\t\t}\n\n\t\t\t// When replay-debug panel updates, parse the range and start badging.\n\t\t\tnew MutationObserver(function() {\n\t\t\t\tvar wrapper = debugPanel.querySelector('[data-replay-count]');\n\t\t\t\tif (!wrapper) return;\n\t\t\t\tvar count = parseInt(wrapper.getAttribute('data-replay-count'), 10);\n\t\t\t\tvar fromID = wrapper.getAttribute('data-replay-from') || '';\n\t\t\t\tif (!count || !fromID) return;\n\n\t\t\t\tvar parts = fromID.match(/(\\d+)$/);\n\t\t\t\tif (!parts) return;\n\t\t\t\tvar base = parseInt(parts[1], 10);\n\n\t\t\t\t// Clear old badges.\n\t\t\t\treplayLog.querySelectorAll('.replay-badge').forEach(function(b) { b.remove(); });\n\n\t\t\t\t// Set range and badge.\n\t\t\t\treplayFromSeq = base + 1;\n\t\t\t\treplayToSeq = base + count;\n\t\t\t\tbadgeExisting();\n\t\t\t\tstartLogObserver();\n\t\t\t}).observe(debugPanel, { childList: true, subtree: true });\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -257,7 +257,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 335, Col: 130}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 366, Col: 130}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -270,7 +270,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", seq))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 335, Col: 173}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 366, Col: 173}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -283,7 +283,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", seq))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 336, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 367, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -296,7 +296,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(timestamp)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 337, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 368, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -309,7 +309,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 338, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 369, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -352,7 +352,7 @@ func ReplaySnapshot(message string) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 345, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 376, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -395,7 +395,7 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDete
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", missedCount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 351, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 382, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -408,7 +408,7 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDete
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 351, Col: 117}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 382, Col: 117}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -431,7 +431,7 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDete
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", missedCount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 358, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 389, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -449,7 +449,7 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDete
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 363, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 394, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -467,7 +467,7 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDete
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayRange(lastEventID, missedCount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 368, Col: 128}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 399, Col: 128}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -480,7 +480,7 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDete
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayGap(gap))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 372, Col: 111}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 403, Col: 111}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {

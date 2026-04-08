@@ -295,11 +295,48 @@ templ replayCountdownScript() {
 			}
 
 			// --- Replay badge ---
-			// When replay-debug swaps in with a replayed count, retroactively
-			// badge the entries that were replayed by sequence range.
+			// When replay-debug arrives, it may land before all replayed events
+			// are in the DOM (goroutine race). So we badge in two passes:
+			// 1. Immediately badge any matching entries already present.
+			// 2. Watch #replay-log for new entries and badge matches as they arrive.
 			var debugPanel = document.getElementById('replay-debug-panel');
 			var replayLog = document.getElementById('replay-log');
+			var replayFromSeq = 0;
+			var replayToSeq = 0;
+			var logObserver = null;
 
+			function badgeEntry(entry) {
+				if (entry.querySelector('.replay-badge')) return;
+				var badge = document.createElement('span');
+				badge.className = 'replay-badge badge badge-xs badge-warning';
+				badge.textContent = 'replayed';
+				entry.appendChild(badge);
+			}
+
+			function badgeExisting() {
+				for (var s = replayFromSeq; s <= replayToSeq; s++) {
+					var entry = replayLog.querySelector('[data-replay-seq="' + s + '"]');
+					if (entry) badgeEntry(entry);
+				}
+			}
+
+			function startLogObserver() {
+				if (logObserver) logObserver.disconnect();
+				logObserver = new MutationObserver(function(mutations) {
+					for (var i = 0; i < mutations.length; i++) {
+						var nodes = mutations[i].addedNodes;
+						for (var j = 0; j < nodes.length; j++) {
+							var node = nodes[j];
+							if (node.nodeType !== 1) continue;
+							var seq = parseInt(node.getAttribute('data-replay-seq'), 10);
+							if (seq >= replayFromSeq && seq <= replayToSeq) badgeEntry(node);
+						}
+					}
+				});
+				logObserver.observe(replayLog, { childList: true });
+			}
+
+			// When replay-debug panel updates, parse the range and start badging.
 			new MutationObserver(function() {
 				var wrapper = debugPanel.querySelector('[data-replay-count]');
 				if (!wrapper) return;
@@ -307,24 +344,18 @@ templ replayCountdownScript() {
 				var fromID = wrapper.getAttribute('data-replay-from') || '';
 				if (!count || !fromID) return;
 
-				// Parse the base sequence from the last-event-id (e.g. "replay-63" → 63).
 				var parts = fromID.match(/(\d+)$/);
 				if (!parts) return;
-				var fromSeq = parseInt(parts[1], 10);
+				var base = parseInt(parts[1], 10);
 
-				// Clear old badges first.
+				// Clear old badges.
 				replayLog.querySelectorAll('.replay-badge').forEach(function(b) { b.remove(); });
 
-				// Badge entries with sequences fromSeq+1 through fromSeq+count.
-				for (var s = fromSeq + 1; s <= fromSeq + count; s++) {
-					var entry = replayLog.querySelector('[data-replay-seq="' + s + '"]');
-					if (entry && !entry.querySelector('.replay-badge')) {
-						var badge = document.createElement('span');
-						badge.className = 'replay-badge badge badge-xs badge-warning';
-						badge.textContent = 'replayed';
-						entry.appendChild(badge);
-					}
-				}
+				// Set range and badge.
+				replayFromSeq = base + 1;
+				replayToSeq = base + count;
+				badgeExisting();
+				startLogObserver();
 			}).observe(debugPanel, { childList: true, subtree: true });
 		})();
 	</script>
