@@ -40,8 +40,12 @@ func (ar *appRoutes) initTavernReplayRoutes(broker *tavern.SSEBroker) {
 	})
 
 	// On reconnect, send debug info to the reconnecting subscriber.
+	// When the Last-Event-ID is not found in the replay log (gap),
+	// tavern sets Gap=0 and MissedCount=0. A non-empty LastEventID
+	// with Gap=0 reliably indicates the ID has rolled out.
 	broker.OnReconnect(TopicTavernReplay, func(info tavern.ReconnectInfo) {
-		html := renderReplayDebug(info.LastEventID, info.MissedCount, info.Gap)
+		gapDetected := info.LastEventID != "" && info.Gap == 0
+		html := renderReplayDebug(info.LastEventID, info.MissedCount, info.Gap, gapDetected)
 		msg := tavern.NewSSEMessage("replay-debug", html).String()
 		info.SendToSubscriber(msg)
 	})
@@ -163,10 +167,10 @@ func renderReplaySnapshot(message string) string {
 	return buf.String()
 }
 
-func renderReplayDebug(lastEventID string, missedCount int, gap time.Duration) string {
+func renderReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDetected bool) string {
 	buf := &bytes.Buffer{}
 	ctx := shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "render replay debug")
-	if err := views.ReplayDebug(lastEventID, missedCount, gap).Render(ctx, buf); err != nil {
+	if err := views.ReplayDebug(lastEventID, missedCount, gap, gapDetected).Render(ctx, buf); err != nil {
 		return ""
 	}
 	return buf.String()

@@ -167,15 +167,28 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 				<div class="card bg-base-200 shadow-sm">
 					<div class="card-body p-4">
 						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">How to Test</h2>
-						<ol class="text-xs text-base-content/50 list-decimal list-inside space-y-1">
-							<li>Set lifetime to 3s, reconnect delay to 5s, replay window to 5</li>
-							<li>Watch events arrive, then the server closes the stream</li>
-							<li>The reconnect countdown shows the delay</li>
-							<li>Emit events or "Burst 30" during the delay</li>
-							<li>On reconnect, missed events replay into the log</li>
-							<li>The "Last Reconnect" panel shows Last-Event-ID and replayed count</li>
-							<li>"Burst 30" with window 5 triggers a gap fallback</li>
-						</ol>
+						<p class="text-xs text-base-content/40 mb-1">
+							Events auto-publish every 2s. Account for this when sizing the replay window.
+						</p>
+						<div class="text-xs text-base-content/50 space-y-2">
+							<div>
+								<p class="font-semibold text-base-content/70">Replay success:</p>
+								<ol class="list-decimal list-inside space-y-0.5 ml-1">
+									<li>Window 50, lifetime 3s, delay 5s</li>
+									<li>Wait for disconnect + reconnect cycle</li>
+									<li>Debug panel shows green "Replay success" with replayed count</li>
+								</ol>
+							</div>
+							<div>
+								<p class="font-semibold text-base-content/70">Gap fallback:</p>
+								<ol class="list-decimal list-inside space-y-0.5 ml-1">
+									<li>Window 5, lifetime 3s, delay 5s</li>
+									<li>Click "Burst 30" during the reconnect delay</li>
+									<li>Debug panel shows red "Gap detected"</li>
+									<li>Gap banner appears in the SSE container</li>
+								</ol>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -301,20 +314,31 @@ templ ReplaySnapshot(message string) {
 }
 
 // ReplayDebug renders the debug info from the last reconnection.
-templ ReplayDebug(lastEventID string, missedCount int, gap time.Duration) {
-	<div class="space-y-1 text-xs">
+templ ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDetected bool) {
+	<div class="space-y-1.5 text-xs">
+		if gapDetected {
+			<div class="py-1.5 px-2 rounded bg-error/10 text-error" data-testid="replay-gap-status">
+				Gap detected — Last-Event-ID not found in replay window
+			</div>
+		} else {
+			<div class="py-1.5 px-2 rounded bg-success/10 text-success" data-testid="replay-gap-status">
+				Replay success — { fmt.Sprintf("%d", missedCount) } missed events replayed
+			</div>
+		}
 		<div class="flex items-center gap-2">
 			<span class="text-base-content/50 w-24 shrink-0">Last-Event-ID:</span>
 			<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-last-id">{ lastEventID }</span>
 		</div>
-		<div class="flex items-center gap-2">
-			<span class="text-base-content/50 w-24 shrink-0">Replayed:</span>
-			<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-missed">{ fmt.Sprintf("%d events", missedCount) }</span>
-		</div>
-		<div class="flex items-center gap-2">
-			<span class="text-base-content/50 w-24 shrink-0">Gap:</span>
-			<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-gap">{ formatReplayGap(gap) }</span>
-		</div>
+		if !gapDetected {
+			<div class="flex items-center gap-2">
+				<span class="text-base-content/50 w-24 shrink-0">Replayed:</span>
+				<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-missed">{ fmt.Sprintf("%d events", missedCount) }</span>
+			</div>
+			<div class="flex items-center gap-2">
+				<span class="text-base-content/50 w-24 shrink-0">Disconnect:</span>
+				<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-gap-duration">{ formatReplayGap(gap) }</span>
+			</div>
+		}
 	</div>
 }
 

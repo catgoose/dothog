@@ -184,7 +184,7 @@ func TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay t
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-2\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Last Reconnect</h2><div id=\"replay-debug-panel\" data-testid=\"replay-debug\"><p class=\"text-xs text-base-content/30\">No reconnections yet.</p></div></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">How to Test</h2><ol class=\"text-xs text-base-content/50 list-decimal list-inside space-y-1\"><li>Set lifetime to 3s, reconnect delay to 5s, replay window to 5</li><li>Watch events arrive, then the server closes the stream</li><li>The reconnect countdown shows the delay</li><li>Emit events or \"Burst 30\" during the delay</li><li>On reconnect, missed events replay into the log</li><li>The \"Last Reconnect\" panel shows Last-Event-ID and replayed count</li><li>\"Burst 30\" with window 5 triggers a gap fallback</li></ol></div></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-2\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Last Reconnect</h2><div id=\"replay-debug-panel\" data-testid=\"replay-debug\"><p class=\"text-xs text-base-content/30\">No reconnections yet.</p></div></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">How to Test</h2><p class=\"text-xs text-base-content/40 mb-1\">Events auto-publish every 2s. Account for this when sizing the replay window.</p><div class=\"text-xs text-base-content/50 space-y-2\"><div><p class=\"font-semibold text-base-content/70\">Replay success:</p><ol class=\"list-decimal list-inside space-y-0.5 ml-1\"><li>Window 50, lifetime 3s, delay 5s</li><li>Wait for disconnect + reconnect cycle</li><li>Debug panel shows green \"Replay success\" with replayed count</li></ol></div><div><p class=\"font-semibold text-base-content/70\">Gap fallback:</p><ol class=\"list-decimal list-inside space-y-0.5 ml-1\"><li>Window 5, lifetime 3s, delay 5s</li><li>Click \"Burst 30\" during the reconnect delay</li><li>Debug panel shows red \"Gap detected\"</li><li>Gap banner appears in the SSE container</li></ol></div></div></div></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -257,7 +257,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", seq))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 290, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 303, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -270,7 +270,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(timestamp)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 291, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 304, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -283,7 +283,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 292, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 305, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -326,7 +326,7 @@ func ReplaySnapshot(message string) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 299, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 312, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -341,7 +341,7 @@ func ReplaySnapshot(message string) templ.Component {
 }
 
 // ReplayDebug renders the debug info from the last reconnection.
-func ReplayDebug(lastEventID string, missedCount int, gap time.Duration) templ.Component {
+func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDetected bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -362,46 +362,84 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration) templ.C
 			templ_7745c5c3_Var18 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<div class=\"space-y-1 text-xs\"><div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Last-Event-ID:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-last-id\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<div class=\"space-y-1.5 text-xs\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 308, Col: 96}
+		if gapDetected {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"py-1.5 px-2 rounded bg-error/10 text-error\" data-testid=\"replay-gap-status\">Gap detected — Last-Event-ID not found in replay window</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<div class=\"py-1.5 px-2 rounded bg-success/10 text-success\" data-testid=\"replay-gap-status\">Replay success — ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var19 string
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", missedCount))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 325, Col: 55}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, " missed events replayed</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</span></div><div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Replayed:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-missed\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Last-Event-ID:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-last-id\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d events", missedCount))
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 312, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 330, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</span></div><div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Gap:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-gap\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayGap(gap))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 316, Col: 101}
+		if !gapDetected {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Replayed:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-missed\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var21 string
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d events", missedCount))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 335, Col: 122}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</span></div><div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Disconnect:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-gap-duration\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var22 string
+			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayGap(gap))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 339, Col: 111}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</span></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</span></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
