@@ -109,6 +109,14 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 						>
 							Burst 30 Events
 						</button>
+						<button
+							class="btn btn-sm btn-ghost w-full"
+							hx-post="/realtime/tavern/replay/reset"
+							hx-swap="none"
+							hx-on::after-request="document.getElementById('replay-log').innerHTML = '<p class=\'text-base-content/30\'>Waiting for events...</p>'"
+						>
+							Reset
+						</button>
 					</div>
 				</div>
 
@@ -185,6 +193,7 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 							<span class="loading loading-spinner loading-xs"></span>
 							Reconnecting in <span id="replay-reconnect-remaining" class="font-mono tabular-nums">-</span>
 						</div>
+						<progress id="replay-reconn-progress" class="progress progress-secondary w-full hidden" value="0" max="100"></progress>
 					</div>
 				</div>
 
@@ -312,6 +321,7 @@ templ replayCountdownScript() {
 			var delayValEl = document.getElementById('replay-delay-val');
 			var reconnCountdown = document.getElementById('replay-reconnect-countdown');
 			var reconnRemaining = document.getElementById('replay-reconnect-remaining');
+			var reconnProgress = document.getElementById('replay-reconn-progress');
 			var connTimer = null;
 			var reconnTimer = null;
 			var connStart = 0;
@@ -352,6 +362,7 @@ templ replayCountdownScript() {
 				stopReconnCountdown();
 				reconnDisconnAt = Date.now();
 				reconnCountdown.classList.remove('hidden');
+				reconnProgress.classList.remove('hidden');
 				reconnTick();
 				reconnTimer = setInterval(reconnTick, 200);
 			}
@@ -361,12 +372,20 @@ templ replayCountdownScript() {
 				var elapsed = (Date.now() - reconnDisconnAt) / 1000;
 				var remaining = Math.max(0, delay - elapsed);
 				reconnRemaining.textContent = remaining.toFixed(1) + 's';
+				var pct = Math.min(100, (elapsed / delay) * 100);
+				reconnProgress.value = pct;
+				reconnProgress.classList.remove('progress-secondary', 'progress-warning', 'progress-error');
+				if (pct >= 100) reconnProgress.classList.add('progress-error');
+				else if (pct >= 80) reconnProgress.classList.add('progress-warning');
+				else reconnProgress.classList.add('progress-secondary');
 				if (remaining <= 0) stopReconnCountdown();
 			}
 
 			function stopReconnCountdown() {
 				if (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }
 				reconnCountdown.classList.add('hidden');
+				reconnProgress.classList.add('hidden');
+				reconnProgress.value = 0;
 			}
 
 			// --- Preset sync ---

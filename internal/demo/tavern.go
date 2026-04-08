@@ -38,6 +38,11 @@ func (rl *ReplayLab) SetReplayWindow(n int) {
 	rl.replayWindow.Store(int64(n))
 }
 
+// Reset zeroes the sequence counter so the next event starts at replay-1.
+func (rl *ReplayLab) Reset() {
+	rl.counter.Store(0)
+}
+
 // BackpressureLab tracks stress presets and tier changes.
 type BackpressureLab struct {
 	activePreset string

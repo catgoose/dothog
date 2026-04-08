@@ -45,8 +45,13 @@ func (ar *appRoutes) initTavernReplayRoutes(broker *tavern.SSEBroker) {
 	// Uses Publish (broadcast) instead of SendToSubscriber because the
 	// callback fires in a goroutine and SendToSubscriber is non-blocking —
 	// the message is silently dropped if the channel buffer is full.
+	//
+	// Gap detection mirrors Tavern's internal logic: when the broker cannot
+	// find Last-Event-ID in the replay log, both Gap and MissedCount are
+	// zero. This is the same condition that triggers the tavern-replay-gap
+	// control event and the banner, so the debug panel and banner agree.
 	broker.OnReconnect(TopicTavernReplay, func(info tavern.ReconnectInfo) {
-		gapDetected := info.LastEventID != "" && info.Gap == 0
+		gapDetected := info.LastEventID != "" && info.Gap == 0 && info.MissedCount == 0
 		html := renderReplayDebug(info.LastEventID, info.ReplayDelivered, info.ReplayDropped, info.Gap, gapDetected)
 		msg := tavern.NewSSEMessage("replay-debug", html).String()
 		broker.Publish(TopicTavernReplay, msg)
@@ -61,6 +66,7 @@ func (ar *appRoutes) initTavernReplayRoutes(broker *tavern.SSEBroker) {
 	ar.e.POST("/realtime/tavern/replay/delay", r.handleDelay)
 	ar.e.POST("/realtime/tavern/replay/rate", r.handleRate)
 	ar.e.POST("/realtime/tavern/replay/preset", r.handlePreset)
+	ar.e.POST("/realtime/tavern/replay/reset", r.handleReset)
 
 	broker.RunPublisher(ar.ctx, r.startPublisher)
 }
@@ -157,6 +163,12 @@ func (r *tavernReplayRoutes) handlePreset(c echo.Context) error {
 	// Tell the client to sync slider values.
 	c.Response().Header().Set("HX-Trigger", fmt.Sprintf(
 		`{"replay-preset":{"window":%d,"lifetime":3,"delay":5,"rate":2000}}`, window))
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (r *tavernReplayRoutes) handleReset(c echo.Context) error {
+	r.lab.Reset()
+	r.broker.ClearReplay(TopicTavernReplay)
 	return c.NoContent(http.StatusNoContent)
 }
 

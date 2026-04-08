@@ -37,14 +37,14 @@ func TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay t
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\t#replay-log, #replay-log * {\n\t\t\ttransition: none !important;\n\t\t\tanimation: none !important;\n\t\t}\n\t\t[data-tavern-gap-banner] {\n\t\t\tdisplay: flex;\n\t\t\talign-items: center;\n\t\t\tgap: 0.5rem;\n\t\t\tpadding: 0.5rem 0.75rem;\n\t\t\tmargin-bottom: 0.5rem;\n\t\t\tborder-radius: var(--rounded-btn, 0.375rem);\n\t\t\tfont-size: 0.75rem;\n\t\t\tbackground-color: color-mix(in oklab, var(--color-error) 15%, transparent);\n\t\t\tcolor: var(--color-error);\n\t\t\tborder: 1px solid color-mix(in oklab, var(--color-error) 25%, transparent);\n\t\t}\n\t\t[data-tavern-gap-banner] button {\n\t\t\tmargin-left: auto;\n\t\t\tpadding: 0.25rem 0.75rem;\n\t\t\tborder-radius: var(--rounded-btn, 0.25rem);\n\t\t\tfont-size: 0.75rem;\n\t\t\tfont-weight: 600;\n\t\t\tcursor: pointer;\n\t\t\tbackground-color: var(--color-error);\n\t\t\tcolor: var(--color-error-content);\n\t\t\tborder: none;\n\t\t\twhite-space: nowrap;\n\t\t}\n\t\t[data-tavern-gap-banner] button:hover {\n\t\t\topacity: 0.85;\n\t\t}\n\t</style><div class=\"max-w-5xl mx-auto p-4 space-y-4\"><div class=\"flex items-center justify-between flex-wrap gap-2\"><div><h1 class=\"text-2xl font-bold\">Replay Lab</h1><p class=\"text-xs text-base-content/50\">Test Last-Event-ID replay. The server closes each SSE connection after the configured lifetime, then the browser waits the reconnect delay before reconnecting with Last-Event-ID. Missed events replay from the buffer.</p></div></div><!-- Single stable SSE container — never replaced. Browser EventSource\n\t\t     handles reconnection natively with Last-Event-ID.\n\t\t     tavern.js attaches control event listeners (tavern-reconnected,\n\t\t     tavern-replay-gap) directly to the EventSource via htmx:sseOpen. --><div id=\"replay-sse\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/replay\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"banner\" data-tavern-gap-banner-text=\"Replay gap — some events were missed.\" data-tavern-debug><div data-tavern-status class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span class=\"loading loading-spinner loading-xs\"></span> Reconnecting...</div><div sse-swap=\"replay-event\" hx-target=\"#replay-log\" hx-swap=\"beforeend settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"replay-snapshot\" hx-target=\"#replay-log\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"replay-debug\" hx-target=\"#replay-debug-panel\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div></div><div class=\"flex gap-4\"><!-- Left: Event Log --><div class=\"flex-[2] min-w-0 space-y-4\"><div class=\"card bg-base-200 shadow-sm overflow-hidden\"><div class=\"card-body p-4\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Event Log</h2><div id=\"replay-log\" class=\"max-h-96 overflow-y-auto overflow-x-hidden font-mono text-xs\" style=\"contain:paint;isolation:isolate\" data-testid=\"replay-log\"><p class=\"text-base-content/30\">Waiting for events...</p></div></div></div></div><!-- Right: Controls + Debug --><div class=\"flex-1 min-w-0 space-y-4\"><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Controls</h2><button class=\"btn btn-sm btn-primary w-full\" hx-post=\"/realtime/tavern/replay/emit\" hx-swap=\"none\">Emit Event</button> <button class=\"btn btn-sm btn-warning w-full\" hx-post=\"/realtime/tavern/replay/burst\" hx-swap=\"none\">Burst 30 Events</button></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Publish Rate</h2><div class=\"flex items-center gap-3\"><input type=\"range\" name=\"ms\" min=\"100\" max=\"5000\" step=\"100\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\t#replay-log, #replay-log * {\n\t\t\ttransition: none !important;\n\t\t\tanimation: none !important;\n\t\t}\n\t\t[data-tavern-gap-banner] {\n\t\t\tdisplay: flex;\n\t\t\talign-items: center;\n\t\t\tgap: 0.5rem;\n\t\t\tpadding: 0.5rem 0.75rem;\n\t\t\tmargin-bottom: 0.5rem;\n\t\t\tborder-radius: var(--rounded-btn, 0.375rem);\n\t\t\tfont-size: 0.75rem;\n\t\t\tbackground-color: color-mix(in oklab, var(--color-error) 15%, transparent);\n\t\t\tcolor: var(--color-error);\n\t\t\tborder: 1px solid color-mix(in oklab, var(--color-error) 25%, transparent);\n\t\t}\n\t\t[data-tavern-gap-banner] button {\n\t\t\tmargin-left: auto;\n\t\t\tpadding: 0.25rem 0.75rem;\n\t\t\tborder-radius: var(--rounded-btn, 0.25rem);\n\t\t\tfont-size: 0.75rem;\n\t\t\tfont-weight: 600;\n\t\t\tcursor: pointer;\n\t\t\tbackground-color: var(--color-error);\n\t\t\tcolor: var(--color-error-content);\n\t\t\tborder: none;\n\t\t\twhite-space: nowrap;\n\t\t}\n\t\t[data-tavern-gap-banner] button:hover {\n\t\t\topacity: 0.85;\n\t\t}\n\t</style><div class=\"max-w-5xl mx-auto p-4 space-y-4\"><div class=\"flex items-center justify-between flex-wrap gap-2\"><div><h1 class=\"text-2xl font-bold\">Replay Lab</h1><p class=\"text-xs text-base-content/50\">Test Last-Event-ID replay. The server closes each SSE connection after the configured lifetime, then the browser waits the reconnect delay before reconnecting with Last-Event-ID. Missed events replay from the buffer.</p></div></div><!-- Single stable SSE container — never replaced. Browser EventSource\n\t\t     handles reconnection natively with Last-Event-ID.\n\t\t     tavern.js attaches control event listeners (tavern-reconnected,\n\t\t     tavern-replay-gap) directly to the EventSource via htmx:sseOpen. --><div id=\"replay-sse\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/replay\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"banner\" data-tavern-gap-banner-text=\"Replay gap — some events were missed.\" data-tavern-debug><div data-tavern-status class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span class=\"loading loading-spinner loading-xs\"></span> Reconnecting...</div><div sse-swap=\"replay-event\" hx-target=\"#replay-log\" hx-swap=\"beforeend settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"replay-snapshot\" hx-target=\"#replay-log\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"replay-debug\" hx-target=\"#replay-debug-panel\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div></div><div class=\"flex gap-4\"><!-- Left: Event Log --><div class=\"flex-[2] min-w-0 space-y-4\"><div class=\"card bg-base-200 shadow-sm overflow-hidden\"><div class=\"card-body p-4\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Event Log</h2><div id=\"replay-log\" class=\"max-h-96 overflow-y-auto overflow-x-hidden font-mono text-xs\" style=\"contain:paint;isolation:isolate\" data-testid=\"replay-log\"><p class=\"text-base-content/30\">Waiting for events...</p></div></div></div></div><!-- Right: Controls + Debug --><div class=\"flex-1 min-w-0 space-y-4\"><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Controls</h2><button class=\"btn btn-sm btn-primary w-full\" hx-post=\"/realtime/tavern/replay/emit\" hx-swap=\"none\">Emit Event</button> <button class=\"btn btn-sm btn-warning w-full\" hx-post=\"/realtime/tavern/replay/burst\" hx-swap=\"none\">Burst 30 Events</button> <button class=\"btn btn-sm btn-ghost w-full\" hx-post=\"/realtime/tavern/replay/reset\" hx-swap=\"none\" hx-on::after-request=\"document.getElementById('replay-log').innerHTML = '<p class=\\'text-base-content/30\\'>Waiting for events...</p>'\">Reset</button></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Publish Rate</h2><div class=\"flex items-center gap-3\"><input type=\"range\" name=\"ms\" min=\"100\" max=\"5000\" step=\"100\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", publishRate.Milliseconds()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 125, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 133, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -57,7 +57,7 @@ func TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay t
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(formatRate(publishRate))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 132, Col: 147}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 140, Col: 147}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -70,7 +70,7 @@ func TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay t
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", int(lifetime.Seconds())))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 146, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 154, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -83,7 +83,7 @@ func TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay t
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(formatLifetime(lifetime))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 153, Col: 156}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 161, Col: 156}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -96,7 +96,7 @@ func TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay t
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", int(reconnectDelay.Seconds())))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 172, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 180, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -109,20 +109,20 @@ func TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay t
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(formatLifetime(reconnectDelay))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 179, Col: 156}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 187, Col: 156}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span></div><p class=\"text-xs text-base-content/40\">How long the browser waits before reconnecting (SSE retry: directive).</p><div id=\"replay-reconnect-countdown\" class=\"hidden text-xs text-warning flex items-center gap-1\"><span class=\"loading loading-spinner loading-xs\"></span> Reconnecting in <span id=\"replay-reconnect-remaining\" class=\"font-mono tabular-nums\">-</span></div></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Replay Window</h2><div class=\"flex items-center gap-3\"><input type=\"range\" name=\"window\" min=\"5\" max=\"100\" step=\"5\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span></div><p class=\"text-xs text-base-content/40\">How long the browser waits before reconnecting (SSE retry: directive).</p><div id=\"replay-reconnect-countdown\" class=\"hidden text-xs text-warning flex items-center gap-1\"><span class=\"loading loading-spinner loading-xs\"></span> Reconnecting in <span id=\"replay-reconnect-remaining\" class=\"font-mono tabular-nums\">-</span></div><progress id=\"replay-reconn-progress\" class=\"progress progress-secondary w-full hidden\" value=\"0\" max=\"100\"></progress></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Replay Window</h2><div class=\"flex items-center gap-3\"><input type=\"range\" name=\"window\" min=\"5\" max=\"100\" step=\"5\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", replayWindow))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 201, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 210, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -135,7 +135,7 @@ func TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay t
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", replayWindow))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 208, Col: 159}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 217, Col: 159}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -177,7 +177,7 @@ func replayCountdownScript() templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<script>\n\t\t(function() {\n\t\t\tvar sse = document.getElementById('replay-sse');\n\t\t\tvar replayLog = document.getElementById('replay-log');\n\t\t\tvar MAX_LOG_ROWS = 200;\n\t\t\tvar scrollPending = false;\n\t\t\tvar userScrolled = false;\n\n\t\t\t// Pause auto-scroll when user scrolls away from bottom.\n\t\t\treplayLog.addEventListener('scroll', function() {\n\t\t\t\tvar atBottom = replayLog.scrollHeight - replayLog.scrollTop - replayLog.clientHeight < 30;\n\t\t\t\tuserScrolled = !atBottom;\n\t\t\t});\n\n\t\t\t// Auto-scroll log to bottom and cap row count.\n\t\t\tnew MutationObserver(function() {\n\t\t\t\t// Trim old rows to keep DOM small.\n\t\t\t\twhile (replayLog.children.length > MAX_LOG_ROWS) {\n\t\t\t\t\treplayLog.removeChild(replayLog.firstElementChild);\n\t\t\t\t}\n\t\t\t\t// Coalesce scroll updates into a single rAF.\n\t\t\t\tif (!userScrolled && !scrollPending) {\n\t\t\t\t\tscrollPending = true;\n\t\t\t\t\trequestAnimationFrame(function() {\n\t\t\t\t\t\treplayLog.scrollTop = replayLog.scrollHeight;\n\t\t\t\t\t\tscrollPending = false;\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t}).observe(replayLog, { childList: true });\n\n\t\t\tvar ageEl = document.getElementById('replay-conn-age');\n\t\t\tvar progressEl = document.getElementById('replay-conn-progress');\n\t\t\tvar lifetimeValEl = document.getElementById('replay-lifetime-val');\n\t\t\tvar delayValEl = document.getElementById('replay-delay-val');\n\t\t\tvar reconnCountdown = document.getElementById('replay-reconnect-countdown');\n\t\t\tvar reconnRemaining = document.getElementById('replay-reconnect-remaining');\n\t\t\tvar connTimer = null;\n\t\t\tvar reconnTimer = null;\n\t\t\tvar connStart = 0;\n\n\t\t\tfunction parseSeconds(el) {\n\t\t\t\treturn parseInt(el.textContent.trim(), 10) || 1;\n\t\t\t}\n\n\t\t\t// --- Connection age countdown ---\n\t\t\tfunction connTick() {\n\t\t\t\tvar elapsed = (Date.now() - connStart) / 1000;\n\t\t\t\tvar limit = parseSeconds(lifetimeValEl);\n\t\t\t\tvar remaining = Math.max(0, limit - elapsed);\n\t\t\t\tageEl.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tvar pct = Math.min(100, (elapsed / limit) * 100);\n\t\t\t\tprogressEl.value = pct;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) progressEl.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) progressEl.classList.add('progress-warning');\n\t\t\t\telse progressEl.classList.add('progress-primary');\n\t\t\t}\n\n\t\t\tfunction startConnTimer() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tconnStart = Date.now();\n\t\t\t\tconnTick();\n\t\t\t\tconnTimer = setInterval(connTick, 200);\n\t\t\t}\n\n\t\t\tfunction stopConnTimer() {\n\t\t\t\tif (connTimer) { clearInterval(connTimer); connTimer = null; }\n\t\t\t}\n\n\t\t\t// --- Reconnect delay countdown ---\n\t\t\tvar reconnDisconnAt = 0;\n\n\t\t\tfunction startReconnCountdown() {\n\t\t\t\tstopReconnCountdown();\n\t\t\t\treconnDisconnAt = Date.now();\n\t\t\t\treconnCountdown.classList.remove('hidden');\n\t\t\t\treconnTick();\n\t\t\t\treconnTimer = setInterval(reconnTick, 200);\n\t\t\t}\n\n\t\t\tfunction reconnTick() {\n\t\t\t\tvar delay = parseSeconds(delayValEl);\n\t\t\t\tvar elapsed = (Date.now() - reconnDisconnAt) / 1000;\n\t\t\t\tvar remaining = Math.max(0, delay - elapsed);\n\t\t\t\treconnRemaining.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tif (remaining <= 0) stopReconnCountdown();\n\t\t\t}\n\n\t\t\tfunction stopReconnCountdown() {\n\t\t\t\tif (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }\n\t\t\t\treconnCountdown.classList.add('hidden');\n\t\t\t}\n\n\t\t\t// --- Preset sync ---\n\t\t\t// When a preset is applied, the server sends an HX-Trigger with\n\t\t\t// slider values. Sync the sliders and their display labels.\n\t\t\tdocument.body.addEventListener('replay-preset', function(e) {\n\t\t\t\tvar d = e.detail;\n\t\t\t\tvar sliders = {\n\t\t\t\t\twindow: document.querySelector('input[name=\"window\"]'),\n\t\t\t\t\tseconds_lt: document.querySelector('input[hx-post$=\"/lifetime\"]'),\n\t\t\t\t\tseconds_dl: document.querySelector('input[hx-post$=\"/delay\"]'),\n\t\t\t\t\tms: document.querySelector('input[name=\"ms\"]')\n\t\t\t\t};\n\t\t\t\tif (sliders.window) { sliders.window.value = d.window; }\n\t\t\t\tif (sliders.seconds_lt) { sliders.seconds_lt.value = d.lifetime; }\n\t\t\t\tif (sliders.seconds_dl) { sliders.seconds_dl.value = d.delay; }\n\t\t\t\tif (sliders.ms) { sliders.ms.value = d.rate; }\n\t\t\t\t// Update display labels.\n\t\t\t\tdocument.getElementById('replay-window-val').textContent = d.window;\n\t\t\t\tdocument.getElementById('replay-lifetime-val').textContent = d.lifetime + 's';\n\t\t\t\tdocument.getElementById('replay-delay-val').textContent = d.delay + 's';\n\t\t\t\tvar rateMs = d.rate;\n\t\t\t\tdocument.getElementById('replay-rate-val').textContent = rateMs >= 1000\n\t\t\t\t\t? (rateMs / 1000).toFixed(1) + 's'\n\t\t\t\t\t: rateMs + 'ms';\n\t\t\t});\n\n\t\t\t// --- Events ---\n\t\t\tsse.addEventListener('htmx:sseOpen', function() {\n\t\t\t\tstartConnTimer();\n\t\t\t\tstopReconnCountdown();\n\t\t\t});\n\n\t\t\tsse.addEventListener('tavern:disconnected', function() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tageEl.textContent = '-';\n\t\t\t\tprogressEl.value = 100;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning');\n\t\t\t\tprogressEl.classList.add('progress-error');\n\t\t\t\tstartReconnCountdown();\n\t\t\t});\n\n\t\t\t// Sync countdowns when lifetime/delay values change via hx-target swap.\n\t\t\tif (lifetimeValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (connTimer) connTick();\n\t\t\t\t}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t\tif (delayValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (reconnTimer) reconnTick();\n\t\t\t\t}).observe(delayValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\n\t\t\t// --- Replay badge ---\n\t\t\t// When replay-debug arrives, it may land before all replayed events\n\t\t\t// are in the DOM (goroutine race). So we badge in two passes:\n\t\t\t// 1. Immediately badge any matching entries already present.\n\t\t\t// 2. Watch #replay-log for new entries and badge matches as they arrive.\n\t\t\tvar debugPanel = document.getElementById('replay-debug-panel');\n\t\t\tvar replayFromSeq = 0;\n\t\t\tvar replayToSeq = 0;\n\t\t\tvar logObserver = null;\n\n\t\t\tfunction badgeEntry(entry) {\n\t\t\t\tif (entry.querySelector('.replay-badge')) return;\n\t\t\t\tvar badge = document.createElement('span');\n\t\t\t\tbadge.className = 'replay-badge badge badge-xs badge-warning';\n\t\t\t\tbadge.textContent = 'replayed';\n\t\t\t\tentry.appendChild(badge);\n\t\t\t}\n\n\t\t\tfunction badgeExisting() {\n\t\t\t\tfor (var s = replayFromSeq; s <= replayToSeq; s++) {\n\t\t\t\t\tvar entry = replayLog.querySelector('[data-replay-seq=\"' + s + '\"]');\n\t\t\t\t\tif (entry) badgeEntry(entry);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction startLogObserver() {\n\t\t\t\tif (logObserver) logObserver.disconnect();\n\t\t\t\tlogObserver = new MutationObserver(function(mutations) {\n\t\t\t\t\tfor (var i = 0; i < mutations.length; i++) {\n\t\t\t\t\t\tvar nodes = mutations[i].addedNodes;\n\t\t\t\t\t\tfor (var j = 0; j < nodes.length; j++) {\n\t\t\t\t\t\t\tvar node = nodes[j];\n\t\t\t\t\t\t\tif (node.nodeType !== 1) continue;\n\t\t\t\t\t\t\tvar seq = parseInt(node.getAttribute('data-replay-seq'), 10);\n\t\t\t\t\t\t\tif (seq >= replayFromSeq && seq <= replayToSeq) badgeEntry(node);\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\tlogObserver.observe(replayLog, { childList: true });\n\t\t\t}\n\n\t\t\t// When replay-debug panel updates, parse the range and start badging.\n\t\t\tnew MutationObserver(function() {\n\t\t\t\tvar wrapper = debugPanel.querySelector('[data-replay-count]');\n\t\t\t\tif (!wrapper) return;\n\t\t\t\tvar count = parseInt(wrapper.getAttribute('data-replay-count'), 10);\n\t\t\t\tvar fromID = wrapper.getAttribute('data-replay-from') || '';\n\t\t\t\tif (!count || !fromID) return;\n\n\t\t\t\tvar parts = fromID.match(/(\\d+)$/);\n\t\t\t\tif (!parts) return;\n\t\t\t\tvar base = parseInt(parts[1], 10);\n\n\t\t\t\t// Clear old badges.\n\t\t\t\treplayLog.querySelectorAll('.replay-badge').forEach(function(b) { b.remove(); });\n\n\t\t\t\t// Set range and badge.\n\t\t\t\treplayFromSeq = base + 1;\n\t\t\t\treplayToSeq = base + count;\n\t\t\t\tbadgeExisting();\n\t\t\t\tstartLogObserver();\n\t\t\t}).observe(debugPanel, { childList: true, subtree: true });\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<script>\n\t\t(function() {\n\t\t\tvar sse = document.getElementById('replay-sse');\n\t\t\tvar replayLog = document.getElementById('replay-log');\n\t\t\tvar MAX_LOG_ROWS = 200;\n\t\t\tvar scrollPending = false;\n\t\t\tvar userScrolled = false;\n\n\t\t\t// Pause auto-scroll when user scrolls away from bottom.\n\t\t\treplayLog.addEventListener('scroll', function() {\n\t\t\t\tvar atBottom = replayLog.scrollHeight - replayLog.scrollTop - replayLog.clientHeight < 30;\n\t\t\t\tuserScrolled = !atBottom;\n\t\t\t});\n\n\t\t\t// Auto-scroll log to bottom and cap row count.\n\t\t\tnew MutationObserver(function() {\n\t\t\t\t// Trim old rows to keep DOM small.\n\t\t\t\twhile (replayLog.children.length > MAX_LOG_ROWS) {\n\t\t\t\t\treplayLog.removeChild(replayLog.firstElementChild);\n\t\t\t\t}\n\t\t\t\t// Coalesce scroll updates into a single rAF.\n\t\t\t\tif (!userScrolled && !scrollPending) {\n\t\t\t\t\tscrollPending = true;\n\t\t\t\t\trequestAnimationFrame(function() {\n\t\t\t\t\t\treplayLog.scrollTop = replayLog.scrollHeight;\n\t\t\t\t\t\tscrollPending = false;\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t}).observe(replayLog, { childList: true });\n\n\t\t\tvar ageEl = document.getElementById('replay-conn-age');\n\t\t\tvar progressEl = document.getElementById('replay-conn-progress');\n\t\t\tvar lifetimeValEl = document.getElementById('replay-lifetime-val');\n\t\t\tvar delayValEl = document.getElementById('replay-delay-val');\n\t\t\tvar reconnCountdown = document.getElementById('replay-reconnect-countdown');\n\t\t\tvar reconnRemaining = document.getElementById('replay-reconnect-remaining');\n\t\t\tvar reconnProgress = document.getElementById('replay-reconn-progress');\n\t\t\tvar connTimer = null;\n\t\t\tvar reconnTimer = null;\n\t\t\tvar connStart = 0;\n\n\t\t\tfunction parseSeconds(el) {\n\t\t\t\treturn parseInt(el.textContent.trim(), 10) || 1;\n\t\t\t}\n\n\t\t\t// --- Connection age countdown ---\n\t\t\tfunction connTick() {\n\t\t\t\tvar elapsed = (Date.now() - connStart) / 1000;\n\t\t\t\tvar limit = parseSeconds(lifetimeValEl);\n\t\t\t\tvar remaining = Math.max(0, limit - elapsed);\n\t\t\t\tageEl.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tvar pct = Math.min(100, (elapsed / limit) * 100);\n\t\t\t\tprogressEl.value = pct;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) progressEl.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) progressEl.classList.add('progress-warning');\n\t\t\t\telse progressEl.classList.add('progress-primary');\n\t\t\t}\n\n\t\t\tfunction startConnTimer() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tconnStart = Date.now();\n\t\t\t\tconnTick();\n\t\t\t\tconnTimer = setInterval(connTick, 200);\n\t\t\t}\n\n\t\t\tfunction stopConnTimer() {\n\t\t\t\tif (connTimer) { clearInterval(connTimer); connTimer = null; }\n\t\t\t}\n\n\t\t\t// --- Reconnect delay countdown ---\n\t\t\tvar reconnDisconnAt = 0;\n\n\t\t\tfunction startReconnCountdown() {\n\t\t\t\tstopReconnCountdown();\n\t\t\t\treconnDisconnAt = Date.now();\n\t\t\t\treconnCountdown.classList.remove('hidden');\n\t\t\t\treconnProgress.classList.remove('hidden');\n\t\t\t\treconnTick();\n\t\t\t\treconnTimer = setInterval(reconnTick, 200);\n\t\t\t}\n\n\t\t\tfunction reconnTick() {\n\t\t\t\tvar delay = parseSeconds(delayValEl);\n\t\t\t\tvar elapsed = (Date.now() - reconnDisconnAt) / 1000;\n\t\t\t\tvar remaining = Math.max(0, delay - elapsed);\n\t\t\t\treconnRemaining.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tvar pct = Math.min(100, (elapsed / delay) * 100);\n\t\t\t\treconnProgress.value = pct;\n\t\t\t\treconnProgress.classList.remove('progress-secondary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) reconnProgress.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) reconnProgress.classList.add('progress-warning');\n\t\t\t\telse reconnProgress.classList.add('progress-secondary');\n\t\t\t\tif (remaining <= 0) stopReconnCountdown();\n\t\t\t}\n\n\t\t\tfunction stopReconnCountdown() {\n\t\t\t\tif (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }\n\t\t\t\treconnCountdown.classList.add('hidden');\n\t\t\t\treconnProgress.classList.add('hidden');\n\t\t\t\treconnProgress.value = 0;\n\t\t\t}\n\n\t\t\t// --- Preset sync ---\n\t\t\t// When a preset is applied, the server sends an HX-Trigger with\n\t\t\t// slider values. Sync the sliders and their display labels.\n\t\t\tdocument.body.addEventListener('replay-preset', function(e) {\n\t\t\t\tvar d = e.detail;\n\t\t\t\tvar sliders = {\n\t\t\t\t\twindow: document.querySelector('input[name=\"window\"]'),\n\t\t\t\t\tseconds_lt: document.querySelector('input[hx-post$=\"/lifetime\"]'),\n\t\t\t\t\tseconds_dl: document.querySelector('input[hx-post$=\"/delay\"]'),\n\t\t\t\t\tms: document.querySelector('input[name=\"ms\"]')\n\t\t\t\t};\n\t\t\t\tif (sliders.window) { sliders.window.value = d.window; }\n\t\t\t\tif (sliders.seconds_lt) { sliders.seconds_lt.value = d.lifetime; }\n\t\t\t\tif (sliders.seconds_dl) { sliders.seconds_dl.value = d.delay; }\n\t\t\t\tif (sliders.ms) { sliders.ms.value = d.rate; }\n\t\t\t\t// Update display labels.\n\t\t\t\tdocument.getElementById('replay-window-val').textContent = d.window;\n\t\t\t\tdocument.getElementById('replay-lifetime-val').textContent = d.lifetime + 's';\n\t\t\t\tdocument.getElementById('replay-delay-val').textContent = d.delay + 's';\n\t\t\t\tvar rateMs = d.rate;\n\t\t\t\tdocument.getElementById('replay-rate-val').textContent = rateMs >= 1000\n\t\t\t\t\t? (rateMs / 1000).toFixed(1) + 's'\n\t\t\t\t\t: rateMs + 'ms';\n\t\t\t});\n\n\t\t\t// --- Events ---\n\t\t\tsse.addEventListener('htmx:sseOpen', function() {\n\t\t\t\tstartConnTimer();\n\t\t\t\tstopReconnCountdown();\n\t\t\t});\n\n\t\t\tsse.addEventListener('tavern:disconnected', function() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tageEl.textContent = '-';\n\t\t\t\tprogressEl.value = 100;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning');\n\t\t\t\tprogressEl.classList.add('progress-error');\n\t\t\t\tstartReconnCountdown();\n\t\t\t});\n\n\t\t\t// Sync countdowns when lifetime/delay values change via hx-target swap.\n\t\t\tif (lifetimeValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (connTimer) connTick();\n\t\t\t\t}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t\tif (delayValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (reconnTimer) reconnTick();\n\t\t\t\t}).observe(delayValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\n\t\t\t// --- Replay badge ---\n\t\t\t// When replay-debug arrives, it may land before all replayed events\n\t\t\t// are in the DOM (goroutine race). So we badge in two passes:\n\t\t\t// 1. Immediately badge any matching entries already present.\n\t\t\t// 2. Watch #replay-log for new entries and badge matches as they arrive.\n\t\t\tvar debugPanel = document.getElementById('replay-debug-panel');\n\t\t\tvar replayFromSeq = 0;\n\t\t\tvar replayToSeq = 0;\n\t\t\tvar logObserver = null;\n\n\t\t\tfunction badgeEntry(entry) {\n\t\t\t\tif (entry.querySelector('.replay-badge')) return;\n\t\t\t\tvar badge = document.createElement('span');\n\t\t\t\tbadge.className = 'replay-badge badge badge-xs badge-warning';\n\t\t\t\tbadge.textContent = 'replayed';\n\t\t\t\tentry.appendChild(badge);\n\t\t\t}\n\n\t\t\tfunction badgeExisting() {\n\t\t\t\tfor (var s = replayFromSeq; s <= replayToSeq; s++) {\n\t\t\t\t\tvar entry = replayLog.querySelector('[data-replay-seq=\"' + s + '\"]');\n\t\t\t\t\tif (entry) badgeEntry(entry);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction startLogObserver() {\n\t\t\t\tif (logObserver) logObserver.disconnect();\n\t\t\t\tlogObserver = new MutationObserver(function(mutations) {\n\t\t\t\t\tfor (var i = 0; i < mutations.length; i++) {\n\t\t\t\t\t\tvar nodes = mutations[i].addedNodes;\n\t\t\t\t\t\tfor (var j = 0; j < nodes.length; j++) {\n\t\t\t\t\t\t\tvar node = nodes[j];\n\t\t\t\t\t\t\tif (node.nodeType !== 1) continue;\n\t\t\t\t\t\t\tvar seq = parseInt(node.getAttribute('data-replay-seq'), 10);\n\t\t\t\t\t\t\tif (seq >= replayFromSeq && seq <= replayToSeq) badgeEntry(node);\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\tlogObserver.observe(replayLog, { childList: true });\n\t\t\t}\n\n\t\t\t// When replay-debug panel updates, parse the range and start badging.\n\t\t\tnew MutationObserver(function() {\n\t\t\t\tvar wrapper = debugPanel.querySelector('[data-replay-count]');\n\t\t\t\tif (!wrapper) return;\n\t\t\t\tvar count = parseInt(wrapper.getAttribute('data-replay-count'), 10);\n\t\t\t\tvar fromID = wrapper.getAttribute('data-replay-from') || '';\n\t\t\t\tif (!count || !fromID) return;\n\n\t\t\t\tvar parts = fromID.match(/(\\d+)$/);\n\t\t\t\tif (!parts) return;\n\t\t\t\tvar base = parseInt(parts[1], 10);\n\n\t\t\t\t// Clear old badges.\n\t\t\t\treplayLog.querySelectorAll('.replay-badge').forEach(function(b) { b.remove(); });\n\n\t\t\t\t// Set range and badge.\n\t\t\t\treplayFromSeq = base + 1;\n\t\t\t\treplayToSeq = base + count;\n\t\t\t\tbadgeExisting();\n\t\t\t\tstartLogObserver();\n\t\t\t}).observe(debugPanel, { childList: true, subtree: true });\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -214,7 +214,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 492, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 511, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -227,7 +227,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", seq))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 492, Col: 142}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 511, Col: 142}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -240,7 +240,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", seq))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 493, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 512, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -253,7 +253,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(timestamp)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 494, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 513, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -266,7 +266,7 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 495, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 514, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -309,7 +309,7 @@ func ReplaySnapshot(message string) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 502, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 521, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -352,7 +352,7 @@ func ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Durati
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", delivered))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 508, Col: 82}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 527, Col: 82}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -365,7 +365,7 @@ func ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Durati
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 508, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 527, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -388,7 +388,7 @@ func ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Durati
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d delivered, %d dropped (buffer full)", delivered, dropped))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 515, Col: 100}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 534, Col: 100}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -406,7 +406,7 @@ func ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Durati
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", delivered))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 519, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 538, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -424,7 +424,7 @@ func ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Durati
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 524, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 543, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -442,7 +442,7 @@ func ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Durati
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayRange(lastEventID, delivered))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 529, Col: 126}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 548, Col: 126}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -460,7 +460,7 @@ func ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Durati
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d events", dropped))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 534, Col: 120}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 553, Col: 120}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -478,7 +478,7 @@ func ReplayDebug(lastEventID string, delivered int, dropped int, gap time.Durati
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayGap(gap))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 539, Col: 111}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 558, Col: 111}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
