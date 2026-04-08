@@ -39,9 +39,9 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 				Reconnecting...
 			</div>
 
-			<div sse-swap="replay-event" hx-target="#replay-log" hx-swap="afterbegin" style="display:none"></div>
-			<div sse-swap="replay-snapshot" hx-target="#replay-log" hx-swap="innerHTML" style="display:none"></div>
-			<div sse-swap="replay-debug" hx-target="#replay-debug-panel" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="replay-event" hx-target="#replay-log" hx-swap="beforeend settle:0" style="display:none"></div>
+			<div sse-swap="replay-snapshot" hx-target="#replay-log" hx-swap="innerHTML settle:0" style="display:none"></div>
+			<div sse-swap="replay-debug" hx-target="#replay-debug-panel" hx-swap="innerHTML settle:0" style="display:none"></div>
 		</div>
 
 		<div class="flex gap-4">
@@ -204,6 +204,13 @@ templ replayCountdownScript() {
 	<script>
 		(function() {
 			var sse = document.getElementById('replay-sse');
+			var replayLog = document.getElementById('replay-log');
+
+			// Auto-scroll log to bottom on new entries.
+			new MutationObserver(function() {
+				replayLog.scrollTop = replayLog.scrollHeight;
+			}).observe(replayLog, { childList: true });
+
 			var ageEl = document.getElementById('replay-conn-age');
 			var progressEl = document.getElementById('replay-conn-progress');
 			var lifetimeValEl = document.getElementById('replay-lifetime-val');
@@ -300,7 +307,6 @@ templ replayCountdownScript() {
 			// 1. Immediately badge any matching entries already present.
 			// 2. Watch #replay-log for new entries and badge matches as they arrive.
 			var debugPanel = document.getElementById('replay-debug-panel');
-			var replayLog = document.getElementById('replay-log');
 			var replayFromSeq = 0;
 			var replayToSeq = 0;
 			var logObserver = null;
