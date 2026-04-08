@@ -14,6 +14,7 @@ const (
 	TopicNumericalDash    = "numerical-dash"
 	TopicNotifications    = "notifications"
 	TopicObservatory      = "observatory"
+	TopicAppLifeline      = "app-lifeline"
 
 	// Tavern gallery lab topics.
 	TopicTavernReplay      = "tavern/replay"

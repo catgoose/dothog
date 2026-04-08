@@ -49,6 +49,8 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 					id="notifications-container"
 					hx-ext="sse"
 					sse-connect="/sse/notifications"
+					data-tavern-role="scoped"
+					data-tavern-scope="notifications"
 					data-tavern-reconnecting-class="opacity-50 pointer-events-none"
 					data-tavern-gap-action="banner"
 					data-tavern-gap-banner-text="Some notifications may have been missed during disconnection."
@@ -148,6 +150,27 @@ templ notificationsScript() {
 				if (empty) empty.remove();
 			}
 		});
+
+		// Scoped stream lifecycle: promote when ready, retire on teardown.
+		(function() {
+			var container = document.getElementById('notifications-container');
+			if (!container || typeof Tavern === 'undefined') return;
+
+			container.addEventListener('tavern:stream-ready', function() {
+				Tavern.promote('notifications');
+			});
+
+			// Retire the scoped stream when navigating away or when the
+			// container is removed from the DOM (e.g. htmx page swap).
+			document.body.addEventListener('htmx:beforeSwap', function onSwap(evt) {
+				if (!document.body.contains(container)) return;
+				var target = evt.detail.target;
+				if (target && (target === container || target.contains(container))) {
+					Tavern.retire('notifications');
+					document.body.removeEventListener('htmx:beforeSwap', onSwap);
+				}
+			});
+		})();
 	</script>
 }
 
