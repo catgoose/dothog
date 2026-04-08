@@ -220,7 +220,7 @@ func replayCountdownScript() templ.Component {
 			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<script>\n\t\t(function() {\n\t\t\tvar sse = document.getElementById('replay-sse');\n\t\t\tvar ageEl = document.getElementById('replay-conn-age');\n\t\t\tvar progressEl = document.getElementById('replay-conn-progress');\n\t\t\tvar lifetimeValEl = document.getElementById('replay-lifetime-val');\n\t\t\tvar delayValEl = document.getElementById('replay-delay-val');\n\t\t\tvar reconnCountdown = document.getElementById('replay-reconnect-countdown');\n\t\t\tvar reconnRemaining = document.getElementById('replay-reconnect-remaining');\n\t\t\tvar connTimer = null;\n\t\t\tvar reconnTimer = null;\n\t\t\tvar connStart = 0;\n\n\t\t\tfunction parseSeconds(el) {\n\t\t\t\treturn parseInt(el.textContent.trim(), 10) || 1;\n\t\t\t}\n\n\t\t\t// --- Connection age countdown ---\n\t\t\tfunction connTick() {\n\t\t\t\tvar elapsed = (Date.now() - connStart) / 1000;\n\t\t\t\tvar limit = parseSeconds(lifetimeValEl);\n\t\t\t\tvar remaining = Math.max(0, limit - elapsed);\n\t\t\t\tageEl.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tvar pct = Math.min(100, (elapsed / limit) * 100);\n\t\t\t\tprogressEl.value = pct;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) progressEl.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) progressEl.classList.add('progress-warning');\n\t\t\t\telse progressEl.classList.add('progress-primary');\n\t\t\t}\n\n\t\t\tfunction startConnTimer() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tconnStart = Date.now();\n\t\t\t\tconnTick();\n\t\t\t\tconnTimer = setInterval(connTick, 200);\n\t\t\t}\n\n\t\t\tfunction stopConnTimer() {\n\t\t\t\tif (connTimer) { clearInterval(connTimer); connTimer = null; }\n\t\t\t}\n\n\t\t\t// --- Reconnect delay countdown ---\n\t\t\tvar reconnDisconnAt = 0;\n\n\t\t\tfunction startReconnCountdown() {\n\t\t\t\tstopReconnCountdown();\n\t\t\t\treconnDisconnAt = Date.now();\n\t\t\t\treconnCountdown.classList.remove('hidden');\n\t\t\t\treconnTick();\n\t\t\t\treconnTimer = setInterval(reconnTick, 200);\n\t\t\t}\n\n\t\t\tfunction reconnTick() {\n\t\t\t\tvar delay = parseSeconds(delayValEl);\n\t\t\t\tvar elapsed = (Date.now() - reconnDisconnAt) / 1000;\n\t\t\t\tvar remaining = Math.max(0, delay - elapsed);\n\t\t\t\treconnRemaining.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tif (remaining <= 0) stopReconnCountdown();\n\t\t\t}\n\n\t\t\tfunction stopReconnCountdown() {\n\t\t\t\tif (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }\n\t\t\t\treconnCountdown.classList.add('hidden');\n\t\t\t}\n\n\t\t\t// --- Events ---\n\t\t\tsse.addEventListener('htmx:sseOpen', function() {\n\t\t\t\tstartConnTimer();\n\t\t\t\tstopReconnCountdown();\n\t\t\t});\n\n\t\t\tsse.addEventListener('tavern:disconnected', function() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tageEl.textContent = '-';\n\t\t\t\tprogressEl.value = 100;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning');\n\t\t\t\tprogressEl.classList.add('progress-error');\n\t\t\t\tstartReconnCountdown();\n\t\t\t});\n\n\t\t\t// Sync countdowns when lifetime/delay values change via hx-target swap.\n\t\t\tif (lifetimeValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (connTimer) connTick();\n\t\t\t\t}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t\tif (delayValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (reconnTimer) reconnTick();\n\t\t\t\t}).observe(delayValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<script>\n\t\t(function() {\n\t\t\tvar sse = document.getElementById('replay-sse');\n\t\t\tvar ageEl = document.getElementById('replay-conn-age');\n\t\t\tvar progressEl = document.getElementById('replay-conn-progress');\n\t\t\tvar lifetimeValEl = document.getElementById('replay-lifetime-val');\n\t\t\tvar delayValEl = document.getElementById('replay-delay-val');\n\t\t\tvar reconnCountdown = document.getElementById('replay-reconnect-countdown');\n\t\t\tvar reconnRemaining = document.getElementById('replay-reconnect-remaining');\n\t\t\tvar connTimer = null;\n\t\t\tvar reconnTimer = null;\n\t\t\tvar connStart = 0;\n\n\t\t\tfunction parseSeconds(el) {\n\t\t\t\treturn parseInt(el.textContent.trim(), 10) || 1;\n\t\t\t}\n\n\t\t\t// --- Connection age countdown ---\n\t\t\tfunction connTick() {\n\t\t\t\tvar elapsed = (Date.now() - connStart) / 1000;\n\t\t\t\tvar limit = parseSeconds(lifetimeValEl);\n\t\t\t\tvar remaining = Math.max(0, limit - elapsed);\n\t\t\t\tageEl.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tvar pct = Math.min(100, (elapsed / limit) * 100);\n\t\t\t\tprogressEl.value = pct;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) progressEl.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) progressEl.classList.add('progress-warning');\n\t\t\t\telse progressEl.classList.add('progress-primary');\n\t\t\t}\n\n\t\t\tfunction startConnTimer() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tconnStart = Date.now();\n\t\t\t\tconnTick();\n\t\t\t\tconnTimer = setInterval(connTick, 200);\n\t\t\t}\n\n\t\t\tfunction stopConnTimer() {\n\t\t\t\tif (connTimer) { clearInterval(connTimer); connTimer = null; }\n\t\t\t}\n\n\t\t\t// --- Reconnect delay countdown ---\n\t\t\tvar reconnDisconnAt = 0;\n\n\t\t\tfunction startReconnCountdown() {\n\t\t\t\tstopReconnCountdown();\n\t\t\t\treconnDisconnAt = Date.now();\n\t\t\t\treconnCountdown.classList.remove('hidden');\n\t\t\t\treconnTick();\n\t\t\t\treconnTimer = setInterval(reconnTick, 200);\n\t\t\t}\n\n\t\t\tfunction reconnTick() {\n\t\t\t\tvar delay = parseSeconds(delayValEl);\n\t\t\t\tvar elapsed = (Date.now() - reconnDisconnAt) / 1000;\n\t\t\t\tvar remaining = Math.max(0, delay - elapsed);\n\t\t\t\treconnRemaining.textContent = remaining.toFixed(1) + 's';\n\t\t\t\tif (remaining <= 0) stopReconnCountdown();\n\t\t\t}\n\n\t\t\tfunction stopReconnCountdown() {\n\t\t\t\tif (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }\n\t\t\t\treconnCountdown.classList.add('hidden');\n\t\t\t}\n\n\t\t\t// --- Events ---\n\t\t\tsse.addEventListener('htmx:sseOpen', function() {\n\t\t\t\tstartConnTimer();\n\t\t\t\tstopReconnCountdown();\n\t\t\t});\n\n\t\t\tsse.addEventListener('tavern:disconnected', function() {\n\t\t\t\tstopConnTimer();\n\t\t\t\tageEl.textContent = '-';\n\t\t\t\tprogressEl.value = 100;\n\t\t\t\tprogressEl.classList.remove('progress-primary', 'progress-warning');\n\t\t\t\tprogressEl.classList.add('progress-error');\n\t\t\t\tstartReconnCountdown();\n\t\t\t});\n\n\t\t\t// Sync countdowns when lifetime/delay values change via hx-target swap.\n\t\t\tif (lifetimeValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (connTimer) connTick();\n\t\t\t\t}).observe(lifetimeValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\t\t\tif (delayValEl) {\n\t\t\t\tnew MutationObserver(function() {\n\t\t\t\t\tif (reconnTimer) reconnTick();\n\t\t\t\t}).observe(delayValEl, { childList: true, characterData: true, subtree: true });\n\t\t\t}\n\n\t\t\t// --- Replay badge ---\n\t\t\t// When replay-debug swaps in with a replayed count, retroactively\n\t\t\t// badge the entries that were replayed by sequence range.\n\t\t\tvar debugPanel = document.getElementById('replay-debug-panel');\n\t\t\tvar replayLog = document.getElementById('replay-log');\n\n\t\t\tnew MutationObserver(function() {\n\t\t\t\tvar wrapper = debugPanel.querySelector('[data-replay-count]');\n\t\t\t\tif (!wrapper) return;\n\t\t\t\tvar count = parseInt(wrapper.getAttribute('data-replay-count'), 10);\n\t\t\t\tvar fromID = wrapper.getAttribute('data-replay-from') || '';\n\t\t\t\tif (!count || !fromID) return;\n\n\t\t\t\t// Parse the base sequence from the last-event-id (e.g. \"replay-63\" → 63).\n\t\t\t\tvar parts = fromID.match(/(\\d+)$/);\n\t\t\t\tif (!parts) return;\n\t\t\t\tvar fromSeq = parseInt(parts[1], 10);\n\n\t\t\t\t// Clear old badges first.\n\t\t\t\treplayLog.querySelectorAll('.replay-badge').forEach(function(b) { b.remove(); });\n\n\t\t\t\t// Badge entries with sequences fromSeq+1 through fromSeq+count.\n\t\t\t\tfor (var s = fromSeq + 1; s <= fromSeq + count; s++) {\n\t\t\t\t\tvar entry = replayLog.querySelector('[data-replay-seq=\"' + s + '\"]');\n\t\t\t\t\tif (entry && !entry.querySelector('.replay-badge')) {\n\t\t\t\t\t\tvar badge = document.createElement('span');\n\t\t\t\t\t\tbadge.className = 'replay-badge badge badge-xs badge-warning';\n\t\t\t\t\t\tbadge.textContent = 'replayed';\n\t\t\t\t\t\tentry.appendChild(badge);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}).observe(debugPanel, { childList: true, subtree: true });\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -250,46 +250,72 @@ func ReplayEvent(seq int64, id string, timestamp string) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"flex items-center gap-2 py-0.5 border-b border-base-300 last:border-0\" data-testid=\"replay-event\"><span class=\"badge badge-xs badge-primary font-mono\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"flex items-center gap-2 py-0.5 border-b border-base-300 last:border-0\" data-testid=\"replay-event\" data-replay-id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", seq))
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 303, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 335, Col: 130}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</span> <span class=\"text-base-content/40 tabular-nums shrink-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" data-replay-seq=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(timestamp)
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", seq))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 304, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 335, Col: 173}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</span> <span class=\"text-base-content/60 truncate\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\"><span class=\"badge badge-xs badge-primary font-mono\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(id)
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", seq))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 305, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 336, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</span></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</span> <span class=\"text-base-content/40 tabular-nums shrink-0\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var16 string
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(timestamp)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 337, Col: 70}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</span> <span class=\"text-base-content/60 truncate\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var17 string
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(id)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 338, Col: 50}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -314,25 +340,25 @@ func ReplaySnapshot(message string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var16 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var16 == nil {
-			templ_7745c5c3_Var16 = templ.NopComponent
+		templ_7745c5c3_Var18 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var18 == nil {
+			templ_7745c5c3_Var18 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div class=\"py-2 px-3 rounded bg-warning/10 text-warning text-xs\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<div class=\"py-2 px-3 rounded bg-warning/10 text-warning text-xs\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(message)
+		var templ_7745c5c3_Var19 string
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 312, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 345, Col: 11}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -357,89 +383,115 @@ func ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDete
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var18 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var18 == nil {
-			templ_7745c5c3_Var18 = templ.NopComponent
+		templ_7745c5c3_Var20 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var20 == nil {
+			templ_7745c5c3_Var20 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<div class=\"space-y-1.5 text-xs\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<div class=\"space-y-1.5 text-xs\" data-replay-count=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var21 string
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", missedCount))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 351, Col: 84}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\" data-replay-from=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var22 string
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 351, Col: 117}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if gapDetected {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"py-1.5 px-2 rounded bg-error/10 text-error\" data-testid=\"replay-gap-status\">Gap detected — Last-Event-ID not found in replay window</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<div class=\"py-1.5 px-2 rounded bg-error/10 text-error\" data-testid=\"replay-gap-status\">Gap detected — Last-Event-ID not found in replay window</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<div class=\"py-1.5 px-2 rounded bg-success/10 text-success\" data-testid=\"replay-gap-status\">Replay success — ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div class=\"py-1.5 px-2 rounded bg-success/10 text-success\" data-testid=\"replay-gap-status\">Replay success — ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var19 string
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", missedCount))
+			var templ_7745c5c3_Var23 string
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", missedCount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 325, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 358, Col: 55}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, " missed events replayed</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, " missed events replayed</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Last-Event-ID:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-last-id\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Last-Event-ID:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-last-id\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
+		var templ_7745c5c3_Var24 string
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(lastEventID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 330, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 363, Col: 96}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</span></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if !gapDetected {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Replayed:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-missed\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Replayed:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-missed\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var21 string
-			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d events", missedCount))
+			var templ_7745c5c3_Var25 string
+			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d events", missedCount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 335, Col: 122}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 368, Col: 122}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</span></div><div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Disconnect:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-gap-duration\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var22 string
-			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayGap(gap))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 339, Col: 111}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</span></div><div class=\"flex items-center gap-2\"><span class=\"text-base-content/50 w-24 shrink-0\">Disconnect:</span> <span class=\"font-mono badge badge-ghost badge-xs\" data-testid=\"replay-gap-duration\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</span></div>")
+			var templ_7745c5c3_Var26 string
+			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(formatReplayGap(gap))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_replay.templ`, Line: 372, Col: 111}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

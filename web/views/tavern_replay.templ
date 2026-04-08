@@ -293,13 +293,46 @@ templ replayCountdownScript() {
 					if (reconnTimer) reconnTick();
 				}).observe(delayValEl, { childList: true, characterData: true, subtree: true });
 			}
+
+			// --- Replay badge ---
+			// When replay-debug swaps in with a replayed count, retroactively
+			// badge the entries that were replayed by sequence range.
+			var debugPanel = document.getElementById('replay-debug-panel');
+			var replayLog = document.getElementById('replay-log');
+
+			new MutationObserver(function() {
+				var wrapper = debugPanel.querySelector('[data-replay-count]');
+				if (!wrapper) return;
+				var count = parseInt(wrapper.getAttribute('data-replay-count'), 10);
+				var fromID = wrapper.getAttribute('data-replay-from') || '';
+				if (!count || !fromID) return;
+
+				// Parse the base sequence from the last-event-id (e.g. "replay-63" → 63).
+				var parts = fromID.match(/(\d+)$/);
+				if (!parts) return;
+				var fromSeq = parseInt(parts[1], 10);
+
+				// Clear old badges first.
+				replayLog.querySelectorAll('.replay-badge').forEach(function(b) { b.remove(); });
+
+				// Badge entries with sequences fromSeq+1 through fromSeq+count.
+				for (var s = fromSeq + 1; s <= fromSeq + count; s++) {
+					var entry = replayLog.querySelector('[data-replay-seq="' + s + '"]');
+					if (entry && !entry.querySelector('.replay-badge')) {
+						var badge = document.createElement('span');
+						badge.className = 'replay-badge badge badge-xs badge-warning';
+						badge.textContent = 'replayed';
+						entry.appendChild(badge);
+					}
+				}
+			}).observe(debugPanel, { childList: true, subtree: true });
 		})();
 	</script>
 }
 
 // ReplayEvent renders a single event entry in the log.
 templ ReplayEvent(seq int64, id string, timestamp string) {
-	<div class="flex items-center gap-2 py-0.5 border-b border-base-300 last:border-0" data-testid="replay-event">
+	<div class="flex items-center gap-2 py-0.5 border-b border-base-300 last:border-0" data-testid="replay-event" data-replay-id={ id } data-replay-seq={ fmt.Sprintf("%d", seq) }>
 		<span class="badge badge-xs badge-primary font-mono">{ fmt.Sprintf("#%d", seq) }</span>
 		<span class="text-base-content/40 tabular-nums shrink-0">{ timestamp }</span>
 		<span class="text-base-content/60 truncate">{ id }</span>
@@ -315,7 +348,7 @@ templ ReplaySnapshot(message string) {
 
 // ReplayDebug renders the debug info from the last reconnection.
 templ ReplayDebug(lastEventID string, missedCount int, gap time.Duration, gapDetected bool) {
-	<div class="space-y-1.5 text-xs">
+	<div class="space-y-1.5 text-xs" data-replay-count={ fmt.Sprintf("%d", missedCount) } data-replay-from={ lastEventID }>
 		if gapDetected {
 			<div class="py-1.5 px-2 rounded bg-error/10 text-error" data-testid="replay-gap-status">
 				Gap detected — Last-Event-ID not found in replay window
