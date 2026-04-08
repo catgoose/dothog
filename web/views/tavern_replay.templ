@@ -21,6 +21,7 @@ templ TavernReplayPage(replayWindow int) {
 			id="replay-sse-container"
 			hx-ext="sse"
 			sse-connect="/sse/tavern/replay"
+			sse-close="replay-close"
 			data-tavern-reconnecting-class="opacity-50"
 			data-tavern-gap-action="banner"
 		>
@@ -57,7 +58,8 @@ templ TavernReplayPage(replayWindow int) {
 								<button
 									id="replay-disconnect-btn"
 									class="btn btn-sm btn-error flex-1"
-									onclick="replayDisconnect()"
+									hx-post="/realtime/tavern/replay/disconnect"
+									hx-swap="none"
 								>
 									Disconnect
 								</button>
@@ -128,34 +130,28 @@ templ TavernReplayPage(replayWindow int) {
 
 templ replayDisconnectScript() {
 	<script>
-		function replayDisconnect() {
+		(function() {
 			var container = document.getElementById('replay-sse-container');
 			if (!container) return;
 
-			// Close the EventSource via HTMX internal data.
-			var data = htmx.getInternalData(container);
-			if (data && data.sseEventSource) {
-				data.sseEventSource.close();
-				data.sseEventSource = null;
-			}
-			// Store and remove sse-connect so HTMX won't auto-reconnect.
-			container.dataset.sseUrl = container.getAttribute('sse-connect');
-			container.removeAttribute('sse-connect');
-
-			document.getElementById('replay-disconnect-btn').disabled = true;
-			document.getElementById('replay-reconnect-btn').disabled = false;
-		}
+			// When sse-close fires, the SSE extension closes the EventSource.
+			// Toggle button state and remove sse-connect to prevent any
+			// re-initialization until the user clicks Reconnect.
+			container.addEventListener('htmx:sseClose', function() {
+				container.removeAttribute('sse-connect');
+				document.getElementById('replay-disconnect-btn').disabled = true;
+				document.getElementById('replay-reconnect-btn').disabled = false;
+			});
+		})();
 
 		function replayReconnect() {
 			var container = document.getElementById('replay-sse-container');
 			if (!container) return;
 
-			// Restore sse-connect and let HTMX re-initialize (sends Last-Event-ID).
-			var url = container.dataset.sseUrl;
-			if (url) {
-				container.setAttribute('sse-connect', url);
-				htmx.process(container);
-			}
+			// Restore sse-connect and reprocess — HTMX creates a new
+			// EventSource that sends Last-Event-ID for replay.
+			container.setAttribute('sse-connect', '/sse/tavern/replay');
+			htmx.process(container);
 
 			document.getElementById('replay-disconnect-btn').disabled = false;
 			document.getElementById('replay-reconnect-btn').disabled = true;

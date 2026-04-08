@@ -39,6 +39,7 @@ func (ar *appRoutes) initTavernReplayRoutes(broker *tavern.SSEBroker) {
 	ar.e.POST("/realtime/tavern/replay/emit", r.handleEmit)
 	ar.e.POST("/realtime/tavern/replay/burst", r.handleBurst)
 	ar.e.POST("/realtime/tavern/replay/window", r.handleWindow)
+	ar.e.POST("/realtime/tavern/replay/disconnect", r.handleDisconnect)
 
 	broker.RunPublisher(ar.ctx, r.startPublisher)
 }
@@ -67,6 +68,15 @@ func (r *tavernReplayRoutes) handleWindow(c echo.Context) error {
 	r.lab.SetReplayWindow(n)
 	r.broker.SetReplayPolicy(TopicTavernReplay, n)
 	return c.HTML(http.StatusOK, fmt.Sprintf("%d", n))
+}
+
+func (r *tavernReplayRoutes) handleDisconnect(c echo.Context) error {
+	// Publish a close event — the sse-close="replay-close" attribute on the
+	// client container tells the HTMX SSE extension to close the EventSource
+	// when it receives an event with this name.
+	msg := tavern.NewSSEMessage("replay-close", "").String()
+	r.broker.Publish(TopicTavernReplay, msg)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (r *tavernReplayRoutes) publishEvent() {
