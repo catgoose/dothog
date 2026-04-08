@@ -135,9 +135,6 @@ func (p *peopleRoutes) handlePersonUpdate(c echo.Context) error {
 
 func (p *peopleRoutes) broadcastPersonUpdate(person demo.Person) {
 	topic := fmt.Sprintf("%s-%d", TopicPeopleUpdate, person.ID)
-	if !p.broker.HasSubscribers(topic) {
-		return
-	}
 	buf := statsBufPool.Get().(*bytes.Buffer)
 	buf.Reset()
 	if err := views.PersonProfileCardOOB(person).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "broadcast person update"), buf); err != nil {

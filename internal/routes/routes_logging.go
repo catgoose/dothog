@@ -140,9 +140,6 @@ func (ar *appRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 var traceCounter atomic.Int64
 
 func broadcastErrorTrace(broker *tavern.SSEBroker, summary promolog.TraceSummary) {
-	if !broker.HasSubscribers(TopicErrorTraces) {
-		return
-	}
 	buf := new(bytes.Buffer)
 	ctx := shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "broadcast error trace")
 	if err := views.LoggingTraceRowOOB(summary).Render(ctx, buf); err != nil {

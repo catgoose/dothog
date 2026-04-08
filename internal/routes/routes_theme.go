@@ -55,13 +55,12 @@ func (ar *appRoutes) handleTheme(broker *tavern.SSEBroker) echo.HandlerFunc {
 		}
 
 		// Broadcast theme change to all connected browsers.
-		if broker.HasSubscribers(TopicThemeChange) {
-			eventID := fmt.Sprintf("tc%d", themeCounter.Add(1))
-			msg := tavern.NewSSEMessage("theme-change", theme).
-				WithID(eventID).
-				String()
-			broker.PublishWithID(TopicThemeChange, eventID, msg)
-		}
+		// Always write to the replay buffer so reconnecting clients receive the change.
+		eventID := fmt.Sprintf("tc%d", themeCounter.Add(1))
+		msg := tavern.NewSSEMessage("theme-change", theme).
+			WithID(eventID).
+			String()
+		broker.PublishWithID(TopicThemeChange, eventID, msg)
 
 		return handler.RenderComponent(c, views.ThemeChanged(theme))
 	}

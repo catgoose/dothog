@@ -75,10 +75,8 @@ func (f *feedRoutes) handleFeedMore(c echo.Context) error {
 }
 
 // BroadcastActivity publishes an activity event to the SSE feed.
+// Always write to the replay buffer so reconnecting clients receive missed events.
 func BroadcastActivity(broker *tavern.SSEBroker, e demo.ActivityEvent) {
-	if !broker.HasSubscribers(TopicActivityFeed) {
-		return
-	}
 	buf := statsBufPool.Get().(*bytes.Buffer)
 	buf.Reset()
 	if err := views.FeedItemOOB(e).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "broadcast activity"), buf); err != nil {
@@ -130,9 +128,6 @@ func (ar *appRoutes) publishActivityEvents(actLog *demo.ActivityLog, broker *tav
 			timer.Stop()
 			return
 		case <-timer.C:
-			if !broker.HasSubscribers(TopicActivityFeed) {
-				continue
-			}
 			tmpl := activityTemplates[rand.IntN(len(activityTemplates))]
 			name := tmpl.Names[rand.IntN(len(tmpl.Names))]
 			detail := tmpl.Details[rand.IntN(len(tmpl.Details))]
