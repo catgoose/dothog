@@ -2,7 +2,10 @@
 
 package views
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // TavernReplayPage renders the replay lab.
 templ TavernReplayPage(replayWindow int) {
@@ -11,17 +14,32 @@ templ TavernReplayPage(replayWindow int) {
 			<div>
 				<h1 class="text-2xl font-bold">Replay Lab</h1>
 				<p class="text-xs text-base-content/50">
-					Test Last-Event-ID resume, replay window limits, and gap fallback.
-					Disconnect your network, wait, then reconnect to watch missed events replay.
+					Test Last-Event-ID replay. Drop the connection from the server,
+					emit events while disconnected, and watch the browser auto-reconnect
+					and replay missed events.
 				</p>
 			</div>
 		</div>
 
-		<!-- SSE connection wrapper — replaced entirely on reconnect so
-		     the HTMX SSE extension initializes fresh. The sse-swap targets
-		     live outside this div so the event log persists across reconnects. -->
-		<div id="replay-sse-wrapper">
-			@ReplaySSEContainer()
+		<!-- Single stable SSE container — never replaced. Browser EventSource
+		     handles reconnection natively with Last-Event-ID. -->
+		<div
+			hx-ext="sse"
+			sse-connect="/sse/tavern/replay"
+			data-tavern-reconnecting-class="opacity-50"
+			data-tavern-gap-action="banner"
+		>
+			<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+				<span class="loading loading-spinner loading-xs"></span>
+				Reconnecting...
+			</div>
+			<div data-tavern-gap class="hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2">
+				Replay gap detected — some events were missed. Snapshot delivered instead.
+			</div>
+
+			<div sse-swap="replay-event" hx-target="#replay-log" hx-swap="afterbegin" style="display:none"></div>
+			<div sse-swap="replay-snapshot" hx-target="#replay-log" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="replay-debug" hx-target="#replay-debug-panel" hx-swap="innerHTML" style="display:none"></div>
 		</div>
 
 		<div class="flex gap-4">
@@ -37,31 +55,18 @@ templ TavernReplayPage(replayWindow int) {
 				</div>
 			</div>
 
-			<!-- Right: Controls -->
+			<!-- Right: Controls + Debug -->
 			<div class="flex-1 min-w-0 space-y-4">
 				<div class="card bg-base-200 shadow-sm">
 					<div class="card-body p-4 space-y-3">
 						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Controls</h2>
-						<div class="flex gap-2">
-							<button
-								id="replay-disconnect-btn"
-								class="btn btn-sm btn-error flex-1"
-								hx-post="/realtime/tavern/replay/disconnect"
-								hx-swap="none"
-							>
-								Disconnect
-							</button>
-							<button
-								id="replay-reconnect-btn"
-								class="btn btn-sm btn-success flex-1"
-								hx-get="/realtime/tavern/replay/sse-panel"
-								hx-target="#replay-sse-wrapper"
-								hx-swap="innerHTML"
-								disabled
-							>
-								Reconnect
-							</button>
-						</div>
+						<button
+							class="btn btn-sm btn-error w-full"
+							hx-post="/realtime/tavern/replay/drop"
+							hx-swap="none"
+						>
+							Drop Connection
+						</button>
 						<button
 							class="btn btn-sm btn-primary w-full"
 							hx-post="/realtime/tavern/replay/emit"
@@ -100,60 +105,30 @@ templ TavernReplayPage(replayWindow int) {
 				</div>
 
 				<div class="card bg-base-200 shadow-sm">
+					<div class="card-body p-4 space-y-2">
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Last Reconnect</h2>
+						<div id="replay-debug-panel" data-testid="replay-debug">
+							<p class="text-xs text-base-content/30">No reconnections yet.</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="card bg-base-200 shadow-sm">
 					<div class="card-body p-4">
 						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">How to Test</h2>
 						<ol class="text-xs text-base-content/50 list-decimal list-inside space-y-1">
 							<li>Watch events arrive in the log</li>
-							<li>Click "Disconnect" to close the SSE connection</li>
-							<li>Events continue publishing on the server</li>
-							<li>Click "Reconnect" — missed events replay via Last-Event-ID</li>
-							<li>Use "Burst 30" while disconnected to overflow the replay window and trigger a gap</li>
+							<li>Click "Drop Connection" to kill the SSE stream</li>
+							<li>The browser will auto-reconnect with Last-Event-ID</li>
+							<li>Missed events replay automatically</li>
+							<li>The "Last Reconnect" panel shows what the server received</li>
+							<li>Use "Burst 30" while dropped to overflow the replay window</li>
 						</ol>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-	@replayDisconnectScript()
-}
-
-// replaySSEContainer is the SSE connection element. It gets replaced
-// entirely on reconnect so the HTMX SSE extension initializes fresh.
-templ ReplaySSEContainer() {
-	<div
-		hx-ext="sse"
-		sse-connect="/sse/tavern/replay"
-		sse-close="replay-close"
-		data-tavern-reconnecting-class="opacity-50"
-		data-tavern-gap-action="banner"
-	>
-		<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
-			<span class="loading loading-spinner loading-xs"></span>
-			Reconnecting...
-		</div>
-		<div data-tavern-gap class="hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2">
-			Replay gap detected — some events were missed. Snapshot delivered instead.
-		</div>
-		<div sse-swap="replay-event" hx-target="#replay-log" hx-swap="afterbegin" style="display:none"></div>
-		<div sse-swap="replay-snapshot" hx-target="#replay-log" hx-swap="innerHTML" style="display:none"></div>
-	</div>
-}
-
-templ replayDisconnectScript() {
-	<script>
-		// Listen for sse-close events on the wrapper (bubbles up from the
-		// SSE container inside). Toggle button state so user can reconnect.
-		document.getElementById('replay-sse-wrapper').addEventListener('htmx:sseClose', function() {
-			document.getElementById('replay-disconnect-btn').disabled = true;
-			document.getElementById('replay-reconnect-btn').disabled = false;
-		});
-
-		// After reconnect swaps in a fresh SSE container, re-enable disconnect.
-		document.getElementById('replay-sse-wrapper').addEventListener('htmx:afterSwap', function() {
-			document.getElementById('replay-disconnect-btn').disabled = false;
-			document.getElementById('replay-reconnect-btn').disabled = true;
-		});
-	</script>
 }
 
 // ReplayEvent renders a single event entry in the log.
@@ -170,4 +145,33 @@ templ ReplaySnapshot(message string) {
 	<div class="py-2 px-3 rounded bg-warning/10 text-warning text-xs">
 		{ message }
 	</div>
+}
+
+// ReplayDebug renders the debug info from the last reconnection.
+templ ReplayDebug(lastEventID string, missedCount int, gap time.Duration) {
+	<div class="space-y-1 text-xs">
+		<div class="flex items-center gap-2">
+			<span class="text-base-content/50 w-24 shrink-0">Last-Event-ID:</span>
+			<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-last-id">{ lastEventID }</span>
+		</div>
+		<div class="flex items-center gap-2">
+			<span class="text-base-content/50 w-24 shrink-0">Replayed:</span>
+			<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-missed">{ fmt.Sprintf("%d events", missedCount) }</span>
+		</div>
+		<div class="flex items-center gap-2">
+			<span class="text-base-content/50 w-24 shrink-0">Gap:</span>
+			<span class="font-mono badge badge-ghost badge-xs" data-testid="replay-gap">{ formatReplayGap(gap) }</span>
+		</div>
+	</div>
+}
+
+func formatReplayGap(d time.Duration) string {
+	switch {
+	case d >= time.Minute:
+		return fmt.Sprintf("%.1fm", d.Minutes())
+	case d >= time.Second:
+		return fmt.Sprintf("%.1fs", d.Seconds())
+	default:
+		return fmt.Sprintf("%dms", d.Milliseconds())
+	}
 }
