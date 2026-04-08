@@ -5,7 +5,10 @@ package routes
 import (
 	"bytes"
 	"context"
+	crand "crypto/rand"
+	"encoding/hex"
 	"fmt"
+	"sort"
 	"math/rand/v2"
 	"net/http"
 	"strings"
@@ -45,14 +48,30 @@ func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
 		PresenceTopicSuffix: ":presence",
 		TargetID:            "presence-list",
 		RenderFunc: func(topic string, users []presence.Info) string {
-			vu := make([]views.NotifPresenceUser, len(users))
-			for i, u := range users {
-				vu[i] = views.NotifPresenceUser{
-					ID:    u.UserID,
+			// Multiple SSE connections may share the same identity (e.g.
+			// multiple tabs). Collapse by identity ID so each user appears
+			// once in the rendered list. Sort by identity ID for stable
+			// rendering order across reconnects.
+			seen := make(map[string]struct{})
+			var vu []views.NotifPresenceUser
+			for _, u := range users {
+				identityID, _ := u.Metadata["identity_id"].(string)
+				if identityID == "" {
+					identityID = u.UserID
+				}
+				if _, ok := seen[identityID]; ok {
+					continue
+				}
+				seen[identityID] = struct{}{}
+				vu = append(vu, views.NotifPresenceUser{
+					ID:    identityID,
 					Name:  u.Name,
 					Color: u.Avatar,
-				}
+				})
 			}
+			sort.Slice(vu, func(i, j int) bool {
+				return vu[i].ID < vu[j].ID
+			})
 			// We render without a "current user" context here — the presence
 			// list is broadcast to all subscribers so "(you)" is omitted in
 			// the OOB swap. The initial render in the page template shows it.
@@ -86,13 +105,22 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 		return fmt.Errorf("streaming unsupported")
 	}
 
-	// Join presence
+	// Each SSE connection gets a unique presence key so that multiple tabs
+	// sharing the same identity cookie track independently. The real identity
+	// ID is stored in metadata for notification routing and deduplication.
+	b := make([]byte, 4)
+	_, _ = crand.Read(b)
+	connID := hex.EncodeToString(b)
+
 	n.tracker.Join(TopicNotifications, presence.Info{
-		UserID: identity.ID,
+		UserID: connID,
 		Name:   identity.Name,
 		Avatar: identity.Color,
+		Metadata: map[string]any{
+			"identity_id": identity.ID,
+		},
 	})
-	defer n.tracker.Leave(TopicNotifications, identity.ID)
+	defer n.tracker.Leave(TopicNotifications, connID)
 
 	// Each user gets a dedicated topic so that replay via Last-Event-ID is
 	// inherently scoped — no risk of leaking another user's notifications.
@@ -146,7 +174,7 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 			_, _ = fmt.Fprint(c.Response(), msg)
 			flusher.Flush()
 		case <-heartbeat.C:
-			n.tracker.Heartbeat(TopicNotifications, identity.ID)
+			n.tracker.Heartbeat(TopicNotifications, connID)
 			_, _ = fmt.Fprintf(c.Response(), ": heartbeat\n\n")
 			flusher.Flush()
 		}
@@ -176,6 +204,13 @@ func (n *notificationRoutes) startSimulator(ctx context.Context) {
 			}
 			target := online[rand.IntN(len(online))]
 
+			// The presence UserID is a per-connection key; the real identity
+			// ID used for notification routing lives in metadata.
+			identityID, _ := target.Metadata["identity_id"].(string)
+			if identityID == "" {
+				continue
+			}
+
 			cat := demo.AllNotificationCategories[rand.IntN(len(demo.AllNotificationCategories))]
 			message := demo.FormatNotification(cat)
 			notifID := fmt.Sprintf("n%d", n.counter.Add(1))
@@ -188,7 +223,7 @@ func (n *notificationRoutes) startSimulator(ctx context.Context) {
 				String()
 
 			n.broker.PublishWithID(
-				notifUserTopic(target.UserID),
+				notifUserTopic(identityID),
 				notifID,
 				sseMsg,
 			)
