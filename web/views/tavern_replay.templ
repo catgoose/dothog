@@ -53,13 +53,23 @@ templ TavernReplayPage(replayWindow int) {
 					<div class="card bg-base-200 shadow-sm">
 						<div class="card-body p-4 space-y-3">
 							<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Controls</h2>
-							<button
-								id="replay-disconnect-btn"
-								class="btn btn-sm btn-error w-full"
-								onclick="replaySimulateDisconnect()"
-							>
-								Simulate Disconnect
-							</button>
+							<div class="flex gap-2">
+								<button
+									id="replay-disconnect-btn"
+									class="btn btn-sm btn-error flex-1"
+									onclick="replayDisconnect()"
+								>
+									Disconnect
+								</button>
+								<button
+									id="replay-reconnect-btn"
+									class="btn btn-sm btn-success flex-1"
+									onclick="replayReconnect()"
+									disabled
+								>
+									Reconnect
+								</button>
+							</div>
 							<button
 								class="btn btn-sm btn-primary w-full"
 								hx-post="/realtime/tavern/replay/emit"
@@ -102,11 +112,10 @@ templ TavernReplayPage(replayWindow int) {
 							<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">How to Test</h2>
 							<ol class="text-xs text-base-content/50 list-decimal list-inside space-y-1">
 								<li>Watch events arrive in the log</li>
-								<li>Click "Simulate Disconnect" to drop the SSE connection</li>
-								<li>Events continue on the server but don't arrive</li>
-								<li>After 3s the connection resumes with Last-Event-ID</li>
-								<li>Missed events replay automatically</li>
-								<li>Use "Burst 30" during disconnect to overflow the window and trigger a gap</li>
+								<li>Click "Disconnect" to close the SSE connection</li>
+								<li>Events continue publishing on the server</li>
+								<li>Click "Reconnect" — missed events replay via Last-Event-ID</li>
+								<li>Use "Burst 30" while disconnected to overflow the replay window and trigger a gap</li>
 							</ol>
 						</div>
 					</div>
@@ -119,24 +128,37 @@ templ TavernReplayPage(replayWindow int) {
 
 templ replayDisconnectScript() {
 	<script>
-		function replaySimulateDisconnect() {
-			var btn = document.getElementById('replay-disconnect-btn');
+		function replayDisconnect() {
 			var container = document.getElementById('replay-sse-container');
 			if (!container) return;
 
-			var sseConnect = container.getAttribute('sse-connect');
+			// Close the EventSource via HTMX internal data.
+			var data = htmx.getInternalData(container);
+			if (data && data.sseEventSource) {
+				data.sseEventSource.close();
+				data.sseEventSource = null;
+			}
+			// Store and remove sse-connect so HTMX won't auto-reconnect.
+			container.dataset.sseUrl = container.getAttribute('sse-connect');
 			container.removeAttribute('sse-connect');
-			htmx.process(container);
 
-			btn.textContent = 'Disconnected (reconnecting in 3s...)';
-			btn.disabled = true;
+			document.getElementById('replay-disconnect-btn').disabled = true;
+			document.getElementById('replay-reconnect-btn').disabled = false;
+		}
 
-			setTimeout(function() {
-				container.setAttribute('sse-connect', sseConnect);
+		function replayReconnect() {
+			var container = document.getElementById('replay-sse-container');
+			if (!container) return;
+
+			// Restore sse-connect and let HTMX re-initialize (sends Last-Event-ID).
+			var url = container.dataset.sseUrl;
+			if (url) {
+				container.setAttribute('sse-connect', url);
 				htmx.process(container);
-				btn.textContent = 'Simulate Disconnect';
-				btn.disabled = false;
-			}, 3000);
+			}
+
+			document.getElementById('replay-disconnect-btn').disabled = false;
+			document.getElementById('replay-reconnect-btn').disabled = true;
 		}
 	</script>
 }
