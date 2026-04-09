@@ -174,8 +174,7 @@ func (pl *PublishLab) Reset() {
 type HooksLab struct {
 	source   string
 	hookLog  []HookEvent
-	pubCount atomic.Int64
-	pubBytes atomic.Int64
+	pubStats PublishStats
 	mu       sync.RWMutex
 }
 
@@ -230,11 +229,10 @@ func (hl *HooksLab) HookLog() []HookEvent {
 
 // AddPublishStats increments middleware counters.
 func (hl *HooksLab) AddPublishStats(bytes int) {
-	hl.pubCount.Add(1)
-	hl.pubBytes.Add(int64(bytes))
+	hl.pubStats.Add(bytes)
 }
 
 // PublishStats returns total publish count and bytes.
 func (hl *HooksLab) PublishStats() (count, bytes int64) {
-	return hl.pubCount.Load(), hl.pubBytes.Load()
+	return hl.pubStats.Snapshot()
 }

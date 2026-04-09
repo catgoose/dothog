@@ -5,7 +5,6 @@ package routes
 import (
 	"fmt"
 	"net/http"
-	"sync/atomic"
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
@@ -24,30 +23,24 @@ const (
 )
 
 type docRoutes struct {
-	broker       *tavern.SSEBroker
-	doc          *demo.SharedDocument
-	publishCount *atomic.Int64
-	publishBytes *atomic.Int64
+	broker   *tavern.SSEBroker
+	doc      *demo.SharedDocument
+	pubStats *demo.PublishStats
 }
 
 func (ar *appRoutes) initDocRoutes(broker *tavern.SSEBroker) {
 	doc := demo.NewSharedDocument()
 
-	var publishCount atomic.Int64
-	var publishBytes atomic.Int64
-
 	d := &docRoutes{
-		broker:       broker,
-		doc:          doc,
-		publishCount: &publishCount,
-		publishBytes: &publishBytes,
+		broker:   broker,
+		doc:      doc,
+		pubStats: &demo.PublishStats{},
 	}
 
 	// Middleware: count all publishes on doc/* topics.
 	broker.UseTopics("doc/*", func(next tavern.PublishFunc) tavern.PublishFunc {
 		return func(t, msg string) {
-			publishCount.Add(1)
-			publishBytes.Add(int64(len(msg)))
+			d.pubStats.Add(len(msg))
 			next(t, msg)
 		}
 	})
@@ -116,8 +109,7 @@ func (d *docRoutes) handleBatchEdit(c echo.Context) error {
 }
 
 func (d *docRoutes) handleStatsBadge(c echo.Context) error {
-	count := d.publishCount.Load()
-	byteCount := d.publishBytes.Load()
+	count, byteCount := d.pubStats.Snapshot()
 	html := fmt.Sprintf(
 		`<span class="badge badge-ghost badge-sm font-mono">%d publishes / %s</span>`,
 		count, formatBytes(byteCount),
