@@ -126,7 +126,7 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 						<span class="loading loading-spinner loading-xs"></span>
 						Reconnecting...
 					</div>
-					<div sse-swap="notification" hx-swap="beforeend settle:0 transition:false" hx-target="#notification-list" style="display:none"></div>
+					<!-- notification events are intercepted via htmx:sseMessage and rendered through a coalesced JS queue (see notificationsScript) -->
 					<div sse-swap="presence" hx-swap="innerHTML settle:0 transition:false" hx-target="#presence-list" style="display:none"></div>
 					<div
 						id="notification-list"
@@ -191,26 +191,49 @@ templ notificationsScript() {
 			return (el.scrollHeight - el.scrollTop - el.clientHeight) < 48;
 		}
 
-		function notifTrimAndMaybeFollow() {
-			const list = document.getElementById('notification-list');
-			if (!list) return;
+		// Coalesced notification renderer: queues incoming notification HTML
+		// from htmx:sseMessage and flushes to the DOM on a timer. Avoids
+		// per-message HTMX swaps on the hot stream.
+		(function() {
+			var FLUSH_MS = 50;
+			var MAX_ROWS = 50;
+			var pending = [];
+			var flushTimer = 0;
 
-			const shouldFollow = list.dataset.followOnSettle === '1';
-			const items = Array.from(list.children).filter(function(node) {
-				return node.id !== 'notif-empty';
+			function flush() {
+				flushTimer = 0;
+				if (pending.length === 0) return;
+				var list = document.getElementById('notification-list');
+				if (!list) { pending = []; return; }
+
+				var follow = notifNearBottom(list);
+
+				var empty = document.getElementById('notif-empty');
+				if (empty) empty.remove();
+
+				list.insertAdjacentHTML('beforeend', pending.join(''));
+				pending = [];
+
+				while (list.children.length > MAX_ROWS) {
+					list.removeChild(list.firstElementChild);
+				}
+
+				if (follow) {
+					list.scrollTop = list.scrollHeight;
+				}
+			}
+
+			function schedule() {
+				if (flushTimer) return;
+				flushTimer = window.setTimeout(flush, FLUSH_MS);
+			}
+
+			document.body.addEventListener('htmx:sseMessage', function(evt) {
+				if (evt.detail.type !== 'notification') return;
+				pending.push(evt.detail.data);
+				schedule();
 			});
-			const maxRows = 50;
-
-			while (items.length > maxRows) {
-				const first = items.shift();
-				if (first) first.remove();
-			}
-
-			if (shouldFollow) {
-				list.scrollTop = list.scrollHeight;
-			}
-			delete list.dataset.followOnSettle;
-		}
+		})();
 
 		function simulateDisconnect() {
 			const btn = document.getElementById('disconnect-btn');
@@ -238,23 +261,6 @@ templ notificationsScript() {
 				btn.disabled = false;
 			}, 3000);
 		}
-
-		document.body.addEventListener('htmx:beforeSwap', function(evt) {
-			const target = evt.detail.target;
-			if (!target || target.id !== 'notification-list') return;
-			target.dataset.followOnSettle = notifNearBottom(target) ? '1' : '0';
-		});
-
-		document.body.addEventListener('htmx:afterSettle', function(evt) {
-			const target = evt.detail.target;
-			if (!target || target.id !== 'notification-list') return;
-
-			const empty = document.getElementById('notif-empty');
-			if (empty) {
-				empty.remove();
-			}
-			notifTrimAndMaybeFollow();
-		});
 
 		// Toggle active class on speed preset buttons.
 		function notifSetActiveSpeed(btn) {
