@@ -201,11 +201,12 @@ templ notificationsScript() {
 		// Coalesced notification renderer: queues incoming notification HTML
 		// from htmx:sseMessage and flushes to the DOM on a timer. Avoids
 		// per-message HTMX swaps on the hot stream.
-		(function() {
+		var notifQueue = (function() {
 			var FLUSH_MS = 50;
 			var MAX_ROWS = 50;
 			var pending = [];
 			var flushTimer = 0;
+			var connected = true;
 
 			function flush() {
 				flushTimer = 0;
@@ -236,10 +237,25 @@ templ notificationsScript() {
 			}
 
 			document.body.addEventListener('htmx:sseMessage', function(evt) {
+				if (!connected) return;
 				if (evt.detail.type !== 'notification') return;
 				pending.push(evt.detail.data);
 				schedule();
 			});
+
+			return {
+				disconnect: function() {
+					connected = false;
+					pending = [];
+					if (flushTimer) {
+						clearTimeout(flushTimer);
+						flushTimer = 0;
+					}
+				},
+				connect: function() {
+					connected = true;
+				}
+			};
 		})();
 
 		function simulateDisconnect() {
@@ -249,6 +265,9 @@ templ notificationsScript() {
 			const remaining = document.getElementById('notif-reconn-remaining');
 			const progress = document.getElementById('notif-reconn-progress');
 			if (!container) return;
+
+			// Stop accepting notifications and clear any in-flight buffer.
+			notifQueue.disconnect();
 
 			// Remove the SSE connection — tavern-js handles the reconnecting visual state
 			const sseConnect = container.getAttribute('sse-connect');
@@ -288,6 +307,7 @@ templ notificationsScript() {
 				// Re-add SSE connection — HTMX will send Last-Event-ID
 				container.setAttribute('sse-connect', sseConnect);
 				htmx.process(container);
+				notifQueue.connect();
 
 				btn.classList.remove('btn-error');
 				btn.classList.add('btn-warning');
