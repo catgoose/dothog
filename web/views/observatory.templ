@@ -44,7 +44,7 @@ templ ObservatoryPage(data ObservatoryData) {
 			</div>
 		</div>
 		<!-- Static controls (not inside SSE swap target so the slider survives updates) -->
-		@observatoryControls(data)
+		@ObservatoryControls(data)
 		<!-- Info -->
 		<div class="card bg-base-200 shadow-sm">
 			<div class="card-body p-4">
@@ -65,17 +65,17 @@ templ ObservatoryUpdate(data ObservatoryData) {
 	@observatoryPanels(data)
 }
 
-templ observatoryControls(data ObservatoryData) {
-	<div class="card bg-base-200 shadow-sm">
+templ ObservatoryControls(data ObservatoryData) {
+	<div id="obs-controls" class="card bg-base-200 shadow-sm">
 		<div class="card-body p-4">
 			<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Controls</h2>
 			<div class="flex items-center gap-6 flex-wrap">
 				<div class="flex items-center gap-3">
 					<span class="text-sm">Stress Test</span>
 					<button
-						id="obs-stress-btn"
 						class={ "btn btn-sm", templ.KV("btn-error", data.StressActive), templ.KV("btn-primary", !data.StressActive) }
 						hx-post="/realtime/observatory/stress"
+						hx-target="#obs-controls"
 						hx-swap="outerHTML"
 					>
 						if data.StressActive {
@@ -90,10 +90,11 @@ templ observatoryControls(data ObservatoryData) {
 					<input
 						type="range"
 						min="1"
-						max="50"
+						max="100"
 						step="1"
 						value={ fmt.Sprintf("%d", data.MaxPerTopic) }
 						class="range range-xs range-primary w-32"
+						disabled?={ data.StressActive }
 						hx-post="/realtime/observatory/max-per-topic"
 						hx-trigger="input changed delay:150ms"
 						hx-target="#obs-max-per-topic-val"
@@ -101,26 +102,13 @@ templ observatoryControls(data ObservatoryData) {
 						name="max"
 					/>
 					<span id="obs-max-per-topic-val" class="badge badge-outline badge-sm font-mono">{ fmt.Sprintf("%d", data.MaxPerTopic) }</span>
+					if data.StressActive {
+						<span class="text-xs text-base-content/40">(stop stress to change)</span>
+					}
 				</div>
 			</div>
 		</div>
 	</div>
-}
-
-// ObservatoryStressButton renders just the stress button (used as the OOB swap response).
-templ ObservatoryStressButton(active bool) {
-	<button
-		id="obs-stress-btn"
-		class={ "btn btn-sm", templ.KV("btn-error", active), templ.KV("btn-primary", !active) }
-		hx-post="/realtime/observatory/stress"
-		hx-swap="outerHTML"
-	>
-		if active {
-			Stop Stress
-		} else {
-			Start Stress
-		}
-	</button>
 }
 
 templ observatoryPanels(data ObservatoryData) {

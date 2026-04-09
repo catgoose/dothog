@@ -201,7 +201,7 @@ func (o *observatoryRoutes) handleMaxPerTopic(c echo.Context) error {
 func (o *observatoryRoutes) handleStressToggle(c echo.Context) error {
 	if o.state.StressActive() {
 		o.state.CancelStress()
-		return handler.RenderComponent(c, views.ObservatoryStressButton(false))
+		return handler.RenderComponent(c, views.ObservatoryControls(o.controlsData()))
 	}
 
 	// Detach from request context — stress test outlives the HTTP request.
@@ -244,6 +244,15 @@ func (o *observatoryRoutes) handleStressToggle(c echo.Context) error {
 		}
 	}
 
-	return handler.RenderComponent(c, views.ObservatoryStressButton(true))
+	return handler.RenderComponent(c, views.ObservatoryControls(o.controlsData()))
+}
+
+// controlsData builds a minimal ObservatoryData for re-rendering the controls
+// fragment after a stress toggle.
+func (o *observatoryRoutes) controlsData() views.ObservatoryData {
+	return views.ObservatoryData{
+		StressActive: o.state.StressActive(),
+		MaxPerTopic:  o.state.MaxPerTopic(),
+	}
 }
 
