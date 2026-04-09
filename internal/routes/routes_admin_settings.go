@@ -92,6 +92,12 @@ func snapshotAdminIntervals() map[string]int {
 	return out
 }
 
+// Override the no-op default in routes_admin_core.go so the admin health page
+// shows live interval values when the demo feature is present.
+func init() {
+	healthIntervalsFn = snapshotAdminIntervals
+}
+
 // ── Publisher ────────────────────────────────────────────────────────────────
 
 func (ar *appRoutes) newAdminPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
