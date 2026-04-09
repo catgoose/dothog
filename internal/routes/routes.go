@@ -271,6 +271,7 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initKanbanRoutes(board, actLog, ar.broker)
 	ar.initApprovalRoutes(queue, actLog, ar.broker)
 	ar.initFeedRoutes(actLog, ar.broker)
+	ar.initCalendarRoutes()
 	ar.initCanvasRoutes(demo.NewPixelCanvas(), ar.broker)
 	ar.initSettingsRoutes(demo.NewSettingsStore())
 	ar.initVendorContactRoutes(db, actLog, ar.broker)

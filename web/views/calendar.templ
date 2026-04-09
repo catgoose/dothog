@@ -1,0 +1,297 @@
+// setup:feature:demo
+
+package views
+
+import (
+	"catgoose/dothog/internal/demo"
+	"fmt"
+	"time"
+)
+
+// CalendarMonthData is the view-model for the calendar page and month
+// fragment.
+type CalendarMonthData struct {
+	Today       time.Time
+	Selected    time.Time
+	WeekStart   time.Time
+	DayCounts   map[int]demo.DayCounts
+	Events      []demo.CalendarEvent
+	Year        int
+	Month       time.Month
+	PrevYear    int
+	NextYear    int
+	WeeksInView int
+	PrevMonth   time.Month
+	NextMonth   time.Month
+}
+
+var calCategoryBadge = map[demo.CalendarEventCategory]string{
+	demo.CalCatMaintenance: "badge-primary",
+	demo.CalCatAppointment: "badge-secondary",
+	demo.CalCatReminder:    "badge-info",
+	demo.CalCatDeadline:    "badge-warning",
+}
+
+var calCategoryDot = map[demo.CalendarEventCategory]string{
+	demo.CalCatMaintenance: "bg-primary",
+	demo.CalCatAppointment: "bg-secondary",
+	demo.CalCatReminder:    "bg-info",
+	demo.CalCatDeadline:    "bg-warning",
+}
+
+templ CalendarPage(data CalendarMonthData) {
+	<div class="max-w-5xl mx-auto p-4 space-y-4">
+		<div class="flex items-center justify-between flex-wrap gap-2">
+			<div>
+				<h1 class="text-2xl font-bold">Calendar</h1>
+				<p class="text-xs text-base-content/50">
+					Server-rendered month view, HTMX navigation, no client-side calendar library.
+					Click a day to inspect events. Add or remove events to see the grid update.
+				</p>
+			</div>
+		</div>
+
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+			<!-- Month grid (left, 2 cols on desktop) -->
+			<div class="lg:col-span-2">
+				<div id="calendar-month" class="card bg-base-200 shadow-sm">
+					@CalendarMonthFragment(data)
+				</div>
+				@calendarLegend()
+			</div>
+			<!-- Day inspector panel (right) -->
+			<div class="lg:col-span-1">
+				<div id="calendar-day" class="card bg-base-200 shadow-sm">
+					if !data.Selected.IsZero() {
+						@CalendarDayPanel(data.Selected, dayEvents(data.Events, data.Selected))
+					} else {
+						@calendarDayEmpty()
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// CalendarMonthFragment renders just the month grid card body, used for
+// prev/next navigation swaps.
+templ CalendarMonthFragment(data CalendarMonthData) {
+	<div id="calendar-month-inner" class="card-body p-4 space-y-3">
+		<div class="flex items-center justify-between gap-2">
+			<button
+				class="btn btn-xs btn-ghost"
+				hx-get={ fmt.Sprintf("/realtime/calendar/month?y=%d&m=%d", data.PrevYear, int(data.PrevMonth)) }
+				hx-target="#calendar-month-inner"
+				hx-swap="outerHTML"
+				aria-label="previous month"
+			>
+				&#9664;
+			</button>
+			<h2 class="text-base font-semibold tabular-nums">{ fmt.Sprintf("%s %d", data.Month.String(), data.Year) }</h2>
+			<button
+				class="btn btn-xs btn-ghost"
+				hx-get={ fmt.Sprintf("/realtime/calendar/month?y=%d&m=%d", data.NextYear, int(data.NextMonth)) }
+				hx-target="#calendar-month-inner"
+				hx-swap="outerHTML"
+				aria-label="next month"
+			>
+				&#9654;
+			</button>
+		</div>
+		<!-- Weekday header -->
+		<div class="grid grid-cols-7 gap-1 text-xs text-base-content/50 text-center">
+			for _, w := range []string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"} {
+				<div>{ w }</div>
+			}
+		</div>
+		<!-- Day grid -->
+		<div class="grid grid-cols-7 gap-1">
+			for w := 0; w < data.WeeksInView; w++ {
+				for d := 0; d < 7; d++ {
+					{{ cellDate := data.WeekStart.AddDate(0, 0, w*7+d) }}
+					@calendarDayCell(cellDate, data)
+				}
+			}
+		</div>
+		<div class="text-xs text-base-content/40">
+			Click a day to inspect or add events.
+		</div>
+	</div>
+}
+
+templ calendarDayCell(cellDate time.Time, data CalendarMonthData) {
+	{{
+		inMonth := cellDate.Month() == data.Month
+		isToday := sameDay(cellDate, data.Today)
+		isSelected := !data.Selected.IsZero() && sameDay(cellDate, data.Selected)
+		dateStr := cellDate.Format("2006-01-02")
+		counts := data.DayCounts[cellDate.Day()]
+	}}
+	<button
+		type="button"
+		class={ calendarCellClass(inMonth, isToday, isSelected) }
+		hx-get={ "/realtime/calendar/day?d=" + dateStr }
+		hx-target="#calendar-day"
+		hx-swap="innerHTML"
+		hx-on::after-request="markCalendarSelected(this)"
+		data-cal-cell={ dateStr }
+	>
+		<span class="text-xs tabular-nums">{ fmt.Sprintf("%d", cellDate.Day()) }</span>
+		if inMonth && len(counts) > 0 {
+			<div class="flex gap-0.5 mt-1">
+				for _, cat := range demo.AllCalendarCategories {
+					if counts[cat] > 0 {
+						<span class={ "w-1.5 h-1.5 rounded-full", calCategoryDot[cat] }></span>
+					}
+				}
+			</div>
+		}
+	</button>
+}
+
+func calendarCellClass(inMonth, isToday, isSelected bool) string {
+	base := "flex flex-col items-center justify-start min-h-12 p-1 rounded text-base-content cursor-pointer hover:bg-base-300"
+	if !inMonth {
+		base += " opacity-30"
+	}
+	if isToday {
+		base += " ring-1 ring-primary"
+	}
+	if isSelected {
+		base += " bg-primary/20"
+	} else {
+		base += " bg-base-100"
+	}
+	return base
+}
+
+templ calendarLegend() {
+	<div class="flex items-center gap-3 text-xs text-base-content/60 mt-2 flex-wrap">
+		for _, cat := range demo.AllCalendarCategories {
+			<div class="flex items-center gap-1">
+				<span class={ "w-2 h-2 rounded-full", calCategoryDot[cat] }></span>
+				<span>{ string(cat) }</span>
+			</div>
+		}
+	</div>
+	<script>
+		// Highlight the clicked day cell without waiting for a full month re-render.
+		function markCalendarSelected(btn) {
+			document.querySelectorAll('[data-cal-cell]').forEach(function(el) {
+				el.classList.remove('bg-primary/20');
+				if (!el.classList.contains('bg-primary/20')) el.classList.add('bg-base-100');
+			});
+			btn.classList.remove('bg-base-100');
+			btn.classList.add('bg-primary/20');
+		}
+	</script>
+}
+
+templ calendarDayEmpty() {
+	<div class="card-body p-4">
+		<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Day</h2>
+		<p class="text-xs text-base-content/40">Pick a day from the calendar to inspect or add events.</p>
+	</div>
+}
+
+// CalendarDayPanel renders the right-hand inspector for a single day.
+templ CalendarDayPanel(day time.Time, events []demo.CalendarEvent) {
+	<div class="card-body p-4 space-y-3">
+		<div>
+			<h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/50">{ day.Format("Mon Jan 2, 2006") }</h2>
+			<p class="text-xs text-base-content/40">{ fmt.Sprintf("%d event(s)", len(events)) }</p>
+		</div>
+		<div class="space-y-1">
+			if len(events) == 0 {
+				<p class="text-xs text-base-content/30 py-2">No events on this day yet.</p>
+			} else {
+				for _, e := range events {
+					@calendarEventRow(e, day)
+				}
+			}
+		</div>
+		@calendarAddEventForm(day)
+	</div>
+}
+
+templ calendarEventRow(e demo.CalendarEvent, day time.Time) {
+	{{ deleteURL := fmt.Sprintf("/realtime/calendar/event/%d?d=%s", e.ID, day.Format("2006-01-02")) }}
+	<div class="flex items-center gap-2 py-1 border-b border-base-300/50 last:border-0">
+		<span class={ "badge badge-xs " + calCategoryBadge[e.Category] }>{ string(e.Category) }</span>
+		<div class="flex-1 min-w-0">
+			<div class="text-sm truncate">{ e.Title }</div>
+			if e.Assignee != "" {
+				<div class="text-xs text-base-content/50 truncate">{ e.Assignee }</div>
+			}
+		</div>
+		<button
+			class="btn btn-ghost btn-xs"
+			hx-delete={ deleteURL }
+			hx-target="#calendar-day"
+			hx-swap="innerHTML"
+			aria-label="remove event"
+		>
+			&times;
+		</button>
+	</div>
+}
+
+templ calendarAddEventForm(day time.Time) {
+	<form
+		class="space-y-2 mt-2 pt-2 border-t border-base-300/50"
+		hx-post="/realtime/calendar/event"
+		hx-target="#calendar-day"
+		hx-swap="innerHTML"
+	>
+		<input type="hidden" name="d" value={ day.Format("2006-01-02") }/>
+		<div class="form-control">
+			<input
+				type="text"
+				name="title"
+				placeholder="Event title"
+				class="input input-xs input-bordered w-full"
+				required
+			/>
+		</div>
+		<div class="form-control">
+			<input
+				type="text"
+				name="assignee"
+				placeholder="Assignee (optional)"
+				class="input input-xs input-bordered w-full"
+			/>
+		</div>
+		<div class="flex items-center gap-2">
+			<select name="category" class="select select-xs select-bordered flex-1">
+				for _, cat := range demo.AllCalendarCategories {
+					<option value={ string(cat) }>{ string(cat) }</option>
+				}
+			</select>
+			<button type="submit" class="btn btn-primary btn-xs">Add</button>
+		</div>
+	</form>
+}
+
+// CalendarDayWithMonthOOB renders the day panel as the primary swap target
+// and includes the month grid as an out-of-band swap so both update together
+// after add/remove.
+templ CalendarDayWithMonthOOB(day time.Time, events []demo.CalendarEvent, monthData CalendarMonthData) {
+	@CalendarDayPanel(day, events)
+	<div hx-swap-oob="outerHTML:#calendar-month-inner">
+		@CalendarMonthFragment(monthData)
+	</div>
+}
+
+func dayEvents(all []demo.CalendarEvent, day time.Time) []demo.CalendarEvent {
+	var out []demo.CalendarEvent
+	for _, e := range all {
+		if sameDay(e.Date, day) {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+func sameDay(a, b time.Time) bool {
+	return a.Year() == b.Year() && a.Month() == b.Month() && a.Day() == b.Day()
+}
