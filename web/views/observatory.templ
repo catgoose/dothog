@@ -43,12 +43,84 @@ templ ObservatoryPage(data ObservatoryData) {
 				@observatoryPanels(data)
 			</div>
 		</div>
+		<!-- Static controls (not inside SSE swap target so the slider survives updates) -->
+		@observatoryControls(data)
+		<!-- Info -->
+		<div class="card bg-base-200 shadow-sm">
+			<div class="card-body p-4">
+				<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">How It Works</h2>
+				<div class="text-xs text-base-content/60 space-y-1">
+					<p>This page observes a <strong>separate demo broker</strong> that is not connected to any real SSE clients. Synthetic traffic is generated across { fmt.Sprintf("%d", len(data.Topics)) } topics at varying rates.</p>
+					<p><strong>Stress Test</strong> spawns slow subscribers that deliberately read messages with a 500ms delay, causing buffer fill-up and triggering adaptive backpressure tiers: Normal, Throttle (every 2nd msg), Simplify (reduced fidelity), Disconnect (eviction).</p>
+					<p><strong>Metrics</strong> are collected every second from the demo broker and delivered to this page via SSE through the main app broker.</p>
+				</div>
+			</div>
+		</div>
 	</div>
 }
 
-// ObservatoryUpdate renders just the panels for SSE swap.
+// ObservatoryUpdate renders just the metrics + tier changes for SSE swap.
+// Controls and Info live outside the swap target so the slider survives updates.
 templ ObservatoryUpdate(data ObservatoryData) {
 	@observatoryPanels(data)
+}
+
+templ observatoryControls(data ObservatoryData) {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body p-4">
+			<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Controls</h2>
+			<div class="flex items-center gap-6 flex-wrap">
+				<div class="flex items-center gap-3">
+					<span class="text-sm">Stress Test</span>
+					<button
+						id="obs-stress-btn"
+						class={ "btn btn-sm", templ.KV("btn-error", data.StressActive), templ.KV("btn-primary", !data.StressActive) }
+						hx-post="/realtime/observatory/stress"
+						hx-swap="outerHTML"
+					>
+						if data.StressActive {
+							Stop Stress
+						} else {
+							Start Stress
+						}
+					</button>
+				</div>
+				<div class="flex items-center gap-3">
+					<span class="text-sm whitespace-nowrap">Max Subscribers/Topic</span>
+					<input
+						type="range"
+						min="1"
+						max="50"
+						step="1"
+						value={ fmt.Sprintf("%d", data.MaxPerTopic) }
+						class="range range-xs range-primary w-32"
+						hx-post="/realtime/observatory/max-per-topic"
+						hx-trigger="input changed delay:150ms"
+						hx-target="#obs-max-per-topic-val"
+						hx-swap="innerHTML"
+						name="max"
+					/>
+					<span id="obs-max-per-topic-val" class="badge badge-outline badge-sm font-mono">{ fmt.Sprintf("%d", data.MaxPerTopic) }</span>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// ObservatoryStressButton renders just the stress button (used as the OOB swap response).
+templ ObservatoryStressButton(active bool) {
+	<button
+		id="obs-stress-btn"
+		class={ "btn btn-sm", templ.KV("btn-error", active), templ.KV("btn-primary", !active) }
+		hx-post="/realtime/observatory/stress"
+		hx-swap="outerHTML"
+	>
+		if active {
+			Stop Stress
+		} else {
+			Start Stress
+		}
+	</button>
 }
 
 templ observatoryPanels(data ObservatoryData) {
@@ -110,47 +182,6 @@ templ observatoryPanels(data ObservatoryData) {
 							<span class="text-base-content/40">{ evt.SubscriberID }</span>
 						</div>
 					}
-				</div>
-			</div>
-		</div>
-		<!-- Controls -->
-		<div class="card bg-base-200 shadow-sm">
-			<div class="card-body p-4">
-				<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Controls</h2>
-				<div class="flex items-center gap-6 flex-wrap">
-					<div class="flex items-center gap-3">
-						<span class="text-sm">Stress Test</span>
-						<button
-							class={ "btn btn-sm", templ.KV("btn-error", data.StressActive), templ.KV("btn-primary", !data.StressActive) }
-							hx-post="/realtime/observatory/stress"
-							hx-swap="none"
-						>
-							if data.StressActive {
-								Stop Stress
-							} else {
-								Start Stress
-							}
-						</button>
-						if data.StressActive {
-							<span class="badge badge-error badge-xs animate-pulse">active</span>
-						}
-					</div>
-					<div class="flex items-center gap-3">
-						<span class="text-sm">Max Subscribers/Topic</span>
-						<span class="badge badge-outline badge-sm font-mono">{ fmt.Sprintf("%d", data.MaxPerTopic) }</span>
-						<span class="text-xs text-base-content/50">(set at broker creation)</span>
-					</div>
-				</div>
-			</div>
-		</div>
-		<!-- Info -->
-		<div class="card bg-base-200 shadow-sm">
-			<div class="card-body p-4">
-				<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">How It Works</h2>
-				<div class="text-xs text-base-content/60 space-y-1">
-					<p>This page observes a <strong>separate demo broker</strong> that is not connected to any real SSE clients. Synthetic traffic is generated across { fmt.Sprintf("%d", len(data.Topics)) } topics at varying rates.</p>
-					<p><strong>Stress Test</strong> spawns slow subscribers that deliberately read messages with a 500ms delay, causing buffer fill-up and triggering adaptive backpressure tiers: Normal, Throttle (every 2nd msg), Simplify (reduced fidelity), Disconnect (eviction).</p>
-					<p><strong>Metrics</strong> are collected every second from the demo broker and delivered to this page via SSE through the main app broker.</p>
 				</div>
 			</div>
 		</div>
