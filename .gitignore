@@ -83,3 +83,6 @@ fastlane/test_output
 Gemfile.lock
 vendor/bundle/
 .bundle/
+
+# Local working notes
+plan.md

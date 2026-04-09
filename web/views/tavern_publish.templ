@@ -13,7 +13,12 @@ type TavernPublishData struct {
 }
 
 templ TavernPublishPage(data TavernPublishData) {
-	<div class="max-w-6xl mx-auto p-4 space-y-4">
+	<style>
+		body:has(#pub-page) main {
+			view-transition-name: none !important;
+		}
+	</style>
+	<div id="pub-page" class="max-w-6xl mx-auto p-4 space-y-4" style="overflow-anchor:none">
 		<div class="flex items-center justify-between flex-wrap gap-2">
 			<div>
 				<h1 class="text-2xl font-bold">Publish Lab</h1>
@@ -59,10 +64,10 @@ templ TavernPublishPage(data TavernPublishData) {
 				Reconnecting...
 			</div>
 
-			<div sse-swap="tavern/pub/raw" hx-target="#pub-raw-log" hx-swap="afterbegin" style="display:none"></div>
-			<div sse-swap="tavern/pub/debounced" hx-target="#pub-debounce-log" hx-swap="afterbegin" style="display:none"></div>
-			<div sse-swap="tavern/pub/throttled" hx-target="#pub-throttle-log" hx-swap="afterbegin" style="display:none"></div>
-			<div sse-swap="tavern/pub/ifchanged" hx-target="#pub-changed-log" hx-swap="afterbegin" style="display:none"></div>
+			<div sse-swap="tavern/pub/raw" hx-target="#pub-raw-log" hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="tavern/pub/debounced" hx-target="#pub-debounce-log" hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="tavern/pub/throttled" hx-target="#pub-throttle-log" hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="tavern/pub/ifchanged" hx-target="#pub-changed-log" hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
 
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 				@publishPanel("Raw", "Publish", "Every message arrives. No filtering or dedup.", "pub-raw-log", data.RawCount)
@@ -83,11 +88,39 @@ templ publishPanel(title string, apiName string, description string, logID strin
 				<span class="font-mono text-primary">{ apiName }</span>
 				<span class="badge badge-xs badge-ghost font-mono ml-1" data-testid={ "count-" + logID }>{ fmt.Sprintf("%d", count) }</span>
 			</div>
-			<div id={ logID } class="max-h-48 overflow-y-auto font-mono text-xs space-y-0.5" data-testid={ logID }>
-				<p class="text-base-content/30">Waiting...</p>
+			<div id={ logID } class="max-h-48 overflow-y-auto overflow-x-hidden font-mono text-xs space-y-0.5" style="contain:paint" data-testid={ logID }>
+				<p class={ "text-base-content/30 " + logID + "-empty" }>Waiting...</p>
 			</div>
 		</div>
 	</div>
+	@pubLogScript(logID)
+}
+
+templ pubLogScript(logID string) {
+	<script data-log-id={ logID }>
+		(function() {
+			var logID = document.currentScript.getAttribute('data-log-id');
+			var log = document.getElementById(logID);
+			if (!log) return;
+			var MAX_ROWS = 50;
+			var emptyCleaned = false;
+
+			log.addEventListener('htmx:afterSettle', function() {
+				if (!emptyCleaned) {
+					var empty = log.querySelector('.' + logID + '-empty');
+					if (empty) empty.remove();
+					emptyCleaned = true;
+				}
+				while (log.children.length > MAX_ROWS) {
+					log.removeChild(log.firstElementChild);
+				}
+				var distFromBottom = log.scrollHeight - log.scrollTop - log.clientHeight;
+				if (distFromBottom < 24) {
+					log.scrollTop = log.scrollHeight;
+				}
+			});
+		})();
+	</script>
 }
 
 // PubEventEntry renders a single publish lab event.

@@ -39,7 +39,7 @@ func LoggingPage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-5xl mx-auto\"><div class=\"flex items-center justify-between mb-4\"><h1 class=\"text-2xl font-bold\">Retrospective Logging</h1></div><div role=\"alert\" class=\"alert alert-info text-sm\"><div><p>Demonstrates <strong>promote-on-error</strong> log capture. Logs are buffered per-request in memory. Only when a request fails are the logs persisted to SQLite for debugging.</p><p class=\"mt-1\">Trigger errors below, then view the captured traces and simulate a support report.</p></div></div><!-- SSE connection for live error trace updates --><div hx-ext=\"sse\" sse-connect=\"/sse/error-traces\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"banner\"><div data-tavern-status class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\">Reconnecting…</div><div sse-swap=\"error-trace\" style=\"display:none\"></div></div><!-- Error Generators --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Generate Errors</h2><p class=\"text-sm text-base-content/70 mb-3\">Each button triggers a real server error with contextual slog entries along the way. The per-request log buffer is promoted to the error trace store on failure. New traces appear below in real-time via SSE.</p><div class=\"flex flex-wrap gap-2\"><button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/platform/logging/trigger/404\" hx-target=\"#logging-trigger-result\" hx-swap=\"innerHTML\">404 Not Found</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/platform/logging/trigger/400\" hx-target=\"#logging-trigger-result\" hx-swap=\"innerHTML\">400 Bad Request</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/platform/logging/trigger/500\" hx-target=\"#logging-trigger-result\" hx-swap=\"innerHTML\">500 Internal Error</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/platform/logging/trigger/403\" hx-target=\"#logging-trigger-result\" hx-swap=\"innerHTML\">403 Forbidden</button></div><div id=\"logging-trigger-result\" class=\"mt-2\"></div></div></div><!-- Recent Error Traces --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><div class=\"flex items-center justify-between mb-3\"><h2 class=\"card-title text-base\">Captured Error Traces</h2><button class=\"btn btn-sm btn-ghost\" hx-get=\"/platform/logging/traces\" hx-target=\"#logging-traces-list\" hx-swap=\"innerHTML\">Refresh</button></div><p class=\"text-sm text-base-content/70 mb-3\">Error traces persisted to SQLite. Click <strong>View Report</strong> to see the JSON payload that would be sent to support (email attachment, Teams webhook, ticket system, etc).</p><div id=\"logging-traces-list\" hx-get=\"/platform/logging/traces\" hx-trigger=\"load\" hx-swap=\"innerHTML\"><div class=\"text-center text-base-content/50 py-4\">Loading...</div></div></div></div><!-- Simulated Report Output --><div id=\"logging-report-output\"></div><!-- How It Works --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\tbody:has(#logging-page) main { view-transition-name: none !important; }\n\t</style><div id=\"logging-page\" class=\"p-4 space-y-6 max-w-5xl mx-auto\" style=\"overflow-anchor:none\"><div class=\"flex items-center justify-between mb-4\"><h1 class=\"text-2xl font-bold\">Retrospective Logging</h1></div><div role=\"alert\" class=\"alert alert-info text-sm\"><div><p>Demonstrates <strong>promote-on-error</strong> log capture. Logs are buffered per-request in memory. Only when a request fails are the logs persisted to SQLite for debugging.</p><p class=\"mt-1\">Trigger errors below, then view the captured traces and simulate a support report.</p></div></div><!-- SSE connection for live error trace updates --><div hx-ext=\"sse\" sse-connect=\"/sse/error-traces\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"banner\"><div data-tavern-status class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\">Reconnecting…</div><div sse-swap=\"error-trace\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div></div><!-- Error Generators --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Generate Errors</h2><p class=\"text-sm text-base-content/70 mb-3\">Each button triggers a real server error with contextual slog entries along the way. The per-request log buffer is promoted to the error trace store on failure. New traces appear below in real-time via SSE.</p><div class=\"flex flex-wrap gap-2\"><button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/platform/logging/trigger/404\" hx-target=\"#logging-trigger-result\" hx-swap=\"innerHTML\">404 Not Found</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/platform/logging/trigger/400\" hx-target=\"#logging-trigger-result\" hx-swap=\"innerHTML\">400 Bad Request</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/platform/logging/trigger/500\" hx-target=\"#logging-trigger-result\" hx-swap=\"innerHTML\">500 Internal Error</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/platform/logging/trigger/403\" hx-target=\"#logging-trigger-result\" hx-swap=\"innerHTML\">403 Forbidden</button></div><div id=\"logging-trigger-result\" class=\"mt-2\"></div></div></div><!-- Recent Error Traces --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><div class=\"flex items-center justify-between mb-3\"><h2 class=\"card-title text-base\">Captured Error Traces</h2><button class=\"btn btn-sm btn-ghost\" hx-get=\"/platform/logging/traces\" hx-target=\"#logging-traces-list\" hx-swap=\"innerHTML\">Refresh</button></div><p class=\"text-sm text-base-content/70 mb-3\">Error traces persisted to SQLite. Click <strong>View Report</strong> to see the JSON payload that would be sent to support (email attachment, Teams webhook, ticket system, etc).</p><div id=\"logging-traces-list\" hx-get=\"/platform/logging/traces\" hx-trigger=\"load\" hx-swap=\"innerHTML\"><div class=\"text-center text-base-content/50 py-4\">Loading...</div></div></div></div><!-- Simulated Report Output --><div id=\"logging-report-output\"></div><!-- How It Works --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -91,7 +91,7 @@ func loggingPatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 114, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 117, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -104,7 +104,7 @@ func loggingPatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 115, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 118, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -117,7 +117,7 @@ func loggingPatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(desc)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 116, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 119, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -207,7 +207,7 @@ func loggingTraceRow(t promolog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(t.CreatedAt.Format("2006-01-02 15:04:05"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 153, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 156, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -228,7 +228,7 @@ func loggingTraceRow(t promolog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(t.Method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 157, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 160, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -241,7 +241,7 @@ func loggingTraceRow(t promolog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(t.Route)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 158, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 161, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -254,7 +254,7 @@ func loggingTraceRow(t promolog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(t.Route)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 158, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 161, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -267,7 +267,7 @@ func loggingTraceRow(t promolog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(t.ErrorChain)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 159, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 162, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -280,7 +280,7 @@ func loggingTraceRow(t promolog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(t.ErrorChain)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 159, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 162, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -293,7 +293,7 @@ func loggingTraceRow(t promolog.TraceSummary) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(reportURL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 163, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 166, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -374,7 +374,7 @@ func loggingStatusBadge(code int) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(code))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 180, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 183, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -392,7 +392,7 @@ func loggingStatusBadge(code int) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(code))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 182, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 185, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -410,7 +410,7 @@ func loggingStatusBadge(code int) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(code))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 184, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 187, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -454,7 +454,7 @@ func LoggingReportOutput(trace *promolog.Trace, jsonPayload string) templ.Compon
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(trace.RequestID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 194, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 197, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -467,7 +467,7 @@ func LoggingReportOutput(trace *promolog.Trace, jsonPayload string) templ.Compon
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(jsonPayload)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 202, Col: 131}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/logging.templ`, Line: 205, Col: 131}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {

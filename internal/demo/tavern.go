@@ -38,11 +38,22 @@ func (rl *ReplayLab) SetReplayWindow(n int) {
 	rl.replayWindow.Store(int64(n))
 }
 
+// Reset zeroes the sequence counter so the next event starts at replay-1.
+func (rl *ReplayLab) Reset() {
+	rl.counter.Store(0)
+}
+
 // BackpressureLab tracks stress presets and tier changes.
 type BackpressureLab struct {
+	currentTiers map[string]liveTier
 	activePreset string
 	tierChanges  []TierChange
 	mu           sync.RWMutex
+}
+
+type liveTier struct {
+	updated time.Time
+	tier    int
 }
 
 // TierChange records a backpressure tier transition.
@@ -56,7 +67,10 @@ type TierChange struct {
 
 // NewBackpressureLab creates a new backpressure lab in calm state.
 func NewBackpressureLab() *BackpressureLab {
-	return &BackpressureLab{activePreset: "calm"}
+	return &BackpressureLab{
+		activePreset: "calm",
+		currentTiers: make(map[string]liveTier),
+	}
 }
 
 // BackpressurePresets maps preset names to publish intervals.
@@ -83,7 +97,7 @@ func (bl *BackpressureLab) SetPreset(name string) {
 	}
 }
 
-// RecordTierChange logs a backpressure tier transition.
+// RecordTierChange logs a backpressure tier transition and updates live state.
 func (bl *BackpressureLab) RecordTierChange(topic, subID string, oldTier, newTier int) {
 	bl.mu.Lock()
 	defer bl.mu.Unlock()
@@ -98,6 +112,32 @@ func (bl *BackpressureLab) RecordTierChange(topic, subID string, oldTier, newTie
 	if len(bl.tierChanges) > 30 {
 		bl.tierChanges = bl.tierChanges[len(bl.tierChanges)-30:]
 	}
+	key := topic + "/" + subID
+	if newTier == 3 { // disconnect = evicted
+		delete(bl.currentTiers, key)
+	} else {
+		bl.currentTiers[key] = liveTier{tier: newTier, updated: time.Now()}
+	}
+}
+
+// HighestTier returns the highest tier among live subscribers, or 0 (normal)
+// if no subscribers are in an elevated tier. Entries older than 10s are
+// treated as stale (subscriber left without a tier-change callback).
+func (bl *BackpressureLab) HighestTier() int {
+	bl.mu.Lock()
+	defer bl.mu.Unlock()
+	highest := 0
+	now := time.Now()
+	for key, lt := range bl.currentTiers {
+		if now.Sub(lt.updated) > 10*time.Second {
+			delete(bl.currentTiers, key)
+			continue
+		}
+		if lt.tier > highest {
+			highest = lt.tier
+		}
+	}
+	return highest
 }
 
 // TierChanges returns a copy of recent tier change events.

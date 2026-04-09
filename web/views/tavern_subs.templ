@@ -5,7 +5,12 @@ package views
 import "fmt"
 
 templ TavernSubsPage() {
-	<div class="max-w-6xl mx-auto p-4 space-y-4">
+	<style>
+		body:has(#subs-page) main {
+			view-transition-name: none !important;
+		}
+	</style>
+	<div id="subs-page" class="max-w-6xl mx-auto p-4 space-y-4" style="overflow-anchor:none">
 		<div class="flex items-center justify-between flex-wrap gap-2">
 			<div>
 				<h1 class="text-2xl font-bold">Subscription Lab</h1>
@@ -131,11 +136,43 @@ templ subsSSEPanel(sseURL string, eventName string, logID string) {
 		sse-connect={ sseURL }
 		data-tavern-reconnecting-class="opacity-50"
 	>
-		<div sse-swap={ eventName } hx-target={ "#" + logID } hx-swap="afterbegin" style="display:none"></div>
-		<div id={ logID } class="max-h-48 overflow-y-auto font-mono text-xs space-y-0.5 mt-2" data-testid={ logID }>
-			<p class="text-base-content/30">Waiting...</p>
+		<div sse-swap={ eventName } hx-target={ "#" + logID } hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
+		<div id={ logID } class="max-h-48 overflow-y-auto overflow-x-hidden font-mono text-xs space-y-0.5 mt-2" style="contain:paint" data-testid={ logID }>
+			<p class={ "text-base-content/30 " + logID + "-empty" }>Waiting...</p>
 		</div>
 	</div>
+	@subsLogScript(logID, eventName)
+}
+
+templ subsLogScript(logID string, eventName string) {
+	<script data-log-id={ logID } data-event-name={ eventName }>
+		(function() {
+			var s = document.currentScript;
+			var logID = s.getAttribute('data-log-id');
+			var evtName = s.getAttribute('data-event-name');
+			var log = document.getElementById(logID);
+			if (!log) return;
+			var MAX_ROWS = 50;
+
+			document.body.addEventListener('htmx:sseMessage', function onFirst(evt) {
+				if (evt.detail.type === evtName) {
+					var empty = log.querySelector('.' + logID + '-empty');
+					if (empty) empty.remove();
+					document.body.removeEventListener('htmx:sseMessage', onFirst);
+				}
+			});
+
+			log.addEventListener('htmx:afterSettle', function() {
+				while (log.children.length > MAX_ROWS) {
+					log.removeChild(log.firstElementChild);
+				}
+				var distFromBottom = log.scrollHeight - log.scrollTop - log.clientHeight;
+				if (distFromBottom < 24) {
+					log.scrollTop = log.scrollHeight;
+				}
+			});
+		})();
+	</script>
 }
 
 // SubsEventEntry renders a single event for any subscription panel.

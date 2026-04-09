@@ -294,7 +294,7 @@ func PersonProfilePage(p demo.Person, from string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"reload\"><div sse-swap=\"person-update\" hx-swap=\"outerHTML\" hx-target=\"#person-profile-card\" style=\"display:none\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" data-tavern-reconnecting-class=\"opacity-50\" data-tavern-gap-action=\"reload\"><div sse-swap=\"person-update\" hx-swap=\"outerHTML settle:0 transition:false\" hx-target=\"#person-profile-card\" style=\"display:none\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

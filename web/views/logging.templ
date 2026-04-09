@@ -10,7 +10,10 @@ import (
 
 // LoggingPage is the full-page layout for /platform/logging.
 templ LoggingPage() {
-	<div class="p-4 space-y-6 max-w-5xl mx-auto">
+	<style>
+		body:has(#logging-page) main { view-transition-name: none !important; }
+	</style>
+	<div id="logging-page" class="p-4 space-y-6 max-w-5xl mx-auto" style="overflow-anchor:none">
 		<div class="flex items-center justify-between mb-4">
 			<h1 class="text-2xl font-bold">Retrospective Logging</h1>
 		</div>
@@ -31,7 +34,7 @@ templ LoggingPage() {
 			<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
 				Reconnecting…
 			</div>
-			<div sse-swap="error-trace" style="display:none"></div>
+			<div sse-swap="error-trace" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 		</div>
 		// setup:feature:sse:end
 

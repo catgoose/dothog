@@ -52,7 +52,7 @@ templ PersonProfilePage(p demo.Person, from string) {
 			data-tavern-reconnecting-class="opacity-50"
 			data-tavern-gap-action="reload"
 		>
-			<div sse-swap="person-update" hx-swap="outerHTML" hx-target="#person-profile-card" style="display:none"></div>
+			<div sse-swap="person-update" hx-swap="outerHTML settle:0 transition:false" hx-target="#person-profile-card" style="display:none"></div>
 			@PersonProfileCard(p)
 		</div>
 	</div>

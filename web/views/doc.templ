@@ -9,7 +9,10 @@ import (
 )
 
 templ DocumentPage(content string, wordCount, charCount int, sentiment string, revisions []demo.DocRevision) {
-	<div class="max-w-6xl mx-auto p-4 space-y-4">
+	<style>
+		body:has(#doc-page) main { view-transition-name: none !important; }
+	</style>
+	<div id="doc-page" class="max-w-6xl mx-auto p-4 space-y-4" style="overflow-anchor:none">
 		<div class="flex items-center justify-between flex-wrap gap-2">
 			<div>
 				<h1 class="text-2xl font-bold">Collaborative Document</h1>
@@ -35,10 +38,10 @@ templ DocumentPage(content string, wordCount, charCount int, sentiment string, r
 				<span class="loading loading-spinner loading-xs"></span>
 				Reconnecting...
 			</div>
-			<div sse-swap="doc/content" hx-target="#doc-content-display" hx-swap="innerHTML" style="display:none"></div>
-			<div sse-swap="doc/stats" hx-target="#doc-stats" hx-swap="innerHTML" style="display:none"></div>
-			<div sse-swap="doc/sentiment" hx-target="#doc-sentiment" hx-swap="innerHTML" style="display:none"></div>
-			<div sse-swap="doc/history" hx-target="#doc-history" hx-swap="innerHTML" style="display:none"></div>
+			<div sse-swap="doc/content" hx-target="#doc-content-display" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="doc/stats" hx-target="#doc-stats" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="doc/sentiment" hx-target="#doc-sentiment" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="doc/history" hx-target="#doc-history" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 			<div class="flex gap-6">
 				<!-- Left column: editor -->
 				<div class="flex-[2] min-w-0 space-y-4">
@@ -110,7 +113,7 @@ templ DocumentPage(content string, wordCount, charCount int, sentiment string, r
 					<div class="card bg-base-200 shadow-sm">
 						<div class="card-body p-4">
 							<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Revision History</h2>
-							<div id="doc-history" class="max-h-64 overflow-y-auto">
+							<div id="doc-history" class="max-h-64 overflow-y-auto overflow-x-hidden" style="contain:paint">
 								@DocHistoryList(revisions)
 							</div>
 						</div>

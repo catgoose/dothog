@@ -253,7 +253,7 @@ func AdminSettingsPage(data AdminPanelData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</tbody></table></div></div></div></div><!-- SSE connection --><div hx-ext=\"sse\" sse-connect=\"/sse/admin\" hx-swap=\"innerHTML settle:0 transition:false\" data-tavern-reconnecting-class=\"opacity-50\"><div sse-swap=\"admin-panel\" style=\"display:none\"></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</tbody></table></div></div></div></div><!-- SSE connection --><div hx-ext=\"sse\" sse-connect=\"/sse/admin\" hx-swap=\"innerHTML settle:0 transition:false\" data-tavern-reconnecting-class=\"opacity-50\"><div sse-swap=\"admin-panel\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

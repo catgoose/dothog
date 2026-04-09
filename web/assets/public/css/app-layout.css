@@ -68,6 +68,9 @@
 		background-color: var(--color-base-100);
 		box-shadow: 0 1px 3px color-mix(in oklab, var(--color-base-content) 5%, transparent);
 	}
+	.app-main {
+		contain: paint;
+	}
 	.app-nav .nav-tabs {
 		flex-direction: row;
 		align-items: center;

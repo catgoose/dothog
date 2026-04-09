@@ -28,13 +28,22 @@ func (ar *appRoutes) initTavernHooksRoutes(broker *tavern.SSEBroker) {
 	lab := demo.NewHooksLab()
 	h := &tavernHooksRoutes{broker: broker, lab: lab}
 
-	// Middleware: count all publishes on tavern/hooks/* topics.
-	broker.UseTopics("tavern/hooks/*", func(next tavern.PublishFunc) tavern.PublishFunc {
-		return func(t, msg string) {
-			lab.AddPublishStats(len(msg))
-			next(t, msg)
-		}
-	})
+	// Middleware: count publishes on each hooks topic. Tavern topic middleware
+	// uses colon-segment matching, so these slash-delimited topics must be
+	// registered explicitly.
+	for _, topic := range []string{
+		TopicTavernHooksSource,
+		TopicTavernHooksDeriv,
+		TopicTavernHooksLog,
+		TopicTavernHooksStats,
+	} {
+		broker.UseTopics(topic, func(next tavern.PublishFunc) tavern.PublishFunc {
+			return func(t, msg string) {
+				lab.AddPublishStats(len(msg))
+				next(t, msg)
+			}
+		})
+	}
 
 	// After hook: derive stats from source and publish to derived topic.
 	broker.After(TopicTavernHooksSource, func() {
@@ -113,8 +122,11 @@ func (h *tavernHooksRoutes) handleSSE(c echo.Context) error {
 			if !ok {
 				return nil
 			}
-			// wrapForGroup-style: use topic as event name.
-			msg := tavern.NewSSEMessage(tm.Topic, tm.Data).String()
+			// Preserve SSE comment/control frames such as keepalives.
+			msg := tm.Data
+			if !strings.HasPrefix(msg, ":") && !strings.HasPrefix(msg, "event: tavern-") {
+				msg = tavern.NewSSEMessage(tm.Topic, tm.Data).String()
+			}
 			_, _ = fmt.Fprint(c.Response(), msg)
 			flusher.Flush()
 		}

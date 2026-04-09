@@ -22,7 +22,10 @@ var notifCategoryBadge = map[demo.NotificationCategory]string{
 }
 
 templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.NotificationCategory]bool) {
-	<div class="max-w-5xl mx-auto p-4 space-y-4">
+	<style>
+		body:has(#notif-page) main { view-transition-name: none !important; }
+	</style>
+	<div id="notif-page" class="max-w-5xl mx-auto p-4 space-y-4" style="overflow-anchor:none">
 		<div class="flex items-center justify-between flex-wrap gap-2">
 			<div class="flex items-center gap-3">
 				<h1 class="text-2xl font-bold">Notifications</h1>
@@ -49,6 +52,8 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 					id="notifications-container"
 					hx-ext="sse"
 					sse-connect="/sse/notifications"
+					data-tavern-role="scoped"
+					data-tavern-scope="notifications"
 					data-tavern-reconnecting-class="opacity-50 pointer-events-none"
 					data-tavern-gap-action="banner"
 					data-tavern-gap-banner-text="Some notifications may have been missed during disconnection."
@@ -57,9 +62,9 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 						<span class="loading loading-spinner loading-xs"></span>
 						Reconnecting...
 					</div>
-					<div sse-swap="notification" hx-swap="afterbegin" hx-target="#notification-list" style="display:none"></div>
-					<div sse-swap="presence" hx-swap="innerHTML" hx-target="#presence-list" style="display:none"></div>
-					<div id="notification-list" class="space-y-2">
+					<div sse-swap="notification" hx-swap="beforeend settle:0 transition:false" hx-target="#notification-list" style="display:none"></div>
+					<div sse-swap="presence" hx-swap="innerHTML settle:0 transition:false" hx-target="#presence-list" style="display:none"></div>
+					<div id="notification-list" class="space-y-2 overflow-x-hidden" style="contain:paint">
 						<div id="notif-empty" class="text-center py-12 text-base-content/40">
 							<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-2 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
@@ -95,7 +100,7 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 									hx-post="/realtime/notifications/filter"
 									hx-vals={ fmt.Sprintf(`{"category":"%s"}`, string(cat)) }
 									hx-swap="none"
-									hx-on::before-request="event.detail.parameters.enabled = this.checked ? 'true' : 'false'"
+									hx-on::before-request="event.detail.parameters = event.detail.parameters || {}; event.detail.parameters.enabled = this.checked ? 'true' : 'false'"
 								/>
 							</label>
 						</div>
@@ -148,6 +153,27 @@ templ notificationsScript() {
 				if (empty) empty.remove();
 			}
 		});
+
+		// Scoped stream lifecycle: promote when ready, retire on teardown.
+		(function() {
+			var container = document.getElementById('notifications-container');
+			if (!container || typeof Tavern === 'undefined') return;
+
+			container.addEventListener('tavern:stream-ready', function() {
+				Tavern.promote('notifications');
+			});
+
+			// Retire the scoped stream when navigating away or when the
+			// container is removed from the DOM (e.g. htmx page swap).
+			document.body.addEventListener('htmx:beforeSwap', function onSwap(evt) {
+				if (!document.body.contains(container)) return;
+				var target = evt.detail.target;
+				if (target && (target === container || target.contains(container))) {
+					Tavern.retire('notifications');
+					document.body.removeEventListener('htmx:beforeSwap', onSwap);
+				}
+			});
+		})();
 	</script>
 }
 
