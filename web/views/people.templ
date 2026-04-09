@@ -47,7 +47,10 @@ templ PersonRow(p demo.Person, from string) {
 }
 
 templ PersonProfilePage(p demo.Person, from string) {
-	<div class="max-w-3xl mx-auto p-4 space-y-6">
+	<style>
+		body:has(#person-page) main { view-transition-name: none !important; }
+	</style>
+	<div id="person-page" class="max-w-3xl mx-auto p-4 space-y-6" style="overflow-anchor:none">
 		<div id="person-profile" hx-ext="sse" sse-connect={ fmt.Sprintf("/sse/people/%d", p.ID) }
 			data-tavern-reconnecting-class="opacity-50"
 			data-tavern-gap-action="reload"

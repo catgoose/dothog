@@ -171,9 +171,9 @@ templ loggingTraceRow(t promolog.TraceSummary) {
 	</tr>
 }
 
-// LoggingTraceRowOOB renders a new trace row as an OOB swap that prepends to the tbody.
+// LoggingTraceRowOOB renders a new trace row as an OOB swap that appends to the tbody.
 templ LoggingTraceRowOOB(t promolog.TraceSummary) {
-	<tbody id="logging-traces-tbody" hx-swap-oob="afterbegin">
+	<tbody id="logging-traces-tbody" hx-swap-oob="beforeend">
 		@loggingTraceRow(t)
 	</tbody>
 }

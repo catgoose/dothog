@@ -118,7 +118,11 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 					</div>
 					<div sse-swap="notification" hx-swap="beforeend settle:0 transition:false" hx-target="#notification-list" style="display:none"></div>
 					<div sse-swap="presence" hx-swap="innerHTML settle:0 transition:false" hx-target="#presence-list" style="display:none"></div>
-					<div id="notification-list" class="space-y-2 overflow-x-hidden" style="contain:paint">
+					<div
+						id="notification-list"
+						class="space-y-2 overflow-x-hidden overflow-y-auto max-h-[28rem] pr-1"
+						style="contain:paint;overflow-anchor:none"
+					>
 						<div id="notif-empty" class="text-center py-12 text-base-content/40">
 							<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-2 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
@@ -173,6 +177,31 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 
 templ notificationsScript() {
 	<script>
+		function notifNearBottom(el) {
+			return (el.scrollHeight - el.scrollTop - el.clientHeight) < 48;
+		}
+
+		function notifTrimAndMaybeFollow() {
+			const list = document.getElementById('notification-list');
+			if (!list) return;
+
+			const shouldFollow = list.dataset.followOnSettle === '1';
+			const items = Array.from(list.children).filter(function(node) {
+				return node.id !== 'notif-empty';
+			});
+			const maxRows = 50;
+
+			while (items.length > maxRows) {
+				const first = items.shift();
+				if (first) first.remove();
+			}
+
+			if (shouldFollow) {
+				list.scrollTop = list.scrollHeight;
+			}
+			delete list.dataset.followOnSettle;
+		}
+
 		function simulateDisconnect() {
 			const btn = document.getElementById('disconnect-btn');
 			const container = document.getElementById('notifications-container');
@@ -200,12 +229,21 @@ templ notificationsScript() {
 			}, 3000);
 		}
 
-		// Hide the empty state once a notification arrives
-		document.body.addEventListener('htmx:sseMessage', function(evt) {
-			if (evt.detail.type === 'notification') {
-				const empty = document.getElementById('notif-empty');
-				if (empty) empty.remove();
+		document.body.addEventListener('htmx:beforeSwap', function(evt) {
+			const target = evt.detail.target;
+			if (!target || target.id !== 'notification-list') return;
+			target.dataset.followOnSettle = notifNearBottom(target) ? '1' : '0';
+		});
+
+		document.body.addEventListener('htmx:afterSettle', function(evt) {
+			const target = evt.detail.target;
+			if (!target || target.id !== 'notification-list') return;
+
+			const empty = document.getElementById('notif-empty');
+			if (empty) {
+				empty.remove();
 			}
+			notifTrimAndMaybeFollow();
 		});
 
 		// Toggle active class on speed preset buttons.
