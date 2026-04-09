@@ -63,18 +63,24 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 					</ul>
 				</div>
 			</div>
-			<button
-				id="disconnect-btn"
-				class="btn btn-outline btn-xs btn-warning"
-				onclick="simulateDisconnect()"
-			>
-				Simulate Disconnect
-			</button>
+			<div class="flex items-center gap-2">
+				<span id="notif-reconn-countdown" class="hidden text-xs text-base-content/60 tabular-nums font-mono">
+					reconnect in <span id="notif-reconn-remaining">3.0s</span>
+				</span>
+				<button
+					id="disconnect-btn"
+					class="btn btn-outline btn-xs btn-warning"
+					onclick="simulateDisconnect()"
+				>
+					Simulate Disconnect
+				</button>
+			</div>
 		</div>
 		<p class="text-xs text-base-content/50">
 			Per-user scoped notifications with presence, categories, and Last-Event-ID replay.
 			A server-side simulator publishes events to currently-online identities.
 		</p>
+		<progress id="notif-reconn-progress" class="progress progress-secondary w-full hidden" value="0" max="100"></progress>
 		<!-- Simulator controls -->
 		<div class="flex items-center gap-2 flex-wrap bg-base-200 rounded-lg p-2">
 			<span class="text-xs font-semibold uppercase tracking-wider text-base-content/50 mr-1">Simulator</span>
@@ -126,7 +132,8 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 						<span class="loading loading-spinner loading-xs"></span>
 						Reconnecting...
 					</div>
-					<!-- notification events are intercepted via htmx:sseMessage and rendered through a coalesced JS queue (see notificationsScript) -->
+					<!-- Bind notification events without swapping so htmx:sseMessage still fires; rendering is handled by the coalesced JS queue below. -->
+					<div hx-trigger="sse:notification" hx-swap="none" style="display:none"></div>
 					<div sse-swap="presence" hx-swap="innerHTML settle:0 transition:false" hx-target="#presence-list" style="display:none"></div>
 					<div
 						id="notification-list"
@@ -238,6 +245,9 @@ templ notificationsScript() {
 		function simulateDisconnect() {
 			const btn = document.getElementById('disconnect-btn');
 			const container = document.getElementById('notifications-container');
+			const countdown = document.getElementById('notif-reconn-countdown');
+			const remaining = document.getElementById('notif-reconn-remaining');
+			const progress = document.getElementById('notif-reconn-progress');
 			if (!container) return;
 
 			// Remove the SSE connection — tavern-js handles the reconnecting visual state
@@ -247,10 +257,34 @@ templ notificationsScript() {
 
 			btn.classList.remove('btn-warning');
 			btn.classList.add('btn-error');
-			btn.textContent = 'Disconnected (reconnecting in 3s...)';
+			btn.textContent = 'Disconnected';
 			btn.disabled = true;
 
+			const DELAY_MS = 3000;
+			const start = Date.now();
+			countdown.classList.remove('hidden');
+			progress.classList.remove('hidden');
+
+			function tick() {
+				const elapsed = Date.now() - start;
+				const left = Math.max(0, DELAY_MS - elapsed);
+				remaining.textContent = (left / 1000).toFixed(1) + 's';
+				const pct = Math.min(100, (elapsed / DELAY_MS) * 100);
+				progress.value = pct;
+				progress.classList.remove('progress-secondary', 'progress-warning', 'progress-error');
+				if (pct >= 100) progress.classList.add('progress-error');
+				else if (pct >= 80) progress.classList.add('progress-warning');
+				else progress.classList.add('progress-secondary');
+			}
+			tick();
+			const timer = setInterval(tick, 100);
+
 			setTimeout(function() {
+				clearInterval(timer);
+				countdown.classList.add('hidden');
+				progress.classList.add('hidden');
+				progress.value = 0;
+
 				// Re-add SSE connection — HTMX will send Last-Event-ID
 				container.setAttribute('sse-connect', sseConnect);
 				htmx.process(container);
@@ -259,7 +293,7 @@ templ notificationsScript() {
 				btn.classList.add('btn-warning');
 				btn.textContent = 'Simulate Disconnect';
 				btn.disabled = false;
-			}, 3000);
+			}, DELAY_MS);
 		}
 
 		// Toggle active class on speed preset buttons.

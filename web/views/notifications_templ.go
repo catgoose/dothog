@@ -155,7 +155,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</ul></div></div><button id=\"disconnect-btn\" class=\"btn btn-outline btn-xs btn-warning\" onclick=\"simulateDisconnect()\">Simulate Disconnect</button></div><p class=\"text-xs text-base-content/50\">Per-user scoped notifications with presence, categories, and Last-Event-ID replay. A server-side simulator publishes events to currently-online identities.</p><!-- Simulator controls --><div class=\"flex items-center gap-2 flex-wrap bg-base-200 rounded-lg p-2\"><span class=\"text-xs font-semibold uppercase tracking-wider text-base-content/50 mr-1\">Simulator</span> <button id=\"sim-pause-btn\" class=\"btn btn-xs btn-outline\" hx-post=\"/realtime/notifications/simulator/pause\" hx-swap=\"innerHTML\" hx-target=\"this\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</ul></div></div><div class=\"flex items-center gap-2\"><span id=\"notif-reconn-countdown\" class=\"hidden text-xs text-base-content/60 tabular-nums font-mono\">reconnect in <span id=\"notif-reconn-remaining\">3.0s</span></span> <button id=\"disconnect-btn\" class=\"btn btn-outline btn-xs btn-warning\" onclick=\"simulateDisconnect()\">Simulate Disconnect</button></div></div><p class=\"text-xs text-base-content/50\">Per-user scoped notifications with presence, categories, and Last-Event-ID replay. A server-side simulator publishes events to currently-online identities.</p><progress id=\"notif-reconn-progress\" class=\"progress progress-secondary w-full hidden\" value=\"0\" max=\"100\"></progress><!-- Simulator controls --><div class=\"flex items-center gap-2 flex-wrap bg-base-200 rounded-lg p-2\"><span class=\"text-xs font-semibold uppercase tracking-wider text-base-content/50 mr-1\">Simulator</span> <button id=\"sim-pause-btn\" class=\"btn btn-xs btn-outline\" hx-post=\"/realtime/notifications/simulator/pause\" hx-swap=\"innerHTML\" hx-target=\"this\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -200,7 +200,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(speed)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 98, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 104, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -213,7 +213,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"speed":"%s"}`, speed))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 100, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 106, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -226,7 +226,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(speed)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 104, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 110, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -244,7 +244,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("delay %s–%s", sim.MinDelay.Round(time.Millisecond), sim.MaxDelay.Round(time.Millisecond)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 109, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 115, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -257,20 +257,20 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs("/sse/notifications?identity=" + identity.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 118, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 124, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" data-tavern-role=\"scoped\" data-tavern-scope=\"notifications\" data-tavern-reconnecting-class=\"opacity-50 pointer-events-none\" data-tavern-gap-action=\"banner\" data-tavern-gap-banner-text=\"Some notifications may have been missed during disconnection.\"><div data-tavern-status class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span class=\"loading loading-spinner loading-xs\"></span> Reconnecting...</div><!-- notification events are intercepted via htmx:sseMessage and rendered through a coalesced JS queue (see notificationsScript) --><div sse-swap=\"presence\" hx-swap=\"innerHTML settle:0 transition:false\" hx-target=\"#presence-list\" style=\"display:none\"></div><div id=\"notification-list\" class=\"space-y-2 overflow-x-hidden overflow-y-auto max-h-[28rem] pr-1\" style=\"contain:paint;overflow-anchor:none\"><div id=\"notif-empty\" class=\"text-center py-12 text-base-content/40\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-12 h-12 mx-auto mb-2 opacity-30\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9\"></path></svg><p class=\"text-sm\">Waiting for notifications...</p><p class=\"text-xs mt-1\">They appear here when the simulator targets you.</p></div></div></div></div><!-- Sidebar: presence + filters --><div class=\"w-56 shrink-0 space-y-4\"><div class=\"bg-base-200 rounded-lg p-3 space-y-2\"><h3 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/50\">Online</h3><div id=\"presence-list\"><div class=\"flex items-center gap-2 p-1\"><div class=\"w-3 h-3 rounded-full\" style=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" data-tavern-role=\"scoped\" data-tavern-scope=\"notifications\" data-tavern-reconnecting-class=\"opacity-50 pointer-events-none\" data-tavern-gap-action=\"banner\" data-tavern-gap-banner-text=\"Some notifications may have been missed during disconnection.\"><div data-tavern-status class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span class=\"loading loading-spinner loading-xs\"></span> Reconnecting...</div><!-- Bind notification events without swapping so htmx:sseMessage still fires; rendering is handled by the coalesced JS queue below. --><div hx-trigger=\"sse:notification\" hx-swap=\"none\" style=\"display:none\"></div><div sse-swap=\"presence\" hx-swap=\"innerHTML settle:0 transition:false\" hx-target=\"#presence-list\" style=\"display:none\"></div><div id=\"notification-list\" class=\"space-y-2 overflow-x-hidden overflow-y-auto max-h-[28rem] pr-1\" style=\"contain:paint;overflow-anchor:none\"><div id=\"notif-empty\" class=\"text-center py-12 text-base-content/40\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-12 h-12 mx-auto mb-2 opacity-30\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9\"></path></svg><p class=\"text-sm\">Waiting for notifications...</p><p class=\"text-xs mt-1\">They appear here when the simulator targets you.</p></div></div></div></div><!-- Sidebar: presence + filters --><div class=\"w-56 shrink-0 space-y-4\"><div class=\"bg-base-200 rounded-lg p-3 space-y-2\"><h3 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/50\">Online</h3><div id=\"presence-list\"><div class=\"flex items-center gap-2 p-1\"><div class=\"w-3 h-3 rounded-full\" style=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("background:%s", identity.Color))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 152, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 159, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -283,7 +283,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 153, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 160, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -323,7 +323,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 163, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 170, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -346,7 +346,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"category":"%s","identity":"%s"}`, string(cat), identity.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 169, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 176, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -390,7 +390,7 @@ func notificationsScript() templ.Component {
 			templ_7745c5c3_Var22 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<script>\n\t\tfunction notifNearBottom(el) {\n\t\t\treturn (el.scrollHeight - el.scrollTop - el.clientHeight) < 48;\n\t\t}\n\n\t\t// Coalesced notification renderer: queues incoming notification HTML\n\t\t// from htmx:sseMessage and flushes to the DOM on a timer. Avoids\n\t\t// per-message HTMX swaps on the hot stream.\n\t\t(function() {\n\t\t\tvar FLUSH_MS = 50;\n\t\t\tvar MAX_ROWS = 50;\n\t\t\tvar pending = [];\n\t\t\tvar flushTimer = 0;\n\n\t\t\tfunction flush() {\n\t\t\t\tflushTimer = 0;\n\t\t\t\tif (pending.length === 0) return;\n\t\t\t\tvar list = document.getElementById('notification-list');\n\t\t\t\tif (!list) { pending = []; return; }\n\n\t\t\t\tvar follow = notifNearBottom(list);\n\n\t\t\t\tvar empty = document.getElementById('notif-empty');\n\t\t\t\tif (empty) empty.remove();\n\n\t\t\t\tlist.insertAdjacentHTML('beforeend', pending.join(''));\n\t\t\t\tpending = [];\n\n\t\t\t\twhile (list.children.length > MAX_ROWS) {\n\t\t\t\t\tlist.removeChild(list.firstElementChild);\n\t\t\t\t}\n\n\t\t\t\tif (follow) {\n\t\t\t\t\tlist.scrollTop = list.scrollHeight;\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction schedule() {\n\t\t\t\tif (flushTimer) return;\n\t\t\t\tflushTimer = window.setTimeout(flush, FLUSH_MS);\n\t\t\t}\n\n\t\t\tdocument.body.addEventListener('htmx:sseMessage', function(evt) {\n\t\t\t\tif (evt.detail.type !== 'notification') return;\n\t\t\t\tpending.push(evt.detail.data);\n\t\t\t\tschedule();\n\t\t\t});\n\t\t})();\n\n\t\tfunction simulateDisconnect() {\n\t\t\tconst btn = document.getElementById('disconnect-btn');\n\t\t\tconst container = document.getElementById('notifications-container');\n\t\t\tif (!container) return;\n\n\t\t\t// Remove the SSE connection — tavern-js handles the reconnecting visual state\n\t\t\tconst sseConnect = container.getAttribute('sse-connect');\n\t\t\tcontainer.removeAttribute('sse-connect');\n\t\t\thtmx.process(container);\n\n\t\t\tbtn.classList.remove('btn-warning');\n\t\t\tbtn.classList.add('btn-error');\n\t\t\tbtn.textContent = 'Disconnected (reconnecting in 3s...)';\n\t\t\tbtn.disabled = true;\n\n\t\t\tsetTimeout(function() {\n\t\t\t\t// Re-add SSE connection — HTMX will send Last-Event-ID\n\t\t\t\tcontainer.setAttribute('sse-connect', sseConnect);\n\t\t\t\thtmx.process(container);\n\n\t\t\t\tbtn.classList.remove('btn-error');\n\t\t\t\tbtn.classList.add('btn-warning');\n\t\t\t\tbtn.textContent = 'Simulate Disconnect';\n\t\t\t\tbtn.disabled = false;\n\t\t\t}, 3000);\n\t\t}\n\n\t\t// Toggle active class on speed preset buttons.\n\t\tfunction notifSetActiveSpeed(btn) {\n\t\t\tconst group = btn.closest('[data-sim-speed-group]');\n\t\t\tif (!group) return;\n\t\t\tgroup.querySelectorAll('button').forEach(function(b) {\n\t\t\t\tb.classList.remove('btn-active', 'btn-primary');\n\t\t\t});\n\t\t\tbtn.classList.add('btn-active', 'btn-primary');\n\t\t}\n\n\t\t// Scoped stream lifecycle: promote when ready, retire on teardown.\n\t\t(function() {\n\t\t\tvar container = document.getElementById('notifications-container');\n\t\t\tif (!container || typeof Tavern === 'undefined') return;\n\n\t\t\tcontainer.addEventListener('tavern:stream-ready', function() {\n\t\t\t\tTavern.promote('notifications');\n\t\t\t});\n\n\t\t\t// Retire the scoped stream when navigating away or when the\n\t\t\t// container is removed from the DOM (e.g. htmx page swap).\n\t\t\tdocument.body.addEventListener('htmx:beforeSwap', function onSwap(evt) {\n\t\t\t\tif (!document.body.contains(container)) return;\n\t\t\t\tvar target = evt.detail.target;\n\t\t\t\tif (target && (target === container || target.contains(container))) {\n\t\t\t\t\tTavern.retire('notifications');\n\t\t\t\t\tdocument.body.removeEventListener('htmx:beforeSwap', onSwap);\n\t\t\t\t}\n\t\t\t});\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<script>\n\t\tfunction notifNearBottom(el) {\n\t\t\treturn (el.scrollHeight - el.scrollTop - el.clientHeight) < 48;\n\t\t}\n\n\t\t// Coalesced notification renderer: queues incoming notification HTML\n\t\t// from htmx:sseMessage and flushes to the DOM on a timer. Avoids\n\t\t// per-message HTMX swaps on the hot stream.\n\t\t(function() {\n\t\t\tvar FLUSH_MS = 50;\n\t\t\tvar MAX_ROWS = 50;\n\t\t\tvar pending = [];\n\t\t\tvar flushTimer = 0;\n\n\t\t\tfunction flush() {\n\t\t\t\tflushTimer = 0;\n\t\t\t\tif (pending.length === 0) return;\n\t\t\t\tvar list = document.getElementById('notification-list');\n\t\t\t\tif (!list) { pending = []; return; }\n\n\t\t\t\tvar follow = notifNearBottom(list);\n\n\t\t\t\tvar empty = document.getElementById('notif-empty');\n\t\t\t\tif (empty) empty.remove();\n\n\t\t\t\tlist.insertAdjacentHTML('beforeend', pending.join(''));\n\t\t\t\tpending = [];\n\n\t\t\t\twhile (list.children.length > MAX_ROWS) {\n\t\t\t\t\tlist.removeChild(list.firstElementChild);\n\t\t\t\t}\n\n\t\t\t\tif (follow) {\n\t\t\t\t\tlist.scrollTop = list.scrollHeight;\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction schedule() {\n\t\t\t\tif (flushTimer) return;\n\t\t\t\tflushTimer = window.setTimeout(flush, FLUSH_MS);\n\t\t\t}\n\n\t\t\tdocument.body.addEventListener('htmx:sseMessage', function(evt) {\n\t\t\t\tif (evt.detail.type !== 'notification') return;\n\t\t\t\tpending.push(evt.detail.data);\n\t\t\t\tschedule();\n\t\t\t});\n\t\t})();\n\n\t\tfunction simulateDisconnect() {\n\t\t\tconst btn = document.getElementById('disconnect-btn');\n\t\t\tconst container = document.getElementById('notifications-container');\n\t\t\tconst countdown = document.getElementById('notif-reconn-countdown');\n\t\t\tconst remaining = document.getElementById('notif-reconn-remaining');\n\t\t\tconst progress = document.getElementById('notif-reconn-progress');\n\t\t\tif (!container) return;\n\n\t\t\t// Remove the SSE connection — tavern-js handles the reconnecting visual state\n\t\t\tconst sseConnect = container.getAttribute('sse-connect');\n\t\t\tcontainer.removeAttribute('sse-connect');\n\t\t\thtmx.process(container);\n\n\t\t\tbtn.classList.remove('btn-warning');\n\t\t\tbtn.classList.add('btn-error');\n\t\t\tbtn.textContent = 'Disconnected';\n\t\t\tbtn.disabled = true;\n\n\t\t\tconst DELAY_MS = 3000;\n\t\t\tconst start = Date.now();\n\t\t\tcountdown.classList.remove('hidden');\n\t\t\tprogress.classList.remove('hidden');\n\n\t\t\tfunction tick() {\n\t\t\t\tconst elapsed = Date.now() - start;\n\t\t\t\tconst left = Math.max(0, DELAY_MS - elapsed);\n\t\t\t\tremaining.textContent = (left / 1000).toFixed(1) + 's';\n\t\t\t\tconst pct = Math.min(100, (elapsed / DELAY_MS) * 100);\n\t\t\t\tprogress.value = pct;\n\t\t\t\tprogress.classList.remove('progress-secondary', 'progress-warning', 'progress-error');\n\t\t\t\tif (pct >= 100) progress.classList.add('progress-error');\n\t\t\t\telse if (pct >= 80) progress.classList.add('progress-warning');\n\t\t\t\telse progress.classList.add('progress-secondary');\n\t\t\t}\n\t\t\ttick();\n\t\t\tconst timer = setInterval(tick, 100);\n\n\t\t\tsetTimeout(function() {\n\t\t\t\tclearInterval(timer);\n\t\t\t\tcountdown.classList.add('hidden');\n\t\t\t\tprogress.classList.add('hidden');\n\t\t\t\tprogress.value = 0;\n\n\t\t\t\t// Re-add SSE connection — HTMX will send Last-Event-ID\n\t\t\t\tcontainer.setAttribute('sse-connect', sseConnect);\n\t\t\t\thtmx.process(container);\n\n\t\t\t\tbtn.classList.remove('btn-error');\n\t\t\t\tbtn.classList.add('btn-warning');\n\t\t\t\tbtn.textContent = 'Simulate Disconnect';\n\t\t\t\tbtn.disabled = false;\n\t\t\t}, DELAY_MS);\n\t\t}\n\n\t\t// Toggle active class on speed preset buttons.\n\t\tfunction notifSetActiveSpeed(btn) {\n\t\t\tconst group = btn.closest('[data-sim-speed-group]');\n\t\t\tif (!group) return;\n\t\t\tgroup.querySelectorAll('button').forEach(function(b) {\n\t\t\t\tb.classList.remove('btn-active', 'btn-primary');\n\t\t\t});\n\t\t\tbtn.classList.add('btn-active', 'btn-primary');\n\t\t}\n\n\t\t// Scoped stream lifecycle: promote when ready, retire on teardown.\n\t\t(function() {\n\t\t\tvar container = document.getElementById('notifications-container');\n\t\t\tif (!container || typeof Tavern === 'undefined') return;\n\n\t\t\tcontainer.addEventListener('tavern:stream-ready', function() {\n\t\t\t\tTavern.promote('notifications');\n\t\t\t});\n\n\t\t\t// Retire the scoped stream when navigating away or when the\n\t\t\t// container is removed from the DOM (e.g. htmx page swap).\n\t\t\tdocument.body.addEventListener('htmx:beforeSwap', function onSwap(evt) {\n\t\t\t\tif (!document.body.contains(container)) return;\n\t\t\t\tvar target = evt.detail.target;\n\t\t\t\tif (target && (target === container || target.contains(container))) {\n\t\t\t\t\tTavern.retire('notifications');\n\t\t\t\t\tdocument.body.removeEventListener('htmx:beforeSwap', onSwap);\n\t\t\t\t}\n\t\t\t});\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -426,7 +426,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs("notif-" + id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 299, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 333, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -439,7 +439,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 299, Col: 167}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 333, Col: 167}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -474,7 +474,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 300, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 334, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -487,7 +487,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 301, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 335, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -500,7 +500,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(timestamp)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 302, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 336, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -543,7 +543,7 @@ func PresenceList(users []NotifPresenceUser, currentUserID string) templ.Compone
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("background:%s", u.Color))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 309, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 343, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -556,7 +556,7 @@ func PresenceList(users []NotifPresenceUser, currentUserID string) templ.Compone
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(u.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 310, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 344, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
