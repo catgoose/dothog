@@ -227,7 +227,7 @@ func HooksLogEntries(events []demo.HookEvent) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var9 = []any{"badge badge-xs", hookBadgeClass(events[i].HookType)}
+				var templ_7745c5c3_Var9 = []any{"badge badge-xs shrink-0 whitespace-nowrap", hookBadgeClass(events[i].HookType)}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var9...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -252,7 +252,7 @@ func HooksLogEntries(events []demo.HookEvent) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(events[i].HookType)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hooks.templ`, Line: 135, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hooks.templ`, Line: 135, Col: 120}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {

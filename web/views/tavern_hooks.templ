@@ -132,7 +132,7 @@ templ HooksLogEntries(events []demo.HookEvent) {
 		for i := len(events) - 1; i >= 0; i-- {
 			<div class="flex items-center gap-2 py-0.5 border-b border-base-300 last:border-0 text-xs">
 				<span class="text-base-content/40 tabular-nums font-mono shrink-0">{ events[i].Timestamp.Format("15:04:05") }</span>
-				<span class={ "badge badge-xs", hookBadgeClass(events[i].HookType) }>{ events[i].HookType }</span>
+				<span class={ "badge badge-xs shrink-0 whitespace-nowrap", hookBadgeClass(events[i].HookType) }>{ events[i].HookType }</span>
 				<span class="text-base-content/60 truncate">{ events[i].Detail }</span>
 			</div>
 		}
