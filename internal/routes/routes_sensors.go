@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"catgoose/dothog/internal/demo"
@@ -44,14 +43,9 @@ func (s *sensorRoutes) handleSSE(c echo.Context) error {
 		pattern = "sensors/**"
 	}
 
-	c.Response().Header().Set("Content-Type", "text/event-stream")
-	c.Response().Header().Set("Cache-Control", "no-cache")
-	c.Response().Header().Set("Connection", "keep-alive")
-	c.Response().WriteHeader(http.StatusOK)
-
-	flusher, ok := c.Response().Writer.(http.Flusher)
-	if !ok {
-		return fmt.Errorf("streaming unsupported")
+	flusher, err := startSSEResponse(c)
+	if err != nil {
+		return err
 	}
 
 	// Build snapshot function for initial state delivery

@@ -114,14 +114,9 @@ func (s *tavernSubsRoutes) handleScopedSSE(c echo.Context) error {
 		scope = "scope-a"
 	}
 
-	c.Response().Header().Set("Content-Type", "text/event-stream")
-	c.Response().Header().Set("Cache-Control", "no-cache")
-	c.Response().Header().Set("Connection", "keep-alive")
-	c.Response().WriteHeader(http.StatusOK)
-
-	flusher, ok := c.Response().Writer.(http.Flusher)
-	if !ok {
-		return fmt.Errorf("streaming unsupported")
+	flusher, err := startSSEResponse(c)
+	if err != nil {
+		return err
 	}
 
 	ch, unsub := s.broker.SubscribeScoped(subsTopics.scoped, scope)
@@ -148,14 +143,9 @@ func (s *tavernSubsRoutes) handleGlobSSE(c echo.Context) error {
 		pattern = "tavern/subs/data/**"
 	}
 
-	c.Response().Header().Set("Content-Type", "text/event-stream")
-	c.Response().Header().Set("Cache-Control", "no-cache")
-	c.Response().Header().Set("Connection", "keep-alive")
-	c.Response().WriteHeader(http.StatusOK)
-
-	flusher, ok := c.Response().Writer.(http.Flusher)
-	if !ok {
-		return fmt.Errorf("streaming unsupported")
+	flusher, err := startSSEResponse(c)
+	if err != nil {
+		return err
 	}
 
 	ch, unsub := s.broker.SubscribeGlob(pattern)
@@ -184,14 +174,9 @@ func (s *tavernSubsRoutes) handleMultiSSE(c echo.Context) error {
 		topics = subsTopics.multi
 	}
 
-	c.Response().Header().Set("Content-Type", "text/event-stream")
-	c.Response().Header().Set("Cache-Control", "no-cache")
-	c.Response().Header().Set("Connection", "keep-alive")
-	c.Response().WriteHeader(http.StatusOK)
-
-	flusher, ok := c.Response().Writer.(http.Flusher)
-	if !ok {
-		return fmt.Errorf("streaming unsupported")
+	flusher, err := startSSEResponse(c)
+	if err != nil {
+		return err
 	}
 
 	ch, unsub := s.broker.SubscribeMulti(topics...)

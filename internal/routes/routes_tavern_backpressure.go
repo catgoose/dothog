@@ -90,13 +90,9 @@ func (bp *tavernBackpressRoutes) handleBatch(c echo.Context) error {
 }
 
 func (bp *tavernBackpressRoutes) handleStreamSSE(c echo.Context) error {
-	c.Response().Header().Set("Content-Type", "text/event-stream")
-	c.Response().Header().Set("Cache-Control", "no-cache")
-	c.Response().Header().Set("Connection", "keep-alive")
-	c.Response().WriteHeader(http.StatusOK)
-	flusher, ok := c.Response().Writer.(http.Flusher)
-	if !ok {
-		return fmt.Errorf("streaming unsupported")
+	flusher, err := startSSEResponse(c)
+	if err != nil {
+		return err
 	}
 
 	msgs, unsub := bp.demoBroker.SubscribeMulti("bp-alpha", "bp-beta", "bp-gamma")

@@ -108,14 +108,9 @@ func (cr *canvasRoutes) handleCanvasSSE(c echo.Context) error {
 	cr.canvas.TouchClient(connID, color)
 	defer cr.canvas.RemoveClient(connID)
 
-	c.Response().Header().Set("Content-Type", "text/event-stream")
-	c.Response().Header().Set("Cache-Control", "no-cache")
-	c.Response().Header().Set("Connection", "keep-alive")
-	c.Response().WriteHeader(http.StatusOK)
-
-	flusher, ok := c.Response().Writer.(http.Flusher)
-	if !ok {
-		return fmt.Errorf("streaming unsupported")
+	flusher, err := startSSEResponse(c)
+	if err != nil {
+		return err
 	}
 
 	ch, unsub := cr.broker.Subscribe(TopicCanvasUpdate)
