@@ -83,25 +83,27 @@ func (ar *appRoutes) initObservatoryRoutes(mainBroker *tavern.SSEBroker) {
 }
 
 func (o *observatoryRoutes) handlePage(c echo.Context) error {
-	metrics := o.demoBroker.Metrics()
-	counts := o.demoBroker.TopicCounts()
-	tierChanges := o.state.RecentTierChanges()
+	return handler.RenderBaseLayout(c, views.ObservatoryPage(o.buildData()))
+}
 
+// buildData assembles the observatory view-model from the demo broker and
+// state. Both the page render path and the periodic SSE update path share
+// this so they stay in sync.
+func (o *observatoryRoutes) buildData() views.ObservatoryData {
 	var obsSnap *tavern.ObservabilitySnapshot
 	if obs := o.demoBroker.Observability(); obs != nil {
 		s := obs.Snapshot(o.demoBroker)
 		obsSnap = &s
 	}
-
-	return handler.RenderBaseLayout(c, views.ObservatoryPage(views.ObservatoryData{
+	return views.ObservatoryData{
 		Topics:       demoTopics,
-		Metrics:      metrics,
-		Counts:       counts,
+		Metrics:      o.demoBroker.Metrics(),
+		Counts:       o.demoBroker.TopicCounts(),
 		ObsSnap:      obsSnap,
-		TierChanges:  tierChanges,
+		TierChanges:  o.state.RecentTierChanges(),
 		StressActive: o.state.StressActive(),
 		MaxPerTopic:  o.state.MaxPerTopic(),
-	}))
+	}
 }
 
 // startTrafficGenerator publishes synthetic messages to the demo broker at
@@ -156,27 +158,7 @@ func (o *observatoryRoutes) startMetricsPublisher(ctx context.Context) {
 			}
 			buf.Reset()
 
-			metrics := o.demoBroker.Metrics()
-			counts := o.demoBroker.TopicCounts()
-			tierChanges := o.state.RecentTierChanges()
-
-			var obsSnap *tavern.ObservabilitySnapshot
-			if obs := o.demoBroker.Observability(); obs != nil {
-				s := obs.Snapshot(o.demoBroker)
-				obsSnap = &s
-			}
-
-			data := views.ObservatoryData{
-				Topics:       demoTopics,
-				Metrics:      metrics,
-				Counts:       counts,
-				ObsSnap:      obsSnap,
-				TierChanges:  tierChanges,
-				StressActive: o.state.StressActive(),
-				MaxPerTopic:  o.state.MaxPerTopic(),
-			}
-
-			if err := views.ObservatoryUpdate(data).Render(ctx, buf); err != nil {
+			if err := views.ObservatoryUpdate(o.buildData()).Render(ctx, buf); err != nil {
 				continue
 			}
 
