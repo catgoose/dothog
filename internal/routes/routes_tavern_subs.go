@@ -51,16 +51,16 @@ type tavernSubsRoutes struct {
 func (ar *appRoutes) initTavernSubsRoutes(broker *tavern.SSEBroker) {
 	s := &tavernSubsRoutes{broker: broker}
 
-	broker.DynamicGroup("tavern-subs-dynamic", func(r *http.Request) []string {
-		cookie, err := r.Cookie(subsGroupCookie)
-		if err != nil || cookie.Value == "" {
+	broker.DynamicGroup("tavern-subs-dynamic", dynamicGroupFromCookie(
+		subsGroupCookie,
+		subsTopics.standard,
+		func(value string) []string {
+			if value == "vip" {
+				return subsTopics.vip
+			}
 			return subsTopics.standard
-		}
-		if cookie.Value == "vip" {
-			return subsTopics.vip
-		}
-		return subsTopics.standard
-	})
+		},
+	))
 
 	ar.e.GET("/realtime/tavern/subscriptions", s.handlePage)
 	ar.e.GET("/realtime/tavern/subscriptions/scoped-panel", s.handleScopedPanel)
