@@ -209,31 +209,39 @@ func (o *observatoryRoutes) handleStressToggle(c echo.Context) error {
 	o.state.SetStress(true, bgCancel)
 
 	// Spawn slow subscribers that deliberately read slowly to trigger
-	// backpressure on the demo broker.
+	// backpressure on the demo broker. The number per topic matches the
+	// current admission cap so the configured Max Subscribers/Topic value
+	// is visibly meaningful.
+	perTopic := o.state.MaxPerTopic()
+	if perTopic <= 0 {
+		perTopic = 1
+	}
 	for _, topic := range demoTopics {
-		go func(t string) {
-			msgs, unsub := o.demoBroker.Subscribe(t)
-			if msgs == nil {
-				return
-			}
-			defer unsub()
-			for {
-				select {
-				case <-bgCtx.Done():
+		for i := 0; i < perTopic; i++ {
+			go func(t string) {
+				msgs, unsub := o.demoBroker.Subscribe(t)
+				if msgs == nil {
 					return
-				case _, ok := <-msgs:
-					if !ok {
-						return
-					}
-					// Deliberately slow: triggers buffer fill and backpressure.
+				}
+				defer unsub()
+				for {
 					select {
 					case <-bgCtx.Done():
 						return
-					case <-time.After(500*time.Millisecond + time.Duration(rand.IntN(200))*time.Millisecond):
+					case _, ok := <-msgs:
+						if !ok {
+							return
+						}
+						// Deliberately slow: triggers buffer fill and backpressure.
+						select {
+						case <-bgCtx.Done():
+							return
+						case <-time.After(500*time.Millisecond + time.Duration(rand.IntN(200))*time.Millisecond):
+						}
 					}
 				}
-			}
-		}(topic)
+			}(topic)
+		}
 	}
 
 	return handler.RenderComponent(c, views.ObservatoryStressButton(true))
