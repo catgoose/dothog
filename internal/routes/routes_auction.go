@@ -46,9 +46,7 @@ func (ar *appRoutes) initAuctionRoutes(broker *tavern.SSEBroker) {
 	}
 
 	// Dynamic group: per-request topic resolution based on watched items cookie.
-	broker.DynamicGroup("my-auctions", func(r *http.Request) []string {
-		return a.watchedTopicsFromRequest(r)
-	})
+	broker.DynamicGroup("my-auctions", dynamicGroupFromCookie(auctionWatchCookie, nil, a.parseWatchedTopics))
 
 	ar.e.GET("/realtime/auction", a.handlePage)
 	ar.e.GET("/sse/auction", echo.WrapHandler(broker.DynamicGroupHandler("my-auctions")))
@@ -165,15 +163,11 @@ func (a *auctionRoutes) startBotBidder(ctx context.Context) {
 	}
 }
 
-// watchedTopicsFromRequest reads the watched cookie from an http.Request
-// and returns the corresponding SSE topics.
-func (a *auctionRoutes) watchedTopicsFromRequest(r *http.Request) []string {
-	cookie, err := r.Cookie(auctionWatchCookie)
-	if err != nil || cookie.Value == "" {
-		return nil
-	}
+// parseWatchedTopics maps a comma-separated list of item IDs to the SSE
+// topics for those items. Used by the dynamic-group cookie callback.
+func (a *auctionRoutes) parseWatchedTopics(value string) []string {
 	var topics []string
-	for _, s := range strings.Split(cookie.Value, ",") {
+	for _, s := range strings.Split(value, ",") {
 		id, err := strconv.Atoi(strings.TrimSpace(s))
 		if err != nil {
 			continue
