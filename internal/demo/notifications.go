@@ -140,6 +140,23 @@ func AssignIdentity(index int) NotificationIdentity {
 	return notificationIdentityPool[index%len(notificationIdentityPool)]
 }
 
+// AllNotificationIdentities returns the full identity pool.
+func AllNotificationIdentities() []NotificationIdentity {
+	out := make([]NotificationIdentity, len(notificationIdentityPool))
+	copy(out, notificationIdentityPool)
+	return out
+}
+
+// IdentityIndexByID returns the pool index for a given identity ID, or -1.
+func IdentityIndexByID(id string) int {
+	for i, ident := range notificationIdentityPool {
+		if ident.ID == id {
+			return i
+		}
+	}
+	return -1
+}
+
 // RandomIdentityIndex returns a random index into the identity pool.
 func RandomIdentityIndex() int {
 	n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(notificationIdentityPool))))

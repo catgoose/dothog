@@ -29,10 +29,13 @@ import (
 const notifCookie = "notif_identity"
 
 type notificationRoutes struct {
-	broker  *tavern.SSEBroker
-	tracker *presence.Tracker
-	filters *demo.NotificationFilters
-	counter atomic.Int64
+	broker   *tavern.SSEBroker
+	tracker  *presence.Tracker
+	filters  *demo.NotificationFilters
+	counter  atomic.Int64
+	paused   atomic.Bool
+	minDelay atomic.Int64 // nanoseconds
+	maxDelay atomic.Int64 // nanoseconds
 }
 
 func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
@@ -42,6 +45,8 @@ func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
 		broker:  broker,
 		filters: filters,
 	}
+	n.minDelay.Store(int64(2 * time.Second))
+	n.maxDelay.Store(int64(5 * time.Second))
 
 	n.tracker = presence.New(broker, presence.Config{
 		StaleTimeout:        30 * time.Second,
@@ -82,6 +87,9 @@ func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
 	ar.e.GET("/realtime/notifications", n.handlePage)
 	ar.e.GET("/sse/notifications", n.handleSSE)
 	ar.e.POST("/realtime/notifications/filter", n.handleFilterUpdate)
+	ar.e.POST("/realtime/notifications/identity", n.handleIdentitySwitch)
+	ar.e.POST("/realtime/notifications/simulator/pause", n.handleSimulatorPause)
+	ar.e.POST("/realtime/notifications/simulator/speed", n.handleSimulatorSpeed)
 
 	broker.RunPublisher(ar.ctx, n.startSimulator)
 }
@@ -89,7 +97,58 @@ func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
 func (n *notificationRoutes) handlePage(c echo.Context) error {
 	identity := getOrCreateNotifIdentity(c)
 	filters := n.filters.EnabledCategories(identity.ID)
-	return handler.RenderBaseLayout(c, views.NotificationsPage(identity, filters))
+	state := views.NotifSimulatorState{
+		Paused:   n.paused.Load(),
+		MinDelay: time.Duration(n.minDelay.Load()),
+		MaxDelay: time.Duration(n.maxDelay.Load()),
+	}
+	return handler.RenderBaseLayout(c, views.NotificationsPage(identity, filters, state))
+}
+
+func (n *notificationRoutes) handleIdentitySwitch(c echo.Context) error {
+	id := c.FormValue("identity")
+	idx := demo.IdentityIndexByID(id)
+	if idx < 0 {
+		return c.String(http.StatusBadRequest, "unknown identity")
+	}
+	c.SetCookie(&http.Cookie{
+		Name:     notifCookie,
+		Value:    fmt.Sprintf("%d", idx),
+		Path:     "/",
+		MaxAge:   86400 * 30,
+		HttpOnly: true,
+		Secure:   !appenv.Dev(),
+		SameSite: http.SameSiteLaxMode,
+	})
+	c.Response().Header().Set("HX-Refresh", "true")
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (n *notificationRoutes) handleSimulatorPause(c echo.Context) error {
+	n.paused.Store(!n.paused.Load())
+	if n.paused.Load() {
+		return c.HTML(http.StatusOK, "Resume")
+	}
+	return c.HTML(http.StatusOK, "Pause")
+}
+
+func (n *notificationRoutes) handleSimulatorSpeed(c echo.Context) error {
+	var minMs, maxMs int
+	switch c.FormValue("speed") {
+	case "slow":
+		minMs, maxMs = 5000, 10000
+	case "normal":
+		minMs, maxMs = 2000, 5000
+	case "fast":
+		minMs, maxMs = 500, 1500
+	case "flood":
+		minMs, maxMs = 50, 200
+	default:
+		return c.String(http.StatusBadRequest, "unknown speed")
+	}
+	n.minDelay.Store(int64(time.Duration(minMs) * time.Millisecond))
+	n.maxDelay.Store(int64(time.Duration(maxMs) * time.Millisecond))
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (n *notificationRoutes) handleSSE(c echo.Context) error {
@@ -191,13 +250,27 @@ func (n *notificationRoutes) handleFilterUpdate(c echo.Context) error {
 
 func (n *notificationRoutes) startSimulator(ctx context.Context) {
 	for {
-		delay := time.Duration(2000+rand.IntN(3000)) * time.Millisecond
+		minD := time.Duration(n.minDelay.Load())
+		maxD := time.Duration(n.maxDelay.Load())
+		if maxD < minD {
+			maxD = minD
+		}
+		spread := maxD - minD
+		var delay time.Duration
+		if spread > 0 {
+			delay = minD + time.Duration(rand.Int64N(int64(spread)))
+		} else {
+			delay = minD
+		}
 		timer := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():
 			timer.Stop()
 			return
 		case <-timer.C:
+			if n.paused.Load() {
+				continue
+			}
 			online := n.tracker.List(TopicNotifications)
 			if len(online) == 0 {
 				continue

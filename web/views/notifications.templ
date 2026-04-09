@@ -5,6 +5,7 @@ package views
 import (
 	"catgoose/dothog/internal/demo"
 	"fmt"
+	"time"
 )
 
 // NotifPresenceUser is a view-layer struct for rendering the presence sidebar.
@@ -14,6 +15,13 @@ type NotifPresenceUser struct {
 	Color string
 }
 
+// NotifSimulatorState holds the current simulator settings for the page.
+type NotifSimulatorState struct {
+	MinDelay time.Duration
+	MaxDelay time.Duration
+	Paused   bool
+}
+
 var notifCategoryBadge = map[demo.NotificationCategory]string{
 	demo.CatOrder:   "badge-primary",
 	demo.CatMention: "badge-secondary",
@@ -21,7 +29,7 @@ var notifCategoryBadge = map[demo.NotificationCategory]string{
 	demo.CatSystem:  "badge-info",
 }
 
-templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.NotificationCategory]bool) {
+templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.NotificationCategory]bool, sim NotifSimulatorState) {
 	<style>
 		body:has(#notif-page) main { view-transition-name: none !important; }
 	</style>
@@ -31,7 +39,18 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 				<h1 class="text-2xl font-bold">Notifications</h1>
 				<div class="flex items-center gap-2 text-sm text-base-content/60">
 					<div class="w-3 h-3 rounded-full" style={ fmt.Sprintf("background:%s", identity.Color) }></div>
-					<span>{ identity.Name }</span>
+					<select
+						class="select select-xs select-bordered"
+						hx-post="/realtime/notifications/identity"
+						hx-trigger="change"
+						hx-swap="none"
+						hx-include="this"
+						name="identity"
+					>
+						for _, id := range demo.AllNotificationIdentities() {
+							<option value={ id.ID } selected?={ id.ID == identity.ID }>{ id.Name }</option>
+						}
+					</select>
 				</div>
 			</div>
 			<button
@@ -44,7 +63,40 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 		</div>
 		<p class="text-xs text-base-content/50">
 			Per-user scoped notifications with presence, categories, and Last-Event-ID replay.
+			A server-side simulator publishes events to currently-online identities.
 		</p>
+		<!-- Simulator controls -->
+		<div class="flex items-center gap-2 flex-wrap bg-base-200 rounded-lg p-2">
+			<span class="text-xs font-semibold uppercase tracking-wider text-base-content/50 mr-1">Simulator</span>
+			<button
+				id="sim-pause-btn"
+				class="btn btn-xs btn-outline"
+				hx-post="/realtime/notifications/simulator/pause"
+				hx-swap="innerHTML"
+				hx-target="this"
+			>
+				if sim.Paused {
+					Resume
+				} else {
+					Pause
+				}
+			</button>
+			<div class="join">
+				for _, speed := range []string{"slow", "normal", "fast", "flood"} {
+					<button
+						class="btn btn-xs btn-outline join-item"
+						hx-post="/realtime/notifications/simulator/speed"
+						hx-vals={ fmt.Sprintf(`{"speed":"%s"}`, speed) }
+						hx-swap="none"
+					>
+						{ speed }
+					</button>
+				}
+			</div>
+			<span class="text-xs text-base-content/50 ml-auto">
+				{ fmt.Sprintf("delay %s–%s", sim.MinDelay.Round(time.Millisecond), sim.MaxDelay.Round(time.Millisecond)) }
+			</span>
+		</div>
 		<div class="flex gap-6">
 			<!-- Main: notification list -->
 			<div class="flex-1 min-w-0">
