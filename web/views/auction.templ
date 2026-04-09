@@ -114,41 +114,45 @@ templ AuctionWatchButton(item demo.AuctionItem, isWatched bool) {
 
 templ auctionBidForm(item demo.AuctionItem) {
 	<form
-		class="flex items-end gap-2 mt-2"
+		class="mt-2 space-y-1"
+		data-item-id={ strconv.Itoa(item.ID) }
 		hx-post="/realtime/auction/bid"
-		hx-target={ fmt.Sprintf("#auction-inner-%d", item.ID) }
-		hx-swap="outerHTML"
+		hx-swap="none"
+		hx-on::after-request="handleBidResponse(event)"
 	>
-		<input type="hidden" name="item_id" value={ strconv.Itoa(item.ID) }/>
-		<div class="form-control flex-1">
-			<label class="label py-0">
-				<span class="label-text text-xs">Your name</span>
-			</label>
-			<input
-				type="text"
-				name="bidder"
-				placeholder="Anonymous"
-				class="input input-xs input-bordered w-full"
-			/>
+		<div class="flex items-end gap-2">
+			<input type="hidden" name="item_id" value={ strconv.Itoa(item.ID) }/>
+			<div class="form-control flex-1">
+				<label class="label py-0">
+					<span class="label-text text-xs">Your name</span>
+				</label>
+				<input
+					type="text"
+					name="bidder"
+					placeholder="Anonymous"
+					class="input input-xs input-bordered w-full"
+				/>
+			</div>
+			<div class="form-control flex-1">
+				<label class="label py-0">
+					<span class="label-text text-xs">Amount ($)</span>
+				</label>
+				<input
+					type="number"
+					name="amount"
+					step="0.01"
+					min={ fmt.Sprintf("%.2f", float64(item.CurrentBid+1)/100) }
+					value={ fmt.Sprintf("%.2f", float64(item.CurrentBid+100)/100) }
+					class="input input-xs input-bordered w-full tabular-nums"
+					required
+				/>
+			</div>
+			<button type="submit" class="btn btn-primary btn-xs">Place</button>
+			<button type="button" class="btn btn-ghost btn-xs" data-item-id={ strconv.Itoa(item.ID) } onclick="closeBidForm(+this.dataset.itemId)">
+				&times;
+			</button>
 		</div>
-		<div class="form-control flex-1">
-			<label class="label py-0">
-				<span class="label-text text-xs">Amount ($)</span>
-			</label>
-			<input
-				type="number"
-				name="amount"
-				step="0.01"
-				min={ fmt.Sprintf("%.2f", float64(item.CurrentBid+1)/100) }
-				placeholder={ fmt.Sprintf("%.2f", float64(item.CurrentBid+100)/100) }
-				class="input input-xs input-bordered w-full tabular-nums"
-				required
-			/>
-		</div>
-		<button type="submit" class="btn btn-primary btn-xs">Place</button>
-		<button type="button" class="btn btn-ghost btn-xs" data-item-id={ strconv.Itoa(item.ID) } onclick="closeBidForm(+this.dataset.itemId)">
-			&times;
-		</button>
+		<p data-bid-error class="hidden text-xs text-error mt-1"></p>
 	</form>
 }
 
@@ -222,7 +226,7 @@ templ auctionScript() {
 				var amountInput = form.querySelector('input[name="amount"]');
 				if (amountInput) {
 					amountInput.min = ((currentBidCents + 1) / 100).toFixed(2);
-					amountInput.placeholder = ((currentBidCents + 100) / 100).toFixed(2);
+					amountInput.value = ((currentBidCents + 100) / 100).toFixed(2);
 				}
 			}
 		}
@@ -232,6 +236,43 @@ templ auctionScript() {
 			if (form) {
 				form.classList.add('hidden');
 			}
+		}
+
+		// Bid form uses hx-swap="none" so we never depend on the auction-inner
+		// element existing at response time (it can be replaced by SSE updates
+		// mid-request, which would otherwise produce htmx:targetError). On
+		// success we apply the server's response HTML directly to the card —
+		// the SSE delivery only reaches subscribers of watched items, so the
+		// bidder may not get the SSE event for the item they just bid on.
+		function handleBidResponse(evt) {
+			var xhr = evt.detail.xhr;
+			var form = evt.detail.elt;
+			var errEl = form && form.querySelector('[data-bid-error]');
+			if (!xhr || !form) return;
+			if (xhr.status >= 400) {
+				if (errEl) {
+					errEl.textContent = xhr.responseText || 'Bid failed';
+					errEl.classList.remove('hidden');
+				}
+				return;
+			}
+			// Success: apply the new card HTML, clear error, close form.
+			var itemId = form.getAttribute('data-item-id');
+			if (itemId) {
+				var inner = document.getElementById('auction-inner-' + itemId);
+				if (inner && xhr.responseText) {
+					var wrapper = document.createElement('div');
+					wrapper.innerHTML = xhr.responseText.trim();
+					var newEl = wrapper.firstElementChild;
+					if (newEl) inner.replaceWith(newEl);
+				}
+				closeBidForm(+itemId);
+			}
+			if (errEl) {
+				errEl.textContent = '';
+				errEl.classList.add('hidden');
+			}
+			form.reset();
 		}
 
 		// Connect on page load.

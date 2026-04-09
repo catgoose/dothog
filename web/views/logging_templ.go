@@ -307,7 +307,7 @@ func loggingTraceRow(t promolog.TraceSummary) templ.Component {
 	})
 }
 
-// LoggingTraceRowOOB renders a new trace row as an OOB swap that prepends to the tbody.
+// LoggingTraceRowOOB renders a new trace row as an OOB swap that appends to the tbody.
 func LoggingTraceRowOOB(t promolog.TraceSummary) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -329,7 +329,7 @@ func LoggingTraceRowOOB(t promolog.TraceSummary) templ.Component {
 			templ_7745c5c3_Var15 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<tbody id=\"logging-traces-tbody\" hx-swap-oob=\"afterbegin\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<tbody id=\"logging-traces-tbody\" hx-swap-oob=\"beforeend\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -44,7 +45,10 @@ func (ar *appRoutes) initObservatoryRoutes(mainBroker *tavern.SSEBroker) {
 			SimplifyAt:   6,
 			DisconnectAt: 10,
 		}),
-		tavern.WithMaxSubscribersPerTopic(int(obs.MaxPerTopic())),
+		tavern.WithAdmissionControl(func(_ string, currentCount int) bool {
+			max := obs.MaxPerTopic()
+			return max <= 0 || currentCount < max
+		}),
 		tavern.WithDropOldest(),
 	)
 
@@ -75,6 +79,7 @@ func (ar *appRoutes) initObservatoryRoutes(mainBroker *tavern.SSEBroker) {
 	ar.e.GET("/realtime/observatory", o.handlePage)
 	ar.e.GET("/sse/observatory", echo.WrapHandler(mainBroker.SSEHandler(TopicObservatory)))
 	ar.e.POST("/realtime/observatory/stress", o.handleStressToggle)
+	ar.e.POST("/realtime/observatory/max-per-topic", o.handleMaxPerTopic)
 }
 
 func (o *observatoryRoutes) handlePage(c echo.Context) error {
@@ -181,11 +186,22 @@ func (o *observatoryRoutes) startMetricsPublisher(ctx context.Context) {
 	}
 }
 
+// handleMaxPerTopic updates the per-topic subscriber cap on the demo broker.
+// The new cap takes effect for new subscriptions on the next admission check.
+func (o *observatoryRoutes) handleMaxPerTopic(c echo.Context) error {
+	n, err := strconv.Atoi(c.FormValue("max"))
+	if err != nil || n < 0 || n > 1000 {
+		return c.String(http.StatusBadRequest, "invalid max")
+	}
+	o.state.SetMaxPerTopic(n)
+	return c.HTML(http.StatusOK, fmt.Sprintf("%d", n))
+}
+
 // handleStressToggle starts or stops the stress test against the demo broker.
 func (o *observatoryRoutes) handleStressToggle(c echo.Context) error {
 	if o.state.StressActive() {
 		o.state.CancelStress()
-		return c.NoContent(http.StatusNoContent)
+		return handler.RenderComponent(c, views.ObservatoryControls(o.controlsData()))
 	}
 
 	// Detach from request context — stress test outlives the HTTP request.
@@ -193,33 +209,50 @@ func (o *observatoryRoutes) handleStressToggle(c echo.Context) error {
 	o.state.SetStress(true, bgCancel)
 
 	// Spawn slow subscribers that deliberately read slowly to trigger
-	// backpressure on the demo broker.
+	// backpressure on the demo broker. The number per topic matches the
+	// current admission cap so the configured Max Subscribers/Topic value
+	// is visibly meaningful.
+	perTopic := o.state.MaxPerTopic()
+	if perTopic <= 0 {
+		perTopic = 1
+	}
 	for _, topic := range demoTopics {
-		go func(t string) {
-			msgs, unsub := o.demoBroker.Subscribe(t)
-			if msgs == nil {
-				return
-			}
-			defer unsub()
-			for {
-				select {
-				case <-bgCtx.Done():
+		for i := 0; i < perTopic; i++ {
+			go func(t string) {
+				msgs, unsub := o.demoBroker.Subscribe(t)
+				if msgs == nil {
 					return
-				case _, ok := <-msgs:
-					if !ok {
-						return
-					}
-					// Deliberately slow: triggers buffer fill and backpressure.
+				}
+				defer unsub()
+				for {
 					select {
 					case <-bgCtx.Done():
 						return
-					case <-time.After(500*time.Millisecond + time.Duration(rand.IntN(200))*time.Millisecond):
+					case _, ok := <-msgs:
+						if !ok {
+							return
+						}
+						// Deliberately slow: triggers buffer fill and backpressure.
+						select {
+						case <-bgCtx.Done():
+							return
+						case <-time.After(500*time.Millisecond + time.Duration(rand.IntN(200))*time.Millisecond):
+						}
 					}
 				}
-			}
-		}(topic)
+			}(topic)
+		}
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	return handler.RenderComponent(c, views.ObservatoryControls(o.controlsData()))
+}
+
+// controlsData builds a minimal ObservatoryData for re-rendering the controls
+// fragment after a stress toggle.
+func (o *observatoryRoutes) controlsData() views.ObservatoryData {
+	return views.ObservatoryData{
+		StressActive: o.state.StressActive(),
+		MaxPerTopic:  o.state.MaxPerTopic(),
+	}
 }
 

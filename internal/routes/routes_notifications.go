@@ -15,7 +15,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	appenv "catgoose/dothog/internal/env"
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/shared"
@@ -26,13 +25,14 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const notifCookie = "notif_identity"
-
 type notificationRoutes struct {
-	broker  *tavern.SSEBroker
-	tracker *presence.Tracker
-	filters *demo.NotificationFilters
-	counter atomic.Int64
+	broker   *tavern.SSEBroker
+	tracker  *presence.Tracker
+	filters  *demo.NotificationFilters
+	counter  atomic.Int64
+	paused   atomic.Bool
+	minDelay atomic.Int64 // nanoseconds
+	maxDelay atomic.Int64 // nanoseconds
 }
 
 func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
@@ -42,6 +42,8 @@ func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
 		broker:  broker,
 		filters: filters,
 	}
+	n.minDelay.Store(int64(2 * time.Second))
+	n.maxDelay.Store(int64(5 * time.Second))
 
 	n.tracker = presence.New(broker, presence.Config{
 		StaleTimeout:        30 * time.Second,
@@ -82,18 +84,60 @@ func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
 	ar.e.GET("/realtime/notifications", n.handlePage)
 	ar.e.GET("/sse/notifications", n.handleSSE)
 	ar.e.POST("/realtime/notifications/filter", n.handleFilterUpdate)
+	ar.e.POST("/realtime/notifications/identity", n.handleIdentitySwitch)
+	ar.e.POST("/realtime/notifications/simulator/pause", n.handleSimulatorPause)
+	ar.e.POST("/realtime/notifications/simulator/speed", n.handleSimulatorSpeed)
 
 	broker.RunPublisher(ar.ctx, n.startSimulator)
 }
 
 func (n *notificationRoutes) handlePage(c echo.Context) error {
-	identity := getOrCreateNotifIdentity(c)
-	filters := n.filters.EnabledCategories(identity.ID)
-	return handler.RenderBaseLayout(c, views.NotificationsPage(identity, filters))
+	identity := resolveNotifIdentity(c.QueryParam("identity"))
+	return handler.RenderBaseLayout(c, views.NotificationsPage(identity, n.filters.EnabledCategories(identity.ID), n.simState()))
+}
+
+func (n *notificationRoutes) handleIdentitySwitch(c echo.Context) error {
+	identity := resolveNotifIdentity(c.FormValue("identity"))
+	return handler.RenderComponent(c, views.NotificationsPage(identity, n.filters.EnabledCategories(identity.ID), n.simState()))
+}
+
+func (n *notificationRoutes) simState() views.NotifSimulatorState {
+	return views.NotifSimulatorState{
+		Paused:   n.paused.Load(),
+		MinDelay: time.Duration(n.minDelay.Load()),
+		MaxDelay: time.Duration(n.maxDelay.Load()),
+	}
+}
+
+func (n *notificationRoutes) handleSimulatorPause(c echo.Context) error {
+	n.paused.Store(!n.paused.Load())
+	if n.paused.Load() {
+		return c.HTML(http.StatusOK, "Resume")
+	}
+	return c.HTML(http.StatusOK, "Pause")
+}
+
+func (n *notificationRoutes) handleSimulatorSpeed(c echo.Context) error {
+	var minMs, maxMs int
+	switch c.FormValue("speed") {
+	case "slow":
+		minMs, maxMs = 5000, 10000
+	case "normal":
+		minMs, maxMs = 2000, 5000
+	case "fast":
+		minMs, maxMs = 500, 1500
+	case "flood":
+		minMs, maxMs = 50, 200
+	default:
+		return c.String(http.StatusBadRequest, "unknown speed")
+	}
+	n.minDelay.Store(int64(time.Duration(minMs) * time.Millisecond))
+	n.maxDelay.Store(int64(time.Duration(maxMs) * time.Millisecond))
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (n *notificationRoutes) handleSSE(c echo.Context) error {
-	identity := getOrCreateNotifIdentity(c)
+	identity := resolveNotifIdentity(c.QueryParam("identity"))
 
 	c.Response().Header().Set("Content-Type", "text/event-stream")
 	c.Response().Header().Set("Cache-Control", "no-cache")
@@ -182,7 +226,7 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 }
 
 func (n *notificationRoutes) handleFilterUpdate(c echo.Context) error {
-	identity := getOrCreateNotifIdentity(c)
+	identity := resolveNotifIdentity(c.FormValue("identity"))
 	cat := demo.NotificationCategory(c.FormValue("category"))
 	enabled := c.FormValue("enabled") == "true"
 	n.filters.SetFilter(identity.ID, cat, enabled)
@@ -191,13 +235,27 @@ func (n *notificationRoutes) handleFilterUpdate(c echo.Context) error {
 
 func (n *notificationRoutes) startSimulator(ctx context.Context) {
 	for {
-		delay := time.Duration(2000+rand.IntN(3000)) * time.Millisecond
+		minD := time.Duration(n.minDelay.Load())
+		maxD := time.Duration(n.maxDelay.Load())
+		if maxD < minD {
+			maxD = minD
+		}
+		spread := maxD - minD
+		var delay time.Duration
+		if spread > 0 {
+			delay = minD + time.Duration(rand.Int64N(int64(spread)))
+		} else {
+			delay = minD
+		}
 		timer := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():
 			timer.Stop()
 			return
 		case <-timer.C:
+			if n.paused.Load() {
+				continue
+			}
 			online := n.tracker.List(TopicNotifications)
 			if len(online) == 0 {
 				continue
@@ -255,23 +313,13 @@ func notifUserTopic(userID string) string {
 	return TopicNotifications + "-" + userID
 }
 
-func getOrCreateNotifIdentity(c echo.Context) demo.NotificationIdentity {
-	if cookie, err := c.Cookie(notifCookie); err == nil && cookie.Value != "" {
-		// Parse index from cookie value
-		var idx int
-		if _, err := fmt.Sscanf(cookie.Value, "%d", &idx); err == nil {
+// resolveNotifIdentity returns the identity matching the given ID, or the
+// first identity in the pool if id is empty or unknown.
+func resolveNotifIdentity(id string) demo.NotificationIdentity {
+	if id != "" {
+		if idx := demo.IdentityIndexByID(id); idx >= 0 {
 			return demo.AssignIdentity(idx)
 		}
 	}
-	idx := demo.RandomIdentityIndex()
-	c.SetCookie(&http.Cookie{
-		Name:     notifCookie,
-		Value:    fmt.Sprintf("%d", idx),
-		Path:     "/",
-		MaxAge:   86400 * 30,
-		HttpOnly: true,
-		Secure:   !appenv.Dev(),
-		SameSite: http.SameSiteLaxMode,
-	})
-	return demo.AssignIdentity(idx)
+	return demo.AssignIdentity(0)
 }

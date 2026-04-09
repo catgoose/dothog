@@ -482,27 +482,27 @@ func auctionBidForm(item demo.AuctionItem) templ.Component {
 			templ_7745c5c3_Var24 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<form class=\"flex items-end gap-2 mt-2\" hx-post=\"/realtime/auction/bid\" hx-target=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<form class=\"mt-2 space-y-1\" data-item-id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#auction-inner-%d", item.ID))
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 119, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 118, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" hx-swap=\"outerHTML\"><input type=\"hidden\" name=\"item_id\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" hx-post=\"/realtime/auction/bid\" hx-swap=\"none\" hx-on::after-request=\"handleBidResponse(event)\"><div class=\"flex items-end gap-2\"><input type=\"hidden\" name=\"item_id\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 122, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 124, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -515,20 +515,20 @@ func auctionBidForm(item demo.AuctionItem) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", float64(item.CurrentBid+1)/100))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 142, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 144, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\" placeholder=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", float64(item.CurrentBid+100)/100))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 143, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 145, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -541,13 +541,13 @@ func auctionBidForm(item demo.AuctionItem) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 149, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/auction.templ`, Line: 151, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\" onclick=\"closeBidForm(+this.dataset.itemId)\">&times;</button></form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\" onclick=\"closeBidForm(+this.dataset.itemId)\">&times;</button></div><p data-bid-error class=\"hidden text-xs text-error mt-1\"></p></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -576,7 +576,7 @@ func auctionScript() templ.Component {
 			templ_7745c5c3_Var30 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<script>\n\t\tvar auctionSSE;\n\n\t\tfunction connectAuctions() {\n\t\t\tif (auctionSSE) {\n\t\t\t\tauctionSSE.close();\n\t\t\t\tauctionSSE = null;\n\t\t\t}\n\t\t\tvar statusEl = document.getElementById('sse-status');\n\n\t\t\tauctionSSE = new EventSource('/sse/auction');\n\t\t\tauctionSSE.onopen = function() {\n\t\t\t\tif (statusEl) {\n\t\t\t\t\tstatusEl.textContent = 'connected';\n\t\t\t\t\tstatusEl.classList.remove('badge-ghost', 'badge-error');\n\t\t\t\t\tstatusEl.classList.add('badge-success');\n\t\t\t\t}\n\t\t\t};\n\t\t\tauctionSSE.onerror = function() {\n\t\t\t\tif (statusEl) {\n\t\t\t\t\tstatusEl.textContent = 'disconnected';\n\t\t\t\t\tstatusEl.classList.remove('badge-success');\n\t\t\t\t\tstatusEl.classList.add('badge-error');\n\t\t\t\t}\n\t\t\t};\n\n\t\t\t// Listen for auction topic events. The SSE event type is the topic\n\t\t\t// name (e.g. \"auction/item-3\"). We listen on all 8 possible topics.\n\t\t\tfor (var i = 1; i <= 8; i++) {\n\t\t\t\t(function(id) {\n\t\t\t\t\tvar topic = 'auction/item-' + id;\n\t\t\t\t\tauctionSSE.addEventListener(topic, function(e) {\n\t\t\t\t\t\tvar inner = document.getElementById('auction-inner-' + id);\n\t\t\t\t\t\tif (!inner) return;\n\n\t\t\t\t\t\t// Parse the incoming HTML and swap inner content.\n\t\t\t\t\t\tvar wrapper = document.createElement('div');\n\t\t\t\t\t\twrapper.innerHTML = e.data.trim();\n\t\t\t\t\t\tvar newEl = wrapper.firstElementChild;\n\t\t\t\t\t\tif (newEl) {\n\t\t\t\t\t\t\tinner.replaceWith(newEl);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\t// Pulse animation on the card.\n\t\t\t\t\t\tvar card = document.getElementById('auction-card-' + id);\n\t\t\t\t\t\tif (card) {\n\t\t\t\t\t\t\tcard.classList.add('ring', 'ring-primary', 'ring-opacity-50');\n\t\t\t\t\t\t\tsetTimeout(function() {\n\t\t\t\t\t\t\t\tcard.classList.remove('ring', 'ring-primary', 'ring-opacity-50');\n\t\t\t\t\t\t\t}, 600);\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t})(i);\n\t\t\t}\n\t\t}\n\n\t\t// Called after watch toggle to reconnect with updated cookie.\n\t\tfunction reconnectAuctions() {\n\t\t\t// Small delay to let the cookie settle after the HTMX response.\n\t\t\tsetTimeout(function() { connectAuctions(); }, 100);\n\t\t}\n\n\t\tfunction openBidForm(itemId, currentBidCents) {\n\t\t\tvar form = document.getElementById('bid-form-' + itemId);\n\t\t\tif (form) {\n\t\t\t\tform.classList.remove('hidden');\n\t\t\t\tvar amountInput = form.querySelector('input[name=\"amount\"]');\n\t\t\t\tif (amountInput) {\n\t\t\t\t\tamountInput.min = ((currentBidCents + 1) / 100).toFixed(2);\n\t\t\t\t\tamountInput.placeholder = ((currentBidCents + 100) / 100).toFixed(2);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\n\t\tfunction closeBidForm(itemId) {\n\t\t\tvar form = document.getElementById('bid-form-' + itemId);\n\t\t\tif (form) {\n\t\t\t\tform.classList.add('hidden');\n\t\t\t}\n\t\t}\n\n\t\t// Connect on page load.\n\t\tconnectAuctions();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<script>\n\t\tvar auctionSSE;\n\n\t\tfunction connectAuctions() {\n\t\t\tif (auctionSSE) {\n\t\t\t\tauctionSSE.close();\n\t\t\t\tauctionSSE = null;\n\t\t\t}\n\t\t\tvar statusEl = document.getElementById('sse-status');\n\n\t\t\tauctionSSE = new EventSource('/sse/auction');\n\t\t\tauctionSSE.onopen = function() {\n\t\t\t\tif (statusEl) {\n\t\t\t\t\tstatusEl.textContent = 'connected';\n\t\t\t\t\tstatusEl.classList.remove('badge-ghost', 'badge-error');\n\t\t\t\t\tstatusEl.classList.add('badge-success');\n\t\t\t\t}\n\t\t\t};\n\t\t\tauctionSSE.onerror = function() {\n\t\t\t\tif (statusEl) {\n\t\t\t\t\tstatusEl.textContent = 'disconnected';\n\t\t\t\t\tstatusEl.classList.remove('badge-success');\n\t\t\t\t\tstatusEl.classList.add('badge-error');\n\t\t\t\t}\n\t\t\t};\n\n\t\t\t// Listen for auction topic events. The SSE event type is the topic\n\t\t\t// name (e.g. \"auction/item-3\"). We listen on all 8 possible topics.\n\t\t\tfor (var i = 1; i <= 8; i++) {\n\t\t\t\t(function(id) {\n\t\t\t\t\tvar topic = 'auction/item-' + id;\n\t\t\t\t\tauctionSSE.addEventListener(topic, function(e) {\n\t\t\t\t\t\tvar inner = document.getElementById('auction-inner-' + id);\n\t\t\t\t\t\tif (!inner) return;\n\n\t\t\t\t\t\t// Parse the incoming HTML and swap inner content.\n\t\t\t\t\t\tvar wrapper = document.createElement('div');\n\t\t\t\t\t\twrapper.innerHTML = e.data.trim();\n\t\t\t\t\t\tvar newEl = wrapper.firstElementChild;\n\t\t\t\t\t\tif (newEl) {\n\t\t\t\t\t\t\tinner.replaceWith(newEl);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\t// Pulse animation on the card.\n\t\t\t\t\t\tvar card = document.getElementById('auction-card-' + id);\n\t\t\t\t\t\tif (card) {\n\t\t\t\t\t\t\tcard.classList.add('ring', 'ring-primary', 'ring-opacity-50');\n\t\t\t\t\t\t\tsetTimeout(function() {\n\t\t\t\t\t\t\t\tcard.classList.remove('ring', 'ring-primary', 'ring-opacity-50');\n\t\t\t\t\t\t\t}, 600);\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t})(i);\n\t\t\t}\n\t\t}\n\n\t\t// Called after watch toggle to reconnect with updated cookie.\n\t\tfunction reconnectAuctions() {\n\t\t\t// Small delay to let the cookie settle after the HTMX response.\n\t\t\tsetTimeout(function() { connectAuctions(); }, 100);\n\t\t}\n\n\t\tfunction openBidForm(itemId, currentBidCents) {\n\t\t\tvar form = document.getElementById('bid-form-' + itemId);\n\t\t\tif (form) {\n\t\t\t\tform.classList.remove('hidden');\n\t\t\t\tvar amountInput = form.querySelector('input[name=\"amount\"]');\n\t\t\t\tif (amountInput) {\n\t\t\t\t\tamountInput.min = ((currentBidCents + 1) / 100).toFixed(2);\n\t\t\t\t\tamountInput.value = ((currentBidCents + 100) / 100).toFixed(2);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\n\t\tfunction closeBidForm(itemId) {\n\t\t\tvar form = document.getElementById('bid-form-' + itemId);\n\t\t\tif (form) {\n\t\t\t\tform.classList.add('hidden');\n\t\t\t}\n\t\t}\n\n\t\t// Bid form uses hx-swap=\"none\" so we never depend on the auction-inner\n\t\t// element existing at response time (it can be replaced by SSE updates\n\t\t// mid-request, which would otherwise produce htmx:targetError). On\n\t\t// success we apply the server's response HTML directly to the card —\n\t\t// the SSE delivery only reaches subscribers of watched items, so the\n\t\t// bidder may not get the SSE event for the item they just bid on.\n\t\tfunction handleBidResponse(evt) {\n\t\t\tvar xhr = evt.detail.xhr;\n\t\t\tvar form = evt.detail.elt;\n\t\t\tvar errEl = form && form.querySelector('[data-bid-error]');\n\t\t\tif (!xhr || !form) return;\n\t\t\tif (xhr.status >= 400) {\n\t\t\t\tif (errEl) {\n\t\t\t\t\terrEl.textContent = xhr.responseText || 'Bid failed';\n\t\t\t\t\terrEl.classList.remove('hidden');\n\t\t\t\t}\n\t\t\t\treturn;\n\t\t\t}\n\t\t\t// Success: apply the new card HTML, clear error, close form.\n\t\t\tvar itemId = form.getAttribute('data-item-id');\n\t\t\tif (itemId) {\n\t\t\t\tvar inner = document.getElementById('auction-inner-' + itemId);\n\t\t\t\tif (inner && xhr.responseText) {\n\t\t\t\t\tvar wrapper = document.createElement('div');\n\t\t\t\t\twrapper.innerHTML = xhr.responseText.trim();\n\t\t\t\t\tvar newEl = wrapper.firstElementChild;\n\t\t\t\t\tif (newEl) inner.replaceWith(newEl);\n\t\t\t\t}\n\t\t\t\tcloseBidForm(+itemId);\n\t\t\t}\n\t\t\tif (errEl) {\n\t\t\t\terrEl.textContent = '';\n\t\t\t\terrEl.classList.add('hidden');\n\t\t\t}\n\t\t\tform.reset();\n\t\t}\n\n\t\t// Connect on page load.\n\t\tconnectAuctions();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
