@@ -111,7 +111,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" hx-swap=\"none\" class=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" hx-target=\"#notif-page\" hx-swap=\"outerHTML\" class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -131,7 +131,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("background:%s", id.Color))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 57, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 58, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -144,7 +144,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(id.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 58, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 59, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -200,7 +200,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(speed)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 97, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 98, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -213,7 +213,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"speed":"%s"}`, speed))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 99, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 100, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -226,7 +226,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(speed)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 103, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 104, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -244,7 +244,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("delay %s–%s", sim.MinDelay.Round(time.Millisecond), sim.MaxDelay.Round(time.Millisecond)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 108, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 109, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -257,7 +257,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("background:%s", identity.Color))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 151, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 152, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -270,7 +270,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 152, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 153, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -310,7 +310,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 162, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 163, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -333,7 +333,7 @@ func NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Noti
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"category":"%s"}`, string(cat)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 168, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 169, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -413,7 +413,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs("notif-" + id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 292, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 293, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -426,7 +426,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 292, Col: 167}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 293, Col: 167}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -461,7 +461,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 293, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 294, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -474,7 +474,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 294, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 295, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -487,7 +487,7 @@ func NotificationItem(id string, cat demo.NotificationCategory, message string, 
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(timestamp)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 295, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 296, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -530,7 +530,7 @@ func PresenceList(users []NotifPresenceUser, currentUserID string) templ.Compone
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("background:%s", u.Color))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 302, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 303, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -543,7 +543,7 @@ func PresenceList(users []NotifPresenceUser, currentUserID string) templ.Compone
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(u.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 303, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/notifications.templ`, Line: 304, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {

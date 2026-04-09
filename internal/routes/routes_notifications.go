@@ -120,8 +120,14 @@ func (n *notificationRoutes) handleIdentitySwitch(c echo.Context) error {
 		Secure:   !appenv.Dev(),
 		SameSite: http.SameSiteLaxMode,
 	})
-	c.Response().Header().Set("HX-Refresh", "true")
-	return c.NoContent(http.StatusNoContent)
+	identity := demo.AssignIdentity(idx)
+	filters := n.filters.EnabledCategories(identity.ID)
+	state := views.NotifSimulatorState{
+		Paused:   n.paused.Load(),
+		MinDelay: time.Duration(n.minDelay.Load()),
+		MaxDelay: time.Duration(n.maxDelay.Load()),
+	}
+	return handler.RenderComponent(c, views.NotificationsPage(identity, filters, state))
 }
 
 func (n *notificationRoutes) handleSimulatorPause(c echo.Context) error {
