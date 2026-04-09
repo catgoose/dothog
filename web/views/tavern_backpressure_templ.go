@@ -47,7 +47,7 @@ func TavernBackpressurePage(data TavernBackpressureData, batchWindow time.Durati
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\t/* Opt out of global view transitions — the ::view-transition snapshot\n\t\t   of main paints over the sticky nav during rapid SSE swaps. */\n\t\tbody:has(#bp-page) main {\n\t\t\tview-transition-name: none !important;\n\t\t}\n\t\t#bp-stream-log, #bp-stream-log *,\n\t\t#bp-tier-badge, #bp-tier-text,\n\t\t#bp-metrics, #bp-metrics *,\n\t\t#bp-tier-log, #bp-tier-log *,\n\t\t#bp-active-preset {\n\t\t\ttransition: none !important;\n\t\t\tanimation: none !important;\n\t\t\tscroll-behavior: auto !important;\n\t\t}\n\t</style><div id=\"bp-page\" class=\"max-w-5xl mx-auto p-4 space-y-4 overflow-hidden\" style=\"overflow-anchor:none\"><div class=\"flex items-center justify-between flex-wrap gap-2\"><div><h1 class=\"text-2xl font-bold\">Backpressure Lab</h1><p class=\"text-xs text-base-content/50\">Live delivery degradation under backpressure. Select a stress preset and watch messages throttle, simplify, and drop.</p></div></div><div hx-ext=\"sse\" sse-connect=\"/sse/tavern/backpressure\" data-tavern-reconnecting-class=\"opacity-50\"><div data-tavern-status class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span class=\"loading loading-spinner loading-xs\"></span> Reconnecting...</div><div sse-swap=\"bp-metrics\" hx-target=\"#bp-metrics\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"bp-tier-log\" hx-target=\"#bp-tier-log\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"bp-preset\" hx-target=\"#bp-active-preset\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"bp-tier-badge\" hx-target=\"#bp-tier-badge\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"bp-tier-text\" hx-target=\"#bp-tier-text\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\t/* Opt out of global view transitions — the ::view-transition snapshot\n\t\t   of main paints over the sticky nav during rapid SSE swaps. */\n\t\tbody:has(#bp-page) main {\n\t\t\tview-transition-name: none !important;\n\t\t}\n\t</style><div id=\"bp-page\" class=\"max-w-5xl mx-auto p-4 space-y-4 overflow-hidden\" style=\"overflow-anchor:none\"><div class=\"flex items-center justify-between flex-wrap gap-2\"><div><h1 class=\"text-2xl font-bold\">Backpressure Lab</h1><p class=\"text-xs text-base-content/50\">Live delivery degradation under backpressure. Select a stress preset and watch messages throttle, simplify, and drop.</p></div></div><div hx-ext=\"sse\" sse-connect=\"/sse/tavern/backpressure\" data-tavern-reconnecting-class=\"opacity-50\"><div data-tavern-status class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span class=\"loading loading-spinner loading-xs\"></span> Reconnecting...</div><div sse-swap=\"bp-metrics\" hx-target=\"#bp-metrics\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"bp-tier-log\" hx-target=\"#bp-tier-log\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"bp-preset\" hx-target=\"#bp-active-preset\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"bp-tier-badge\" hx-target=\"#bp-tier-badge\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"bp-tier-text\" hx-target=\"#bp-tier-text\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -148,7 +148,7 @@ func TavernBackpressurePreset(preset string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(preset)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 80, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 71, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -188,7 +188,7 @@ func BackpressureStreamEvent(topic, message string, simplified bool) templ.Compo
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(bpStripSimplified(message))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 88, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 79, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -228,7 +228,7 @@ func BackpressureStreamEvent(topic, message string, simplified bool) templ.Compo
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(topic)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 92, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 83, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -241,7 +241,7 @@ func BackpressureStreamEvent(topic, message string, simplified bool) templ.Compo
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 93, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 84, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -303,7 +303,7 @@ func BackpressureTierBadge(tierName string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(tierName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 100, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 91, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -353,13 +353,13 @@ func backpressurePanels(data TavernBackpressureData, batchWindow time.Duration) 
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(bpTierExplanation("normal"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 110, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 101, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</span></div><!-- Live Stream Panel (separate SSE connection through demo broker) --><div class=\"card bg-base-200 shadow-sm overflow-hidden\"><div class=\"card-body p-4\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Live Delivery Stream</h2><div hx-ext=\"sse\" sse-connect=\"/sse/tavern/backpressure/stream\"><!-- Raw mode: one event per swap (append) --><div sse-swap=\"bp-stream\" hx-target=\"#bp-stream-log\" hx-swap=\"beforeend settle:0 transition:false\" style=\"display:none\"></div><!-- Batch mode: one swap per window (append) --><div sse-swap=\"bp-stream-batch\" hx-target=\"#bp-stream-log\" hx-swap=\"beforeend settle:0 transition:false\" style=\"display:none\"></div><div id=\"bp-stream-log\" class=\"max-h-72 overflow-y-auto overflow-x-hidden space-y-0.5\" style=\"contain:paint\" data-testid=\"stream-log\"><p id=\"bp-stream-empty\" class=\"text-xs text-base-content/30 py-2\">Waiting for stream events...</p></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</span></div><!-- Live Stream Panel (separate SSE connection through demo broker) --><div class=\"card bg-base-200 shadow-sm overflow-hidden\"><div class=\"card-body p-4\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/50\">Live Delivery Stream</h2><div id=\"bp-stream-log\" class=\"max-h-72 overflow-y-auto overflow-x-hidden space-y-0.5\" style=\"contain:paint\" data-testid=\"stream-log\" data-stream-url=\"/sse/tavern/backpressure/stream\"><p id=\"bp-stream-empty\" class=\"text-xs text-base-content/30 py-2\">Waiting for stream events...</p></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -379,7 +379,7 @@ func backpressurePanels(data TavernBackpressureData, batchWindow time.Duration) 
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"preset":"%s"}`, preset))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 143, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 125, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -392,7 +392,7 @@ func backpressurePanels(data TavernBackpressureData, batchWindow time.Duration) 
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs("preset-" + preset)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 145, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 127, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -405,7 +405,7 @@ func backpressurePanels(data TavernBackpressureData, batchWindow time.Duration) 
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(preset)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 147, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 129, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -423,7 +423,7 @@ func backpressurePanels(data TavernBackpressureData, batchWindow time.Duration) 
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(data.ActivePreset)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 152, Col: 134}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 134, Col: 134}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -436,7 +436,7 @@ func backpressurePanels(data TavernBackpressureData, batchWindow time.Duration) 
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", batchWindow.Milliseconds()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 165, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 147, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -449,7 +449,7 @@ func backpressurePanels(data TavernBackpressureData, batchWindow time.Duration) 
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(bpBatchLabel(batchWindow))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 175, Col: 104}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 157, Col: 104}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -512,7 +512,7 @@ func backpressureMetrics(data TavernBackpressureData) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(topic)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 232, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 214, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -525,7 +525,7 @@ func backpressureMetrics(data TavernBackpressureData) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs("metric-pub-" + topic)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 233, Col: 84}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 215, Col: 84}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -538,7 +538,7 @@ func backpressureMetrics(data TavernBackpressureData) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", bpTopicPub(data.Metrics, topic)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 233, Col: 139}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 215, Col: 139}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -551,7 +551,7 @@ func backpressureMetrics(data TavernBackpressureData) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d dropped", bpTopicDrop(data.Metrics, topic)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 235, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 217, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -636,7 +636,7 @@ func tierChangeEntry(tc demo.TierChange) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(tc.Timestamp.Format("15:04:05"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 254, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 236, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
@@ -649,7 +649,7 @@ func tierChangeEntry(tc demo.TierChange) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(tc.Topic)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 255, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 237, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -684,7 +684,7 @@ func tierChangeEntry(tc demo.TierChange) templ.Component {
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(bpTierName(tc.OldTier))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 256, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 238, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -719,7 +719,7 @@ func tierChangeEntry(tc demo.TierChange) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(bpTierName(tc.NewTier))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 258, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_backpressure.templ`, Line: 240, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
@@ -798,7 +798,7 @@ func backpressureStreamScript() templ.Component {
 			templ_7745c5c3_Var39 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<script>\n\t\t(function() {\n\t\t\tvar log = document.getElementById('bp-stream-log');\n\t\t\tif (!log) return;\n\t\t\tvar MAX_ROWS = 50;\n\n\t\t\t// Remove empty-state message on first event.\n\t\t\tdocument.body.addEventListener('htmx:sseMessage', function onFirst(evt) {\n\t\t\t\tif (evt.detail.type === 'bp-stream' || evt.detail.type === 'bp-stream-batch') {\n\t\t\t\t\tvar empty = document.getElementById('bp-stream-empty');\n\t\t\t\t\tif (empty) empty.remove();\n\t\t\t\t\tdocument.body.removeEventListener('htmx:sseMessage', onFirst);\n\t\t\t\t}\n\t\t\t});\n\n\t\t\t// After each swap: trim oldest rows, auto-scroll to bottom.\n\t\t\tlog.addEventListener('htmx:afterSettle', function() {\n\t\t\t\twhile (log.children.length > MAX_ROWS) {\n\t\t\t\t\tlog.removeChild(log.firstElementChild);\n\t\t\t\t}\n\t\t\t\tlog.scrollTop = log.scrollHeight;\n\t\t\t});\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<script>\n\t\t(function() {\n\t\t\tvar log = document.getElementById('bp-stream-log');\n\t\t\tif (!log) return;\n\t\t\tvar MAX_ROWS = 50;\n\t\t\tvar FLUSH_MS = 50;\n\t\t\tvar lastFollowAt = 0;\n\t\t\tvar pending = [];\n\t\t\tvar flushTimer = 0;\n\t\t\tvar streamURL = log.getAttribute('data-stream-url');\n\t\t\tif (!streamURL) return;\n\n\t\t\tfunction scheduleFlush() {\n\t\t\t\tif (flushTimer) return;\n\t\t\t\tflushTimer = window.setTimeout(flushPending, FLUSH_MS);\n\t\t\t}\n\n\t\t\tfunction flushPending() {\n\t\t\t\tflushTimer = 0;\n\t\t\t\tif (pending.length === 0) return;\n\t\t\t\tvar distanceFromBottom = log.scrollHeight - log.scrollTop - log.clientHeight;\n\t\t\t\tvar shouldFollow = distanceFromBottom < 24;\n\t\t\t\tvar empty = document.getElementById('bp-stream-empty');\n\t\t\t\tif (empty) empty.remove();\n\t\t\t\tlog.insertAdjacentHTML('beforeend', pending.join(''));\n\t\t\t\tpending = [];\n\t\t\t\twhile (log.children.length > MAX_ROWS) {\n\t\t\t\t\tlog.removeChild(log.firstElementChild);\n\t\t\t\t}\n\t\t\t\tvar now = Date.now();\n\t\t\t\tif (shouldFollow && now - lastFollowAt >= 100) {\n\t\t\t\t\tlastFollowAt = now;\n\t\t\t\t\tlog.scrollTop = log.scrollHeight;\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction queueHTML(html) {\n\t\t\t\tpending.push(html);\n\t\t\t\tscheduleFlush();\n\t\t\t}\n\n\t\t\tvar es = new EventSource(streamURL, { withCredentials: true });\n\t\t\tes.addEventListener('bp-stream', function(evt) {\n\t\t\t\tqueueHTML(evt.data);\n\t\t\t});\n\t\t\tes.addEventListener('bp-stream-batch', function(evt) {\n\t\t\t\tqueueHTML(evt.data);\n\t\t\t});\n\t\t\twindow.addEventListener('beforeunload', function() {\n\t\t\t\tes.close();\n\t\t\t});\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

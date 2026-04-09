@@ -25,15 +25,6 @@ templ TavernBackpressurePage(data TavernBackpressureData, batchWindow time.Durat
 		body:has(#bp-page) main {
 			view-transition-name: none !important;
 		}
-		#bp-stream-log, #bp-stream-log *,
-		#bp-tier-badge, #bp-tier-text,
-		#bp-metrics, #bp-metrics *,
-		#bp-tier-log, #bp-tier-log *,
-		#bp-active-preset {
-			transition: none !important;
-			animation: none !important;
-			scroll-behavior: auto !important;
-		}
 	</style>
 	<div id="bp-page" class="max-w-5xl mx-auto p-4 space-y-4 overflow-hidden" style="overflow-anchor:none">
 		<div class="flex items-center justify-between flex-wrap gap-2">
@@ -114,17 +105,8 @@ templ backpressurePanels(data TavernBackpressureData, batchWindow time.Duration)
 		<div class="card bg-base-200 shadow-sm overflow-hidden">
 			<div class="card-body p-4">
 				<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Live Delivery Stream</h2>
-				<div
-					hx-ext="sse"
-					sse-connect="/sse/tavern/backpressure/stream"
-				>
-					<!-- Raw mode: one event per swap (append) -->
-					<div sse-swap="bp-stream" hx-target="#bp-stream-log" hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
-					<!-- Batch mode: one swap per window (append) -->
-					<div sse-swap="bp-stream-batch" hx-target="#bp-stream-log" hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
-					<div id="bp-stream-log" class="max-h-72 overflow-y-auto overflow-x-hidden space-y-0.5" style="contain:paint" data-testid="stream-log">
-						<p id="bp-stream-empty" class="text-xs text-base-content/30 py-2">Waiting for stream events...</p>
-					</div>
+				<div id="bp-stream-log" class="max-h-72 overflow-y-auto overflow-x-hidden space-y-0.5" style="contain:paint" data-testid="stream-log" data-stream-url="/sse/tavern/backpressure/stream">
+					<p id="bp-stream-empty" class="text-xs text-base-content/30 py-2">Waiting for stream events...</p>
 				</div>
 			</div>
 		</div>
@@ -309,22 +291,51 @@ templ backpressureStreamScript() {
 			var log = document.getElementById('bp-stream-log');
 			if (!log) return;
 			var MAX_ROWS = 50;
+			var FLUSH_MS = 50;
+			var lastFollowAt = 0;
+			var pending = [];
+			var flushTimer = 0;
+			var streamURL = log.getAttribute('data-stream-url');
+			if (!streamURL) return;
 
-			// Remove empty-state message on first event.
-			document.body.addEventListener('htmx:sseMessage', function onFirst(evt) {
-				if (evt.detail.type === 'bp-stream' || evt.detail.type === 'bp-stream-batch') {
-					var empty = document.getElementById('bp-stream-empty');
-					if (empty) empty.remove();
-					document.body.removeEventListener('htmx:sseMessage', onFirst);
-				}
-			});
+			function scheduleFlush() {
+				if (flushTimer) return;
+				flushTimer = window.setTimeout(flushPending, FLUSH_MS);
+			}
 
-			// After each swap: trim oldest rows, auto-scroll to bottom.
-			log.addEventListener('htmx:afterSettle', function() {
+			function flushPending() {
+				flushTimer = 0;
+				if (pending.length === 0) return;
+				var distanceFromBottom = log.scrollHeight - log.scrollTop - log.clientHeight;
+				var shouldFollow = distanceFromBottom < 24;
+				var empty = document.getElementById('bp-stream-empty');
+				if (empty) empty.remove();
+				log.insertAdjacentHTML('beforeend', pending.join(''));
+				pending = [];
 				while (log.children.length > MAX_ROWS) {
 					log.removeChild(log.firstElementChild);
 				}
-				log.scrollTop = log.scrollHeight;
+				var now = Date.now();
+				if (shouldFollow && now - lastFollowAt >= 100) {
+					lastFollowAt = now;
+					log.scrollTop = log.scrollHeight;
+				}
+			}
+
+			function queueHTML(html) {
+				pending.push(html);
+				scheduleFlush();
+			}
+
+			var es = new EventSource(streamURL, { withCredentials: true });
+			es.addEventListener('bp-stream', function(evt) {
+				queueHTML(evt.data);
+			});
+			es.addEventListener('bp-stream-batch', function(evt) {
+				queueHTML(evt.data);
+			});
+			window.addEventListener('beforeunload', function() {
+				es.close();
 			});
 		})();
 	</script>

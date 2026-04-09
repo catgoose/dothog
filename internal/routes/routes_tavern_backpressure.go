@@ -58,6 +58,7 @@ func (ar *appRoutes) initTavernBackpressRoutes(mainBroker *tavern.SSEBroker) {
 		demoBroker: demoBroker,
 		lab:        lab,
 	}
+	bp.batchWindow.Store(int64(25 * time.Millisecond))
 
 	mainBroker.RunPublisher(ar.ctx, bp.startTrafficGenerator)
 	mainBroker.RunPublisher(ar.ctx, bp.startMetricsPublisher)
