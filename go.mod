@@ -29,8 +29,8 @@ require (
 	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/lib/pq v1.12.3 // indirect
 	github.com/mattn/go-sqlite3 v1.14.42 // indirect
-	github.com/ncruces/go-sqlite3 v0.33.2 // indirect
-	github.com/ncruces/go-sqlite3-wasm v1.0.5-0.20260409161517-713f55e3abd6 // indirect
+	github.com/ncruces/go-sqlite3 v0.33.3 // indirect
+	github.com/ncruces/go-sqlite3-wasm v1.1.1-0.20260409221933-87e4b35a38d0 // indirect
 	github.com/ncruces/julianday v1.0.0 // indirect
 )
 
