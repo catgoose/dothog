@@ -38,7 +38,6 @@ type AppConfig struct {
 	// setup:feature:auth:start
 	CroonerDisabled bool
 	// setup:feature:auth:end
-	EnableDatabase       bool
 	InitRepo             bool
 	CSRFRotatePerRequest bool
 }
@@ -48,7 +47,7 @@ func buildConfig() (*AppConfig, error) {
 		// Defaults — override with env vars
 		ServerPort:  envStr("SERVER_LISTEN_PORT", "3000"),
 		AppName:     envStr("APP_NAME", ""),
-		DatabaseURL: envStr("DATABASE_URL", "sqlite:///db/app.db"),
+		DatabaseURL: envStr("DATABASE_URL", ""),
 	}
 
 	// APP_NAME: required unless demo provides a fallback
@@ -60,10 +59,6 @@ func buildConfig() (*AppConfig, error) {
 	if cfg.AppName == "" {
 		return nil, fmt.Errorf("APP_NAME is required")
 	}
-
-	// setup:feature:database:start
-	cfg.EnableDatabase = envBool("ENABLE_DATABASE", false)
-	// setup:feature:database:end
 
 	// setup:feature:auth:start
 	cfg.CroonerDisabled = true

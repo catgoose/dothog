@@ -843,8 +843,7 @@ See `.env.sample` for the full list. Key variables:
 | `APP_NAME` | Application name | (required) |
 | `SERVER_LISTEN_PORT` | Echo server port | (required) |
 | `LOG_LEVEL` | DEBUG, INFO, WARN, ERROR | INFO |
-| `ENABLE_DATABASE` | Enable SQL backend | false |
-| `DATABASE_URL` | Database connection URL | sqlite:///db/app.db |
+| `DATABASE_URL` | Database connection URL (database enabled when set) | -- |
 | `AZURE_CLIENT_ID` | Azure AD app client ID | -- |
 | `AZURE_CLIENT_SECRET` | Azure AD app client secret | -- |
 | `AZURE_TENANT_ID` | Azure AD tenant ID | -- |

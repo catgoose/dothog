@@ -102,7 +102,7 @@ func main() {
 	// setup:feature:demo:end
 
 	// setup:feature:database:start
-	if cfg.EnableDatabase {
+	if cfg.DatabaseURL != "" {
 		db, d, err := dialect.OpenURL(appCtx, cfg.DatabaseURL)
 		if err != nil {
 			logger.Fatal("Failed to open database", "error", err)

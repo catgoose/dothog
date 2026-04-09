@@ -41,7 +41,7 @@ func TestGetConfigDefaults(t *testing.T) {
 	config, err := GetConfig()
 	require.NoError(t, err)
 	assert.Equal(t, "3000", config.ServerPort)
-	assert.Equal(t, "sqlite:///db/app.db", config.DatabaseURL)
+	assert.Equal(t, "", config.DatabaseURL)
 }
 
 func TestMustGetConfig(t *testing.T) {

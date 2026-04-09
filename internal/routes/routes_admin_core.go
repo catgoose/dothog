@@ -93,8 +93,7 @@ func (ar *appRoutes) handleConfigInfo(c echo.Context) error {
 		{Key: "SERVER_LISTEN_PORT", Value: cfg.ServerPort},
 		{Key: "APP_NAME", Value: defaultStr(cfg.AppName, "(not set)")},
 		// setup:feature:database:start
-		{Key: "ENABLE_DATABASE", Value: fmt.Sprintf("%t", cfg.EnableDatabase)},
-		{Key: "DATABASE_URL", Value: cfg.DatabaseURL},
+		{Key: "DATABASE_URL", Value: defaultStr(cfg.DatabaseURL, "(not set)")},
 		// setup:feature:database:end
 		// setup:feature:auth:start
 		{Key: "CROONER_DISABLED", Value: fmt.Sprintf("%t", cfg.CroonerDisabled)},

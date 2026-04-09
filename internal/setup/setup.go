@@ -1373,8 +1373,7 @@ func buildEnvTable(features []string, appName, appTLSPort string) string {
 	sb.WriteString("| `SERVER_LISTEN_PORT` | Echo server port | " + appTLSPort + " |\n")
 	sb.WriteString("| `APP_NAME` | Application name | " + appName + " |\n")
 	sb.WriteString("| `LOG_LEVEL` | DEBUG, INFO, WARN, ERROR | INFO |\n")
-	sb.WriteString("| `ENABLE_DATABASE` | Enable SQL backend | false |\n")
-	sb.WriteString("| `DATABASE_URL` | Database connection string | sqlite:///db/app.db |\n")
+	sb.WriteString("| `DATABASE_URL` | Database connection string (database enabled when set) | -- |\n")
 
 	// Auth
 	if keep[FeatureAuth] {
