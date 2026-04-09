@@ -243,6 +243,7 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initTavernPublishRoutes(ar.broker)
 	ar.initTavernHooksRoutes(ar.broker)
 	ar.initRecoveryRoutes(ar.broker)
+	ar.initFailuresRoutes(ar.broker)
 	// setup:feature:sse:end
 
 	db, err := demo.Open("db/demo.db")

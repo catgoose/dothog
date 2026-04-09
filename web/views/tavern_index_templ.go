@@ -60,6 +60,10 @@ func TavernIndexPage() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = adminResourceCard("/realtime/tavern/failures", "Failures Lab", "Negative-path scenarios: malformed Last-Event-ID, expired replay window, gap fallback.", "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div><div class=\"space-y-2\"><h2 class=\"text-sm font-semibold uppercase tracking-wider text-base-content/50\">See Also</h2><p class=\"text-xs text-base-content/40\">Existing demos that exercise Tavern features in realistic contexts.</p><div class=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
