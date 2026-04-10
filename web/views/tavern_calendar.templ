@@ -258,14 +258,12 @@ templ calLabAddEventForm(day time.Time) {
 				required
 			/>
 		</div>
-		<div class="grid grid-cols-[1fr_auto] gap-2">
-			<select name="category" class="select select-xs select-bordered w-full">
-				for _, cat := range demo.AllCalendarCategories {
-					<option value={ string(cat) }>{ string(cat) }</option>
-				}
-			</select>
-			<button type="submit" class="btn btn-primary btn-xs">Add</button>
-		</div>
+		<select name="category" class="select select-xs select-bordered w-full">
+			for _, cat := range demo.AllCalendarCategories {
+				<option value={ string(cat) }>{ string(cat) }</option>
+			}
+		</select>
+		<button type="submit" class="btn btn-primary btn-xs w-full">Add</button>
 	</form>
 }
 
