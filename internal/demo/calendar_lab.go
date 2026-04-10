@@ -5,6 +5,7 @@ package demo
 import (
 	"fmt"
 	"math/rand/v2"
+	"sort"
 	"sync"
 	"time"
 )
@@ -187,13 +188,19 @@ func (l *CalendarLab) SimTick() []string {
 		actions = append(actions, fmt.Sprintf("%s on %s (%s)", title, date.Format("Jan 2"), assignee))
 	}
 
-	// Prune: keep at most 60 events in the visible month.
+	// Prune: keep at most 60 events in the visible month. Remove by
+	// lowest ID (oldest insertion) rather than earliest date so the
+	// surviving set stays spread across the whole month.
 	const budget = 60
 	events := l.Store.EventsForMonth(year, month)
 	if len(events) > budget {
-		excess := len(events) - budget
+		// Build an ID-sorted slice to find the oldest insertions.
+		byID := make([]CalendarEvent, len(events))
+		copy(byID, events)
+		sort.Slice(byID, func(i, j int) bool { return byID[i].ID < byID[j].ID })
+		excess := len(byID) - budget
 		for i := 0; i < excess; i++ {
-			l.Store.RemoveEvent(events[i].ID)
+			l.Store.RemoveEvent(byID[i].ID)
 		}
 		actions = append(actions, fmt.Sprintf("pruned %d oldest events", excess))
 	}
