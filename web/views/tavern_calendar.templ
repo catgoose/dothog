@@ -72,7 +72,7 @@ templ TavernCalendarPage(data CalendarLabData) {
 
 				<!-- Right rail: day inspector + controls (4 cols) -->
 				<div class="lg:col-span-4 space-y-4">
-					<div id="cal-lab-day" class="card bg-base-200 shadow-sm">
+					<div id="cal-lab-day" class="card bg-base-200 shadow-sm overflow-visible">
 						if !data.MonthData.Selected.IsZero() {
 							@CalendarLabDay(data.MonthData.Selected, data.DayEvents, data.Settings)
 						} else {

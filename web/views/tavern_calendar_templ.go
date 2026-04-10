@@ -71,7 +71,7 @@ func TavernCalendarPage(data CalendarLabData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div></div></div></div><!-- Right rail: day inspector + controls (4 cols) --><div class=\"lg:col-span-4 space-y-4\"><div id=\"cal-lab-day\" class=\"card bg-base-200 shadow-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div></div></div></div><!-- Right rail: day inspector + controls (4 cols) --><div class=\"lg:col-span-4 space-y-4\"><div id=\"cal-lab-day\" class=\"card bg-base-200 shadow-sm overflow-visible\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
