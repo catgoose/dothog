@@ -259,6 +259,15 @@ func (r *tavernCalendarRoutes) publishAll() {
 	r.publishActivity()
 }
 
+// publishSimTick publishes the regions that change on a simulator tick.
+// Notably skips the day panel to avoid destroying the add-event form
+// (the form has dropdowns/inputs that would reset on innerHTML swap).
+func (r *tavernCalendarRoutes) publishSimTick() {
+	r.publishMonth()
+	r.publishStats()
+	r.publishActivity()
+}
+
 func (r *tavernCalendarRoutes) publishMonth() {
 	r.broker.Publish(topicCalMonth, r.renderMonthFrame())
 }
@@ -296,7 +305,7 @@ func (r *tavernCalendarRoutes) renderDayFrame() string {
 	}
 	events := r.lab.Store.EventsForDay(selected)
 	return tavern.NewSSEMessage("cal-day",
-		renderToString("cal-lab day events", views.CalendarLabDayEvents(selected, events, settings)),
+		renderToString("cal-lab day full", views.CalendarLabDayFull(selected, events, settings)),
 	).String()
 }
 
@@ -374,7 +383,7 @@ func (r *tavernCalendarRoutes) startSimulator(ctx context.Context) {
 			for _, a := range actions {
 				r.lab.RecordActivity(a)
 			}
-			r.publishAll()
+			r.publishSimTick()
 		}
 	}
 }
