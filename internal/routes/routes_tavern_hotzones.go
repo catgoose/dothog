@@ -1,0 +1,318 @@
+// setup:feature:demo
+
+package routes
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
+	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/routes/handler"
+	"catgoose/dothog/web/views"
+
+	"github.com/catgoose/tavern"
+	"github.com/labstack/echo/v4"
+)
+
+const (
+	topicHZStats    = "hz/stats"
+	topicHZActivity = "hz/activity"
+)
+
+// topicHZRegion returns the SSE topic for a specific region.
+func topicHZRegion(id int) string {
+	return fmt.Sprintf("hz/region/%d", id)
+}
+
+type tavernHotZoneRoutes struct {
+	broker *tavern.SSEBroker
+	lab    *demo.HotZoneLab
+}
+
+func (ar *appRoutes) initTavernHotZoneRoutes(broker *tavern.SSEBroker) {
+	r := &tavernHotZoneRoutes{
+		broker: broker,
+		lab:    demo.NewHotZoneLab(),
+	}
+
+	broker.SetReplayPolicy(topicHZActivity, 10)
+
+	ar.e.GET("/realtime/tavern/hotzones", r.handlePage)
+	ar.e.GET("/sse/tavern/hotzones", r.handleSSE)
+	ar.e.POST("/realtime/tavern/hotzones/controls", r.handleControls)
+	ar.e.POST("/realtime/tavern/hotzones/pause", r.handlePause)
+	ar.e.POST("/realtime/tavern/hotzones/reset", r.handleReset)
+	ar.e.POST("/realtime/tavern/hotzones/command", r.handleCommand)
+
+	broker.RunPublisher(ar.ctx, r.startSimulator)
+}
+
+func (r *tavernHotZoneRoutes) handlePage(c echo.Context) error {
+	data := r.buildPageData()
+	return handler.RenderBaseLayout(c, views.HotZoneLabPage(data))
+}
+
+func (r *tavernHotZoneRoutes) handleSSE(c echo.Context) error {
+	settings := r.lab.Settings()
+
+	// Subscribe to region topics for the active regions.
+	type sub struct {
+		ch    <-chan string
+		unsub func()
+	}
+	regionSubs := make([]sub, settings.RegionCount)
+	for i := 0; i < settings.RegionCount; i++ {
+		id := i + 1
+		ch, unsub := r.broker.SubscribeWithSnapshot(topicHZRegion(id), func() string {
+			return r.renderRegionFrame(id)
+		})
+		regionSubs[i] = sub{ch, unsub}
+	}
+	defer func() {
+		for _, s := range regionSubs {
+			s.unsub()
+		}
+	}()
+
+	statsCh, statsUnsub := r.broker.SubscribeWithSnapshot(topicHZStats, func() string {
+		return r.renderStatsFrame()
+	})
+	defer statsUnsub()
+
+	lastEventID := c.Request().Header.Get("Last-Event-ID")
+	actCh, actUnsub := r.broker.SubscribeFromIDWith(topicHZActivity, lastEventID)
+	defer actUnsub()
+
+	ctx := c.Request().Context()
+	fanIn := make(chan string, 20)
+	go func() {
+		defer close(fanIn)
+		// Build a combined select using reflect for dynamic region count.
+		// For simplicity and performance, poll with a small ticker.
+		ticker := time.NewTicker(10 * time.Millisecond)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+			}
+			// Drain all region channels.
+			for _, s := range regionSubs {
+				for {
+					select {
+					case msg, ok := <-s.ch:
+						if !ok {
+							return
+						}
+						select {
+						case fanIn <- msg:
+						case <-ctx.Done():
+							return
+						}
+					default:
+						goto nextRegion
+					}
+				}
+			nextRegion:
+			}
+			// Drain stats.
+			for {
+				select {
+				case msg, ok := <-statsCh:
+					if !ok {
+						return
+					}
+					select {
+					case fanIn <- msg:
+					case <-ctx.Done():
+						return
+					}
+				default:
+					goto drainAct
+				}
+			}
+		drainAct:
+			for {
+				select {
+				case msg, ok := <-actCh:
+					if !ok {
+						return
+					}
+					select {
+					case fanIn <- msg:
+					case <-ctx.Done():
+						return
+					}
+				default:
+					goto done
+				}
+			}
+		done:
+		}
+	}()
+
+	return tavern.StreamSSE(
+		ctx,
+		c.Response(),
+		fanIn,
+		func(s string) string { return s },
+		tavern.WithStreamHeartbeat(15*time.Second),
+	)
+}
+
+func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
+	r.lab.UpdateSettings(func(s *demo.HotZoneSettings) {
+		if v, err := strconv.Atoi(c.FormValue("update_interval")); err == nil && v >= 50 && v <= 5000 {
+			s.UpdateIntervalMS = v
+		}
+		if v, err := strconv.Atoi(c.FormValue("region_count")); err == nil && v >= 1 && v <= 6 {
+			s.RegionCount = v
+		}
+		if v, err := strconv.Atoi(c.FormValue("payload_size")); err == nil && v >= 10 && v <= 2000 {
+			s.PayloadSize = v
+		}
+		if v, err := strconv.Atoi(c.FormValue("focused_region")); err == nil && v >= 0 && v <= 6 {
+			s.FocusedRegion = v
+		}
+		s.BurstMode = c.FormValue("burst_mode") == "on"
+		mode := demo.HotZoneMode(c.FormValue("command_mode"))
+		if mode == demo.HotZoneModeHXPost || mode == demo.HotZoneModeTavern {
+			s.CommandMode = mode
+		}
+	})
+	r.publishStats()
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (r *tavernHotZoneRoutes) handlePause(c echo.Context) error {
+	paused := r.lab.TogglePause()
+	if paused {
+		r.lab.RecordActivity("simulator paused")
+	} else {
+		r.lab.RecordActivity("simulator resumed")
+	}
+	r.publishStats()
+	r.publishActivity()
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (r *tavernHotZoneRoutes) handleReset(c echo.Context) error {
+	r.lab.ResetStats()
+	r.lab.RecordActivity("stats reset")
+	r.publishStats()
+	r.publishActivity()
+	return c.NoContent(http.StatusNoContent)
+}
+
+// handleCommand receives a user-triggered "command" from either hx-post or
+// Tavern.command(). It increments the region's counter and publishes the
+// updated region. The client sends the mode it used so we can track stats.
+func (r *tavernHotZoneRoutes) handleCommand(c echo.Context) error {
+	regionID, err := strconv.Atoi(c.FormValue("region"))
+	if err != nil {
+		regionID, err = strconv.Atoi(c.QueryParam("region"))
+	}
+	if err != nil || regionID < 1 || regionID > 6 {
+		return c.String(http.StatusBadRequest, "invalid region")
+	}
+	mode := demo.HotZoneMode(c.FormValue("mode"))
+	if mode == "" {
+		mode = demo.HotZoneMode(c.QueryParam("mode"))
+	}
+	if mode != demo.HotZoneModeHXPost && mode != demo.HotZoneModeTavern {
+		mode = demo.HotZoneModeTavern
+	}
+
+	r.lab.RecordCommand(mode, true)
+	r.lab.RecordActivity(fmt.Sprintf("command via %s → region %d", mode, regionID))
+	r.publishStats()
+	r.publishActivity()
+	return c.NoContent(http.StatusNoContent)
+}
+
+// --- publishers ---
+
+func (r *tavernHotZoneRoutes) publishRegion(id int) {
+	r.broker.Publish(topicHZRegion(id), r.renderRegionFrame(id))
+}
+
+func (r *tavernHotZoneRoutes) publishStats() {
+	r.broker.Publish(topicHZStats, r.renderStatsFrame())
+}
+
+func (r *tavernHotZoneRoutes) publishActivity() {
+	r.broker.Publish(topicHZActivity, r.renderActivityFrame())
+}
+
+// --- renderers ---
+
+func (r *tavernHotZoneRoutes) renderRegionFrame(id int) string {
+	region := r.lab.Region(id)
+	settings := r.lab.Settings()
+	payload := demo.GeneratePayload(region.PayloadRunes)
+	return tavern.NewSSEMessage(fmt.Sprintf("hz-region-%d", id),
+		renderToString("hz region", views.HotZoneRegionContent(region, settings, payload)),
+	).String()
+}
+
+func (r *tavernHotZoneRoutes) renderStatsFrame() string {
+	settings := r.lab.Settings()
+	stats := r.lab.CommandStats()
+	return tavern.NewSSEMessage("hz-stats",
+		renderToString("hz stats", views.HotZoneStats(settings, stats, r.lab.Paused())),
+	).String()
+}
+
+func (r *tavernHotZoneRoutes) renderActivityFrame() string {
+	return tavern.NewSSEMessage("hz-activity",
+		renderToString("hz activity", views.HotZoneActivityLog(r.lab.Activity())),
+	).String()
+}
+
+// --- view-model ---
+
+func (r *tavernHotZoneRoutes) buildPageData() views.HotZoneLabData {
+	settings := r.lab.Settings()
+	regions := r.lab.Regions()
+	payloads := make([]string, len(regions))
+	for i, reg := range regions {
+		payloads[i] = demo.GeneratePayload(reg.PayloadRunes)
+	}
+	return views.HotZoneLabData{
+		Settings: settings,
+		Regions:  regions,
+		Payloads: payloads,
+		Stats:    r.lab.CommandStats(),
+		Activity: r.lab.Activity(),
+		Paused:   r.lab.Paused(),
+	}
+}
+
+// --- simulator ---
+
+func (r *tavernHotZoneRoutes) startSimulator(ctx context.Context) {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if r.lab.Paused() {
+				continue
+			}
+			settings := r.lab.Settings()
+			ticker.Reset(time.Duration(settings.UpdateIntervalMS) * time.Millisecond)
+
+			updated := r.lab.SimTick()
+			for _, id := range updated {
+				r.publishRegion(id)
+			}
+			r.publishStats()
+		}
+	}
+}
