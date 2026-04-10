@@ -114,27 +114,15 @@ func (s *tavernSubsRoutes) handleScopedSSE(c echo.Context) error {
 		scope = "scope-a"
 	}
 
-	flusher, err := startSSEResponse(c)
-	if err != nil {
-		return err
-	}
-
 	ch, unsub := s.broker.SubscribeScoped(subsTopics.scoped, scope)
 	defer unsub()
 
-	ctx := c.Request().Context()
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case msg, ok := <-ch:
-			if !ok {
-				return nil
-			}
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
-		}
-	}
+	return tavern.StreamSSE(
+		c.Request().Context(),
+		c.Response(),
+		ch,
+		func(msg string) string { return msg },
+	)
 }
 
 func (s *tavernSubsRoutes) handleGlobSSE(c echo.Context) error {
@@ -143,28 +131,17 @@ func (s *tavernSubsRoutes) handleGlobSSE(c echo.Context) error {
 		pattern = "tavern/subs/data/**"
 	}
 
-	flusher, err := startSSEResponse(c)
-	if err != nil {
-		return err
-	}
-
 	ch, unsub := s.broker.SubscribeGlob(pattern)
 	defer unsub()
 
-	ctx := c.Request().Context()
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case tm, ok := <-ch:
-			if !ok {
-				return nil
-			}
-			msg := tavern.NewSSEMessage("glob-events", tm.Data).String()
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
-		}
-	}
+	return tavern.StreamSSE(
+		c.Request().Context(),
+		c.Response(),
+		ch,
+		func(tm tavern.TopicMessage) string {
+			return tavern.NewSSEMessage("glob-events", tm.Data).String()
+		},
+	)
 }
 
 func (s *tavernSubsRoutes) handleMultiSSE(c echo.Context) error {
@@ -174,28 +151,17 @@ func (s *tavernSubsRoutes) handleMultiSSE(c echo.Context) error {
 		topics = subsTopics.multi
 	}
 
-	flusher, err := startSSEResponse(c)
-	if err != nil {
-		return err
-	}
-
 	ch, unsub := s.broker.SubscribeMulti(topics...)
 	defer unsub()
 
-	ctx := c.Request().Context()
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case tm, ok := <-ch:
-			if !ok {
-				return nil
-			}
-			msg := tavern.NewSSEMessage("multi-events", tm.Data).String()
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
-		}
-	}
+	return tavern.StreamSSE(
+		c.Request().Context(),
+		c.Response(),
+		ch,
+		func(tm tavern.TopicMessage) string {
+			return tavern.NewSSEMessage("multi-events", tm.Data).String()
+		},
+	)
 }
 
 func (s *tavernSubsRoutes) startPublisher(ctx context.Context) {
