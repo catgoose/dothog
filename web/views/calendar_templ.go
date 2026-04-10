@@ -84,7 +84,7 @@ func CalendarPage(data CalendarMonthData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- Day inspector panel (right) --><div class=\"lg:col-span-1\"><div id=\"calendar-day\" class=\"card bg-base-200 shadow-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- Day inspector panel (right) --><div class=\"lg:col-span-1\"><div id=\"calendar-day\" class=\"card bg-base-200 shadow-sm overflow-visible\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -692,7 +692,7 @@ func calendarAddEventForm(day time.Time) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "\"><div class=\"form-control\"><input type=\"text\" name=\"title\" placeholder=\"Event title\" class=\"input input-xs input-bordered w-full\" required></div><div class=\"form-control\"><input type=\"text\" name=\"assignee\" placeholder=\"Assignee (optional)\" class=\"input input-xs input-bordered w-full\"></div><div class=\"flex items-center gap-2\"><select name=\"category\" class=\"select select-xs select-bordered flex-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "\"><div class=\"form-control\"><input type=\"text\" name=\"title\" placeholder=\"Event title\" class=\"input input-xs input-bordered w-full\" required></div><div class=\"form-control\"><input type=\"text\" name=\"assignee\" placeholder=\"Assignee (optional)\" class=\"input input-xs input-bordered w-full\"></div><select name=\"category\" class=\"select select-xs select-bordered w-full\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -704,7 +704,7 @@ func calendarAddEventForm(day time.Time) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/calendar.templ`, Line: 267, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/calendar.templ`, Line: 266, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -717,7 +717,7 @@ func calendarAddEventForm(day time.Time) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/calendar.templ`, Line: 267, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/calendar.templ`, Line: 266, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -728,7 +728,7 @@ func calendarAddEventForm(day time.Time) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</select> <button type=\"submit\" class=\"btn btn-primary btn-xs\">Add</button></div></form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</select> <button type=\"submit\" class=\"btn btn-primary btn-xs w-full\">Add</button></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

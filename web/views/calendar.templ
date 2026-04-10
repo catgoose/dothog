@@ -61,7 +61,7 @@ templ CalendarPage(data CalendarMonthData) {
 			</div>
 			<!-- Day inspector panel (right) -->
 			<div class="lg:col-span-1">
-				<div id="calendar-day" class="card bg-base-200 shadow-sm">
+				<div id="calendar-day" class="card bg-base-200 shadow-sm overflow-visible">
 					if !data.Selected.IsZero() {
 						@CalendarDayPanel(data.Selected, dayEvents(data.Events, data.Selected))
 					} else {
@@ -261,14 +261,12 @@ templ calendarAddEventForm(day time.Time) {
 				class="input input-xs input-bordered w-full"
 			/>
 		</div>
-		<div class="flex items-center gap-2">
-			<select name="category" class="select select-xs select-bordered flex-1">
-				for _, cat := range demo.AllCalendarCategories {
-					<option value={ string(cat) }>{ string(cat) }</option>
-				}
-			</select>
-			<button type="submit" class="btn btn-primary btn-xs">Add</button>
-		</div>
+		<select name="category" class="select select-xs select-bordered w-full">
+			for _, cat := range demo.AllCalendarCategories {
+				<option value={ string(cat) }>{ string(cat) }</option>
+			}
+		</select>
+		<button type="submit" class="btn btn-primary btn-xs w-full">Add</button>
 	</form>
 }
 
