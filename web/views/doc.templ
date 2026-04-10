@@ -32,9 +32,9 @@ templ DocumentPage(content string, wordCount, charCount int, sentiment string, r
 		<div
 			hx-ext="sse"
 			sse-connect="/sse/document"
-			data-tavern-reconnecting-class="opacity-50"
+			tavern-reconnecting-class="opacity-50"
 		>
-			<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+			<div tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
 				<span class="loading loading-spinner loading-xs"></span>
 				Reconnecting...
 			</div>

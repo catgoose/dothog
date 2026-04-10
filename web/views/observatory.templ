@@ -35,8 +35,8 @@ templ ObservatoryPage(data ObservatoryData) {
 			id="observatory-container"
 			hx-ext="sse"
 			sse-connect="/sse/observatory"
-			data-tavern-reconnecting-class="opacity-50"
-			data-tavern-debug
+			tavern-reconnecting-class="opacity-50"
+			tavern-debug
 		>
 			<div sse-swap="observatory-update" hx-swap="innerHTML settle:0 transition:false" hx-target="#observatory-panels" style="display:none"></div>
 			<div id="observatory-panels">

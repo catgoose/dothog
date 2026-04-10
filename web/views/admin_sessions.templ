@@ -22,8 +22,8 @@ templ AdminSessionsPage(sessions []session.Settings) {
 			The table below shows all active session settings entries.
 		</p>
 		<div hx-ext="sse" sse-connect="/sse/theme"
-			data-tavern-reconnecting-class="opacity-50"
-			data-tavern-gap-action="reload"
+			tavern-reconnecting-class="opacity-50"
+			tavern-gap-action="reload"
 		>
 			<div id="admin-sessions-table" hx-get="/admin/sessions/table" hx-trigger="sse:theme-change" hx-swap="innerHTML">
 				@AdminSessionsTable(sessions)

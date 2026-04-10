@@ -28,10 +28,10 @@ templ LoggingPage() {
 		<!-- SSE connection for live error trace updates -->
 		// setup:feature:sse:start
 		<div hx-ext="sse" sse-connect="/sse/error-traces"
-			data-tavern-reconnecting-class="opacity-50"
-			data-tavern-gap-action="banner"
+			tavern-reconnecting-class="opacity-50"
+			tavern-gap-action="banner"
 		>
-			<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+			<div tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
 				Reconnecting…
 			</div>
 			<div sse-swap="error-trace" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>

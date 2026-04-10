@@ -68,6 +68,10 @@ func TavernIndexPage() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = adminResourceCard("/realtime/tavern/hotzones", "Hot-Zone Lab", "Stress surface for SSE churn and command delivery. Compare hx-post vs Tavern.command() under load.", "M13 10V3L4 14h7v7l9-11h-7z").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div><div class=\"space-y-2\"><h2 class=\"text-sm font-semibold uppercase tracking-wider text-base-content/50\">See Also</h2><p class=\"text-xs text-base-content/40\">Existing demos that exercise Tavern features in realistic contexts.</p><div class=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

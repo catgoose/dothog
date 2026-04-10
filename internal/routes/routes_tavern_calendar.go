@@ -42,11 +42,13 @@ func (ar *appRoutes) initTavernCalendarRoutes(broker *tavern.SSEBroker) {
 	ar.e.GET("/realtime/tavern/calendar", r.handlePage)
 	ar.e.GET("/sse/tavern/calendar", r.handleSSE)
 	ar.e.POST("/realtime/tavern/calendar/day", r.handleSelectDay)
+	ar.e.POST("/realtime/tavern/calendar/day/deselect", r.handleDeselectDay)
 	ar.e.POST("/realtime/tavern/calendar/month", r.handleSetMonth)
 	ar.e.POST("/realtime/tavern/calendar/event", r.handleAddEvent)
 	ar.e.POST("/realtime/tavern/calendar/event/delete", r.handleDeleteEvent)
 	ar.e.POST("/realtime/tavern/calendar/controls", r.handleControls)
 	ar.e.POST("/realtime/tavern/calendar/sim/pause", r.handleSimPause)
+	ar.e.POST("/realtime/tavern/calendar/preset", r.handlePreset)
 
 	broker.RunPublisher(ar.ctx, r.startSimulator)
 }
@@ -149,6 +151,14 @@ func (r *tavernCalendarRoutes) handleSSE(c echo.Context) error {
 		func(s string) string { return s },
 		tavern.WithStreamHeartbeat(15*time.Second),
 	)
+}
+
+// handleDeselectDay clears the selected day and publishes day + month.
+func (r *tavernCalendarRoutes) handleDeselectDay(c echo.Context) error {
+	r.lab.SelectDay(time.Time{})
+	r.publishMonth()
+	r.publishDay()
+	return c.NoContent(http.StatusNoContent)
 }
 
 // handleSelectDay updates the shared selected day and publishes day + month.
@@ -266,6 +276,24 @@ func (r *tavernCalendarRoutes) handleSimPause(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+// handlePreset applies a named simulation preset and republishes.
+func (r *tavernCalendarRoutes) handlePreset(c echo.Context) error {
+	name := c.QueryParam("name")
+	for _, p := range demo.CalendarLabPresets {
+		if p.Name == name {
+			r.lab.UpdateSettings(func(s *demo.CalendarLabSettings) {
+				s.Density = p.Density
+				s.SimSpeed = p.SimSpeed
+				s.BurstSize = p.BurstSize
+			})
+			r.lab.RecordActivity(fmt.Sprintf("preset: %s", name))
+			r.publishAll()
+			return c.NoContent(http.StatusNoContent)
+		}
+	}
+	return c.String(http.StatusBadRequest, "unknown preset")
+}
+
 // --- publishers ---
 
 func (r *tavernCalendarRoutes) publishAll() {
@@ -276,12 +304,16 @@ func (r *tavernCalendarRoutes) publishAll() {
 }
 
 // publishSimTick publishes the regions that change on a simulator tick.
-// The full day panel (cal-day) is skipped to avoid resetting the add-event
-// form. Instead, only the event list region (cal-day-list) is updated so the
-// selected day's event count stays fresh without touching form state.
+// When a day is selected the full day panel is skipped to avoid resetting the
+// add-event form — only the event list region is updated. When no day is
+// selected the full day frame is published so the month breakdown stays fresh.
 func (r *tavernCalendarRoutes) publishSimTick() {
 	r.publishMonth()
-	r.publishDayList()
+	if r.lab.SelectedDay().IsZero() {
+		r.publishDay()
+	} else {
+		r.publishDayList()
+	}
 	r.publishStats()
 	r.publishActivity()
 }
@@ -322,8 +354,10 @@ func (r *tavernCalendarRoutes) renderDayFrame() string {
 	selected := r.lab.SelectedDay()
 	settings := r.lab.Settings()
 	if selected.IsZero() {
+		data := r.buildMonthData()
+		dayEvents := r.lab.DayEventsMap()
 		return tavern.NewSSEMessage("cal-day",
-			renderToString("cal-lab day empty", views.CalendarLabDayEmpty()),
+			renderToString("cal-lab month breakdown", views.CalendarLabMonthBreakdown(data, dayEvents, settings)),
 		).String()
 	}
 	events := r.lab.Store.EventsForDay(selected)

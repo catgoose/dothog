@@ -23,6 +23,22 @@ type CalendarLabSettings struct {
 	HighlightWeekends bool
 }
 
+// CalendarLabPreset is a named set of simulator defaults.
+type CalendarLabPreset struct {
+	Name      string
+	Density   int
+	SimSpeed  int
+	BurstSize int
+}
+
+// CalendarLabPresets lists the available simulation presets.
+var CalendarLabPresets = []CalendarLabPreset{
+	{Name: "Calm", Density: 2, SimSpeed: 4000, BurstSize: 1},
+	{Name: "Steady", Density: 4, SimSpeed: 2000, BurstSize: 2},
+	{Name: "Busy", Density: 6, SimSpeed: 800, BurstSize: 3},
+	{Name: "Chaos", Density: 8, SimSpeed: 200, BurstSize: 5},
+}
+
 // CalendarLabActivity records one simulator or user action for the activity log.
 type CalendarLabActivity struct {
 	Timestamp time.Time
@@ -56,9 +72,9 @@ func NewCalendarLab() *CalendarLab {
 		year:  now.Year(),
 		month: now.Month(),
 		settings: CalendarLabSettings{
-			Density:           4,
-			SimSpeed:          2000,
-			BurstSize:         1,
+			Density:           8,
+			SimSpeed:          200,
+			BurstSize:         5,
 			VisibleCategories: cats,
 		},
 	}
@@ -182,7 +198,7 @@ func (l *CalendarLab) SimTick() []string {
 		day := rand.IntN(daysInMonth) + 1
 		cat := AllCalendarCategories[rand.IntN(len(AllCalendarCategories))]
 		assignee := assignees[rand.IntN(len(assignees))]
-		title := fmt.Sprintf("Auto: %s %s", verbs[rand.IntN(len(verbs))], string(cat))
+		title := fmt.Sprintf("%s %s", verbs[rand.IntN(len(verbs))], string(cat))
 		date := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
 		l.Store.AddEvent(date, title, assignee, cat)
 		actions = append(actions, fmt.Sprintf("%s on %s (%s)", title, date.Format("Jan 2"), assignee))

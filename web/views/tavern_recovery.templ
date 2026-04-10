@@ -31,7 +31,7 @@ templ TavernRecoveryPage(initialSnapshot string) {
 			id="recovery-container"
 			hx-ext="sse"
 			sse-connect="/sse/tavern/recovery"
-			data-tavern-reconnecting-class="opacity-60 pointer-events-none"
+			tavern-reconnecting-class="opacity-60 pointer-events-none"
 		>
 			<div sse-swap="recovery-replay" hx-target="#recovery-replay-list" hx-swap="afterbegin settle:0 transition:false" style="display:none"></div>
 			<div sse-swap="recovery-snapshot" hx-target="#recovery-snapshot-display" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
