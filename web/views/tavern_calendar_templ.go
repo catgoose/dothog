@@ -985,7 +985,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "\" class=\"range range-xs range-accent\" name=\"burst_size\" hx-post=\"/realtime/tavern/calendar/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\" oninput=\"document.getElementById('cal-burst-val').textContent=this.value\"></div><!-- Assignee select --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Assignee</span></label> <select name=\"assignee\" class=\"select select-xs select-bordered w-full\" hx-post=\"/realtime/tavern/calendar/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\"><option value=\"\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "\" class=\"range range-xs range-accent\" name=\"burst_size\" hx-post=\"/realtime/tavern/calendar/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\" oninput=\"document.getElementById('cal-burst-val').textContent=this.value\"></div><!-- Assignee select --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Assignee</span></label> <select name=\"assignee\" class=\"select select-sm select-bordered w-full\" hx-post=\"/realtime/tavern/calendar/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\"><option value=\"\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
