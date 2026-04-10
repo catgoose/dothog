@@ -907,7 +907,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			templ_7745c5c3_Var40 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/60\">Controls</h2><!-- Density slider --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Density</span> <span class=\"label-text-alt text-xs font-mono\" id=\"cal-density-val\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<div class=\"card bg-base-200 shadow-sm overflow-visible\"><div class=\"card-body p-4 space-y-3\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/60\">Controls</h2><!-- Density slider --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Density</span> <span class=\"label-text-alt text-xs font-mono\" id=\"cal-density-val\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1041,12 +1041,12 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "</select></div><!-- Category toggles --><div class=\"space-y-1\"><span class=\"text-xs text-base-content/60\">Categories</span><div class=\"flex flex-wrap gap-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "</select></div><!-- Category toggles --><div class=\"space-y-1\"><span class=\"text-xs text-base-content/60\">Categories</span><div class=\"flex flex-wrap gap-1.5\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, cat := range demo.AllCalendarCategories {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "<label class=\"swap swap-flip\"><input type=\"checkbox\" name=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "<label class=\"cursor-pointer flex items-center gap-1\"><input type=\"checkbox\" name=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1059,7 +1059,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "\" class=\"checkbox checkbox-xs\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1073,7 +1073,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var50 = []any{"swap-on badge badge-xs cursor-pointer " + calCategoryBadge[cat]}
+			var templ_7745c5c3_Var50 = []any{"text-xs", calCategoryTextColor[cat]}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var50...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1098,66 +1098,53 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 416, Col: 101}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 417, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "</span> <span class=\"swap-off badge badge-xs badge-ghost cursor-pointer line-through opacity-50\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var53 string
-			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 417, Col: 109}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "</span></label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "</span></label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "</div></div><!-- Toggles --><div class=\"flex flex-wrap gap-2\"><label class=\"label cursor-pointer gap-2 py-0\"><span class=\"label-text text-xs\">Compact</span> <input type=\"checkbox\" name=\"compact\" class=\"toggle toggle-xs toggle-primary\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "</div></div><!-- Toggles --><div class=\"flex flex-wrap gap-2\"><label class=\"label cursor-pointer gap-2 py-0\"><span class=\"label-text text-xs\">Compact</span> <input type=\"checkbox\" name=\"compact\" class=\"toggle toggle-xs toggle-primary\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if settings.CompactMode {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, " checked")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, " checked")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, " hx-post=\"/realtime/tavern/calendar/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\"></label> <label class=\"label cursor-pointer gap-2 py-0\"><span class=\"label-text text-xs\">Weekends</span> <input type=\"checkbox\" name=\"highlight_weekends\" class=\"toggle toggle-xs toggle-secondary\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, " hx-post=\"/realtime/tavern/calendar/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\"></label> <label class=\"label cursor-pointer gap-2 py-0\"><span class=\"label-text text-xs\">Weekends</span> <input type=\"checkbox\" name=\"highlight_weekends\" class=\"toggle toggle-xs toggle-secondary\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if settings.HighlightWeekends {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, " checked")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, " checked")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, " hx-post=\"/realtime/tavern/calendar/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\"></label></div><!-- Simulator pause --><button class=\"btn btn-xs btn-outline w-full\" hx-post=\"/realtime/tavern/calendar/sim/pause\" hx-swap=\"none\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, " hx-post=\"/realtime/tavern/calendar/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\"></label></div><!-- Simulator pause --><button class=\"btn btn-xs btn-outline w-full\" hx-post=\"/realtime/tavern/calendar/sim/pause\" hx-swap=\"none\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if paused {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "Resume Simulator")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "Resume Simulator")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "Pause Simulator")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "Pause Simulator")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "</button></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
