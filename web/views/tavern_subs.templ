@@ -134,7 +134,7 @@ templ subsSSEPanel(sseURL string, eventName string, logID string) {
 	<div
 		hx-ext="sse"
 		sse-connect={ sseURL }
-		data-tavern-reconnecting-class="opacity-50"
+		tavern-reconnecting-class="opacity-50"
 	>
 		<div sse-swap={ eventName } hx-target={ "#" + logID } hx-swap="beforeend settle:0 transition:false" style="display:none"></div>
 		<div id={ logID } class="max-h-48 overflow-y-auto overflow-x-hidden font-mono text-xs space-y-0.5 mt-2" style="contain:paint" data-testid={ logID }>

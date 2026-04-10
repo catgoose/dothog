@@ -14,7 +14,7 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 			transition: none !important;
 			animation: none !important;
 		}
-		[data-tavern-gap-banner] {
+		[tavern-gap-banner] {
 			display: flex;
 			align-items: center;
 			gap: 0.5rem;
@@ -26,7 +26,7 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 			color: var(--color-error);
 			border: 1px solid color-mix(in oklab, var(--color-error) 25%, transparent);
 		}
-		[data-tavern-gap-banner] button {
+		[tavern-gap-banner] button {
 			margin-left: auto;
 			padding: 0.25rem 0.75rem;
 			border-radius: var(--rounded-btn, 0.25rem);
@@ -38,7 +38,7 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 			border: none;
 			white-space: nowrap;
 		}
-		[data-tavern-gap-banner] button:hover {
+		[tavern-gap-banner] button:hover {
 			opacity: 0.85;
 		}
 	</style>
@@ -62,12 +62,12 @@ templ TavernReplayPage(replayWindow int, lifetime time.Duration, reconnectDelay 
 			id="replay-sse"
 			hx-ext="sse"
 			sse-connect="/sse/tavern/replay"
-			data-tavern-reconnecting-class="opacity-50"
-			data-tavern-gap-action="banner"
-			data-tavern-gap-banner-text="Replay gap — some events were missed."
-			data-tavern-debug
+			tavern-reconnecting-class="opacity-50"
+			tavern-gap-action="banner"
+			tavern-gap-banner-text="Replay gap — some events were missed."
+			tavern-debug
 		>
-			<div data-tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+			<div tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
 				<span class="loading loading-spinner loading-xs"></span>
 				Reconnecting...
 			</div>

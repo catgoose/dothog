@@ -18,8 +18,8 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 					id="app-lifeline"
 					hx-ext="sse"
 					sse-connect="/sse/app"
-					data-tavern-role="lifeline"
-					data-tavern-reconnecting-class="app-lifeline-disconnected"
+					tavern-role="lifeline"
+					tavern-reconnecting-class="app-lifeline-disconnected"
 					style="display:none"
 				></div>
 				<div id="error-status" class="sticky top-0 z-40"></div>
