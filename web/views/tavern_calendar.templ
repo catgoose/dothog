@@ -317,7 +317,7 @@ templ CalendarLabActivityLog(activity []demo.CalendarLabActivity) {
 
 // calendarLabControls renders the control rail.
 templ calendarLabControls(settings demo.CalendarLabSettings, paused bool) {
-	<div class="card bg-base-200 shadow-sm">
+	<div class="card bg-base-200 shadow-sm overflow-visible">
 		<div class="card-body p-4 space-y-3">
 			<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Controls</h2>
 
@@ -401,20 +401,20 @@ templ calendarLabControls(settings demo.CalendarLabSettings, paused bool) {
 			<!-- Category toggles -->
 			<div class="space-y-1">
 				<span class="text-xs text-base-content/60">Categories</span>
-				<div class="flex flex-wrap gap-1">
+				<div class="flex flex-wrap gap-1.5">
 					for _, cat := range demo.AllCalendarCategories {
-						<label class="swap swap-flip">
+						<label class="cursor-pointer flex items-center gap-1">
 							<input
 								type="checkbox"
 								name={ "cat_" + string(cat) }
+								class="checkbox checkbox-xs"
 								checked?={ settings.VisibleCategories[cat] }
 								hx-post="/realtime/tavern/calendar/controls"
 								hx-trigger="change"
 								hx-swap="none"
 								hx-include="closest .card-body"
 							/>
-							<span class={ "swap-on badge badge-xs cursor-pointer " + calCategoryBadge[cat] }>{ string(cat) }</span>
-							<span class="swap-off badge badge-xs badge-ghost cursor-pointer line-through opacity-50">{ string(cat) }</span>
+							<span class={ "text-xs", calCategoryTextColor[cat] }>{ string(cat) }</span>
 						</label>
 					}
 				</div>
