@@ -1,0 +1,469 @@
+// setup:feature:demo
+
+package views
+
+import (
+	"catgoose/dothog/internal/demo"
+	"fmt"
+	"time"
+)
+
+// CalendarLabData is the view-model for the calendar lab page.
+type CalendarLabData struct {
+	MonthData CalendarMonthData
+	Settings  demo.CalendarLabSettings
+	DayEvents []demo.CalendarEvent
+	Activity  []demo.CalendarLabActivity
+	Paused    bool
+	EventCount int
+}
+
+templ TavernCalendarPage(data CalendarLabData) {
+	<style>
+		body:has(#calendar-lab-page) main { view-transition-name: none !important; }
+	</style>
+	<div id="calendar-lab-page" class="max-w-6xl mx-auto p-4 space-y-4" style="overflow-anchor:none">
+		<div>
+			<h1 class="text-2xl font-bold">Calendar Lab</h1>
+			<p class="text-xs text-base-content/50">
+				Shared calendar state, live region updates via Tavern, HTML/CSS-first controls.
+				Open two tabs to see cross-tab sync. Simulator adds events automatically.
+			</p>
+		</div>
+
+		<div
+			id="calendar-lab-container"
+			hx-ext="sse"
+			sse-connect="/sse/tavern/calendar"
+			data-tavern-reconnecting-class="opacity-60"
+		>
+			<div sse-swap="cal-month" hx-target="#cal-lab-month" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="cal-day" hx-target="#cal-lab-day" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="cal-stats" hx-target="#cal-lab-stats" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="cal-activity" hx-target="#cal-lab-activity-list" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+
+			<div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+				<!-- Month grid (left, 8 cols) -->
+				<div class="lg:col-span-8 space-y-4">
+					<div id="cal-lab-month" class="card bg-base-200 shadow-sm">
+						@CalendarLabMonth(data.MonthData, data.Settings)
+					</div>
+
+					<!-- Stats + Activity -->
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+						<div class="card bg-base-200 shadow-sm">
+							<div class="card-body p-4 space-y-2">
+								<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Stats</h2>
+								<div id="cal-lab-stats">
+									@CalendarLabStats(data.EventCount, data.Settings, data.Paused)
+								</div>
+							</div>
+						</div>
+						<div class="card bg-base-200 shadow-sm">
+							<div class="card-body p-4 space-y-2">
+								<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Activity</h2>
+								<div id="cal-lab-activity-list" class="max-h-48 overflow-y-auto overflow-x-hidden text-xs font-mono space-y-0.5" style="contain:paint">
+									@CalendarLabActivityLog(data.Activity)
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Right rail: day inspector + controls (4 cols) -->
+				<div class="lg:col-span-4 space-y-4">
+					<div id="cal-lab-day" class="card bg-base-200 shadow-sm">
+						if !data.MonthData.Selected.IsZero() {
+							@CalendarLabDay(data.MonthData.Selected, data.DayEvents, data.Settings)
+						} else {
+							@CalendarLabDayEmpty()
+						}
+					</div>
+					@calendarLabControls(data.Settings, data.Paused)
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// CalendarLabMonth renders the month grid for the lab. It filters events
+// based on the current lab settings.
+templ CalendarLabMonth(data CalendarMonthData, settings demo.CalendarLabSettings) {
+	<div class="card-body p-4 space-y-3">
+		<div class="flex items-center justify-between gap-2">
+			<button
+				class="btn btn-xs btn-ghost"
+				hx-post={ fmt.Sprintf("/realtime/tavern/calendar/month?dir=prev") }
+				hx-swap="none"
+				aria-label="previous month"
+			>
+				&#9664;
+			</button>
+			<h2 class="text-base font-semibold tabular-nums">{ fmt.Sprintf("%s %d", data.Month.String(), data.Year) }</h2>
+			<button
+				class="btn btn-xs btn-ghost"
+				hx-post={ fmt.Sprintf("/realtime/tavern/calendar/month?dir=next") }
+				hx-swap="none"
+				aria-label="next month"
+			>
+				&#9654;
+			</button>
+		</div>
+		<!-- Weekday header -->
+		<div class="grid grid-cols-7 gap-1 text-xs text-base-content/50 text-center">
+			for _, w := range []string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"} {
+				<div>{ w }</div>
+			}
+		</div>
+		<!-- Day grid -->
+		<div class={ calLabGridClass(settings.CompactMode) }>
+			for w := 0; w < data.WeeksInView; w++ {
+				for d := 0; d < 7; d++ {
+					{{ cellDate := data.WeekStart.AddDate(0, 0, w*7+d) }}
+					@calLabDayCell(cellDate, data, settings)
+				}
+			}
+		</div>
+		@calendarLegend()
+	</div>
+}
+
+func calLabGridClass(compact bool) string {
+	if compact {
+		return "grid grid-cols-7 gap-0.5"
+	}
+	return "grid grid-cols-7 gap-1"
+}
+
+templ calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.CalendarLabSettings) {
+	{{
+		inMonth := cellDate.Month() == data.Month
+		isToday := sameDay(cellDate, data.Today)
+		isSelected := !data.Selected.IsZero() && sameDay(cellDate, data.Selected)
+		dateStr := cellDate.Format("2006-01-02")
+		counts := data.DayCounts[cellDate.Day()]
+		isWeekend := cellDate.Weekday() == time.Sunday || cellDate.Weekday() == time.Saturday
+	}}
+	<button
+		type="button"
+		class={ calLabCellClass(inMonth, isToday, isSelected, isWeekend && settings.HighlightWeekends, settings.CompactMode) }
+		hx-post={ "/realtime/tavern/calendar/day?d=" + dateStr }
+		hx-swap="none"
+		data-cal-cell={ dateStr }
+	>
+		<span class="text-xs tabular-nums">{ fmt.Sprintf("%d", cellDate.Day()) }</span>
+		if inMonth && len(counts) > 0 {
+			<div class="flex gap-0.5 mt-0.5 flex-wrap justify-center">
+				for _, cat := range demo.AllCalendarCategories {
+					if counts[cat] > 0 && settings.VisibleCategories[cat] {
+						<span class={ "w-1.5 h-1.5 rounded-full", calCategoryDot[cat] }></span>
+					}
+				}
+			</div>
+		}
+	</button>
+}
+
+func calLabCellClass(inMonth, isToday, isSelected, highlightWeekend, compact bool) string {
+	h := "min-h-12"
+	if compact {
+		h = "min-h-8"
+	}
+	base := "flex flex-col items-center justify-start p-1 rounded text-base-content cursor-pointer hover:bg-base-300 " + h
+	if !inMonth {
+		base += " opacity-30"
+	}
+	if highlightWeekend {
+		base += " bg-base-300/50"
+	} else {
+		if isSelected {
+			base += " bg-primary/20"
+		} else {
+			base += " bg-base-100"
+		}
+	}
+	if isToday {
+		base += " ring-1 ring-primary"
+	}
+	if isSelected && highlightWeekend {
+		base += " ring-2 ring-primary"
+	}
+	return base
+}
+
+// CalendarLabDayEmpty renders the empty day inspector placeholder.
+templ CalendarLabDayEmpty() {
+	<div class="card-body p-4">
+		<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/50">Day</h2>
+		<p class="text-xs text-base-content/40">Pick a day from the calendar.</p>
+	</div>
+}
+
+// CalendarLabDay renders the day inspector panel.
+templ CalendarLabDay(day time.Time, events []demo.CalendarEvent, settings demo.CalendarLabSettings) {
+	<div class="card-body p-4 space-y-3">
+		<div>
+			<h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/50">{ day.Format("Mon Jan 2, 2006") }</h2>
+			<p class="text-xs text-base-content/40">{ fmt.Sprintf("%d event(s)", len(events)) }</p>
+		</div>
+		<div class="space-y-1 max-h-64 overflow-y-auto" style="contain:paint">
+			if len(events) == 0 {
+				<p class="text-xs text-base-content/30 py-2">No events on this day.</p>
+			} else {
+				for _, e := range events {
+					if settings.VisibleCategories[e.Category] && (settings.Assignee == "" || settings.Assignee == e.Assignee) {
+						@calLabEventRow(e, day)
+					}
+				}
+			}
+		</div>
+		@calLabAddEventForm(day)
+	</div>
+}
+
+templ calLabEventRow(e demo.CalendarEvent, day time.Time) {
+	<div class="flex items-center gap-2 py-1 border-b border-base-300/50 last:border-0">
+		<span class={ "badge badge-xs " + calCategoryBadge[e.Category] }>{ string(e.Category) }</span>
+		<div class="flex-1 min-w-0">
+			<div class="text-sm truncate">{ e.Title }</div>
+			if e.Assignee != "" {
+				<div class="text-xs text-base-content/50 truncate">{ e.Assignee }</div>
+			}
+		</div>
+		<button
+			class="btn btn-ghost btn-xs"
+			hx-post={ fmt.Sprintf("/realtime/tavern/calendar/event/delete?id=%d&d=%s", e.ID, day.Format("2006-01-02")) }
+			hx-swap="none"
+			aria-label="remove event"
+		>
+			&times;
+		</button>
+	</div>
+}
+
+templ calLabAddEventForm(day time.Time) {
+	<form
+		class="space-y-2 mt-2 pt-2 border-t border-base-300/50"
+		hx-post="/realtime/tavern/calendar/event"
+		hx-swap="none"
+		hx-on::after-request="this.querySelector('input[name=title]').value=''"
+	>
+		<input type="hidden" name="d" value={ day.Format("2006-01-02") }/>
+		<div class="form-control">
+			<input
+				type="text"
+				name="title"
+				placeholder="Event title"
+				class="input input-xs input-bordered w-full"
+				required
+			/>
+		</div>
+		<div class="flex items-center gap-2">
+			<select name="category" class="select select-xs select-bordered flex-1">
+				for _, cat := range demo.AllCalendarCategories {
+					<option value={ string(cat) }>{ string(cat) }</option>
+				}
+			</select>
+			<button type="submit" class="btn btn-primary btn-xs">Add</button>
+		</div>
+	</form>
+}
+
+// CalendarLabStats renders the stats region.
+templ CalendarLabStats(eventCount int, settings demo.CalendarLabSettings, paused bool) {
+	<div class="space-y-1 text-xs">
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Events this month</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", eventCount) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Density</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", settings.Density) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Sim speed</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%dms", settings.SimSpeed) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Simulator</span>
+			if paused {
+				<span class="badge badge-xs badge-warning">paused</span>
+			} else {
+				<span class="badge badge-xs badge-success">running</span>
+			}
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Assignee</span>
+			if settings.Assignee == "" {
+				<span class="text-base-content/40">all</span>
+			} else {
+				<span class="font-mono">{ settings.Assignee }</span>
+			}
+		</div>
+	</div>
+}
+
+// CalendarLabActivityLog renders the activity log entries (newest first).
+templ CalendarLabActivityLog(activity []demo.CalendarLabActivity) {
+	if len(activity) == 0 {
+		<p class="text-base-content/30 py-2">No activity yet.</p>
+	} else {
+		for i := len(activity) - 1; i >= 0; i-- {
+			<div class="flex items-start gap-2 py-0.5 border-b border-base-300/50 last:border-0">
+				<span class="text-base-content/40 tabular-nums shrink-0">{ activity[i].Timestamp.Format("15:04:05") }</span>
+				<span class="text-base-content/70 break-all">{ activity[i].Action }</span>
+			</div>
+		}
+	}
+}
+
+// calendarLabControls renders the control rail.
+templ calendarLabControls(settings demo.CalendarLabSettings, paused bool) {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body p-4 space-y-3">
+			<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Controls</h2>
+
+			<!-- Density slider -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Density</span>
+					<span class="label-text-alt text-xs font-mono" id="cal-density-val">{ fmt.Sprintf("%d", settings.Density) }</span>
+				</label>
+				<input
+					type="range" min="1" max="8"
+					value={ fmt.Sprintf("%d", settings.Density) }
+					class="range range-xs range-primary"
+					name="density"
+					hx-post="/realtime/tavern/calendar/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+					oninput="document.getElementById('cal-density-val').textContent=this.value"
+				/>
+			</div>
+
+			<!-- Sim speed slider -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Sim speed</span>
+					<span class="label-text-alt text-xs font-mono" id="cal-speed-val">{ fmt.Sprintf("%dms", settings.SimSpeed) }</span>
+				</label>
+				<input
+					type="range" min="200" max="5000" step="200"
+					value={ fmt.Sprintf("%d", settings.SimSpeed) }
+					class="range range-xs range-secondary"
+					name="sim_speed"
+					hx-post="/realtime/tavern/calendar/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+					oninput="document.getElementById('cal-speed-val').textContent=this.value+'ms'"
+				/>
+			</div>
+
+			<!-- Burst size slider -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Burst size</span>
+					<span class="label-text-alt text-xs font-mono" id="cal-burst-val">{ fmt.Sprintf("%d", settings.BurstSize) }</span>
+				</label>
+				<input
+					type="range" min="1" max="5"
+					value={ fmt.Sprintf("%d", settings.BurstSize) }
+					class="range range-xs range-accent"
+					name="burst_size"
+					hx-post="/realtime/tavern/calendar/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+					oninput="document.getElementById('cal-burst-val').textContent=this.value"
+				/>
+			</div>
+
+			<!-- Assignee select -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Assignee</span>
+				</label>
+				<select
+					name="assignee"
+					class="select select-xs select-bordered w-full"
+					hx-post="/realtime/tavern/calendar/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+				>
+					<option value="" selected?={ settings.Assignee == "" }>All</option>
+					for _, a := range []string{"Jordan", "Maria", "Sam", "Pat", "ops-team"} {
+						<option value={ a } selected?={ settings.Assignee == a }>{ a }</option>
+					}
+				</select>
+			</div>
+
+			<!-- Category toggles -->
+			<div class="space-y-1">
+				<span class="text-xs text-base-content/60">Categories</span>
+				<div class="flex flex-wrap gap-1">
+					for _, cat := range demo.AllCalendarCategories {
+						<label class="swap swap-flip">
+							<input
+								type="checkbox"
+								name={ "cat_" + string(cat) }
+								checked?={ settings.VisibleCategories[cat] }
+								hx-post="/realtime/tavern/calendar/controls"
+								hx-trigger="change"
+								hx-swap="none"
+								hx-include="closest .card-body"
+							/>
+							<span class={ "swap-on badge badge-xs cursor-pointer " + calCategoryBadge[cat] }>{ string(cat) }</span>
+							<span class="swap-off badge badge-xs badge-ghost cursor-pointer line-through opacity-50">{ string(cat) }</span>
+						</label>
+					}
+				</div>
+			</div>
+
+			<!-- Toggles -->
+			<div class="flex flex-wrap gap-2">
+				<label class="label cursor-pointer gap-2 py-0">
+					<span class="label-text text-xs">Compact</span>
+					<input
+						type="checkbox"
+						name="compact"
+						class="toggle toggle-xs toggle-primary"
+						checked?={ settings.CompactMode }
+						hx-post="/realtime/tavern/calendar/controls"
+						hx-trigger="change"
+						hx-swap="none"
+						hx-include="closest .card-body"
+					/>
+				</label>
+				<label class="label cursor-pointer gap-2 py-0">
+					<span class="label-text text-xs">Weekends</span>
+					<input
+						type="checkbox"
+						name="highlight_weekends"
+						class="toggle toggle-xs toggle-secondary"
+						checked?={ settings.HighlightWeekends }
+						hx-post="/realtime/tavern/calendar/controls"
+						hx-trigger="change"
+						hx-swap="none"
+						hx-include="closest .card-body"
+					/>
+				</label>
+			</div>
+
+			<!-- Simulator pause -->
+			<button
+				class="btn btn-xs btn-outline w-full"
+				hx-post="/realtime/tavern/calendar/sim/pause"
+				hx-swap="none"
+			>
+				if paused {
+					Resume Simulator
+				} else {
+					Pause Simulator
+				}
+			</button>
+		</div>
+	</div>
+}

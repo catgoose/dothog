@@ -64,6 +64,10 @@ func TavernIndexPage() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = adminResourceCard("/realtime/tavern/calendar", "Calendar Lab", "Shared calendar state, multi-region SSE updates, HTML/CSS-first controls. Cross-tab sync demo.", "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div><div class=\"space-y-2\"><h2 class=\"text-sm font-semibold uppercase tracking-wider text-base-content/50\">See Also</h2><p class=\"text-xs text-base-content/40\">Existing demos that exercise Tavern features in realistic contexts.</p><div class=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
