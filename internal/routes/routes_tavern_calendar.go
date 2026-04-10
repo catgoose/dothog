@@ -20,6 +20,7 @@ import (
 const (
 	topicCalMonth    = "calendar/month"
 	topicCalDay      = "calendar/day"
+	topicCalDayList  = "calendar/day/list"
 	topicCalStats    = "calendar/stats"
 	topicCalActivity = "calendar/activity"
 )
@@ -56,9 +57,9 @@ func (r *tavernCalendarRoutes) handlePage(c echo.Context) error {
 	return handler.RenderBaseLayout(c, views.TavernCalendarPage(data))
 }
 
-// handleSSE fans all four calendar topics into one StreamSSE connection.
-// Month, day, and stats regions use snapshot-on-subscribe so reconnects
-// get the current view immediately. Activity uses replay for recent entries.
+// handleSSE fans all five calendar topics into one StreamSSE connection.
+// Month, day, day-list, and stats regions use snapshot-on-subscribe so
+// reconnects get the current view immediately. Activity uses replay.
 func (r *tavernCalendarRoutes) handleSSE(c echo.Context) error {
 	monthCh, monthUnsub := r.broker.SubscribeWithSnapshot(topicCalMonth, func() string {
 		return r.renderMonthFrame()
@@ -70,6 +71,11 @@ func (r *tavernCalendarRoutes) handleSSE(c echo.Context) error {
 	})
 	defer dayUnsub()
 
+	dayListCh, dayListUnsub := r.broker.SubscribeWithSnapshot(topicCalDayList, func() string {
+		return r.renderDayListFrame()
+	})
+	defer dayListUnsub()
+
 	statsCh, statsUnsub := r.broker.SubscribeWithSnapshot(topicCalStats, func() string {
 		return r.renderStatsFrame()
 	})
@@ -80,7 +86,7 @@ func (r *tavernCalendarRoutes) handleSSE(c echo.Context) error {
 	defer actUnsub()
 
 	ctx := c.Request().Context()
-	fanIn := make(chan string, 16)
+	fanIn := make(chan string, 20)
 	go func() {
 		defer close(fanIn)
 		for {
@@ -97,6 +103,15 @@ func (r *tavernCalendarRoutes) handleSSE(c echo.Context) error {
 					return
 				}
 			case msg, ok := <-dayCh:
+				if !ok {
+					return
+				}
+				select {
+				case fanIn <- msg:
+				case <-ctx.Done():
+					return
+				}
+			case msg, ok := <-dayListCh:
 				if !ok {
 					return
 				}
@@ -189,7 +204,8 @@ func (r *tavernCalendarRoutes) handleAddEvent(c echo.Context) error {
 	if !validCalendarCategory(cat) {
 		cat = demo.CalCatReminder
 	}
-	r.lab.Store.AddEvent(day, title, "", cat)
+	assignee := c.FormValue("assignee")
+	r.lab.Store.AddEvent(day, title, assignee, cat)
 	r.lab.RecordActivity(fmt.Sprintf("added \"%s\" on %s", title, day.Format("Jan 2")))
 	r.publishAll()
 	return c.NoContent(http.StatusNoContent)
@@ -260,10 +276,12 @@ func (r *tavernCalendarRoutes) publishAll() {
 }
 
 // publishSimTick publishes the regions that change on a simulator tick.
-// Notably skips the day panel to avoid destroying the add-event form
-// (the form has dropdowns/inputs that would reset on innerHTML swap).
+// The full day panel (cal-day) is skipped to avoid resetting the add-event
+// form. Instead, only the event list region (cal-day-list) is updated so the
+// selected day's event count stays fresh without touching form state.
 func (r *tavernCalendarRoutes) publishSimTick() {
 	r.publishMonth()
+	r.publishDayList()
 	r.publishStats()
 	r.publishActivity()
 }
@@ -274,6 +292,10 @@ func (r *tavernCalendarRoutes) publishMonth() {
 
 func (r *tavernCalendarRoutes) publishDay() {
 	r.broker.Publish(topicCalDay, r.renderDayFrame())
+}
+
+func (r *tavernCalendarRoutes) publishDayList() {
+	r.broker.Publish(topicCalDayList, r.renderDayListFrame())
 }
 
 func (r *tavernCalendarRoutes) publishStats() {
@@ -290,8 +312,9 @@ func (r *tavernCalendarRoutes) publishActivity() {
 func (r *tavernCalendarRoutes) renderMonthFrame() string {
 	data := r.buildMonthData()
 	settings := r.lab.Settings()
+	dayEvents := r.lab.DayEventsMap()
 	return tavern.NewSSEMessage("cal-month",
-		renderToString("cal-lab month", views.CalendarLabMonth(data, settings)),
+		renderToString("cal-lab month", views.CalendarLabMonth(data, settings, dayEvents)),
 	).String()
 }
 
@@ -309,10 +332,23 @@ func (r *tavernCalendarRoutes) renderDayFrame() string {
 	).String()
 }
 
+func (r *tavernCalendarRoutes) renderDayListFrame() string {
+	selected := r.lab.SelectedDay()
+	settings := r.lab.Settings()
+	if selected.IsZero() {
+		// No day selected — publish empty content so the target is cleared.
+		return tavern.NewSSEMessage("cal-day-list", "").String()
+	}
+	events := r.lab.Store.EventsForDay(selected)
+	return tavern.NewSSEMessage("cal-day-list",
+		renderToString("cal-lab day list", views.CalendarLabDayList(events, selected, settings)),
+	).String()
+}
+
 func (r *tavernCalendarRoutes) renderStatsFrame() string {
 	settings := r.lab.Settings()
 	return tavern.NewSSEMessage("cal-stats",
-		renderToString("cal-lab stats", views.CalendarLabStats(r.lab.EventCount(), settings, r.lab.Paused())),
+		renderToString("cal-lab stats", views.CalendarLabStats(r.lab.EventCount(), r.lab.FilteredEventCount(), settings, r.lab.Paused())),
 	).String()
 }
 
@@ -333,12 +369,14 @@ func (r *tavernCalendarRoutes) buildPageData() views.CalendarLabData {
 		dayEvents = r.lab.Store.EventsForDay(selected)
 	}
 	return views.CalendarLabData{
-		MonthData:  monthData,
-		Settings:   settings,
-		DayEvents:  dayEvents,
-		Activity:   r.lab.Activity(),
-		Paused:     r.lab.Paused(),
-		EventCount: r.lab.EventCount(),
+		MonthData:          monthData,
+		Settings:           settings,
+		DayEvents:          dayEvents,
+		Activity:           r.lab.Activity(),
+		Paused:             r.lab.Paused(),
+		EventCount:         r.lab.EventCount(),
+		FilteredEventCount: r.lab.FilteredEventCount(),
+		DayEventsMap:       r.lab.DayEventsMap(),
 	}
 }
 
