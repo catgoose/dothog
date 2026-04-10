@@ -90,34 +90,48 @@ func (bp *tavernBackpressRoutes) handleBatch(c echo.Context) error {
 }
 
 func (bp *tavernBackpressRoutes) handleStreamSSE(c echo.Context) error {
-	flusher, err := startSSEResponse(c)
-	if err != nil {
-		return err
-	}
-
 	msgs, unsub := bp.demoBroker.SubscribeMulti("bp-alpha", "bp-beta", "bp-gamma")
 	defer unsub()
 
 	ctx := c.Request().Context()
-	w := c.Response()
 
-	for {
-		bw := time.Duration(bp.batchWindow.Load())
-		if bw == 0 {
-			// Raw mode: flush per message.
+	// The raw-vs-batch collection logic is the core of this demo, not
+	// incidental plumbing — it deliberately switches per outer iteration
+	// based on the live batchWindow setting, and emits two different SSE
+	// event types (bp-stream vs bp-stream-batch). It runs in a sibling
+	// goroutine that emits already-formatted SSE frames into `out`, and
+	// StreamSSE handles the response write mechanics.
+	out := make(chan string, 16)
+	go func() {
+		defer close(out)
+		emit := func(frame string) bool {
 			select {
+			case out <- frame:
+				return true
 			case <-ctx.Done():
-				return nil
-			case tm, ok := <-msgs:
-				if !ok {
-					return nil
-				}
-				simplified := strings.HasPrefix(tm.Data, "[simplified] ")
-				html := renderBPStreamEvent(tm.Topic, tm.Data, simplified)
-				_, _ = fmt.Fprint(w, tavern.NewSSEMessage("bp-stream", html).String())
-				flusher.Flush()
+				return false
 			}
-		} else {
+		}
+		for {
+			bw := time.Duration(bp.batchWindow.Load())
+			if bw == 0 {
+				// Raw mode: emit one frame per message.
+				select {
+				case <-ctx.Done():
+					return
+				case tm, ok := <-msgs:
+					if !ok {
+						return
+					}
+					simplified := strings.HasPrefix(tm.Data, "[simplified] ")
+					html := renderBPStreamEvent(tm.Topic, tm.Data, simplified)
+					if !emit(tavern.NewSSEMessage("bp-stream", html).String()) {
+						return
+					}
+				}
+				continue
+			}
+
 			// Batch mode: collect during window, emit one swap.
 			timer := time.NewTimer(bw)
 			var rows bytes.Buffer
@@ -126,11 +140,11 @@ func (bp *tavernBackpressRoutes) handleStreamSSE(c echo.Context) error {
 				select {
 				case <-ctx.Done():
 					timer.Stop()
-					return nil
+					return
 				case tm, ok := <-msgs:
 					if !ok {
 						timer.Stop()
-						return nil
+						return
 					}
 					simplified := strings.HasPrefix(tm.Data, "[simplified] ")
 					html := renderBPStreamEvent(tm.Topic, tm.Data, simplified)
@@ -140,11 +154,19 @@ func (bp *tavernBackpressRoutes) handleStreamSSE(c echo.Context) error {
 				}
 			}
 			if rows.Len() > 0 {
-				_, _ = fmt.Fprint(w, tavern.NewSSEMessage("bp-stream-batch", rows.String()).String())
-				flusher.Flush()
+				if !emit(tavern.NewSSEMessage("bp-stream-batch", rows.String()).String()) {
+					return
+				}
 			}
 		}
-	}
+	}()
+
+	return tavern.StreamSSE(
+		ctx,
+		c.Response(),
+		out,
+		func(frame string) string { return frame },
+	)
 }
 
 func formatBatchLabel(ms int) string {
