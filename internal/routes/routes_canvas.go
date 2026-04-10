@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"math/big"
 	"net/http"
@@ -108,32 +107,31 @@ func (cr *canvasRoutes) handleCanvasSSE(c echo.Context) error {
 	cr.canvas.TouchClient(connID, color)
 	defer cr.canvas.RemoveClient(connID)
 
-	flusher, err := startSSEResponse(c)
-	if err != nil {
-		return err
-	}
-
 	ch, unsub := cr.broker.Subscribe(TopicCanvasUpdate)
 	defer unsub()
 
-	heartbeat := time.NewTicker(10 * time.Second)
-	defer heartbeat.Stop()
-
+	// Periodically refresh this client's presence so the prune-stale tick
+	// keeps it visible. This is presence bookkeeping, not an SSE heartbeat.
 	ctx := c.Request().Context()
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-heartbeat.C:
-			cr.canvas.TouchClient(connID, color)
-		case msg, ok := <-ch:
-			if !ok {
-				return nil
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				cr.canvas.TouchClient(connID, color)
 			}
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
 		}
-	}
+	}()
+
+	return tavern.StreamSSE(
+		ctx,
+		c.Response(),
+		ch,
+		func(s string) string { return s },
+	)
 }
 
 // runTicker periodically broadcasts active client info and prunes stale clients.

@@ -58,11 +58,6 @@ func (r *failuresRoutes) handlePage(c echo.Context) error {
 // parameter — the latter lets the in-page scenario buttons trigger a
 // resume without browser support for setting EventSource headers.
 func (r *failuresRoutes) handleSSE(c echo.Context) error {
-	flusher, err := startSSEResponse(c)
-	if err != nil {
-		return err
-	}
-
 	lastEventID := c.Request().Header.Get("Last-Event-ID")
 	if lastEventID == "" {
 		lastEventID = c.QueryParam("resume")
@@ -70,29 +65,27 @@ func (r *failuresRoutes) handleSSE(c echo.Context) error {
 
 	var msgs <-chan string
 	var unsub func()
+	var opts []tavern.StreamSSEOption
 	if lastEventID != "" {
 		msgs, unsub = r.broker.SubscribeFromID(topicFailuresLive, lastEventID)
-		// Tell the client what we got back so the result panel can show it.
-		describeResume(c.Response(), lastEventID)
-		flusher.Flush()
+		// Tell the client how we interpreted the resume hint so the result
+		// panel can render it. WithStreamSnapshot writes this once before
+		// any channel values are streamed.
+		opts = append(opts, tavern.WithStreamSnapshot(func() string {
+			return resumeDescriptionFrame(lastEventID)
+		}))
 	} else {
 		msgs, unsub = r.broker.Subscribe(topicFailuresLive)
 	}
 	defer unsub()
 
-	ctx := c.Request().Context()
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case msg, ok := <-msgs:
-			if !ok {
-				return nil
-			}
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
-		}
-	}
+	return tavern.StreamSSE(
+		c.Request().Context(),
+		c.Response(),
+		msgs,
+		func(s string) string { return s },
+		opts...,
+	)
 }
 
 // handleBurst publishes a few events with sequential IDs so the replay
@@ -137,9 +130,10 @@ func (r *failuresRoutes) startBackgroundTrickle(ctx context.Context) {
 	}
 }
 
-// describeResume writes a one-shot SSE result message describing how the
-// resume attempt was interpreted. The client renders this in the result panel.
-func describeResume(w http.ResponseWriter, lastEventID string) {
+// resumeDescriptionFrame returns a one-shot SSE result frame describing how
+// the resume attempt was interpreted. The client renders this in the result
+// panel. It is delivered via tavern.WithStreamSnapshot before any live events.
+func resumeDescriptionFrame(lastEventID string) string {
 	var title, detail, level string
 	if !looksLikeFailuresEventID(lastEventID) {
 		title = "malformed Last-Event-ID"
@@ -151,7 +145,7 @@ func describeResume(w http.ResponseWriter, lastEventID string) {
 		level = "info"
 	}
 	html := renderFailuresResult(title, detail, level)
-	_, _ = fmt.Fprint(w, tavern.NewSSEMessage("failures-result", html).String())
+	return tavern.NewSSEMessage("failures-result", html).String()
 }
 
 // looksLikeFailuresEventID is a tiny shape check matching IDs this lab emits.

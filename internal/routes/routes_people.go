@@ -159,11 +159,6 @@ func (p *peopleRoutes) handlePersonSSE(c echo.Context) error {
 	p.broker.SetReplayPolicy(topic, 5)
 	p.broker.SetReplayGapPolicy(topic, tavern.GapFallbackToSnapshot, nil)
 
-	flusher, err := startSSEResponse(c)
-	if err != nil {
-		return err
-	}
-
 	// Check for Last-Event-ID for replay on reconnect.
 	lastEventID := c.Request().Header.Get("Last-Event-ID")
 	var ch <-chan string
@@ -175,19 +170,12 @@ func (p *peopleRoutes) handlePersonSSE(c echo.Context) error {
 	}
 	defer unsub()
 
-	ctx := c.Request().Context()
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case msg, ok := <-ch:
-			if !ok {
-				return nil
-			}
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
-		}
-	}
+	return tavern.StreamSSE(
+		c.Request().Context(),
+		c.Response(),
+		ch,
+		func(s string) string { return s },
+	)
 }
 
 func (p *peopleRoutes) buildPeopleContent(c echo.Context) ([]demo.Person, int, linkwell.FilterBar, []linkwell.TableCol, linkwell.PageInfo, error) {

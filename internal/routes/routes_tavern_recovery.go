@@ -76,17 +76,16 @@ func (r *recoveryRoutes) handleReset(c echo.Context) error {
 // handleSSE multiplexes all three recovery topics into one SSE response.
 // On reconnect, the replay region uses Last-Event-ID, the snapshot region
 // gets the current snapshot value, and the live region just resumes streaming.
+//
+// StreamSSE takes a single channel, so the three topic channels are fanned
+// in to one stream channel. The fan-in goroutine exits when ctx is cancelled
+// or any source channel is closed; closing fanIn signals StreamSSE to return.
 func (r *recoveryRoutes) handleSSE(c echo.Context) error {
-	flusher, err := startSSEResponse(c)
-	if err != nil {
-		return err
-	}
-
 	lastEventID := c.Request().Header.Get("Last-Event-ID")
 	reconnect := lastEventID != ""
 
-	// Replay subscription: SubscribeFromID for reconnects, SubscribeMulti
-	// otherwise. SubscribeFromID delivers any events newer than lastEventID.
+	// Replay subscription: SubscribeFromID for reconnects, Subscribe otherwise.
+	// SubscribeFromID delivers any events newer than lastEventID.
 	var replayCh <-chan string
 	var replayUnsub func()
 	if reconnect {
@@ -109,48 +108,62 @@ func (r *recoveryRoutes) handleSSE(c echo.Context) error {
 	liveCh, liveUnsub := r.broker.Subscribe(topicRecoveryLive)
 	defer liveUnsub()
 
+	ctx := c.Request().Context()
+	fanIn := make(chan string, 16)
+	go func() {
+		defer close(fanIn)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg, ok := <-replayCh:
+				if !ok {
+					return
+				}
+				select {
+				case fanIn <- msg:
+				case <-ctx.Done():
+					return
+				}
+			case msg, ok := <-snapCh:
+				if !ok {
+					return
+				}
+				select {
+				case fanIn <- msg:
+				case <-ctx.Done():
+					return
+				}
+			case msg, ok := <-liveCh:
+				if !ok {
+					return
+				}
+				select {
+				case fanIn <- msg:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}
+	}()
+
 	// Tell the client whether this was a fresh connect or a reconnect, so
-	// the regions can show the right "first delivery" badges.
+	// the regions can show the right "first delivery" badges. Delivered as
+	// a one-shot snapshot before any channel values are streamed.
 	mode := "fresh"
 	if reconnect {
 		mode = "reconnect"
 	}
-	if _, werr := fmt.Fprintf(c.Response(), "event: recovery-mode\ndata: %s\n\n", mode); werr != nil {
-		return nil
-	}
-	flusher.Flush()
+	modeFrame := fmt.Sprintf("event: recovery-mode\ndata: %s\n\n", mode)
 
-	ctx := c.Request().Context()
-	heartbeat := time.NewTicker(15 * time.Second)
-	defer heartbeat.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case msg, ok := <-replayCh:
-			if !ok {
-				return nil
-			}
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
-		case msg, ok := <-snapCh:
-			if !ok {
-				return nil
-			}
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
-		case msg, ok := <-liveCh:
-			if !ok {
-				return nil
-			}
-			_, _ = fmt.Fprint(c.Response(), msg)
-			flusher.Flush()
-		case <-heartbeat.C:
-			_, _ = fmt.Fprintf(c.Response(), ": heartbeat\n\n")
-			flusher.Flush()
-		}
-	}
+	return tavern.StreamSSE(
+		ctx,
+		c.Response(),
+		fanIn,
+		func(s string) string { return s },
+		tavern.WithStreamSnapshot(func() string { return modeFrame }),
+		tavern.WithStreamHeartbeat(15*time.Second),
+	)
 }
 
 // startPublisher emits replay and live events on a slow timer so the demo
