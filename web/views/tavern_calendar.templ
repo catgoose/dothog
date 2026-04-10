@@ -10,12 +10,14 @@ import (
 
 // CalendarLabData is the view-model for the calendar lab page.
 type CalendarLabData struct {
-	MonthData CalendarMonthData
-	Settings  demo.CalendarLabSettings
-	DayEvents []demo.CalendarEvent
-	Activity  []demo.CalendarLabActivity
-	Paused    bool
-	EventCount int
+	MonthData          CalendarMonthData
+	Settings           demo.CalendarLabSettings
+	DayEvents          []demo.CalendarEvent
+	Activity           []demo.CalendarLabActivity
+	Paused             bool
+	EventCount         int
+	FilteredEventCount int
+	DayEventsMap       map[int][]demo.CalendarEvent
 }
 
 templ TavernCalendarPage(data CalendarLabData) {
@@ -39,6 +41,7 @@ templ TavernCalendarPage(data CalendarLabData) {
 		>
 			<div sse-swap="cal-month" hx-target="#cal-lab-month" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 			<div sse-swap="cal-day" hx-target="#cal-lab-day-events" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="cal-day-list" hx-target="#cal-lab-day-list" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 			<div sse-swap="cal-stats" hx-target="#cal-lab-stats" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 			<div sse-swap="cal-activity" hx-target="#cal-lab-activity-list" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 
@@ -46,7 +49,7 @@ templ TavernCalendarPage(data CalendarLabData) {
 				<!-- Month grid (left, 8 cols) -->
 				<div class="lg:col-span-8 space-y-4">
 					<div id="cal-lab-month" class="card bg-base-200 shadow-sm">
-						@CalendarLabMonth(data.MonthData, data.Settings)
+						@CalendarLabMonth(data.MonthData, data.Settings, data.DayEventsMap)
 					</div>
 
 					<!-- Stats + Activity -->
@@ -55,7 +58,7 @@ templ TavernCalendarPage(data CalendarLabData) {
 							<div class="card-body p-4 space-y-2">
 								<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Stats</h2>
 								<div id="cal-lab-stats">
-									@CalendarLabStats(data.EventCount, data.Settings, data.Paused)
+									@CalendarLabStats(data.EventCount, data.FilteredEventCount, data.Settings, data.Paused)
 								</div>
 							</div>
 						</div>
@@ -88,7 +91,7 @@ templ TavernCalendarPage(data CalendarLabData) {
 
 // CalendarLabMonth renders the month grid for the lab. It filters events
 // based on the current lab settings.
-templ CalendarLabMonth(data CalendarMonthData, settings demo.CalendarLabSettings) {
+templ CalendarLabMonth(data CalendarMonthData, settings demo.CalendarLabSettings, dayEvents map[int][]demo.CalendarEvent) {
 	<div class="card-body p-4 space-y-3">
 		<div class="flex items-center justify-between gap-2">
 			<button
@@ -120,7 +123,7 @@ templ CalendarLabMonth(data CalendarMonthData, settings demo.CalendarLabSettings
 			for w := 0; w < data.WeeksInView; w++ {
 				for d := 0; d < 7; d++ {
 					{{ cellDate := data.WeekStart.AddDate(0, 0, w*7+d) }}
-					@calLabDayCell(cellDate, data, settings)
+					@calLabDayCell(cellDate, data, settings, dayEvents)
 				}
 			}
 		</div>
@@ -135,7 +138,38 @@ func calLabGridClass(compact bool) string {
 	return "grid grid-cols-7 gap-1"
 }
 
-templ calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.CalendarLabSettings) {
+// calCategoryBadgeBg maps category to a subtle background class for inline chips.
+var calCategoryBadgeBg = map[demo.CalendarEventCategory]string{
+	demo.CalCatMaintenance: "bg-primary/20 text-primary",
+	demo.CalCatAppointment: "bg-secondary/20 text-secondary",
+	demo.CalCatReminder:    "bg-info/20 text-info",
+	demo.CalCatDeadline:    "bg-warning/20 text-warning",
+}
+
+// calLabShortTitle truncates event titles for inline cell display. Higher
+// density allows more characters; lower density clips aggressively.
+func calLabShortTitle(title string, density int) string {
+	max := 8 + density*2
+	runes := []rune(title)
+	if len(runes) <= max {
+		return title
+	}
+	return string(runes[:max-1]) + "…"
+}
+
+// calLabFilteredCount returns the number of events in the slice that pass
+// the settings filters.
+func calLabFilteredCount(events []demo.CalendarEvent, settings demo.CalendarLabSettings) int {
+	n := 0
+	for _, e := range events {
+		if settings.VisibleCategories[e.Category] && (settings.Assignee == "" || settings.Assignee == e.Assignee) {
+			n++
+		}
+	}
+	return n
+}
+
+templ calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.CalendarLabSettings, dayEvents map[int][]demo.CalendarEvent) {
 	{{
 		inMonth := cellDate.Month() == data.Month
 		isToday := sameDay(cellDate, data.Today)
@@ -143,6 +177,7 @@ templ calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.Ca
 		dateStr := cellDate.Format("2006-01-02")
 		counts := data.DayCounts[cellDate.Day()]
 		isWeekend := cellDate.Weekday() == time.Sunday || cellDate.Weekday() == time.Saturday
+		cellEvents := dayEvents[cellDate.Day()]
 	}}
 	<button
 		type="button"
@@ -152,12 +187,29 @@ templ calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.Ca
 		data-cal-cell={ dateStr }
 	>
 		<span class="text-xs tabular-nums">{ fmt.Sprintf("%d", cellDate.Day()) }</span>
-		if inMonth && len(counts) > 0 {
-			<div class="flex gap-0.5 mt-0.5 flex-wrap justify-center">
-				for _, cat := range demo.AllCalendarCategories {
-					if counts[cat] > 0 && settings.VisibleCategories[cat] {
-						<span class={ "w-1.5 h-1.5 rounded-full", calCategoryDot[cat] }></span>
+		if inMonth && settings.Density <= 2 {
+			<!-- Density 1-2: category dots only -->
+			if len(counts) > 0 {
+				<div class="flex gap-0.5 mt-0.5 flex-wrap justify-center">
+					for _, cat := range demo.AllCalendarCategories {
+						if counts[cat] > 0 && settings.VisibleCategories[cat] {
+							<span class={ "w-1.5 h-1.5 rounded-full", calCategoryDot[cat] }></span>
+						}
 					}
+				</div>
+			}
+		} else if inMonth && len(cellEvents) > 0 {
+			<!-- Density 3+: event title chips -->
+			<div class="w-full space-y-0.5 mt-0.5">
+				{{ shown := 0 }}
+				for _, e := range cellEvents {
+					if shown < settings.Density && settings.VisibleCategories[e.Category] && (settings.Assignee == "" || settings.Assignee == e.Assignee) {
+						{{ shown++ }}
+						<div class={ "text-xs truncate px-0.5 rounded leading-tight", calCategoryBadgeBg[e.Category] } title={ e.Title }>{ calLabShortTitle(e.Title, settings.Density) }</div>
+					}
+				}
+				if shown < calLabFilteredCount(cellEvents, settings) {
+					<div class="text-xs text-base-content/40 text-center">+{ fmt.Sprintf("%d", calLabFilteredCount(cellEvents, settings)-shown) }</div>
 				}
 			</div>
 		}
@@ -199,25 +251,39 @@ templ CalendarLabDayEmpty() {
 	</div>
 }
 
-// CalendarLabDayFull renders the complete day inspector: event list + add form.
-// Used for SSE swaps from user actions (select day, add/delete event).
+// CalendarLabDayFull renders the complete day inspector: header, event list,
+// and add form. Used for SSE swaps from user actions (select day, add/delete).
+// The event list is wrapped in #cal-lab-day-list so the simulator can update
+// it independently without touching the form.
 templ CalendarLabDayFull(day time.Time, events []demo.CalendarEvent, settings demo.CalendarLabSettings) {
 	<div class="card-body p-4 space-y-3">
-		@CalendarLabDayEvents(day, events, settings)
+		@calLabDayHeader(day, events, settings)
+		<div id="cal-lab-day-list">
+			@CalendarLabDayList(events, day, settings)
+		</div>
 		@calLabAddEventForm(day)
 	</div>
 }
 
-// CalendarLabDayEvents renders just the event list portion of the day inspector.
-// Used for SSE swaps from the simulator (month-level changes that update the
-// event list but shouldn't destroy the form).
-templ CalendarLabDayEvents(day time.Time, events []demo.CalendarEvent, settings demo.CalendarLabSettings) {
+// calLabDayHeader renders the day title and filtered event count.
+templ calLabDayHeader(day time.Time, events []demo.CalendarEvent, settings demo.CalendarLabSettings) {
+	{{ filtered := calLabFilteredCount(events, settings) }}
 	<div>
 		<h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/50">{ day.Format("Mon Jan 2, 2006") }</h2>
-		<p class="text-xs text-base-content/40">{ fmt.Sprintf("%d event(s)", len(events)) }</p>
+		if filtered == len(events) {
+			<p class="text-xs text-base-content/40">{ fmt.Sprintf("%d event(s)", len(events)) }</p>
+		} else {
+			<p class="text-xs text-base-content/40">{ fmt.Sprintf("%d of %d event(s)", filtered, len(events)) }</p>
+		}
 	</div>
+}
+
+// CalendarLabDayList renders the scrollable event rows for the selected day.
+// This is the simulator-safe region: it is published as cal-day-list and
+// targets #cal-lab-day-list, leaving the form untouched.
+templ CalendarLabDayList(events []demo.CalendarEvent, day time.Time, settings demo.CalendarLabSettings) {
 	<div class="space-y-1 max-h-64 overflow-y-auto">
-		if len(events) == 0 {
+		if calLabFilteredCount(events, settings) == 0 {
 			<p class="text-xs text-base-content/30 py-2">No events on this day.</p>
 		} else {
 			for _, e := range events {
@@ -266,21 +332,33 @@ templ calLabAddEventForm(day time.Time) {
 				required
 			/>
 		</div>
-		<select name="category" class="select select-sm select-bordered w-full">
-			for _, cat := range demo.AllCalendarCategories {
-				<option value={ string(cat) }>{ string(cat) }</option>
-			}
-		</select>
+		<div class="grid grid-cols-2 gap-1">
+			<select name="category" class="select select-xs select-bordered w-full">
+				for _, cat := range demo.AllCalendarCategories {
+					<option value={ string(cat) }>{ string(cat) }</option>
+				}
+			</select>
+			<select name="assignee" class="select select-xs select-bordered w-full">
+				<option value="">unassigned</option>
+				for _, a := range []string{"Jordan", "Maria", "Sam", "Pat", "ops-team"} {
+					<option value={ a }>{ a }</option>
+				}
+			</select>
+		</div>
 		<button type="submit" class="btn btn-primary btn-xs w-full">Add</button>
 	</form>
 }
 
 // CalendarLabStats renders the stats region.
-templ CalendarLabStats(eventCount int, settings demo.CalendarLabSettings, paused bool) {
+templ CalendarLabStats(eventCount int, filteredCount int, settings demo.CalendarLabSettings, paused bool) {
 	<div class="space-y-1 text-xs">
 		<div class="flex justify-between">
 			<span class="text-base-content/60">Events this month</span>
-			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", eventCount) }</span>
+			if filteredCount == eventCount {
+				<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", eventCount) }</span>
+			} else {
+				<span class="font-mono tabular-nums">{ fmt.Sprintf("%d / %d", filteredCount, eventCount) }</span>
+			}
 		</div>
 		<div class="flex justify-between">
 			<span class="text-base-content/60">Density</span>

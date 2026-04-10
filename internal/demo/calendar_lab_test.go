@@ -125,3 +125,120 @@ func TestCalendarLab_SettingsDeepCopy(t *testing.T) {
 	assert.True(t, s2.VisibleCategories[CalCatMaintenance],
 		"mutating returned settings should not affect the lab")
 }
+
+func TestCalendarLab_SetMonth_ClearsSelection(t *testing.T) {
+	lab := NewCalendarLab()
+
+	// Select a day in April 2026.
+	lab.SelectDay(time.Date(2026, time.April, 15, 0, 0, 0, 0, time.UTC))
+	require.Equal(t, 15, lab.SelectedDay().Day())
+
+	// Navigate to May 2026 — selection should be cleared.
+	lab.SetMonth(2026, time.May)
+	assert.True(t, lab.SelectedDay().IsZero(),
+		"SetMonth should clear selection when it falls outside the new month")
+}
+
+func TestCalendarLab_SetMonth_KeepsSelectionInSameMonth(t *testing.T) {
+	lab := NewCalendarLab()
+	now := time.Now().UTC()
+
+	// Select a day in the current month.
+	lab.SelectDay(time.Date(now.Year(), now.Month(), 5, 0, 0, 0, 0, time.UTC))
+	require.False(t, lab.SelectedDay().IsZero())
+
+	// Navigate to the same month — selection should be preserved.
+	lab.SetMonth(now.Year(), now.Month())
+	assert.False(t, lab.SelectedDay().IsZero(),
+		"SetMonth should keep selection when it falls within the new month")
+}
+
+func TestCalendarLab_FilterEvents(t *testing.T) {
+	events := []CalendarEvent{
+		{ID: 1, Category: CalCatMaintenance, Assignee: "Jordan"},
+		{ID: 2, Category: CalCatAppointment, Assignee: "Maria"},
+		{ID: 3, Category: CalCatReminder, Assignee: "Jordan"},
+		{ID: 4, Category: CalCatDeadline, Assignee: "Sam"},
+	}
+
+	cats := map[CalendarEventCategory]bool{
+		CalCatMaintenance: true,
+		CalCatAppointment: true,
+		CalCatReminder:    true,
+		CalCatDeadline:    true,
+	}
+
+	t.Run("all visible no assignee filter", func(t *testing.T) {
+		settings := CalendarLabSettings{VisibleCategories: cats, Assignee: ""}
+		got := FilterEvents(events, settings)
+		assert.Len(t, got, 4)
+	})
+
+	t.Run("assignee filter", func(t *testing.T) {
+		settings := CalendarLabSettings{VisibleCategories: cats, Assignee: "Jordan"}
+		got := FilterEvents(events, settings)
+		assert.Len(t, got, 2)
+		for _, e := range got {
+			assert.Equal(t, "Jordan", e.Assignee)
+		}
+	})
+
+	t.Run("hidden category", func(t *testing.T) {
+		catsNoMaint := map[CalendarEventCategory]bool{
+			CalCatMaintenance: false,
+			CalCatAppointment: true,
+			CalCatReminder:    true,
+			CalCatDeadline:    true,
+		}
+		settings := CalendarLabSettings{VisibleCategories: catsNoMaint, Assignee: ""}
+		got := FilterEvents(events, settings)
+		assert.Len(t, got, 3)
+		for _, e := range got {
+			assert.NotEqual(t, CalCatMaintenance, e.Category)
+		}
+	})
+
+	t.Run("empty input", func(t *testing.T) {
+		settings := CalendarLabSettings{VisibleCategories: cats, Assignee: ""}
+		got := FilterEvents(nil, settings)
+		assert.Empty(t, got)
+	})
+}
+
+func TestCalendarLab_FilteredEventCount(t *testing.T) {
+	lab := NewCalendarLab()
+	now := time.Now().UTC()
+
+	// Add some events with specific assignees.
+	lab.Store.AddEvent(time.Date(now.Year(), now.Month(), 10, 0, 0, 0, 0, time.UTC), "J1", "Jordan", CalCatReminder)
+	lab.Store.AddEvent(time.Date(now.Year(), now.Month(), 11, 0, 0, 0, 0, time.UTC), "M1", "Maria", CalCatAppointment)
+
+	totalBefore := lab.EventCount()
+
+	// Filtered count with no filters should equal total.
+	assert.Equal(t, totalBefore, lab.FilteredEventCount())
+
+	// Filter to Jordan only.
+	lab.UpdateSettings(func(s *CalendarLabSettings) {
+		s.Assignee = "Jordan"
+	})
+	filtered := lab.FilteredEventCount()
+	assert.Less(t, filtered, totalBefore,
+		"filtering by assignee should reduce count below total")
+	assert.GreaterOrEqual(t, filtered, 1, "Jordan should have at least one event")
+}
+
+func TestCalendarLab_DayEventsMap(t *testing.T) {
+	lab := NewCalendarLab()
+	now := time.Now().UTC()
+
+	day10 := time.Date(now.Year(), now.Month(), 10, 0, 0, 0, 0, time.UTC)
+	day20 := time.Date(now.Year(), now.Month(), 20, 0, 0, 0, 0, time.UTC)
+	lab.Store.AddEvent(day10, "A", "Jordan", CalCatReminder)
+	lab.Store.AddEvent(day10, "B", "Maria", CalCatAppointment)
+	lab.Store.AddEvent(day20, "C", "Sam", CalCatDeadline)
+
+	m := lab.DayEventsMap()
+	assert.GreaterOrEqual(t, len(m[10]), 2, "day 10 should have at least 2 events")
+	assert.GreaterOrEqual(t, len(m[20]), 1, "day 20 should have at least 1 event")
+}

@@ -77,12 +77,17 @@ func (l *CalendarLab) Month() time.Month {
 	return l.month
 }
 
-// SetMonth changes the visible month/year.
+// SetMonth changes the visible month/year and clears the selected day if it
+// falls outside the new visible month.
 func (l *CalendarLab) SetMonth(year int, month time.Month) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.year = year
 	l.month = month
+	// Clear selection if it falls outside the new visible month.
+	if !l.selectedDay.IsZero() && (l.selectedDay.Year() != year || l.selectedDay.Month() != month) {
+		l.selectedDay = time.Time{}
+	}
 }
 
 // SelectedDay returns the currently selected day (zero if none).
@@ -202,4 +207,47 @@ func (l *CalendarLab) EventCount() int {
 	year, month := l.year, l.month
 	l.mu.RUnlock()
 	return len(l.Store.EventsForMonth(year, month))
+}
+
+// FilteredEventCount returns the number of events in the current visible month
+// that match the active visibility and assignee filters.
+func (l *CalendarLab) FilteredEventCount() int {
+	l.mu.RLock()
+	year, month := l.year, l.month
+	settings := l.settings
+	cats := make(map[CalendarEventCategory]bool, len(settings.VisibleCategories))
+	for k, v := range settings.VisibleCategories {
+		cats[k] = v
+	}
+	settings.VisibleCategories = cats
+	l.mu.RUnlock()
+	return len(FilterEvents(l.Store.EventsForMonth(year, month), settings))
+}
+
+// FilterEvents returns the subset of events that match the given settings'
+// visibility and assignee filters. It is a pure function safe to call from
+// any goroutine.
+func FilterEvents(events []CalendarEvent, settings CalendarLabSettings) []CalendarEvent {
+	out := events[:0:0]
+	for _, e := range events {
+		if settings.VisibleCategories[e.Category] && (settings.Assignee == "" || settings.Assignee == e.Assignee) {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+// DayEventsMap builds a map of day-of-month to event slice for the current
+// visible month. The returned map is safe to read (not share with writes).
+func (l *CalendarLab) DayEventsMap() map[int][]CalendarEvent {
+	l.mu.RLock()
+	year, month := l.year, l.month
+	l.mu.RUnlock()
+	events := l.Store.EventsForMonth(year, month)
+	m := make(map[int][]CalendarEvent)
+	for _, e := range events {
+		d := e.Date.Day()
+		m[d] = append(m[d], e)
+	}
+	return m
 }
