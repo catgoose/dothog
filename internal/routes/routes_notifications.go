@@ -171,22 +171,14 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 		return true
 	}
 
-	// Check for Last-Event-ID for replay.
-	// Both paths apply the same filterFn: SubscribeWith uses it natively at
-	// the broker level for live messages; SubscribeFromID doesn't support
-	// filters, so the encode function below re-applies it. Returning an
-	// empty string from the encoder skips a value without terminating the
-	// stream, so category preferences survive SSE reconnections.
+	// SubscribeFromIDWith composes resume with subscription options, so the
+	// category filter applies at the broker layer on both fresh and resumed
+	// connections. Category preferences now survive SSE reconnections from
+	// a single subscription path.
 	lastEventID := c.Request().Header.Get("Last-Event-ID")
-	var msgs <-chan string
-	var unsub func()
-	if lastEventID != "" {
-		msgs, unsub = n.broker.SubscribeFromID(userTopic, lastEventID)
-	} else {
-		msgs, unsub = n.broker.SubscribeWith(userTopic,
-			tavern.SubWithFilter(filterFn),
-		)
-	}
+	msgs, unsub := n.broker.SubscribeFromIDWith(userTopic, lastEventID,
+		tavern.SubWithFilter(filterFn),
+	)
 	defer unsub()
 
 	// Presence bookkeeping: refresh the tracker entry every 10s so the user
@@ -211,12 +203,7 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 		ctx,
 		c.Response(),
 		msgs,
-		func(msg string) string {
-			if !filterFn(msg) {
-				return ""
-			}
-			return msg
-		},
+		func(msg string) string { return msg },
 		tavern.WithStreamHeartbeat(10*time.Second),
 	)
 }

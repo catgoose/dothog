@@ -84,15 +84,11 @@ func (r *recoveryRoutes) handleSSE(c echo.Context) error {
 	lastEventID := c.Request().Header.Get("Last-Event-ID")
 	reconnect := lastEventID != ""
 
-	// Replay subscription: SubscribeFromID for reconnects, Subscribe otherwise.
-	// SubscribeFromID delivers any events newer than lastEventID.
-	var replayCh <-chan string
-	var replayUnsub func()
-	if reconnect {
-		replayCh, replayUnsub = r.broker.SubscribeFromID(topicRecoveryReplay, lastEventID)
-	} else {
-		replayCh, replayUnsub = r.broker.Subscribe(topicRecoveryReplay)
-	}
+	// Replay subscription: SubscribeFromIDWith handles both fresh and
+	// resumed connections in a single call. The snapshot and live legs
+	// below intentionally use different APIs because they exercise
+	// different recovery strategies on this multi-region demo.
+	replayCh, replayUnsub := r.broker.SubscribeFromIDWith(topicRecoveryReplay, lastEventID)
 	defer replayUnsub()
 
 	// Snapshot subscription: deliver the current snapshot atomically before

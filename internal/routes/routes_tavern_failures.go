@@ -63,21 +63,19 @@ func (r *failuresRoutes) handleSSE(c echo.Context) error {
 		lastEventID = c.QueryParam("resume")
 	}
 
-	var msgs <-chan string
-	var unsub func()
+	// SubscribeFromIDWith collapses the fresh-vs-resume branch into a
+	// single subscription path. The conditional snapshot frame describing
+	// the resume attempt only fires on the resume path, since fresh
+	// connections have nothing to explain.
+	msgs, unsub := r.broker.SubscribeFromIDWith(topicFailuresLive, lastEventID)
+	defer unsub()
+
 	var opts []tavern.StreamSSEOption
 	if lastEventID != "" {
-		msgs, unsub = r.broker.SubscribeFromID(topicFailuresLive, lastEventID)
-		// Tell the client how we interpreted the resume hint so the result
-		// panel can render it. WithStreamSnapshot writes this once before
-		// any channel values are streamed.
 		opts = append(opts, tavern.WithStreamSnapshot(func() string {
 			return resumeDescriptionFrame(lastEventID)
 		}))
-	} else {
-		msgs, unsub = r.broker.Subscribe(topicFailuresLive)
 	}
-	defer unsub()
 
 	return tavern.StreamSSE(
 		c.Request().Context(),

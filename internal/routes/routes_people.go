@@ -159,15 +159,11 @@ func (p *peopleRoutes) handlePersonSSE(c echo.Context) error {
 	p.broker.SetReplayPolicy(topic, 5)
 	p.broker.SetReplayGapPolicy(topic, tavern.GapFallbackToSnapshot, nil)
 
-	// Check for Last-Event-ID for replay on reconnect.
+	// SubscribeFromIDWith is resume-aware on both paths: a fresh connection
+	// (empty Last-Event-ID) behaves like SubscribeWith, and a non-empty
+	// Last-Event-ID replays from the ID-backed replay log after that ID.
 	lastEventID := c.Request().Header.Get("Last-Event-ID")
-	var ch <-chan string
-	var unsub func()
-	if lastEventID != "" {
-		ch, unsub = p.broker.SubscribeFromID(topic, lastEventID)
-	} else {
-		ch, unsub = p.broker.Subscribe(topic)
-	}
+	ch, unsub := p.broker.SubscribeFromIDWith(topic, lastEventID)
 	defer unsub()
 
 	return tavern.StreamSSE(
