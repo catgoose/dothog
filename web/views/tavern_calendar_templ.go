@@ -482,7 +482,7 @@ func CalendarLabDay(day time.Time, events []demo.CalendarEvent, settings demo.Ca
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</p></div><div class=\"space-y-1 max-h-64 overflow-y-auto\" style=\"contain:paint\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</p></div><div class=\"space-y-1 max-h-64 overflow-y-auto\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -664,7 +664,7 @@ func calLabAddEventForm(day time.Time) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "\"><div class=\"form-control\"><input type=\"text\" name=\"title\" placeholder=\"Event title\" class=\"input input-xs input-bordered w-full\" required></div><div class=\"flex items-center gap-2\"><select name=\"category\" class=\"select select-xs select-bordered flex-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "\"><div class=\"form-control\"><input type=\"text\" name=\"title\" placeholder=\"Event title\" class=\"input input-xs input-bordered w-full\" required></div><div class=\"grid grid-cols-[1fr_auto] gap-2\"><select name=\"category\" class=\"select select-xs select-bordered w-full\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

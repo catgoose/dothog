@@ -206,7 +206,7 @@ templ CalendarLabDay(day time.Time, events []demo.CalendarEvent, settings demo.C
 			<h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/50">{ day.Format("Mon Jan 2, 2006") }</h2>
 			<p class="text-xs text-base-content/40">{ fmt.Sprintf("%d event(s)", len(events)) }</p>
 		</div>
-		<div class="space-y-1 max-h-64 overflow-y-auto" style="contain:paint">
+		<div class="space-y-1 max-h-64 overflow-y-auto">
 			if len(events) == 0 {
 				<p class="text-xs text-base-content/30 py-2">No events on this day.</p>
 			} else {
@@ -258,8 +258,8 @@ templ calLabAddEventForm(day time.Time) {
 				required
 			/>
 		</div>
-		<div class="flex items-center gap-2">
-			<select name="category" class="select select-xs select-bordered flex-1">
+		<div class="grid grid-cols-[1fr_auto] gap-2">
+			<select name="category" class="select select-xs select-bordered w-full">
 				for _, cat := range demo.AllCalendarCategories {
 					<option value={ string(cat) }>{ string(cat) }</option>
 				}
