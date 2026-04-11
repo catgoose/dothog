@@ -89,6 +89,7 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:sse:end
 		// setup:feature:demo:start
 		<script defer src={ version.Asset("/public/js/tavern.min.js") }></script>
+		<script defer src={ version.Asset("/public/js/tavern-container.js") }></script>
 		// setup:feature:demo:end
 		<link rel="stylesheet" href={ version.Asset("/public/css/tailwind.css") } type="text/css"/>
 		<link rel="stylesheet" href={ version.Asset("/public/css/daisyui.css") } type="text/css"/>

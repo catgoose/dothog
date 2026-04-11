@@ -28,33 +28,13 @@ templ HotZoneLabPage(data HotZoneLabData) {
 			</p>
 		</div>
 
-		<script>
-			// Delegated command handler — Tavern.command() mode.
-			// Fires on buttons inside hot regions that would be destroyed by SSE swaps.
-			document.addEventListener('click', function(e) {
-				var btn = e.target.closest('[data-hz-command]');
-				if (!btn) return;
-				e.preventDefault();
-				var region = btn.dataset.hzCommand;
-				var mode = btn.dataset.hzMode || 'tavern-command';
-				if (mode === 'tavern-command') {
-					Tavern.command('/realtime/tavern/hotzones/command?region=' + region + '&mode=tavern-command');
-				} else {
-					// hx-post mode: use fetch so we can track failures from hot regions
-					fetch('/realtime/tavern/hotzones/command', {
-						method: 'POST',
-						headers: {'Content-Type':'application/x-www-form-urlencoded'},
-						body: 'region=' + region + '&mode=hx-post'
-					});
-				}
-			});
-		</script>
-
 		<div
 			id="hz-lab-container"
 			hx-ext="sse"
 			sse-connect="/sse/tavern/hotzones"
 			tavern-reconnecting-class="opacity-60"
+			tavern-command-delegate="pointerdown"
+			tavern-command-target="[command-url]"
 		>
 			<!-- SSE swap targets (hidden relay elements) -->
 			for _, reg := range data.Regions {
@@ -130,16 +110,14 @@ templ HotZoneRegionContent(region demo.HotZoneRegion, settings demo.HotZoneSetti
 			if settings.CommandMode == demo.HotZoneModeTavern {
 				<button
 					class="btn btn-xs btn-primary flex-1"
-					data-hz-command={ fmt.Sprintf("%d", region.ID) }
-					data-hz-mode="tavern-command"
+					command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=tavern-command", region.ID) }
 				>
 					Tavern.command()
 				</button>
 			} else {
 				<button
 					class="btn btn-xs btn-secondary flex-1"
-					data-hz-command={ fmt.Sprintf("%d", region.ID) }
-					data-hz-mode="hx-post"
+					command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=hx-post", region.ID) }
 				>
 					hx-post
 				</button>

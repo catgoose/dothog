@@ -46,7 +46,7 @@ func HotZoneLabPage(data HotZoneLabData) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"hz-lab-page\" class=\"max-w-[90rem] mx-auto p-4 space-y-3\"><div><h1 class=\"text-2xl font-bold\">Hot-Zone Lab</h1><p class=\"text-xs text-base-content/50\">Stress surface for SSE region churn and command delivery. Compare hx-post vs Tavern.command() under varying update frequencies. <a href=\"https://github.com/catgoose/dothog/issues/641\" class=\"link link-primary\" target=\"_blank\">#641</a></p></div><script>\n\t\t\t// Delegated command handler — Tavern.command() mode.\n\t\t\t// Fires on buttons inside hot regions that would be destroyed by SSE swaps.\n\t\t\tdocument.addEventListener('click', function(e) {\n\t\t\t\tvar btn = e.target.closest('[data-hz-command]');\n\t\t\t\tif (!btn) return;\n\t\t\t\te.preventDefault();\n\t\t\t\tvar region = btn.dataset.hzCommand;\n\t\t\t\tvar mode = btn.dataset.hzMode || 'tavern-command';\n\t\t\t\tif (mode === 'tavern-command') {\n\t\t\t\t\tTavern.command('/realtime/tavern/hotzones/command?region=' + region + '&mode=tavern-command');\n\t\t\t\t} else {\n\t\t\t\t\t// hx-post mode: use fetch so we can track failures from hot regions\n\t\t\t\t\tfetch('/realtime/tavern/hotzones/command', {\n\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\theaders: {'Content-Type':'application/x-www-form-urlencoded'},\n\t\t\t\t\t\tbody: 'region=' + region + '&mode=hx-post'\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t});\n\t\t</script><div id=\"hz-lab-container\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/hotzones\" tavern-reconnecting-class=\"opacity-60\"><!-- SSE swap targets (hidden relay elements) -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"hz-lab-page\" class=\"max-w-[90rem] mx-auto p-4 space-y-3\"><div><h1 class=\"text-2xl font-bold\">Hot-Zone Lab</h1><p class=\"text-xs text-base-content/50\">Stress surface for SSE region churn and command delivery. Compare hx-post vs Tavern.command() under varying update frequencies. <a href=\"https://github.com/catgoose/dothog/issues/641\" class=\"link link-primary\" target=\"_blank\">#641</a></p></div><div id=\"hz-lab-container\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/hotzones\" tavern-reconnecting-class=\"opacity-60\" tavern-command-delegate=\"pointerdown\" tavern-command-target=\"[command-url]\"><!-- SSE swap targets (hidden relay elements) -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -58,7 +58,7 @@ func HotZoneLabPage(data HotZoneLabData) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("hz-region-%d", reg.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 61, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 41, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -71,7 +71,7 @@ func HotZoneLabPage(data HotZoneLabData) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#hz-region-%d", reg.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 61, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 41, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -140,7 +140,7 @@ func HotZoneLabPage(data HotZoneLabData) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(reg.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 95, Col: 101}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 75, Col: 101}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -153,7 +153,7 @@ func HotZoneLabPage(data HotZoneLabData) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", reg.Counter))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 96, Col: 94}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 76, Col: 94}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -166,7 +166,7 @@ func HotZoneLabPage(data HotZoneLabData) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("hz-region-%d", reg.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 98, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 78, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -234,7 +234,7 @@ func HotZoneRegionContent(region demo.HotZoneRegion, settings demo.HotZoneSettin
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(payload)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 127, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 107, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -245,38 +245,38 @@ func HotZoneRegionContent(region demo.HotZoneRegion, settings demo.HotZoneSettin
 			return templ_7745c5c3_Err
 		}
 		if settings.CommandMode == demo.HotZoneModeTavern {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<button class=\"btn btn-xs btn-primary flex-1\" data-hz-command=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<button class=\"btn btn-xs btn-primary flex-1\" command-url=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", region.ID))
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=tavern-command", region.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 133, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 113, Col: 108}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" data-hz-mode=\"tavern-command\">Tavern.command()</button> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\">Tavern.command()</button> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<button class=\"btn btn-xs btn-secondary flex-1\" data-hz-command=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<button class=\"btn btn-xs btn-secondary flex-1\" command-url=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", region.ID))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=hx-post", region.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 141, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 120, Col: 101}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" data-hz-mode=\"hx-post\">hx-post</button> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">hx-post</button> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -289,7 +289,7 @@ func HotZoneRegionContent(region demo.HotZoneRegion, settings demo.HotZoneSettin
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(region.LastUpdate.Format("15:04:05"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 149, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 127, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -348,7 +348,7 @@ func HotZoneStats(settings demo.HotZoneSettings, stats [2]demo.HotZoneCommandSta
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%dms", settings.UpdateIntervalMS))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 169, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 147, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -361,7 +361,7 @@ func HotZoneStats(settings demo.HotZoneSettings, stats [2]demo.HotZoneCommandSta
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(string(settings.CommandMode))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 173, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 151, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -379,7 +379,7 @@ func HotZoneStats(settings demo.HotZoneSettings, stats [2]demo.HotZoneCommandSta
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(string(s.Mode))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 178, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 156, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -392,7 +392,7 @@ func HotZoneStats(settings demo.HotZoneSettings, stats [2]demo.HotZoneCommandSta
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", s.Sent))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 181, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 159, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -405,7 +405,7 @@ func HotZoneStats(settings demo.HotZoneSettings, stats [2]demo.HotZoneCommandSta
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", s.Succeeded))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 185, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 163, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -418,7 +418,7 @@ func HotZoneStats(settings demo.HotZoneSettings, stats [2]demo.HotZoneCommandSta
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", s.Failed))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 189, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 167, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -473,7 +473,7 @@ func HotZoneActivityLog(activity []demo.HotZoneActivity) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(activity[i].Timestamp.Format("15:04:05"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 203, Col: 103}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 181, Col: 103}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -486,7 +486,7 @@ func HotZoneActivityLog(activity []demo.HotZoneActivity) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(activity[i].Action)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 204, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 182, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -531,7 +531,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%dms", settings.UpdateIntervalMS))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 220, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 198, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -544,7 +544,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.UpdateIntervalMS))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 224, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 202, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -557,7 +557,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.RegionCount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 239, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 217, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -570,7 +570,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.RegionCount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 243, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 221, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -583,7 +583,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.PayloadSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 258, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 236, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -596,7 +596,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.PayloadSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 262, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 240, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -624,7 +624,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 288, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 266, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -647,7 +647,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Region %d", i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 288, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 266, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {

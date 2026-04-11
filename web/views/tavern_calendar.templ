@@ -34,38 +34,18 @@ templ TavernCalendarPage(data CalendarLabData) {
 		</div>
 
 		<script>
+			// Click-outside deselect: not a hot-region command, just a UI behavior.
 			function calLabDeselect(e) {
 				if (e.target.closest('#cal-lab-month') || e.target.closest('#cal-lab-day-events') || e.target.closest('.card-body')) return;
-				document.querySelectorAll('[data-cal-cell]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });
+				document.querySelectorAll('[command-url]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });
 				Tavern.command('/realtime/tavern/calendar/day/deselect');
 			}
-			// Delegated clicks — uses Tavern.command(), immune to SSE innerHTML
-			// swaps destroying the click target. All interactive elements inside
-			// hot regions use delegation + Tavern.command() instead of hx-post.
-			document.addEventListener('click', function(e) {
-				// Day cell selection
-				var cell = e.target.closest('[data-cal-cell]');
-				if (cell && cell.closest('#cal-lab-month')) {
-					e.stopPropagation();
-					document.querySelectorAll('[data-cal-cell]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });
-					cell.classList.add('ring-2', 'ring-accent');
-					Tavern.command('/realtime/tavern/calendar/day?d=' + cell.dataset.calCell);
-					return;
-				}
-				// Month navigation (prev/next)
-				var nav = e.target.closest('[data-cal-nav]');
-				if (nav) {
-					e.preventDefault();
-					Tavern.command('/realtime/tavern/calendar/month?dir=' + nav.dataset.calNav);
-					return;
-				}
-				// Delete event
-				var del = e.target.closest('[data-cal-delete]');
-				if (del) {
-					e.preventDefault();
-					Tavern.command('/realtime/tavern/calendar/event/delete?id=' + del.dataset.calDelete);
-					return;
-				}
+			// Optimistic day-cell highlight: applied immediately on pointerdown,
+			// before the server round-trip completes.
+			document.addEventListener('tavern:optimistic', function(e) {
+				if (e.detail.name !== 'calendar-select') return;
+				document.querySelectorAll('[command-url]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });
+				e.detail.target.classList.add('ring-2', 'ring-accent');
 			});
 		</script>
 
@@ -74,6 +54,8 @@ templ TavernCalendarPage(data CalendarLabData) {
 			hx-ext="sse"
 			sse-connect="/sse/tavern/calendar"
 			tavern-reconnecting-class="opacity-60"
+			tavern-command-delegate="pointerdown"
+			tavern-command-target="[command-url]"
 		>
 			<div sse-swap="cal-month" hx-target="#cal-lab-month" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 			<div sse-swap="cal-day" hx-target="#cal-lab-day-events" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
@@ -132,7 +114,7 @@ templ CalendarLabMonth(data CalendarMonthData, settings demo.CalendarLabSettings
 		<div class="flex items-center justify-between gap-2">
 			<button
 				class="btn btn-xs btn-ghost"
-				data-cal-nav="prev"
+				command-url="/realtime/tavern/calendar/month?dir=prev"
 				aria-label="previous month"
 			>
 				&#9664;
@@ -140,7 +122,7 @@ templ CalendarLabMonth(data CalendarMonthData, settings demo.CalendarLabSettings
 			<h2 class="text-base font-semibold tabular-nums">{ fmt.Sprintf("%s %d", data.Month.String(), data.Year) }</h2>
 			<button
 				class="btn btn-xs btn-ghost"
-				data-cal-nav="next"
+				command-url="/realtime/tavern/calendar/month?dir=next"
 				aria-label="next month"
 			>
 				&#9654;
@@ -216,7 +198,8 @@ templ calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.Ca
 	<button
 		type="button"
 		class={ calLabCellClass(inMonth, isToday, isSelected, isWeekend && settings.HighlightWeekends, settings.CompactMode) }
-		data-cal-cell={ dateStr }
+		command-url={ "/realtime/tavern/calendar/day?d=" + dateStr }
+		tavern-command-optimistic="calendar-select"
 	>
 		<span class="text-xs tabular-nums">{ fmt.Sprintf("%d", cellDate.Day()) }</span>
 		if inMonth && settings.Density <= 2 {
@@ -372,7 +355,7 @@ templ calLabEventRow(e demo.CalendarEvent, day time.Time) {
 		</div>
 		<button
 			class="btn btn-ghost btn-xs"
-			data-cal-delete={ fmt.Sprintf("%d", e.ID) }
+			command-url={ fmt.Sprintf("/realtime/tavern/calendar/event/delete?id=%d", e.ID) }
 			aria-label="remove event"
 		>
 			&times;
