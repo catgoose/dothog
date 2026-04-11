@@ -20,8 +20,8 @@ templ ToastLabPage(data ToastLabData) {
 		<div>
 			<h1 class="text-2xl font-bold">Toast Lab</h1>
 			<p class="text-xs text-base-content/50">
-				Tavern-js lifecycle event gallery. Primary toasts come from Tavern-js DOM events
-				(disconnect, reconnect, replay gap, scope changes). App-signal toasts are secondary.
+				Tavern-js event gallery. Trigger lifecycle events to see how they map to client toasts.
+				Real events from the SSE connection work the same way.
 			</p>
 		</div>
 
@@ -33,30 +33,17 @@ templ ToastLabPage(data ToastLabData) {
 			tavern-stale-class="opacity-40"
 			tavern-live-class=""
 		>
-			<div tavern-status-recovering class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
-				<span>&#9888;</span> Reconnecting&hellip;
-			</div>
-			<div tavern-status-stale class="hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2">
-				<span>&#9888;</span> Connection lost — data may be stale.
-			</div>
-
-			<!-- SSE swap targets -->
+			<!-- SSE swap targets (stats + log only — toasts are event-driven) -->
 			<div sse-swap="toast-event" hx-target="#toast-event-sink" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 			<div sse-swap="toast-stats" hx-target="#toast-lab-stats" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 			<div sse-swap="toast-log" hx-target="#toast-lab-log" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 
 			<div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
-				<!-- Left rail: controls + stats -->
+				<!-- Left: event triggers -->
 				<div class="lg:col-span-3 space-y-3">
-					@toastLabControls(data.Settings, data.Paused)
-					<div class="card bg-base-200 shadow-sm">
-						<div class="card-body p-3 space-y-1">
-							<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Stats</h2>
-							<div id="toast-lab-stats">
-								@ToastLabStatsFragment(data.Settings, data.Stats, data.Paused)
-							</div>
-						</div>
-					</div>
+					@toastLabEventTriggers()
+					@toastLabPresets()
+					@toastLabAppSignals(data.Settings, data.Paused)
 				</div>
 
 				<!-- Center: toast stage -->
@@ -67,40 +54,29 @@ templ ToastLabPage(data ToastLabData) {
 								<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Live Toasts</h2>
 								<span class="text-xs text-base-content/40 font-mono" id="toast-count">0</span>
 							</div>
-							<!-- Hidden sink for app-signal toasts via SSE -->
 							<div id="toast-event-sink" class="hidden"></div>
-							<!-- Client-rendered toast stack -->
-							<div id="toast-stack" class="space-y-2 min-h-[24rem]" data-max-stack={ fmt.Sprintf("%d", data.Settings.StackSize) }>
-								<p class="text-xs text-base-content/30 py-4 text-center" id="toast-empty">Waiting for events&hellip;</p>
+							<div id="toast-stack" class="space-y-2 min-h-[28rem]" data-max-stack={ fmt.Sprintf("%d", data.Settings.StackSize) }>
+								<p class="text-xs text-base-content/30 py-4 text-center" id="toast-empty">Trigger an event to see its toast.</p>
 							</div>
 						</div>
 					</div>
 				</div>
 
-				<!-- Right rail: event inspector -->
+				<!-- Right: reference + inspector -->
 				<div class="lg:col-span-4 space-y-3">
-					<!-- Event counters -->
+					@toastLabEventReference()
 					<div class="card bg-base-200 shadow-sm">
 						<div class="card-body p-3 space-y-1">
-							<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Tavern-js Events</h2>
-							<div id="toast-event-counters" class="space-y-0.5 text-xs font-mono">
-								<div class="flex justify-between"><span class="text-base-content/50">disconnected</span><span id="cnt-disconnected">0</span></div>
-								<div class="flex justify-between"><span class="text-base-content/50">reconnected</span><span id="cnt-reconnected">0</span></div>
-								<div class="flex justify-between"><span class="text-base-content/50">replay-gap</span><span id="cnt-replay-gap">0</span></div>
-								<div class="flex justify-between"><span class="text-base-content/50">transport-open</span><span id="cnt-transport-open">0</span></div>
-								<div class="flex justify-between"><span class="text-base-content/50">topics-changed</span><span id="cnt-topics-changed">0</span></div>
-								<div class="flex justify-between"><span class="text-base-content/50">live</span><span id="cnt-live">0</span></div>
-								<div class="flex justify-between"><span class="text-base-content/50">recovering</span><span id="cnt-recovering">0</span></div>
-								<div class="flex justify-between"><span class="text-base-content/50">stale</span><span id="cnt-stale">0</span></div>
-								<div class="flex justify-between text-base-content/30"><span>app-signal</span><span id="cnt-app-signal">0</span></div>
+							<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Stats</h2>
+							<div id="toast-lab-stats">
+								@ToastLabStatsFragment(data.Settings, data.Stats, data.Paused)
 							</div>
 						</div>
 					</div>
-					<!-- Lifecycle log -->
 					<div class="card bg-base-200 shadow-sm">
 						<div class="card-body p-3 space-y-1">
-							<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Lifecycle Log</h2>
-							<div id="toast-lab-log" class="max-h-[20rem] overflow-y-auto overflow-x-hidden text-xs font-mono space-y-0.5" style="contain:paint">
+							<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Log</h2>
+							<div id="toast-lab-log" class="max-h-40 overflow-y-auto overflow-x-hidden text-xs font-mono space-y-0.5" style="contain:paint">
 								@ToastLabLogEntries(data.Log)
 							</div>
 						</div>
@@ -119,19 +95,42 @@ templ ToastLabPage(data ToastLabData) {
 			var emptyEl = document.getElementById('toast-empty');
 			var maxStack = parseInt(stack.dataset.maxStack) || 8;
 
-			var severityMap = {
+			// --- Event catalog: name -> { severity, meaning, sticky } ---
+			var catalog = {
+				'tavern:disconnected':       { sev: 'warning', meaning: 'Browser lost the SSE connection.', sticky: true },
+				'tavern:recovering':         { sev: 'warning', meaning: 'Transport reopened, catching up on missed events.', sticky: false },
+				'tavern:reconnected':        { sev: 'success', meaning: 'SSE connection restored after interruption.', sticky: false },
+				'tavern:live':               { sev: 'success', meaning: 'Region is receiving live data.', sticky: false },
+				'tavern:stale':              { sev: 'error',   meaning: 'Connection failed — displayed data may be outdated.', sticky: true },
+				'tavern:transport-open':     { sev: 'info',    meaning: 'Underlying EventSource transport opened (awaiting server confirmation).', sticky: false },
+				'tavern:replay-gap':         { sev: 'error',   meaning: 'Replay buffer could not satisfy Last-Event-ID. Some events were missed.', sticky: true },
+				'tavern:topics-changed':     { sev: 'info',    meaning: 'Server updated the set of active topics on this connection.', sticky: false },
+				'tavern:stream-warming':     { sev: 'info',    meaning: 'Scoped stream connecting, not yet confirmed by server.', sticky: false },
+				'tavern:stream-ready':       { sev: 'success', meaning: 'Scoped stream confirmed and receiving events.', sticky: false },
+				'tavern:stream-fallback':    { sev: 'warning', meaning: 'Scoped stream lost, falling back to lifeline.', sticky: false },
+				'tavern:stream-promoted':    { sev: 'success', meaning: 'Scoped stream promoted to active delivery.', sticky: false },
+				'tavern:stream-retired':     { sev: 'info',    meaning: 'Scoped stream retired, no longer active.', sticky: false },
+				'tavern:policy-activated':   { sev: 'info',    meaning: 'Hot-region insulation is temporarily deferring SSE updates.', sticky: false },
+				'tavern:policy-deactivated': { sev: 'info',    meaning: 'Hot-region insulation released, queued updates flushed.', sticky: false },
+				'tavern:command-sent':       { sev: 'info',    meaning: 'Delegated command POST dispatched to server.', sticky: false },
+				'tavern:command-success':    { sev: 'success', meaning: 'Delegated command completed successfully.', sticky: false },
+				'tavern:command-error':      { sev: 'error',   meaning: 'Delegated command request failed.', sticky: true }
+			};
+
+			var severityClass = {
 				success: 'alert-success',
 				info: 'alert-info',
 				warning: 'alert-warning',
 				error: 'alert-error'
 			};
 
-			// Event counters
+			// --- Counters ---
 			var counters = {};
 			function incrCounter(name) {
-				counters[name] = (counters[name] || 0) + 1;
-				var el = document.getElementById('cnt-' + name);
-				if (el) el.textContent = counters[name];
+				var key = name.replace('tavern:', '');
+				counters[key] = (counters[key] || 0) + 1;
+				var el = document.getElementById('cnt-' + key);
+				if (el) el.textContent = counters[key];
 			}
 
 			function reportLifecycle(action) {
@@ -144,9 +143,8 @@ templ ToastLabPage(data ToastLabData) {
 				if (emptyEl) emptyEl.style.display = n > 0 ? 'none' : '';
 			}
 
-			// Render a toast into the stack.
-			// source: "tavern-js" or "app"
-			function addToast(severity, title, detail, source, sticky) {
+			// --- Toast renderer ---
+			function addToast(eventName, detail, source) {
 				if (emptyEl) emptyEl.style.display = 'none';
 
 				var items = stack.querySelectorAll('.toast-item');
@@ -156,34 +154,35 @@ templ ToastLabPage(data ToastLabData) {
 					items = stack.querySelectorAll('.toast-item');
 				}
 
+				var entry = catalog[eventName] || { sev: 'info', meaning: '', sticky: false };
 				var el = document.createElement('div');
-				el.className = 'toast-item alert ' + (severityMap[severity] || 'alert-info') + ' py-2 px-3 text-sm shadow-sm flex items-start gap-2';
+				el.className = 'toast-item alert ' + (severityClass[entry.sev] || 'alert-info') + ' py-2 px-3 text-sm shadow-sm flex items-start gap-2';
 
 				var badge = document.createElement('span');
-				badge.className = 'badge badge-xs shrink-0 ' + (source === 'tavern-js' ? 'badge-primary' : 'badge-ghost');
-				badge.textContent = source;
+				badge.className = 'badge badge-xs shrink-0 ' + (source === 'app' ? 'badge-ghost' : 'badge-primary');
+				badge.textContent = source || 'tavern-js';
 
 				var body = document.createElement('div');
 				body.className = 'flex-1 min-w-0';
-				var titleEl = document.createElement('div');
-				titleEl.className = 'font-semibold text-xs';
-				titleEl.textContent = title;
-				body.appendChild(titleEl);
+				var title = document.createElement('div');
+				title.className = 'font-semibold text-xs font-mono';
+				title.textContent = eventName;
+				body.appendChild(title);
+				var meaning = document.createElement('div');
+				meaning.className = 'text-xs opacity-80';
+				meaning.textContent = entry.meaning;
+				body.appendChild(meaning);
 				if (detail) {
 					var detailEl = document.createElement('div');
-					detailEl.className = 'text-xs opacity-70 truncate';
-					detailEl.textContent = detail;
+					detailEl.className = 'text-[0.65rem] opacity-50 font-mono truncate mt-0.5';
+					detailEl.textContent = typeof detail === 'string' ? detail : JSON.stringify(detail);
 					body.appendChild(detailEl);
 				}
 
 				var dismiss = document.createElement('button');
 				dismiss.className = 'btn btn-ghost btn-xs shrink-0';
 				dismiss.innerHTML = '&times;';
-				dismiss.onclick = function() {
-					el.remove();
-					updateCount();
-					reportLifecycle('dismissed');
-				};
+				dismiss.onclick = function() { el.remove(); updateCount(); reportLifecycle('dismissed'); };
 
 				el.appendChild(badge);
 				el.appendChild(body);
@@ -192,71 +191,35 @@ templ ToastLabPage(data ToastLabData) {
 				updateCount();
 				reportLifecycle('displayed');
 
-				if (!sticky) {
-					var dur = parseInt(stack.dataset.dismissMs) || 5000;
+				if (!entry.sticky) {
 					setTimeout(function() {
-						if (el.parentNode) {
-							el.remove();
-							updateCount();
-							reportLifecycle('dismissed');
-						}
-					}, dur);
+						if (el.parentNode) { el.remove(); updateCount(); reportLifecycle('dismissed'); }
+					}, 5000);
 				}
 			}
 
-			// --- Tavern-js lifecycle event listeners (primary toast source) ---
+			// --- Dispatch helper for trigger buttons ---
+			window.dispatchDemoEvent = function(name, detail) {
+				container.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: detail || {} }));
+			};
 
-			container.addEventListener('tavern:disconnected', function() {
-				incrCounter('disconnected');
-				addToast('warning', 'Disconnected', 'SSE connection lost', 'tavern-js', true);
-			});
-
-			container.addEventListener('tavern:reconnected', function() {
-				incrCounter('reconnected');
-				// Dismiss any sticky disconnect toasts
-				stack.querySelectorAll('.toast-item').forEach(function(el) {
-					if (el.querySelector('.font-semibold') && el.querySelector('.font-semibold').textContent === 'Disconnected') {
-						el.remove();
-					}
+			// --- Preset runner ---
+			window.runScenario = function(steps) {
+				steps.forEach(function(step, i) {
+					setTimeout(function() { dispatchDemoEvent(step[0], step[1]); }, i * 800);
 				});
-				addToast('success', 'Reconnected', 'SSE connection restored', 'tavern-js', false);
-				updateCount();
-			});
+			};
 
-			container.addEventListener('tavern:replay-gap', function(e) {
-				incrCounter('replay-gap');
-				var detail = e.detail && e.detail.lastEventId ? 'Last ID: ' + e.detail.lastEventId : 'Events were missed during disconnection';
-				addToast('error', 'Replay Gap', detail, 'tavern-js', true);
-			});
-
-			container.addEventListener('tavern:transport-open', function() {
-				incrCounter('transport-open');
-				// Log but don't toast — too noisy
-			});
-
-			container.addEventListener('tavern:topics-changed', function(e) {
-				incrCounter('topics-changed');
-				var detail = e.detail ? JSON.stringify(e.detail) : 'Topics updated';
-				addToast('info', 'Topics Changed', detail, 'tavern-js', false);
-			});
-
-			container.addEventListener('tavern:live', function() {
-				incrCounter('live');
-				addToast('success', 'Live', 'Region is receiving live data', 'tavern-js', false);
-			});
-
-			container.addEventListener('tavern:recovering', function() {
-				incrCounter('recovering');
-				addToast('warning', 'Recovering', 'Replaying missed events', 'tavern-js', false);
-			});
-
-			container.addEventListener('tavern:stale', function() {
-				incrCounter('stale');
-				addToast('error', 'Stale', 'Connection failed — displayed data may be outdated', 'tavern-js', true);
+			// --- Listen to ALL catalog events on the container ---
+			Object.keys(catalog).forEach(function(name) {
+				container.addEventListener(name, function(e) {
+					incrCounter(name);
+					var detail = e.detail && Object.keys(e.detail).length > 0 ? e.detail : null;
+					addToast(name, detail, 'tavern-js');
+				});
 			});
 
 			// --- App-signal toasts (secondary, from SSE JSON payloads) ---
-
 			var observer = new MutationObserver(function() {
 				var raw = sink.textContent.trim();
 				if (!raw) return;
@@ -264,20 +227,160 @@ templ ToastLabPage(data ToastLabData) {
 				try {
 					var evt = JSON.parse(raw);
 					incrCounter('app-signal');
-					addToast(evt.severity || 'info', evt.title, evt.body + ' — ' + evt.source, 'app', evt.sticky);
-				} catch(e) {
-					console.warn('[toast-lab] parse error:', e);
-				}
+					addToast('app:' + (evt.severity || 'info'), evt.title + ' — ' + evt.source, 'app');
+				} catch(e) { /* ignore */ }
 			});
 			observer.observe(sink, { childList: true, characterData: true, subtree: true });
 
-			// Update max stack when settings change
 			document.addEventListener('htmx:afterSettle', function() {
 				var newMax = parseInt(stack.dataset.maxStack);
 				if (newMax && newMax !== maxStack) maxStack = newMax;
 			});
 		})();
 	</script>
+}
+
+// toastLabEventTriggers renders grouped event trigger buttons.
+templ toastLabEventTriggers() {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body p-3 space-y-2">
+			<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Event Triggers</h2>
+
+			<div class="space-y-1">
+				<span class="text-[0.65rem] text-base-content/40 uppercase">Connection</span>
+				<div class="flex flex-wrap gap-1">
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:disconnected')">disconnected</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:recovering')">recovering</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:reconnected')">reconnected</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:live')">live</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:stale')">stale</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:transport-open')">transport-open</button>
+				</div>
+			</div>
+
+			<div class="space-y-1">
+				<span class="text-[0.65rem] text-base-content/40 uppercase">Replay</span>
+				<div class="flex flex-wrap gap-1">
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:replay-gap', {lastEventId:'evt-42'})">replay-gap</button>
+				</div>
+			</div>
+
+			<div class="space-y-1">
+				<span class="text-[0.65rem] text-base-content/40 uppercase">Topics / Scopes</span>
+				<div class="flex flex-wrap gap-1">
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:topics-changed')">topics-changed</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:stream-warming')">stream-warming</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:stream-ready')">stream-ready</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:stream-fallback')">stream-fallback</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:stream-promoted')">stream-promoted</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:stream-retired')">stream-retired</button>
+				</div>
+			</div>
+
+			<div class="space-y-1">
+				<span class="text-[0.65rem] text-base-content/40 uppercase">Hot Policy</span>
+				<div class="flex flex-wrap gap-1">
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:policy-activated', {policy:'pause-on-pointerdown'})">activated</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:policy-deactivated', {flushed:3})">deactivated</button>
+				</div>
+			</div>
+
+			<div class="space-y-1">
+				<span class="text-[0.65rem] text-base-content/40 uppercase">Commands</span>
+				<div class="flex flex-wrap gap-1">
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:command-sent', {url:'/api/action'})">sent</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:command-success', {url:'/api/action'})">success</button>
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:command-error', {url:'/api/action', error:'500'})">error</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// toastLabPresets renders one-click scenario buttons.
+templ toastLabPresets() {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body p-3 space-y-2">
+			<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Presets</h2>
+			<div class="space-y-1">
+				<button class="btn btn-xs btn-outline w-full" onclick="runScenario([['tavern:disconnected'],['tavern:recovering'],['tavern:reconnected'],['tavern:live']])">
+					Reconnect Cycle
+				</button>
+				<button class="btn btn-xs btn-outline w-full" onclick="runScenario([['tavern:disconnected'],['tavern:transport-open'],['tavern:replay-gap',{lastEventId:'evt-99'}],['tavern:stale']])">
+					Replay Gap
+				</button>
+				<button class="btn btn-xs btn-outline w-full" onclick="runScenario([['tavern:stream-warming',{scope:'notifications'}],['tavern:stream-ready',{scope:'notifications'}],['tavern:stream-fallback',{scope:'notifications'}],['tavern:stream-promoted',{scope:'notifications'}]])">
+					Scoped Fallback
+				</button>
+				<button class="btn btn-xs btn-outline w-full" onclick="runScenario([['tavern:policy-activated',{policy:'pause-on-pointerdown'}],['tavern:command-sent',{url:'/api/save'}],['tavern:command-success',{url:'/api/save'}],['tavern:policy-deactivated',{flushed:2}]])">
+					Hot Policy Cycle
+				</button>
+			</div>
+		</div>
+	</div>
+}
+
+// toastLabAppSignals renders the simplified app-signal controls.
+templ toastLabAppSignals(settings demo.ToastLabSettings, paused bool) {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body p-3 space-y-2">
+			<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">App Signals</h2>
+			<p class="text-[0.65rem] text-base-content/40">Server-generated toasts (secondary).</p>
+			<div class="flex flex-wrap gap-1">
+				for _, sev := range demo.AllToastSeverities {
+					<button class="btn btn-xs btn-outline flex-1" hx-post={ "/realtime/tavern/toasts/emit?severity=" + string(sev) } hx-swap="none">{ string(sev) }</button>
+				}
+			</div>
+			<div class="flex gap-1">
+				<button class="btn btn-xs btn-warning flex-1" hx-post="/realtime/tavern/toasts/burst" hx-swap="none">Burst</button>
+				<button class="btn btn-xs btn-outline flex-1" hx-post="/realtime/tavern/toasts/pause" hx-swap="none">
+					if paused {
+						Resume
+					} else {
+						Pause
+					}
+				</button>
+				<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/toasts/reset" hx-swap="none">Reset</button>
+			</div>
+		</div>
+	</div>
+}
+
+// toastLabEventReference renders the event catalog reference panel.
+templ toastLabEventReference() {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body p-3 space-y-1">
+			<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Event Reference</h2>
+			<div class="max-h-48 overflow-y-auto space-y-1 text-xs">
+				@toastLabRefEntry("tavern:disconnected", "lifecycle", "Browser lost the SSE connection.")
+				@toastLabRefEntry("tavern:recovering", "lifecycle", "Transport reopened, catching up on missed events.")
+				@toastLabRefEntry("tavern:reconnected", "lifecycle", "SSE connection restored after interruption.")
+				@toastLabRefEntry("tavern:live", "lifecycle", "Region is receiving live data.")
+				@toastLabRefEntry("tavern:stale", "lifecycle", "Connection failed — data may be outdated.")
+				@toastLabRefEntry("tavern:transport-open", "lifecycle", "EventSource transport opened.")
+				@toastLabRefEntry("tavern:replay-gap", "lifecycle", "Replay buffer could not satisfy Last-Event-ID.")
+				@toastLabRefEntry("tavern:topics-changed", "lifecycle", "Server updated the active topic set.")
+				@toastLabRefEntry("tavern:stream-warming", "scoped", "Scoped stream connecting.")
+				@toastLabRefEntry("tavern:stream-ready", "scoped", "Scoped stream confirmed.")
+				@toastLabRefEntry("tavern:stream-fallback", "scoped", "Scoped stream lost, falling back.")
+				@toastLabRefEntry("tavern:stream-promoted", "scoped", "Scoped stream promoted to active.")
+				@toastLabRefEntry("tavern:stream-retired", "scoped", "Scoped stream retired.")
+				@toastLabRefEntry("tavern:policy-activated", "hot-policy", "Deferring updates during interaction.")
+				@toastLabRefEntry("tavern:policy-deactivated", "hot-policy", "Insulation released, queue flushed.")
+				@toastLabRefEntry("tavern:command-sent", "command", "Delegated command dispatched.")
+				@toastLabRefEntry("tavern:command-success", "command", "Command completed.")
+				@toastLabRefEntry("tavern:command-error", "command", "Command request failed.")
+			</div>
+		</div>
+	</div>
+}
+
+templ toastLabRefEntry(name string, category string, meaning string) {
+	<div class="flex items-start gap-2 py-0.5 border-b border-base-300/30 last:border-0">
+		<span class="font-mono text-primary shrink-0">{ name }</span>
+		<span class="badge badge-xs badge-ghost shrink-0">{ category }</span>
+		<span class="text-base-content/60">{ meaning }</span>
+	</div>
 }
 
 // ToastLabStatsFragment renders the stats region.
@@ -290,14 +393,6 @@ templ ToastLabStatsFragment(settings demo.ToastLabSettings, stats demo.ToastLabS
 			} else {
 				<span class="badge badge-xs badge-success">running</span>
 			}
-		</div>
-		<div class="flex justify-between">
-			<span class="text-base-content/60">Rate</span>
-			<span class="font-mono tabular-nums">{ fmt.Sprintf("%dms", settings.RateMS) }</span>
-		</div>
-		<div class="flex justify-between">
-			<span class="text-base-content/60">Mix</span>
-			<span class="font-mono">{ string(settings.SeverityMix) }</span>
 		</div>
 		<div class="divider my-1"></div>
 		<div class="flex justify-between">
@@ -331,169 +426,4 @@ templ ToastLabLogEntries(log []demo.ToastLabLogEntry) {
 			</div>
 		}
 	}
-}
-
-// toastLabControls renders the operator control panel.
-templ toastLabControls(settings demo.ToastLabSettings, paused bool) {
-	<div class="card bg-base-200 shadow-sm">
-		<div class="card-body p-3 space-y-2">
-			<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Controls</h2>
-
-			<!-- Rate slider -->
-			<div class="form-control">
-				<label class="label py-0">
-					<span class="label-text text-xs">Sim rate</span>
-					<span class="label-text-alt text-xs font-mono" id="toast-rate-val">{ fmt.Sprintf("%dms", settings.RateMS) }</span>
-				</label>
-				<input
-					type="range" min="100" max="5000" step="100"
-					value={ fmt.Sprintf("%d", settings.RateMS) }
-					class="range range-xs range-primary"
-					name="rate_ms"
-					hx-post="/realtime/tavern/toasts/controls"
-					hx-trigger="change"
-					hx-swap="none"
-					hx-include="closest .card-body"
-					oninput="document.getElementById('toast-rate-val').textContent=this.value+'ms'"
-				/>
-			</div>
-
-			<!-- Dismiss duration slider -->
-			<div class="form-control">
-				<label class="label py-0">
-					<span class="label-text text-xs">Auto-dismiss</span>
-					<span class="label-text-alt text-xs font-mono" id="toast-dismiss-val">{ fmt.Sprintf("%ds", settings.DismissDurMS/1000) }</span>
-				</label>
-				<input
-					type="range" min="1000" max="30000" step="1000"
-					value={ fmt.Sprintf("%d", settings.DismissDurMS) }
-					class="range range-xs range-secondary"
-					name="dismiss_dur"
-					hx-post="/realtime/tavern/toasts/controls"
-					hx-trigger="change"
-					hx-swap="none"
-					hx-include="closest .card-body"
-					oninput="document.getElementById('toast-dismiss-val').textContent=Math.round(this.value/1000)+'s'"
-				/>
-			</div>
-
-			<!-- Stack size slider -->
-			<div class="form-control">
-				<label class="label py-0">
-					<span class="label-text text-xs">Stack size</span>
-					<span class="label-text-alt text-xs font-mono" id="toast-stack-val">{ fmt.Sprintf("%d", settings.StackSize) }</span>
-				</label>
-				<input
-					type="range" min="3" max="20"
-					value={ fmt.Sprintf("%d", settings.StackSize) }
-					class="range range-xs range-accent"
-					name="stack_size"
-					hx-post="/realtime/tavern/toasts/controls"
-					hx-trigger="change"
-					hx-swap="none"
-					hx-include="closest .card-body"
-					oninput="document.getElementById('toast-stack-val').textContent=this.value"
-				/>
-			</div>
-
-			<!-- Burst size slider -->
-			<div class="form-control">
-				<label class="label py-0">
-					<span class="label-text text-xs">Burst size</span>
-					<span class="label-text-alt text-xs font-mono" id="toast-burst-val">{ fmt.Sprintf("%d", settings.BurstSize) }</span>
-				</label>
-				<input
-					type="range" min="1" max="10"
-					value={ fmt.Sprintf("%d", settings.BurstSize) }
-					class="range range-xs range-warning"
-					name="burst_size"
-					hx-post="/realtime/tavern/toasts/controls"
-					hx-trigger="change"
-					hx-swap="none"
-					hx-include="closest .card-body"
-					oninput="document.getElementById('toast-burst-val').textContent=this.value"
-				/>
-			</div>
-
-			<!-- Severity mix -->
-			<div class="form-control">
-				<label class="label py-0">
-					<span class="label-text text-xs">Severity mix</span>
-				</label>
-				<select
-					name="severity_mix"
-					class="select select-sm select-bordered w-full"
-					hx-post="/realtime/tavern/toasts/controls"
-					hx-trigger="change"
-					hx-swap="none"
-					hx-include="closest .card-body"
-				>
-					<option value="balanced" selected?={ settings.SeverityMix == demo.ToastMixBalanced }>Balanced</option>
-					<option value="warning-heavy" selected?={ settings.SeverityMix == demo.ToastMixWarningHeavy }>Warning-heavy</option>
-					<option value="error-heavy" selected?={ settings.SeverityMix == demo.ToastMixErrorHeavy }>Error-heavy</option>
-					<option value="success-only" selected?={ settings.SeverityMix == demo.ToastMixSuccessOnly }>Success only</option>
-				</select>
-			</div>
-
-			<!-- Replay toggle -->
-			<label class="label cursor-pointer gap-2 py-0">
-				<span class="label-text text-xs">Replay on reconnect</span>
-				<input
-					type="checkbox"
-					name="replay_recent"
-					class="toggle toggle-xs toggle-primary"
-					checked?={ settings.ReplayRecent }
-					hx-post="/realtime/tavern/toasts/controls"
-					hx-trigger="change"
-					hx-swap="none"
-					hx-include="closest .card-body"
-				/>
-			</label>
-
-			<!-- Manual emit buttons (app signals) -->
-			<div class="space-y-1">
-				<span class="text-xs text-base-content/60">App Signals</span>
-				<div class="flex flex-wrap gap-1">
-					for _, sev := range demo.AllToastSeverities {
-						<button
-							class="btn btn-xs btn-outline flex-1"
-							hx-post={ "/realtime/tavern/toasts/emit?severity=" + string(sev) }
-							hx-swap="none"
-						>
-							{ string(sev) }
-						</button>
-					}
-				</div>
-			</div>
-
-			<!-- Burst + Pause -->
-			<div class="flex gap-1">
-				<button
-					class="btn btn-xs btn-warning flex-1"
-					hx-post="/realtime/tavern/toasts/burst"
-					hx-swap="none"
-				>
-					Burst
-				</button>
-				<button
-					class="btn btn-xs btn-outline flex-1"
-					hx-post="/realtime/tavern/toasts/pause"
-					hx-swap="none"
-				>
-					if paused {
-						Resume
-					} else {
-						Pause
-					}
-				</button>
-				<button
-					class="btn btn-xs btn-outline btn-error"
-					hx-post="/realtime/tavern/toasts/reset"
-					hx-swap="none"
-				>
-					Reset
-				</button>
-			</div>
-		</div>
-	</div>
 }
