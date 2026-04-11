@@ -153,7 +153,7 @@ github.com/catgoose/crooner
 # github.com/catgoose/dorman v0.1.15
 ## explicit; go 1.26.2
 github.com/catgoose/dorman
-# github.com/catgoose/linkwell v0.2.29
+# github.com/catgoose/linkwell v0.2.30
 ## explicit; go 1.26.2
 github.com/catgoose/linkwell
 # github.com/catgoose/promolog v0.2.27

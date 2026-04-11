@@ -77,8 +77,8 @@ github.com/catgoose/crooner v1.4.16 h1:XiIMEhOMiQvIrX2bfWfDRLrfWNQuWrdmnFp1aO8Fz
 github.com/catgoose/crooner v1.4.16/go.mod h1:D1o/6PwAmHNA/pi1fiCGCBBL2PhFlQwxBaLqvuZl9qM=
 github.com/catgoose/dorman v0.1.15 h1:i03VmZdUvumYrzXHy3TmaV+pVRIRetJR19vYTBzxG7A=
 github.com/catgoose/dorman v0.1.15/go.mod h1:RpA+QcMI9k12FPUkkbjBAdHL919x6JW+1GzQnSqvKlU=
-github.com/catgoose/linkwell v0.2.29 h1:Iv0SduMETZfU/gFSzScvhfkVij8r9jntwR//eAQfpcc=
-github.com/catgoose/linkwell v0.2.29/go.mod h1:25OAouFDBNjMgrMpL31pJYR6GwBf7d4heCaD0YnHBz4=
+github.com/catgoose/linkwell v0.2.30 h1:CNvsFmfCZRjmAp3wH5nuAVzfLX3g6/V0RPpsun2WQ3w=
+github.com/catgoose/linkwell v0.2.30/go.mod h1:25OAouFDBNjMgrMpL31pJYR6GwBf7d4heCaD0YnHBz4=
 github.com/catgoose/promolog v0.2.27 h1:nzvumQ2FO/N8BKpbSz5ZT7RI8d8VSquGHN6hrzuQJBM=
 github.com/catgoose/promolog v0.2.27/go.mod h1:ml44Fkt/KONxjTO6yL+3EQDSuv3+KdVJQOjM5pPnCKk=
 github.com/catgoose/promolog/sqlite v0.0.0-20260409215859-0fc0b83ab989 h1:HUgCDs4EgHHLb3bssCWncflb0jsxAoObtKVlfp2w634=
