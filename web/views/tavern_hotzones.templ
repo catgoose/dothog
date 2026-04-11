@@ -21,16 +21,14 @@ templ HotZoneLabPage(data HotZoneLabData) {
 	<div id="hz-lab-page" class="max-w-[90rem] mx-auto p-4 space-y-3">
 		<style>
 			#hz-lab-page [data-hz-card] {
-				transition: box-shadow 180ms ease, background-color 180ms ease, outline-color 180ms ease;
+				transition: box-shadow 150ms ease-out, background-color 150ms ease-out, outline-color 150ms ease-out;
 			}
 
 			#hz-lab-page [data-hz-card].hz-card-hot {
-				outline: 2px solid color-mix(in oklab, var(--color-primary) 60%, transparent);
-				outline-offset: 2px;
-				background-color: color-mix(in oklab, var(--color-primary) 10%, var(--color-base-200));
-				box-shadow:
-					0 0 0 1px color-mix(in oklab, var(--color-primary) 40%, transparent),
-					0 0 16px color-mix(in oklab, var(--color-primary) 18%, transparent);
+				outline: 1px solid color-mix(in oklab, var(--color-primary) 30%, transparent);
+				outline-offset: 1px;
+				background-color: color-mix(in oklab, var(--color-primary) 4%, var(--color-base-200));
+				box-shadow: 0 0 8px color-mix(in oklab, var(--color-primary) 8%, transparent);
 			}
 		</style>
 		<div>
@@ -425,7 +423,7 @@ templ hotZoneLifecycleScript() {
 			if (!container) return;
 			var hotTimers = {};
 			var hotClass = 'hz-card-hot';
-			var cooldownMS = 1000;
+			var cooldownMS = 400;
 
 			function reportLifecycle(action, mode) {
 				fetch('/realtime/tavern/hotzones/lifecycle?action=' +
