@@ -43,12 +43,12 @@ templ TavernCalendarPage(data CalendarLabData) {
 				document.querySelectorAll('[command-url]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });
 				Tavern.command('/realtime/tavern/calendar/day/deselect');
 			}
-			// Optimistic day-cell highlight: applied immediately on pointerdown,
+			// Optimistic day-cell highlight: applied immediately on command-sent,
 			// before the server round-trip completes.
-			document.addEventListener('tavern:optimistic', function(e) {
-				if (e.detail.name !== 'calendar-select') return;
+			document.addEventListener('tavern:command-sent', function(e) {
+				if (!e.detail.url || e.detail.url.indexOf('/calendar/day?d=') === -1) return;
 				document.querySelectorAll('[command-url]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });
-				e.detail.target.classList.add('ring-2', 'ring-accent');
+				if (e.target) e.target.classList.add('ring-2', 'ring-accent');
 			});
 		</script>
 
@@ -202,7 +202,6 @@ templ calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.Ca
 		type="button"
 		class={ calLabCellClass(inMonth, isToday, isSelected, isWeekend && settings.HighlightWeekends, settings.CompactMode) }
 		command-url={ "/realtime/tavern/calendar/day?d=" + dateStr }
-		tavern-command-optimistic="calendar-select"
 	>
 		<span class="text-xs tabular-nums">{ fmt.Sprintf("%d", cellDate.Day()) }</span>
 		if inMonth && settings.Density <= 2 {

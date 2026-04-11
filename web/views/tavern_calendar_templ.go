@@ -49,7 +49,7 @@ func TavernCalendarPage(data CalendarLabData) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\tbody:has(#calendar-lab-page) main { view-transition-name: none !important; }\n\t</style><div id=\"calendar-lab-page\" class=\"max-w-[90rem] mx-auto p-4 space-y-3\" style=\"overflow-anchor:none\" onclick=\"calLabDeselect(event)\"><div><h1 class=\"text-2xl font-bold\">Calendar Lab</h1><p class=\"text-xs text-base-content/50\">Shared calendar state, live region updates via Tavern, HTML/CSS-first controls. Open two tabs to see cross-tab sync. Simulator adds events automatically.</p></div><script>\n\t\t\t// Click-outside deselect: not a hot-region command, just a UI behavior.\n\t\t\t// Guard: if the click target was detached by an SSE swap between\n\t\t\t// pointerdown and click (common at high churn), skip the deselect.\n\t\t\tfunction calLabDeselect(e) {\n\t\t\t\tif (!e.target.isConnected) return;\n\t\t\t\tif (e.target.closest('#cal-lab-month') || e.target.closest('#cal-lab-day-events') || e.target.closest('.card-body')) return;\n\t\t\t\tdocument.querySelectorAll('[command-url]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });\n\t\t\t\tTavern.command('/realtime/tavern/calendar/day/deselect');\n\t\t\t}\n\t\t\t// Optimistic day-cell highlight: applied immediately on pointerdown,\n\t\t\t// before the server round-trip completes.\n\t\t\tdocument.addEventListener('tavern:optimistic', function(e) {\n\t\t\t\tif (e.detail.name !== 'calendar-select') return;\n\t\t\t\tdocument.querySelectorAll('[command-url]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });\n\t\t\t\te.detail.target.classList.add('ring-2', 'ring-accent');\n\t\t\t});\n\t\t</script><div id=\"calendar-lab-container\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/calendar\" tavern-reconnecting-class=\"opacity-60\" tavern-command-delegate=\"pointerdown\" tavern-command-target=\"[command-url]\"><div sse-swap=\"cal-month\" hx-target=\"#cal-lab-month\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"cal-day\" hx-target=\"#cal-lab-day-events\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"cal-day-list\" hx-target=\"#cal-lab-day-list\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"cal-stats\" hx-target=\"#cal-lab-stats\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"cal-activity\" hx-target=\"#cal-lab-activity-list\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div class=\"grid grid-cols-1 lg:grid-cols-12 gap-3\"><!-- Left rail: controls, stats, activity --><div class=\"lg:col-span-3 space-y-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\tbody:has(#calendar-lab-page) main { view-transition-name: none !important; }\n\t</style><div id=\"calendar-lab-page\" class=\"max-w-[90rem] mx-auto p-4 space-y-3\" style=\"overflow-anchor:none\" onclick=\"calLabDeselect(event)\"><div><h1 class=\"text-2xl font-bold\">Calendar Lab</h1><p class=\"text-xs text-base-content/50\">Shared calendar state, live region updates via Tavern, HTML/CSS-first controls. Open two tabs to see cross-tab sync. Simulator adds events automatically.</p></div><script>\n\t\t\t// Click-outside deselect: not a hot-region command, just a UI behavior.\n\t\t\t// Guard: if the click target was detached by an SSE swap between\n\t\t\t// pointerdown and click (common at high churn), skip the deselect.\n\t\t\tfunction calLabDeselect(e) {\n\t\t\t\tif (!e.target.isConnected) return;\n\t\t\t\tif (e.target.closest('#cal-lab-month') || e.target.closest('#cal-lab-day-events') || e.target.closest('.card-body')) return;\n\t\t\t\tdocument.querySelectorAll('[command-url]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });\n\t\t\t\tTavern.command('/realtime/tavern/calendar/day/deselect');\n\t\t\t}\n\t\t\t// Optimistic day-cell highlight: applied immediately on command-sent,\n\t\t\t// before the server round-trip completes.\n\t\t\tdocument.addEventListener('tavern:command-sent', function(e) {\n\t\t\t\tif (!e.detail.url || e.detail.url.indexOf('/calendar/day?d=') === -1) return;\n\t\t\t\tdocument.querySelectorAll('[command-url]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });\n\t\t\t\tif (e.target) e.target.classList.add('ring-2', 'ring-accent');\n\t\t\t});\n\t\t</script><div id=\"calendar-lab-container\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/calendar\" tavern-reconnecting-class=\"opacity-60\" tavern-command-delegate=\"pointerdown\" tavern-command-target=\"[command-url]\"><div sse-swap=\"cal-month\" hx-target=\"#cal-lab-month\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"cal-day\" hx-target=\"#cal-lab-day-events\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"cal-day-list\" hx-target=\"#cal-lab-day-list\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"cal-stats\" hx-target=\"#cal-lab-stats\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"cal-activity\" hx-target=\"#cal-lab-activity-list\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div class=\"grid grid-cols-1 lg:grid-cols-12 gap-3\"><!-- Left rail: controls, stats, activity --><div class=\"lg:col-span-3 space-y-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -311,14 +311,14 @@ func calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.Cal
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" tavern-command-optimistic=\"calendar-select\"><span class=\"text-xs tabular-nums\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\"><span class=\"text-xs tabular-nums\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", cellDate.Day()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 207, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 206, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -408,7 +408,7 @@ func calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.Cal
 					var templ_7745c5c3_Var16 string
 					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(e.Title)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 227, Col: 123}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 226, Col: 123}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
@@ -421,7 +421,7 @@ func calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.Cal
 					var templ_7745c5c3_Var17 string
 					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(calLabShortTitle(e.Title, settings.Density))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 227, Col: 171}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 226, Col: 171}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
@@ -445,7 +445,7 @@ func calLabDayCell(cellDate time.Time, data CalendarMonthData, settings demo.Cal
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", filtered-settings.Density))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 232, Col: 120}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 231, Col: 120}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -558,7 +558,7 @@ func CalendarLabMonthBreakdown(data CalendarMonthData, dayEvents map[int][]demo.
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s %d", data.Month.String(), data.Year))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 286, Col: 137}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 285, Col: 137}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -571,7 +571,7 @@ func CalendarLabMonthBreakdown(data CalendarMonthData, dayEvents map[int][]demo.
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d event(s) matching filters", total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 287, Col: 95}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 286, Col: 95}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -612,7 +612,7 @@ func CalendarLabMonthBreakdown(data CalendarMonthData, dayEvents map[int][]demo.
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 294, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 293, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -625,7 +625,7 @@ func CalendarLabMonthBreakdown(data CalendarMonthData, dayEvents map[int][]demo.
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", catCounts[cat]))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 295, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 294, Col: 86}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -732,7 +732,7 @@ func calLabDayHeader(day time.Time, events []demo.CalendarEvent, settings demo.C
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(day.Format("Mon Jan 2, 2006"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 326, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 325, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -750,7 +750,7 @@ func calLabDayHeader(day time.Time, events []demo.CalendarEvent, settings demo.C
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d event(s)", len(events)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 328, Col: 84}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 327, Col: 84}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 			if templ_7745c5c3_Err != nil {
@@ -768,7 +768,7 @@ func calLabDayHeader(day time.Time, events []demo.CalendarEvent, settings demo.C
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d of %d event(s)", filtered, len(events)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 330, Col: 100}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 329, Col: 100}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -888,7 +888,7 @@ func calLabEventRow(e demo.CalendarEvent, day time.Time) templ.Component {
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(string(e.Category))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 354, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 353, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 		if templ_7745c5c3_Err != nil {
@@ -901,7 +901,7 @@ func calLabEventRow(e demo.CalendarEvent, day time.Time) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(e.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 356, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 355, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
@@ -919,7 +919,7 @@ func calLabEventRow(e demo.CalendarEvent, day time.Time) templ.Component {
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(e.Assignee)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 358, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 357, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -937,7 +937,7 @@ func calLabEventRow(e demo.CalendarEvent, day time.Time) templ.Component {
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/realtime/tavern/calendar/event/delete?id=%d", e.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 363, Col: 82}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 362, Col: 82}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 		if templ_7745c5c3_Err != nil {
@@ -979,7 +979,7 @@ func calLabAddEventForm(day time.Time) templ.Component {
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(day.Format("2006-01-02"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 378, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 377, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -997,7 +997,7 @@ func calLabAddEventForm(day time.Time) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 391, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 390, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -1010,7 +1010,7 @@ func calLabAddEventForm(day time.Time) templ.Component {
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 391, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 390, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 			if templ_7745c5c3_Err != nil {
@@ -1033,7 +1033,7 @@ func calLabAddEventForm(day time.Time) templ.Component {
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(a)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 397, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 396, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
@@ -1046,7 +1046,7 @@ func calLabAddEventForm(day time.Time) templ.Component {
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(a)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 397, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 396, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -1099,7 +1099,7 @@ func CalendarLabStats(eventCount int, filteredCount int, settings demo.CalendarL
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", eventCount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 411, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 410, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {
@@ -1117,7 +1117,7 @@ func CalendarLabStats(eventCount int, filteredCount int, settings demo.CalendarL
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d / %d", filteredCount, eventCount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 413, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 412, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -1135,7 +1135,7 @@ func CalendarLabStats(eventCount int, filteredCount int, settings demo.CalendarL
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.Density))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 418, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 417, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 		if templ_7745c5c3_Err != nil {
@@ -1148,7 +1148,7 @@ func CalendarLabStats(eventCount int, filteredCount int, settings demo.CalendarL
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%dms", settings.SimSpeed))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 422, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 421, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1186,7 +1186,7 @@ func CalendarLabStats(eventCount int, filteredCount int, settings demo.CalendarL
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(settings.Assignee)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 437, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 436, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -1241,7 +1241,7 @@ func CalendarLabActivityLog(activity []demo.CalendarLabActivity) templ.Component
 				var templ_7745c5c3_Var53 string
 				templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(activity[i].Timestamp.Format("15:04:05"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 450, Col: 103}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 449, Col: 103}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 				if templ_7745c5c3_Err != nil {
@@ -1254,7 +1254,7 @@ func CalendarLabActivityLog(activity []demo.CalendarLabActivity) templ.Component
 				var templ_7745c5c3_Var54 string
 				templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(activity[i].Action)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 451, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 450, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 				if templ_7745c5c3_Err != nil {
@@ -1304,7 +1304,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs("/realtime/tavern/calendar/preset?name=" + p.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 468, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 467, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 			if templ_7745c5c3_Err != nil {
@@ -1317,7 +1317,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", p.Density))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 470, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 469, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -1330,7 +1330,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var58 string
 			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", p.SimSpeed))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 471, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 470, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 			if templ_7745c5c3_Err != nil {
@@ -1343,7 +1343,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var59 string
 			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", p.BurstSize))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 472, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 471, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 			if templ_7745c5c3_Err != nil {
@@ -1356,7 +1356,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 475, Col: 14}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 474, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 			if templ_7745c5c3_Err != nil {
@@ -1374,7 +1374,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 		var templ_7745c5c3_Var61 string
 		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.Density))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 496, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 495, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 		if templ_7745c5c3_Err != nil {
@@ -1387,7 +1387,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 		var templ_7745c5c3_Var62 string
 		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.Density))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 500, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 499, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 		if templ_7745c5c3_Err != nil {
@@ -1400,7 +1400,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 		var templ_7745c5c3_Var63 string
 		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%dms", settings.SimSpeed))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 515, Col: 111}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 514, Col: 111}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 		if templ_7745c5c3_Err != nil {
@@ -1413,7 +1413,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 		var templ_7745c5c3_Var64 string
 		templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.SimSpeed))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 519, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 518, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 		if templ_7745c5c3_Err != nil {
@@ -1426,7 +1426,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 		var templ_7745c5c3_Var65 string
 		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.BurstSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 534, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 533, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 		if templ_7745c5c3_Err != nil {
@@ -1439,7 +1439,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 		var templ_7745c5c3_Var66 string
 		templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.BurstSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 538, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 537, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 		if templ_7745c5c3_Err != nil {
@@ -1467,7 +1467,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(a)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 564, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 563, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 			if templ_7745c5c3_Err != nil {
@@ -1490,7 +1490,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var68 string
 			templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(a)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 564, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 563, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 			if templ_7745c5c3_Err != nil {
@@ -1513,7 +1513,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var69 string
 			templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs("cat_" + string(cat))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 577, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 576, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 			if templ_7745c5c3_Err != nil {
@@ -1558,7 +1558,7 @@ func calendarLabControls(settings demo.CalendarLabSettings, paused bool) templ.C
 			var templ_7745c5c3_Var72 string
 			templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(string(cat))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 585, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_calendar.templ`, Line: 584, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 			if templ_7745c5c3_Err != nil {
