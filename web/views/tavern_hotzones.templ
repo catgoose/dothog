@@ -31,6 +31,17 @@ templ HotZoneLabPage(data HotZoneLabData) {
 				box-shadow: 0 0 10px color-mix(in srgb, var(--hz-heat-color) 15%, transparent);
 			}
 		</style>
+		<script>
+			// Swap just the lab area after a control change that affects
+			// server-rendered structure (region count, presets).
+			function hzRefreshLab() {
+				htmx.ajax('GET', '/realtime/tavern/hotzones', {
+					target: '#hz-lab-page',
+					swap: 'outerHTML settle:0',
+					select: '#hz-lab-page'
+				});
+			}
+		</script>
 		<div>
 			<h1 class="text-2xl font-bold">Hot-Zone Lab</h1>
 			<p class="text-xs text-base-content/50">
@@ -265,10 +276,10 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					}
 				</label>
 				<div class="flex gap-1 flex-wrap">
-					<button class="btn btn-xs btn-outline" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"normal"}' hx-swap="none" hx-on::after-request="location.reload()">Normal</button>
-					<button class="btn btn-xs btn-outline btn-warning" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hot"}' hx-swap="none" hx-on::after-request="location.reload()">Hot</button>
-					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"nasty"}' hx-swap="none" hx-on::after-request="location.reload()">Nasty</button>
-					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hell"}' hx-swap="none" hx-on::after-request="location.reload()">Hell</button>
+					<button class="btn btn-xs btn-outline" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"normal"}' hx-swap="none" hx-on::after-request="hzRefreshLab()">Normal</button>
+					<button class="btn btn-xs btn-outline btn-warning" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hot"}' hx-swap="none" hx-on::after-request="hzRefreshLab()">Hot</button>
+					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"nasty"}' hx-swap="none" hx-on::after-request="hzRefreshLab()">Nasty</button>
+					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hell"}' hx-swap="none" hx-on::after-request="hzRefreshLab()">Hell</button>
 				</div>
 			</div>
 
@@ -307,7 +318,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					hx-swap="none"
 					hx-include="closest .card-body"
 					oninput="document.getElementById('hz-region-val').textContent=this.value"
-					hx-on::after-request="location.reload()"
+					hx-on::after-request="hzRefreshLab()"
 				/>
 			</div>
 
