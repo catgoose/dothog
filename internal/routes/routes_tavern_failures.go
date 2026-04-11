@@ -21,8 +21,9 @@ const (
 )
 
 type failuresRoutes struct {
-	broker  *tavern.SSEBroker
-	counter atomic.Int64
+	broker    *tavern.SSEBroker
+	counter   atomic.Int64
+	latestID  atomic.Value // stores string — most recently published event ID
 }
 
 func (ar *appRoutes) initFailuresRoutes(broker *tavern.SSEBroker) {
@@ -43,6 +44,9 @@ func (ar *appRoutes) initFailuresRoutes(broker *tavern.SSEBroker) {
 	ar.e.GET("/sse/tavern/failures", r.handleSSE)
 	ar.e.POST("/realtime/tavern/failures/burst", r.handleBurst)
 	ar.e.POST("/realtime/tavern/failures/clear-replay", r.handleClearReplay)
+	ar.e.POST("/realtime/tavern/failures/scenario/expired", r.handleScenarioExpired)
+	ar.e.POST("/realtime/tavern/failures/scenario/gap", r.handleScenarioGap)
+	ar.e.GET("/realtime/tavern/failures/latest-id", r.handleLatestID)
 
 	broker.RunPublisher(ar.ctx, r.startBackgroundTrickle)
 }
@@ -89,14 +93,14 @@ func (r *failuresRoutes) handleSSE(c echo.Context) error {
 // handleBurst publishes a few events with sequential IDs so the replay
 // window has something to (over)flow.
 func (r *failuresRoutes) handleBurst(c echo.Context) error {
-	for i := 0; i < 8; i++ {
-		seq := r.counter.Add(1)
-		id := fmt.Sprintf("evt-%d", seq)
-		html := renderFailuresEvent(seq, id, time.Now().Format("15:04:05.000"))
-		msg := tavern.NewSSEMessage("failures-event", html).WithID(id).String()
-		r.broker.PublishWithID(topicFailuresLive, id, msg)
-	}
+	r.publishBurst(8)
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (r *failuresRoutes) publishBurst(n int) {
+	for i := 0; i < n; i++ {
+		r.publishOne()
+	}
 }
 
 func (r *failuresRoutes) handleClearReplay(c echo.Context) error {
@@ -109,6 +113,62 @@ func (r *failuresRoutes) handleClearReplay(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+// handleScenarioExpired deterministically demonstrates an expired replay
+// window. It captures the current latest ID, publishes enough events to
+// overflow the 5-event replay window, then returns the captured ID so
+// the client can reconnect with it.
+func (r *failuresRoutes) handleScenarioExpired(c echo.Context) error {
+	capturedID := r.getLatestID()
+	if capturedID == "" {
+		// No events yet — publish one so we have something to expire.
+		r.publishOne()
+		capturedID = r.getLatestID()
+	}
+	// Overflow the replay window (size=5) so the captured ID is gone.
+	r.publishBurst(8)
+	return c.JSON(http.StatusOK, map[string]string{"resume_id": capturedID})
+}
+
+// handleScenarioGap deterministically triggers a replay gap fallback.
+// It captures the current latest ID, publishes enough to overflow the
+// replay window, clears the replay buffer entirely, then returns the
+// captured ID for the client to reconnect with.
+func (r *failuresRoutes) handleScenarioGap(c echo.Context) error {
+	capturedID := r.getLatestID()
+	if capturedID == "" {
+		r.publishOne()
+		capturedID = r.getLatestID()
+	}
+	r.publishBurst(8)
+	r.broker.ClearReplay(topicFailuresLive)
+	return c.JSON(http.StatusOK, map[string]string{"resume_id": capturedID})
+}
+
+// handleLatestID returns the most recently published event ID so the
+// client can display it and use it for deterministic scenarios.
+func (r *failuresRoutes) handleLatestID(c echo.Context) error {
+	id := r.getLatestID()
+	return c.JSON(http.StatusOK, map[string]string{"latest_id": id})
+}
+
+func (r *failuresRoutes) getLatestID() string {
+	v := r.latestID.Load()
+	if v == nil {
+		return ""
+	}
+	return v.(string)
+}
+
+// publishOne publishes a single event and stores the ID as latest.
+func (r *failuresRoutes) publishOne() {
+	seq := r.counter.Add(1)
+	id := fmt.Sprintf("evt-%d", seq)
+	html := renderFailuresEvent(seq, id, time.Now().Format("15:04:05.000"))
+	msg := tavern.NewSSEMessage("failures-event", html).WithID(id).String()
+	r.broker.PublishWithID(topicFailuresLive, id, msg)
+	r.latestID.Store(id)
+}
+
 // startBackgroundTrickle keeps a slow trickle of events going so the
 // page is never empty.
 func (r *failuresRoutes) startBackgroundTrickle(ctx context.Context) {
@@ -119,11 +179,7 @@ func (r *failuresRoutes) startBackgroundTrickle(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			seq := r.counter.Add(1)
-			id := fmt.Sprintf("evt-%d", seq)
-			html := renderFailuresEvent(seq, id, time.Now().Format("15:04:05.000"))
-			msg := tavern.NewSSEMessage("failures-event", html).WithID(id).String()
-			r.broker.PublishWithID(topicFailuresLive, id, msg)
+			r.publishOne()
 		}
 	}
 }

@@ -24,6 +24,12 @@ templ TavernRecoveryPage(initialSnapshot string) {
 			</div>
 		</div>
 
+		<div id="recovery-reconnect-countdown" class="hidden text-xs text-warning flex items-center gap-1">
+			<span class="loading loading-spinner loading-xs"></span>
+			Reconnecting in <span id="recovery-reconnect-remaining" class="font-mono tabular-nums">-</span>
+		</div>
+		<progress id="recovery-reconn-progress" class="progress progress-secondary w-full hidden" value="0" max="100"></progress>
+
 		<div id="recovery-mode" class="text-xs text-base-content/60 font-mono"></div>
 
 		<!-- Connection container holding all three regions on a single SSE stream. -->
@@ -164,6 +170,10 @@ templ tavernRecoveryScript() {
 			}
 		});
 
+		var reconnTimer = null;
+		var reconnDisconnAt = 0;
+		var RECONN_DELAY = 3; // seconds
+
 		function recoveryDisconnect() {
 			var btn = document.getElementById('recovery-disconnect');
 			var container = document.getElementById('recovery-container');
@@ -173,19 +183,53 @@ templ tavernRecoveryScript() {
 			container.removeAttribute('sse-connect');
 			htmx.process(container);
 
-			btn.textContent = 'Reconnecting in 3s...';
 			btn.disabled = true;
 			btn.classList.add('btn-error');
 			btn.classList.remove('btn-warning');
+			startReconnCountdown();
 
 			setTimeout(function() {
 				container.setAttribute('sse-connect', sseConnect);
 				htmx.process(container);
-				btn.textContent = 'Disconnect';
 				btn.disabled = false;
 				btn.classList.remove('btn-error');
 				btn.classList.add('btn-warning');
-			}, 3000);
+				stopReconnCountdown();
+			}, RECONN_DELAY * 1000);
+		}
+
+		function startReconnCountdown() {
+			stopReconnCountdown();
+			reconnDisconnAt = Date.now();
+			var cd = document.getElementById('recovery-reconnect-countdown');
+			var pb = document.getElementById('recovery-reconn-progress');
+			cd.classList.remove('hidden');
+			pb.classList.remove('hidden');
+			reconnTick();
+			reconnTimer = setInterval(reconnTick, 200);
+		}
+
+		function reconnTick() {
+			var elapsed = (Date.now() - reconnDisconnAt) / 1000;
+			var remaining = Math.max(0, RECONN_DELAY - elapsed);
+			document.getElementById('recovery-reconnect-remaining').textContent = remaining.toFixed(1) + 's';
+			var pb = document.getElementById('recovery-reconn-progress');
+			var pct = Math.min(100, (elapsed / RECONN_DELAY) * 100);
+			pb.value = pct;
+			pb.classList.remove('progress-secondary', 'progress-warning', 'progress-error');
+			if (pct >= 100) pb.classList.add('progress-error');
+			else if (pct >= 80) pb.classList.add('progress-warning');
+			else pb.classList.add('progress-secondary');
+			if (remaining <= 0) stopReconnCountdown();
+		}
+
+		function stopReconnCountdown() {
+			if (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; }
+			var cd = document.getElementById('recovery-reconnect-countdown');
+			var pb = document.getElementById('recovery-reconn-progress');
+			cd.classList.add('hidden');
+			pb.classList.add('hidden');
+			pb.value = 0;
 		}
 
 		function recoveryReset() {

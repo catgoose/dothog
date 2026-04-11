@@ -22,8 +22,16 @@ templ TavernFailuresPage() {
 			id="failures-container"
 			hx-ext="sse"
 			sse-connect="/sse/tavern/failures"
-			tavern-reconnecting-class="opacity-60"
+			tavern-reconnecting-class="opacity-60 pointer-events-none"
+			tavern-stale-class="opacity-40"
+			tavern-live-class=""
 		>
+			<div tavern-status-recovering class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+				<span>&#9888;</span> Reconnecting &mdash; replaying missed events&hellip;
+			</div>
+			<div tavern-status-stale class="hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2">
+				<span>&#9888;</span> Connection lost &mdash; displayed data may be stale.
+			</div>
 			<div sse-swap="failures-event" hx-target="#failures-events" hx-swap="afterbegin settle:0 transition:false" style="display:none"></div>
 			<div sse-swap="failures-result" hx-target="#failures-result" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 
@@ -32,8 +40,9 @@ templ TavernFailuresPage() {
 					<div class="card-body p-4 space-y-2">
 						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Live Events</h2>
 						<p class="text-xs text-base-content/40">
-							Replay window of 5 — exceed it and the next Last-Event-ID resume will gap-fall-back.
+							Replay window of 5 &mdash; exceed it and the next Last-Event-ID resume will gap-fall-back.
 						</p>
+						<div id="failures-latest-id" class="text-xs text-base-content/40 font-mono">latest: &mdash;</div>
 						<div id="failures-events" class="max-h-64 overflow-y-auto overflow-x-hidden font-mono text-xs space-y-0.5" style="contain:paint">
 							<p class="text-base-content/30 py-2">Waiting for events...</p>
 						</div>
@@ -59,27 +68,27 @@ templ TavernFailuresPage() {
 			<div class="card-body p-4 space-y-3">
 				<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Scenarios</h2>
 
+				<h3 class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Actions</h3>
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-					<button class="btn btn-sm btn-outline justify-start" onclick="failuresMalformedLastID()">
-						<span class="badge badge-xs badge-warning mr-1">1</span>
-						Malformed Last-Event-ID
-					</button>
 					<button class="btn btn-sm btn-outline justify-start" hx-post="/realtime/tavern/failures/burst" hx-swap="none">
-						<span class="badge badge-xs badge-primary mr-1">2</span>
 						Publish 8-event burst
 					</button>
 					<button class="btn btn-sm btn-outline justify-start" hx-post="/realtime/tavern/failures/clear-replay" hx-swap="none">
-						<span class="badge badge-xs badge-warning mr-1">3</span>
 						Clear replay buffer
-					</button>
-					<button class="btn btn-sm btn-outline justify-start" onclick="failuresExpiredResume()">
-						<span class="badge badge-xs badge-warning mr-1">4</span>
-						Resume with expired ID
 					</button>
 				</div>
 
-				<div class="text-xs text-base-content/60 space-y-1">
-					<p><strong>Try this sequence:</strong> click 2 (publish a burst), then 3 (clear replay), then 4 (try to resume with an old ID). The result panel will show the gap fallback firing.</p>
+				<h3 class="text-xs font-semibold text-base-content/50 uppercase tracking-wider pt-2">Failure Modes</h3>
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+					<button class="btn btn-sm btn-warning btn-outline justify-start" onclick="runMalformedResume()">
+						Malformed Last-Event-ID
+					</button>
+					<button class="btn btn-sm btn-warning btn-outline justify-start" onclick="runExpiredResume()">
+						Expired replay window
+					</button>
+					<button class="btn btn-sm btn-error btn-outline justify-start" onclick="runGapFallback()">
+						Replay gap fallback
+					</button>
 				</div>
 			</div>
 		</div>
@@ -133,10 +142,28 @@ func failuresResultBadge(level string) string {
 
 templ tavernFailuresScript() {
 	<script>
+		// Track the latest event ID seen on the live stream so scenarios
+		// can capture a known-good ID for deterministic replay expiration.
+		var failuresLastSeenID = '';
+
+		// Update latest ID display whenever a new event arrives.
+		document.body.addEventListener('htmx:sseMessage', function(evt) {
+			if (evt.detail.type !== 'failures-event') return;
+			// Extract the event ID from the badge in the incoming HTML.
+			var tmp = document.createElement('div');
+			tmp.innerHTML = evt.detail.data;
+			var badge = tmp.querySelector('.badge');
+			if (badge) {
+				failuresLastSeenID = badge.textContent.trim();
+				var el = document.getElementById('failures-latest-id');
+				if (el) el.textContent = 'latest: ' + failuresLastSeenID;
+			}
+		});
+
 		// Reconnect the SSE container with a synthetic resume token.
-		// The browser EventSource API can't set custom headers, so we
-		// pass the resume hint as a ?resume= query parameter and the
-		// server treats it equivalently to a real Last-Event-ID header.
+		// EventSource can't set custom headers, so the resume hint is
+		// passed as a ?resume= query parameter. The server reads either
+		// the real Last-Event-ID header or ?resume= equivalently.
 		function failuresReconnectWith(lastID) {
 			var container = document.getElementById('failures-container');
 			if (!container) return;
@@ -144,9 +171,6 @@ templ tavernFailuresScript() {
 			container.removeAttribute('sse-connect');
 			htmx.process(container);
 
-			// Reconnect with the resume hint as a query param. The server
-			// reads X-Lab-Last-Event-ID as a synthetic Last-Event-ID since
-			// we can't set the real header from EventSource.
 			var newURL = sseConnect.split('?')[0] + '?resume=' + encodeURIComponent(lastID);
 			setTimeout(function() {
 				container.setAttribute('sse-connect', newURL);
@@ -154,13 +178,33 @@ templ tavernFailuresScript() {
 			}, 100);
 		}
 
-		function failuresMalformedLastID() {
+		// --- Scenarios ---
+
+		// Malformed: reconnect with a token that doesn't match the evt-N scheme.
+		function runMalformedResume() {
 			failuresReconnectWith('this-is-not-a-valid-id');
 		}
 
-		function failuresExpiredResume() {
-			// "evt-1" was almost certainly aged out of the 5-event replay window.
-			failuresReconnectWith('evt-1');
+		// Expired: the server captures the current latest ID, publishes
+		// enough events to overflow the 5-event replay window, then
+		// returns the captured (now expired) ID for the client to resume with.
+		function runExpiredResume() {
+			fetch('/realtime/tavern/failures/scenario/expired', { method: 'POST' })
+				.then(function(r) { return r.json(); })
+				.then(function(data) {
+					if (data.resume_id) failuresReconnectWith(data.resume_id);
+				});
+		}
+
+		// Gap fallback: the server captures the latest ID, overflows the
+		// replay window, clears the buffer entirely, then returns the
+		// captured ID. The broker's gap-fallback policy fires on reconnect.
+		function runGapFallback() {
+			fetch('/realtime/tavern/failures/scenario/gap', { method: 'POST' })
+				.then(function(r) { return r.json(); })
+				.then(function(data) {
+					if (data.resume_id) failuresReconnectWith(data.resume_id);
+				});
 		}
 	</script>
 }
