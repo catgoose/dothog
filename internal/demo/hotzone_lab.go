@@ -56,11 +56,29 @@ type HotZoneSettings struct {
 	PayloadSize      int              // filler chars per region update (10–4000)
 	FocusedRegion    int              // 0 = random, 1–8 = only update that region
 	BurstMode        bool             // burst: publish all regions every tick
+	// Heat-map visualization settings (client-side only).
+	HeatEnabled    bool   // toggle heat gradient on/off
+	HeatWindowMS   int    // rolling window for rate calculation (100–5000)
+	HeatThreshold1 int    // updates/sec for first color stop
+	HeatThreshold2 int    // updates/sec for second color stop
+	HeatThreshold3 int    // updates/sec for third color stop
+	HeatColor1     string // hex color at threshold 1 (e.g. "#22c55e")
+	HeatColor2     string // hex color at threshold 2 (e.g. "#ef4444")
+	HeatColor3     string // hex color at threshold 3 (e.g. "#a855f7")
+	HeatBaseColor  string // hex color for idle/quiet state
+}
+
+// DefaultHeatSettings returns sensible heat-map defaults.
+func DefaultHeatSettings() (int, int, int, int, string, string, string, string) {
+	return 1000, 10, 50, 100, "#22c55e", "#ef4444", "#a855f7", "#1e293b"
 }
 
 // ApplyPreset sets fields to the named preset's values.
 func (s *HotZoneSettings) ApplyPreset(p HotZonePreset) {
 	s.Preset = p
+	s.HeatWindowMS, s.HeatThreshold1, s.HeatThreshold2, s.HeatThreshold3,
+		s.HeatColor1, s.HeatColor2, s.HeatColor3, s.HeatBaseColor = DefaultHeatSettings()
+	s.HeatEnabled = true
 	switch p {
 	case HotZonePresetHot:
 		s.UpdateIntervalMS = 200
@@ -74,12 +92,18 @@ func (s *HotZoneSettings) ApplyPreset(p HotZonePreset) {
 		s.PayloadSize = 1500
 		s.BurstMode = true
 		s.FocusedRegion = 0
+		s.HeatThreshold1 = 20
+		s.HeatThreshold2 = 80
+		s.HeatThreshold3 = 150
 	case HotZonePresetHell:
 		s.UpdateIntervalMS = 25
 		s.RegionCount = 8
 		s.PayloadSize = 4000
 		s.BurstMode = true
 		s.FocusedRegion = 0
+		s.HeatThreshold1 = 30
+		s.HeatThreshold2 = 100
+		s.HeatThreshold3 = 200
 	default: // normal
 		s.UpdateIntervalMS = 500
 		s.RegionCount = 4
@@ -125,6 +149,7 @@ type HotZoneActivity struct {
 
 // NewHotZoneLab creates a lab with default settings.
 func NewHotZoneLab() *HotZoneLab {
+	wMS, t1, t2, t3, c1, c2, c3, base := DefaultHeatSettings()
 	lab := &HotZoneLab{
 		settings: HotZoneSettings{
 			Preset:           HotZonePresetNormal,
@@ -135,6 +160,15 @@ func NewHotZoneLab() *HotZoneLab {
 			FocusedRegion:    0,
 			CommandMode:      HotZoneModeTavern,
 			SwapScope:        HotZoneSwapInner,
+			HeatEnabled:      true,
+			HeatWindowMS:     wMS,
+			HeatThreshold1:   t1,
+			HeatThreshold2:   t2,
+			HeatThreshold3:   t3,
+			HeatColor1:       c1,
+			HeatColor2:       c2,
+			HeatColor3:       c3,
+			HeatBaseColor:    base,
 		},
 	}
 	for i := range lab.regions {

@@ -19,6 +19,16 @@ func TestHotZoneLab_NewLab(t *testing.T) {
 	assert.Equal(t, HotZonePresetNormal, s.Preset)
 	assert.False(t, s.BurstMode)
 	assert.False(t, lab.Paused())
+	// Heat defaults
+	assert.True(t, s.HeatEnabled)
+	assert.Equal(t, 1000, s.HeatWindowMS)
+	assert.Equal(t, 10, s.HeatThreshold1)
+	assert.Equal(t, 50, s.HeatThreshold2)
+	assert.Equal(t, 100, s.HeatThreshold3)
+	assert.Equal(t, "#22c55e", s.HeatColor1)
+	assert.Equal(t, "#ef4444", s.HeatColor2)
+	assert.Equal(t, "#a855f7", s.HeatColor3)
+	assert.Equal(t, "#1e293b", s.HeatBaseColor)
 }
 
 func TestHotZoneLab_ApplyPreset(t *testing.T) {
@@ -46,8 +56,32 @@ func TestHotZoneLab_ApplyPreset(t *testing.T) {
 			assert.Equal(t, tt.payload, s.PayloadSize)
 			assert.Equal(t, tt.burst, s.BurstMode)
 			assert.Equal(t, tt.preset, s.Preset)
+			// All presets should set valid heat config.
+			assert.True(t, s.HeatEnabled)
+			assert.Greater(t, s.HeatThreshold1, 0)
+			assert.Greater(t, s.HeatThreshold2, s.HeatThreshold1)
+			assert.Greater(t, s.HeatThreshold3, s.HeatThreshold2)
+			assert.NotEmpty(t, s.HeatColor1)
+			assert.NotEmpty(t, s.HeatColor2)
+			assert.NotEmpty(t, s.HeatColor3)
 		})
 	}
+}
+
+func TestHotZoneLab_PresetHeatThresholds(t *testing.T) {
+	lab := NewHotZoneLab()
+	// Nasty and Hell should have higher thresholds than Normal.
+	lab.UpdateSettings(func(s *HotZoneSettings) { s.ApplyPreset(HotZonePresetNasty) })
+	nasty := lab.Settings()
+	assert.Equal(t, 20, nasty.HeatThreshold1)
+	assert.Equal(t, 80, nasty.HeatThreshold2)
+	assert.Equal(t, 150, nasty.HeatThreshold3)
+
+	lab.UpdateSettings(func(s *HotZoneSettings) { s.ApplyPreset(HotZonePresetHell) })
+	hell := lab.Settings()
+	assert.Equal(t, 30, hell.HeatThreshold1)
+	assert.Equal(t, 100, hell.HeatThreshold2)
+	assert.Equal(t, 200, hell.HeatThreshold3)
 }
 
 func TestHotZoneLab_RecordReceived(t *testing.T) {

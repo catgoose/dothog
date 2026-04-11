@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -197,9 +198,42 @@ func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
 		if scope == demo.HotZoneSwapInner || scope == demo.HotZoneSwapCard {
 			s.SwapScope = scope
 		}
+		// Heat-map controls.
+		if c.FormValue("heat_enabled") != "" {
+			s.HeatEnabled = c.FormValue("heat_enabled") == "on"
+		}
+		if v, err := strconv.Atoi(c.FormValue("heat_window")); err == nil && v >= 100 && v <= 5000 {
+			s.HeatWindowMS = v
+		}
+		t1, e1 := strconv.Atoi(c.FormValue("heat_t1"))
+		t2, e2 := strconv.Atoi(c.FormValue("heat_t2"))
+		t3, e3 := strconv.Atoi(c.FormValue("heat_t3"))
+		if e1 == nil && e2 == nil && e3 == nil && t1 > 0 && t1 < t2 && t2 < t3 {
+			s.HeatThreshold1 = t1
+			s.HeatThreshold2 = t2
+			s.HeatThreshold3 = t3
+		}
+		if v := c.FormValue("heat_color1"); isHexColor(v) {
+			s.HeatColor1 = v
+		}
+		if v := c.FormValue("heat_color2"); isHexColor(v) {
+			s.HeatColor2 = v
+		}
+		if v := c.FormValue("heat_color3"); isHexColor(v) {
+			s.HeatColor3 = v
+		}
+		if v := c.FormValue("heat_base"); isHexColor(v) {
+			s.HeatBaseColor = v
+		}
 	})
 	r.publishStats()
 	return c.NoContent(http.StatusNoContent)
+}
+
+var hexColorRe = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
+
+func isHexColor(s string) bool {
+	return hexColorRe.MatchString(s)
 }
 
 func (r *tavernHotZoneRoutes) handlePause(c echo.Context) error {
