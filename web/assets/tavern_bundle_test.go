@@ -39,6 +39,11 @@ func TestTavernBundleContract(t *testing.T) {
 		t.Error("tavern.min.js missing tavern-hearth shorthand; expected v0.0.22+")
 	}
 
+	// Must contain region-updated signal (v0.0.23+).
+	if !strings.Contains(src, "region-updated") || !strings.Contains(src, "updatedClass") || !strings.Contains(src, "updatedMs") {
+		t.Error("tavern.min.js missing region-updated support (region-updated/updatedClass/updatedMs); expected v0.0.23+")
+	}
+
 	// Must contain hot-policy support (v0.0.17+).
 	if !strings.Contains(src, "hotPolicy") {
 		t.Error("tavern.min.js missing hot-policy support; expected v0.0.17+")

@@ -114,7 +114,8 @@ templ ToastLabPage(data ToastLabData) {
 				'tavern:policy-deactivated': { sev: 'info',    meaning: 'Hot-region insulation released, queued updates flushed.', sticky: false },
 				'tavern:command-sent':       { sev: 'info',    meaning: 'Delegated command POST dispatched to server.', sticky: false },
 				'tavern:command-success':    { sev: 'success', meaning: 'Delegated command completed successfully.', sticky: false },
-				'tavern:command-error':      { sev: 'error',   meaning: 'Delegated command request failed.', sticky: true }
+				'tavern:command-error':      { sev: 'error',   meaning: 'Delegated command request failed.', sticky: true },
+				'tavern:region-updated':    { sev: 'info',    meaning: 'A live SSE region just received a content swap.', sticky: false }
 			};
 
 			var severityClass = {
@@ -293,6 +294,13 @@ templ toastLabEventTriggers() {
 					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:command-error', {url:'/api/action', error:'500'})">error</button>
 				</div>
 			</div>
+
+			<div class="space-y-1">
+				<span class="text-[0.65rem] text-base-content/40 uppercase">Region</span>
+				<div class="flex flex-wrap gap-1">
+					<button class="btn btn-xs btn-outline" onclick="dispatchDemoEvent('tavern:region-updated', {})">updated</button>
+				</div>
+			</div>
 		</div>
 	</div>
 }
@@ -370,6 +378,7 @@ templ toastLabEventReference() {
 				@toastLabRefEntry("tavern:command-sent", "command", "Delegated command dispatched.")
 				@toastLabRefEntry("tavern:command-success", "command", "Command completed.")
 				@toastLabRefEntry("tavern:command-error", "command", "Command request failed.")
+				@toastLabRefEntry("tavern:region-updated", "region", "Live region received a content swap.")
 			</div>
 		</div>
 	</div>
