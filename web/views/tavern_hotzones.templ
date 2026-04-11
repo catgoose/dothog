@@ -11,7 +11,6 @@ import (
 type HotZoneLabData struct {
 	Settings demo.HotZoneSettings
 	Regions  []demo.HotZoneRegion
-	Payloads []string
 	Stats    [2]demo.HotZoneCommandStat
 	Activity []demo.HotZoneActivity
 	Paused   bool
@@ -40,8 +39,6 @@ templ HotZoneLabPage(data HotZoneLabData) {
 				document.getElementById('hz-interval-val').textContent = v + 'ms';
 				htmx.trigger(slider, 'change');
 			}
-			// Swap just the lab area after a control change that affects
-			// server-rendered structure (region count, presets).
 			function hzRefreshLab() {
 				htmx.ajax('GET', '/realtime/tavern/hotzones', {
 					target: '#hz-lab-page',
@@ -53,9 +50,8 @@ templ HotZoneLabPage(data HotZoneLabData) {
 		<div>
 			<h1 class="text-2xl font-bold">Hot-Zone Lab</h1>
 			<p class="text-xs text-base-content/50">
-				Stress surface for SSE region churn and command delivery.
-				Compare hx-post vs Tavern.command(), inner vs full-card swap scope,
-				and find the threshold where naive interaction degrades.
+				Anime gallery stress surface for SSE region churn and command delivery.
+				Lock regions with Tavern.command() while the rest keep jittering.
 				<a href="https://github.com/catgoose/dothog/issues/641" class="link link-primary" target="_blank">#641</a>
 			</p>
 		</div>
@@ -105,20 +101,13 @@ templ HotZoneLabPage(data HotZoneLabData) {
 					</div>
 				</div>
 
-				<!-- Center + right: hot regions -->
+				<!-- Center + right: gallery grid -->
 				<div class="lg:col-span-9">
-					<div class={ hotZoneGridClass(data.Settings.RegionCount) }>
-						for i, reg := range data.Regions {
-							<div class="card bg-base-200 shadow-sm transition-shadow transition-colors duration-200" data-hz-card={ fmt.Sprintf("%d", reg.ID) }>
-								<div class="card-body p-3">
-									<div class="flex items-center justify-between mb-2">
-										<h3 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">{ reg.Label }</h3>
-										<span class="hz-rate-badge badge badge-xs badge-ghost font-mono tabular-nums">0/s</span>
-										<span class="badge badge-xs badge-ghost font-mono">{ fmt.Sprintf("#%d", reg.Counter) }</span>
-									</div>
-									<div id={ fmt.Sprintf("hz-region-%d", reg.ID) }>
-										@HotZoneRegionContent(reg, data.Settings, data.Payloads[i])
-									</div>
+					<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+						for _, reg := range data.Regions {
+							<div class="card bg-base-200 shadow-sm overflow-hidden" data-hz-card={ fmt.Sprintf("%d", reg.ID) }>
+								<div id={ fmt.Sprintf("hz-region-%d", reg.ID) }>
+									@HotZoneRegionContent(reg, data.Settings)
 								</div>
 							</div>
 						}
@@ -130,47 +119,52 @@ templ HotZoneLabPage(data HotZoneLabData) {
 	</div>
 }
 
-func hotZoneGridClass(count int) string {
-	switch {
-	case count <= 2:
-		return "grid grid-cols-1 md:grid-cols-2 gap-3"
-	case count <= 4:
-		return "grid grid-cols-2 gap-3"
-	default:
-		return "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3"
-	}
+// HotZoneRegionContent renders the inner content of a single hot region.
+templ HotZoneRegionContent(region demo.HotZoneRegion, settings demo.HotZoneSettings) {
+	<figure class="relative">
+		if region.ImagePath != "" {
+			<img src={ region.ImagePath } alt={ region.ImageAlt } class="w-full aspect-square object-cover" loading="lazy"/>
+		} else {
+			<div class="w-full aspect-square bg-base-300 flex items-center justify-center text-base-content/20 text-xs">no image</div>
+		}
+		if region.Locked {
+			<div class="absolute top-1 right-1 badge badge-sm badge-warning gap-1 font-mono">locked</div>
+		}
+	</figure>
+	<div class="p-2 space-y-1">
+		<div class="flex items-center justify-between">
+			<span class="text-xs font-semibold text-base-content/60">{ region.Label }</span>
+			<div class="flex items-center gap-1">
+				<span class="hz-rate-badge badge badge-xs badge-ghost font-mono tabular-nums">0/s</span>
+				<span class="badge badge-xs badge-ghost font-mono">{ fmt.Sprintf("#%d", region.Counter) }</span>
+			</div>
+		</div>
+		if settings.ShowMeta && region.Series != "" {
+			<div class="text-[0.6rem] text-base-content/40 truncate">{ region.Series } &mdash; { region.ImageAlt }</div>
+		}
+		if settings.CommandMode == demo.HotZoneModeTavern {
+			<button
+				class={ "btn btn-xs w-full", lockButtonClass(region.Locked) }
+				command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=tavern-command", region.ID) }
+			>
+				Tavern.command()
+			</button>
+		} else {
+			<button
+				class={ "btn btn-xs btn-secondary w-full", lockButtonClass(region.Locked) }
+				command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=hx-post", region.ID) }
+			>
+				hx-post
+			</button>
+		}
+	</div>
 }
 
-// HotZoneRegionContent renders the inner content of a single hot region.
-// This is the SSE swap target — it gets replaced on every tick.
-templ HotZoneRegionContent(region demo.HotZoneRegion, settings demo.HotZoneSettings, payload string) {
-	<div class="space-y-2">
-		<div class="text-xs text-base-content/50 font-mono h-16 overflow-hidden leading-relaxed" title="Simulated payload">
-			{ payload }
-		</div>
-		<div class="flex items-center gap-2">
-			if settings.CommandMode == demo.HotZoneModeTavern {
-				<button
-					class="btn btn-xs btn-primary flex-1"
-					command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=tavern-command", region.ID) }
-				>
-					Tavern.command()
-				</button>
-			} else {
-				<button
-					class="btn btn-xs btn-secondary flex-1"
-					command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=hx-post", region.ID) }
-				>
-					hx-post
-				</button>
-			}
-			<span class="text-[0.65rem] text-base-content/40 font-mono tabular-nums">
-				if !region.LastUpdate.IsZero() {
-					{ region.LastUpdate.Format("15:04:05") }
-				}
-			</span>
-		</div>
-	</div>
+func lockButtonClass(locked bool) string {
+	if locked {
+		return "btn-warning"
+	}
+	return "btn-primary"
 }
 
 // HotZoneStats renders the command delivery stats and simulator state.
@@ -197,12 +191,12 @@ templ HotZoneStats(settings demo.HotZoneSettings, stats [2]demo.HotZoneCommandSt
 			<span class="font-mono tabular-nums">{ fmt.Sprintf("%dms", settings.UpdateIntervalMS) }</span>
 		</div>
 		<div class="flex justify-between">
-			<span class="text-base-content/60">Regions</span>
-			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", settings.RegionCount) }</span>
+			<span class="text-base-content/60">Jitter</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d-%dms", settings.JitterMinMS, settings.JitterMaxMS) }</span>
 		</div>
 		<div class="flex justify-between">
-			<span class="text-base-content/60">Payload</span>
-			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", settings.PayloadSize) }</span>
+			<span class="text-base-content/60">Regions</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", settings.RegionCount) }</span>
 		</div>
 		<div class="flex justify-between">
 			<span class="text-base-content/60">Command mode</span>
@@ -312,6 +306,18 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 				</div>
 			</div>
 
+			<!-- Jitter -->
+			<div class="grid grid-cols-2 gap-2">
+				<div class="form-control">
+					<label class="label py-0"><span class="label-text text-xs">Jitter min</span></label>
+					<input type="number" name="jitter_min" value={ fmt.Sprintf("%d", settings.JitterMinMS) } min="0" max="2000" class="input input-xs input-bordered w-full font-mono" hx-post="/realtime/tavern/hotzones/controls" hx-trigger="change" hx-swap="none" hx-include="closest .card-body"/>
+				</div>
+				<div class="form-control">
+					<label class="label py-0"><span class="label-text text-xs">Jitter max</span></label>
+					<input type="number" name="jitter_max" value={ fmt.Sprintf("%d", settings.JitterMaxMS) } min="0" max="5000" class="input input-xs input-bordered w-full font-mono" hx-post="/realtime/tavern/hotzones/controls" hx-trigger="change" hx-swap="none" hx-include="closest .card-body"/>
+				</div>
+			</div>
+
 			<!-- Region count slider -->
 			<div class="form-control">
 				<label class="label py-0">
@@ -329,25 +335,6 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					hx-include="closest .card-body"
 					oninput="document.getElementById('hz-region-val').textContent=this.value"
 					hx-on::after-request="hzRefreshLab()"
-				/>
-			</div>
-
-			<!-- Payload size slider -->
-			<div class="form-control">
-				<label class="label py-0">
-					<span class="label-text text-xs">Payload size</span>
-					<span class="label-text-alt text-xs font-mono" id="hz-payload-val">{ fmt.Sprintf("%d", settings.PayloadSize) }</span>
-				</label>
-				<input
-					type="range" min="10" max="10240" step="10"
-					value={ fmt.Sprintf("%d", settings.PayloadSize) }
-					class="range range-xs range-accent"
-					name="payload_size"
-					hx-post="/realtime/tavern/hotzones/controls"
-					hx-trigger="change"
-					hx-swap="none"
-					hx-include="closest .card-body"
-					oninput="document.getElementById('hz-payload-val').textContent=this.value"
 				/>
 			</div>
 
@@ -408,19 +395,18 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 			</div>
 
 			<!-- Toggles -->
-			<div class="flex flex-wrap gap-2">
+			<div class="flex flex-wrap gap-3">
 				<label class="label cursor-pointer gap-2 py-0">
 					<span class="label-text text-xs">Burst</span>
-					<input
-						type="checkbox"
-						name="burst_mode"
-						class="toggle toggle-xs toggle-warning"
-						checked?={ settings.BurstMode }
-						hx-post="/realtime/tavern/hotzones/controls"
-						hx-trigger="change"
-						hx-swap="none"
-						hx-include="closest .card-body"
-					/>
+					<input type="checkbox" name="burst_mode" class="toggle toggle-xs toggle-warning" checked?={ settings.BurstMode } hx-post="/realtime/tavern/hotzones/controls" hx-trigger="change" hx-swap="none" hx-include="closest .card-body"/>
+				</label>
+				<label class="label cursor-pointer gap-2 py-0">
+					<span class="label-text text-xs">GIFs</span>
+					<input type="checkbox" name="allow_gif" class="toggle toggle-xs toggle-accent" checked?={ settings.AllowGIF } hx-post="/realtime/tavern/hotzones/controls" hx-trigger="change" hx-swap="none" hx-include="closest .card-body"/>
+				</label>
+				<label class="label cursor-pointer gap-2 py-0">
+					<span class="label-text text-xs">Meta</span>
+					<input type="checkbox" name="show_meta" class="toggle toggle-xs toggle-info" checked?={ settings.ShowMeta } hx-post="/realtime/tavern/hotzones/controls" hx-trigger="change" hx-swap="none" hx-include="closest .card-body"/>
 				</label>
 			</div>
 
@@ -429,16 +415,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 			<div class="flex flex-wrap gap-2">
 				<label class="label cursor-pointer gap-2 py-0">
 					<span class="label-text text-xs">Heat</span>
-					<input
-						type="checkbox"
-						name="heat_enabled"
-						class="toggle toggle-xs toggle-accent"
-						checked?={ settings.HeatEnabled }
-						hx-post="/realtime/tavern/hotzones/controls"
-						hx-trigger="change"
-						hx-swap="none"
-						hx-include="closest .card-body"
-					/>
+					<input type="checkbox" name="heat_enabled" class="toggle toggle-xs toggle-accent" checked?={ settings.HeatEnabled } hx-post="/realtime/tavern/hotzones/controls" hx-trigger="change" hx-swap="none" hx-include="closest .card-body"/>
 				</label>
 			</div>
 			<div class="grid grid-cols-3 gap-1">
@@ -476,22 +453,14 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 
 			<!-- Pause / Reset -->
 			<div class="flex gap-1">
-				<button
-					class="btn btn-xs btn-outline flex-1"
-					hx-post="/realtime/tavern/hotzones/pause"
-					hx-swap="none"
-				>
+				<button class="btn btn-xs btn-outline flex-1" hx-post="/realtime/tavern/hotzones/pause" hx-swap="none">
 					if paused {
 						Resume
 					} else {
 						Pause
 					}
 				</button>
-				<button
-					class="btn btn-xs btn-outline btn-error"
-					hx-post="/realtime/tavern/hotzones/reset"
-					hx-swap="none"
-				>
+				<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/reset" hx-swap="none">
 					Reset Stats
 				</button>
 			</div>
@@ -499,41 +468,29 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 	</div>
 }
 
-// hotZoneLifecycleScript reports client-side command lifecycle events
-// and drives the heat-map visualization from SSE swap frequency.
+// hotZoneLifecycleScript drives heat-map visualization and command lifecycle reporting.
 templ hotZoneLifecycleScript() {
 	<script>
 		(function() {
 			var container = document.getElementById('hz-lab-container');
 			if (!container) return;
 
-			// --- Heat config (synced from server via SSE stats frame) ---
+			// --- Heat config ---
 			var heatCfg = {
-				enabled: true,
-				windowMS: 1000,
-				t1: 10, t2: 50, t3: 100,
-				base: [30, 41, 59],
-				c1: [34, 197, 94],
-				c2: [239, 68, 68],
-				c3: [168, 85, 247]
+				enabled: true, windowMS: 1000,
+				t1: 8, t2: 16, t3: 32,
+				base: [30, 41, 59], c1: [34, 197, 94], c2: [239, 68, 68], c3: [168, 85, 247]
 			};
-			// Per-region rolling timestamp buffers.
 			var samples = {};
 
-			// --- Color helpers ---
 			function parseHex(h) {
 				if (!h || h[0] !== '#' || h.length !== 7) return [128,128,128];
 				return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
 			}
 			function lerpColor(a, b, t) {
-				return [
-					Math.round(a[0]+(b[0]-a[0])*t),
-					Math.round(a[1]+(b[1]-a[1])*t),
-					Math.round(a[2]+(b[2]-a[2])*t)
-				];
+				return [Math.round(a[0]+(b[0]-a[0])*t), Math.round(a[1]+(b[1]-a[1])*t), Math.round(a[2]+(b[2]-a[2])*t)];
 			}
 			function toCSS(rgb) { return 'rgb('+rgb[0]+','+rgb[1]+','+rgb[2]+')'; }
-
 			function rateToColor(rate) {
 				if (rate <= 0) return toCSS(heatCfg.base);
 				if (rate <= heatCfg.t1) return toCSS(lerpColor(heatCfg.base, heatCfg.c1, rate/heatCfg.t1));
@@ -541,13 +498,10 @@ templ hotZoneLifecycleScript() {
 				if (rate <= heatCfg.t3) return toCSS(lerpColor(heatCfg.c2, heatCfg.c3, (rate-heatCfg.t2)/(heatCfg.t3-heatCfg.t2)));
 				return toCSS(heatCfg.c3);
 			}
-
-			// --- Rate tracking ---
 			function recordSwap(regionID) {
 				if (!samples[regionID]) samples[regionID] = [];
 				samples[regionID].push(Date.now());
 			}
-
 			function computeRate(regionID) {
 				var buf = samples[regionID];
 				if (!buf || buf.length === 0) return 0;
@@ -555,8 +509,6 @@ templ hotZoneLifecycleScript() {
 				while (buf.length > 0 && buf[0] < cutoff) buf.shift();
 				return (buf.length / heatCfg.windowMS) * 1000;
 			}
-
-			// --- Apply heat to cards ---
 			function applyHeat() {
 				if (!heatCfg.enabled) {
 					document.querySelectorAll('[data-hz-card]').forEach(function(card) {
@@ -579,20 +531,16 @@ templ hotZoneLifecycleScript() {
 					}
 				});
 			}
-
-			// Recompute heat every 100ms for smooth visual updates.
 			setInterval(applyHeat, 100);
 
-			// --- Sync config from SSE stats frames ---
-			// The stats panel includes data attributes with current heat settings.
 			function syncConfig() {
 				var el = document.getElementById('hz-heat-cfg');
 				if (!el) return;
 				heatCfg.enabled = el.getAttribute('data-enabled') === 'true';
 				heatCfg.windowMS = parseInt(el.getAttribute('data-window')) || 1000;
-				heatCfg.t1 = parseInt(el.getAttribute('data-t1')) || 10;
-				heatCfg.t2 = parseInt(el.getAttribute('data-t2')) || 50;
-				heatCfg.t3 = parseInt(el.getAttribute('data-t3')) || 100;
+				heatCfg.t1 = parseInt(el.getAttribute('data-t1')) || 8;
+				heatCfg.t2 = parseInt(el.getAttribute('data-t2')) || 16;
+				heatCfg.t3 = parseInt(el.getAttribute('data-t3')) || 32;
 				heatCfg.base = parseHex(el.getAttribute('data-base'));
 				heatCfg.c1 = parseHex(el.getAttribute('data-c1'));
 				heatCfg.c2 = parseHex(el.getAttribute('data-c2'));
@@ -601,24 +549,15 @@ templ hotZoneLifecycleScript() {
 
 			// --- Lifecycle reporting ---
 			function reportLifecycle(action, mode) {
-				fetch('/realtime/tavern/hotzones/lifecycle?action=' +
-					encodeURIComponent(action) + '&mode=' +
-					encodeURIComponent(mode), { method: 'POST' });
+				fetch('/realtime/tavern/hotzones/lifecycle?action=' + encodeURIComponent(action) + '&mode=' + encodeURIComponent(mode), { method: 'POST' });
 			}
 			function currentMode() {
 				var sel = document.querySelector('select[name="command_mode"]');
 				return sel ? sel.value : 'tavern-command';
 			}
-
-			container.addEventListener('tavern:command-sent', function() {
-				reportLifecycle('dispatched', currentMode());
-			});
-			container.addEventListener('tavern:command-success', function() {
-				reportLifecycle('succeeded', currentMode());
-			});
-			container.addEventListener('tavern:command-error', function() {
-				reportLifecycle('failed', currentMode());
-			});
+			container.addEventListener('tavern:command-sent', function() { reportLifecycle('dispatched', currentMode()); });
+			container.addEventListener('tavern:command-success', function() { reportLifecycle('succeeded', currentMode()); });
+			container.addEventListener('tavern:command-error', function() { reportLifecycle('failed', currentMode()); });
 
 			// --- SSE swap handler ---
 			document.body.addEventListener('htmx:afterSwap', function(evt) {
@@ -626,10 +565,8 @@ templ hotZoneLifecycleScript() {
 				if (elt && elt.id && elt.id.startsWith('hz-region-')) {
 					recordSwap(elt.id.replace('hz-region-', ''));
 				}
-				// Sync config whenever stats panel refreshes.
 				if (elt && elt.id === 'hz-stats') syncConfig();
 			});
-			// Initial config sync.
 			syncConfig();
 		})();
 	</script>

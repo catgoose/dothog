@@ -34,9 +34,10 @@ type tavernHotZoneRoutes struct {
 }
 
 func (ar *appRoutes) initTavernHotZoneRoutes(broker *tavern.SSEBroker) {
+	images := demo.LoadHotZoneImages("web/assets/public/images/hotzones/anime")
 	r := &tavernHotZoneRoutes{
 		broker: broker,
-		lab:    demo.NewHotZoneLab(),
+		lab:    demo.NewHotZoneLab(images),
 	}
 
 	broker.SetReplayPolicy(topicHZActivity, 10)
@@ -60,7 +61,6 @@ func (r *tavernHotZoneRoutes) handlePage(c echo.Context) error {
 func (r *tavernHotZoneRoutes) handleSSE(c echo.Context) error {
 	settings := r.lab.Settings()
 
-	// Subscribe to region topics for the active regions.
 	type sub struct {
 		ch    <-chan string
 		unsub func()
@@ -92,8 +92,6 @@ func (r *tavernHotZoneRoutes) handleSSE(c echo.Context) error {
 	fanIn := make(chan string, 20)
 	go func() {
 		defer close(fanIn)
-		// Build a combined select using reflect for dynamic region count.
-		// For simplicity and performance, poll with a small ticker.
 		ticker := time.NewTicker(10 * time.Millisecond)
 		defer ticker.Stop()
 		for {
@@ -102,7 +100,6 @@ func (r *tavernHotZoneRoutes) handleSSE(c echo.Context) error {
 				return
 			case <-ticker.C:
 			}
-			// Drain all region channels.
 			for _, s := range regionSubs {
 				for {
 					select {
@@ -121,7 +118,6 @@ func (r *tavernHotZoneRoutes) handleSSE(c echo.Context) error {
 				}
 			nextRegion:
 			}
-			// Drain stats.
 			for {
 				select {
 				case msg, ok := <-statsCh:
@@ -183,13 +179,18 @@ func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
 		if v, err := strconv.Atoi(c.FormValue("region_count")); err == nil && v >= 1 && v <= 64 {
 			s.RegionCount = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("payload_size")); err == nil && v >= 10 && v <= 10240 {
-			s.PayloadSize = v
-		}
 		if v, err := strconv.Atoi(c.FormValue("focused_region")); err == nil && v >= 0 && v <= 64 {
 			s.FocusedRegion = v
 		}
+		if v, err := strconv.Atoi(c.FormValue("jitter_min")); err == nil && v >= 0 && v <= 2000 {
+			s.JitterMinMS = v
+		}
+		if v, err := strconv.Atoi(c.FormValue("jitter_max")); err == nil && v >= 0 && v <= 5000 {
+			s.JitterMaxMS = v
+		}
 		s.BurstMode = c.FormValue("burst_mode") == "on"
+		s.AllowGIF = c.FormValue("allow_gif") == "on"
+		s.ShowMeta = c.FormValue("show_meta") == "on"
 		mode := demo.HotZoneMode(c.FormValue("command_mode"))
 		if mode == demo.HotZoneModeHXPost || mode == demo.HotZoneModeTavern {
 			s.CommandMode = mode
@@ -198,8 +199,7 @@ func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
 		if scope == demo.HotZoneSwapInner || scope == demo.HotZoneSwapCard {
 			s.SwapScope = scope
 		}
-		// Heat-map controls. Checkbox sends "on" when checked,
-		// absent when unchecked — always update from the form.
+		// Heat-map controls.
 		s.HeatEnabled = c.FormValue("heat_enabled") == "on"
 		if v, err := strconv.Atoi(c.FormValue("heat_window")); err == nil && v >= 100 && v <= 5000 {
 			s.HeatWindowMS = v
@@ -255,9 +255,8 @@ func (r *tavernHotZoneRoutes) handleReset(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-// handleCommand receives a user-triggered "command" from either hx-post or
-// Tavern.command(). It increments the region's counter and publishes the
-// updated region. The client sends the mode it used so we can track stats.
+// handleCommand toggles the lock state of a region. Locked regions are
+// skipped by the simulator, demonstrating command-up / SSE-render-down.
 func (r *tavernHotZoneRoutes) handleCommand(c echo.Context) error {
 	regionID, err := strconv.Atoi(c.FormValue("region"))
 	if err != nil {
@@ -274,15 +273,21 @@ func (r *tavernHotZoneRoutes) handleCommand(c echo.Context) error {
 		mode = demo.HotZoneModeTavern
 	}
 
+	locked := r.lab.ToggleLock(regionID)
+	action := "unlocked"
+	if locked {
+		action = "locked"
+	}
+
 	r.lab.RecordReceived(mode)
-	r.lab.RecordActivity(fmt.Sprintf("command via %s → region %d", mode, regionID))
+	r.lab.RecordActivity(fmt.Sprintf("%s region %d via %s", action, regionID, mode))
+	r.publishRegion(regionID)
 	r.publishStats()
 	r.publishActivity()
 	return c.NoContent(http.StatusNoContent)
 }
 
-// handleLifecycle receives client-reported command lifecycle events
-// (dispatched, succeeded, failed) so stats track the full lifecycle.
+// handleLifecycle receives client-reported command lifecycle events.
 func (r *tavernHotZoneRoutes) handleLifecycle(c echo.Context) error {
 	action := c.FormValue("action")
 	if action == "" {
@@ -324,9 +329,8 @@ func (r *tavernHotZoneRoutes) publishActivity() {
 func (r *tavernHotZoneRoutes) renderRegionFrame(id int) string {
 	region := r.lab.Region(id)
 	settings := r.lab.Settings()
-	payload := demo.GeneratePayload(region.PayloadRunes)
 	return tavern.NewSSEMessage(fmt.Sprintf("hz-region-%d", id),
-		renderToString("hz region", views.HotZoneRegionContent(region, settings, payload)),
+		renderToString("hz region", views.HotZoneRegionContent(region, settings)),
 	).String()
 }
 
@@ -347,16 +351,9 @@ func (r *tavernHotZoneRoutes) renderActivityFrame() string {
 // --- view-model ---
 
 func (r *tavernHotZoneRoutes) buildPageData() views.HotZoneLabData {
-	settings := r.lab.Settings()
-	regions := r.lab.Regions()
-	payloads := make([]string, len(regions))
-	for i, reg := range regions {
-		payloads[i] = demo.GeneratePayload(reg.PayloadRunes)
-	}
 	return views.HotZoneLabData{
-		Settings: settings,
-		Regions:  regions,
-		Payloads: payloads,
+		Settings: r.lab.Settings(),
+		Regions:  r.lab.Regions(),
 		Stats:    r.lab.CommandStats(),
 		Activity: r.lab.Activity(),
 		Paused:   r.lab.Paused(),
@@ -366,19 +363,15 @@ func (r *tavernHotZoneRoutes) buildPageData() views.HotZoneLabData {
 // --- simulator ---
 
 func (r *tavernHotZoneRoutes) startSimulator(ctx context.Context) {
-	ticker := time.NewTicker(500 * time.Millisecond)
-	defer ticker.Stop()
 	for {
+		delay := r.lab.JitteredInterval()
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
+		case <-time.After(delay):
 			if r.lab.Paused() {
 				continue
 			}
-			settings := r.lab.Settings()
-			ticker.Reset(time.Duration(settings.UpdateIntervalMS) * time.Millisecond)
-
 			updated := r.lab.SimTick()
 			for _, id := range updated {
 				r.publishRegion(id)
