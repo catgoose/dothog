@@ -265,10 +265,10 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					}
 				</label>
 				<div class="flex gap-1 flex-wrap">
-					<button class="btn btn-xs btn-outline" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"normal"}' hx-swap="none">Normal</button>
-					<button class="btn btn-xs btn-outline btn-warning" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hot"}' hx-swap="none">Hot</button>
-					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"nasty"}' hx-swap="none">Nasty</button>
-					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hell"}' hx-swap="none">Hell</button>
+					<button class="btn btn-xs btn-outline" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"normal"}' hx-swap="none" hx-on::after-request="location.reload()">Normal</button>
+					<button class="btn btn-xs btn-outline btn-warning" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hot"}' hx-swap="none" hx-on::after-request="location.reload()">Hot</button>
+					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"nasty"}' hx-swap="none" hx-on::after-request="location.reload()">Nasty</button>
+					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hell"}' hx-swap="none" hx-on::after-request="location.reload()">Hell</button>
 				</div>
 			</div>
 
@@ -307,6 +307,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					hx-swap="none"
 					hx-include="closest .card-body"
 					oninput="document.getElementById('hz-region-val').textContent=this.value"
+					hx-on::after-request="location.reload()"
 				/>
 			</div>
 

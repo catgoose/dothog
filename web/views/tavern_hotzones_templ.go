@@ -772,7 +772,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</label><div class=\"flex gap-1 flex-wrap\"><button class=\"btn btn-xs btn-outline\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-vals='{\"preset\":\"normal\"}' hx-swap=\"none\">Normal</button> <button class=\"btn btn-xs btn-outline btn-warning\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-vals='{\"preset\":\"hot\"}' hx-swap=\"none\">Hot</button> <button class=\"btn btn-xs btn-outline btn-error\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-vals='{\"preset\":\"nasty\"}' hx-swap=\"none\">Nasty</button> <button class=\"btn btn-xs btn-outline btn-error\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-vals='{\"preset\":\"hell\"}' hx-swap=\"none\">Hell</button></div></div><!-- Update interval slider --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Update interval</span> <span class=\"label-text-alt text-xs font-mono\" id=\"hz-interval-val\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</label><div class=\"flex gap-1 flex-wrap\"><button class=\"btn btn-xs btn-outline\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-vals='{\"preset\":\"normal\"}' hx-swap=\"none\" hx-on::after-request=\"location.reload()\">Normal</button> <button class=\"btn btn-xs btn-outline btn-warning\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-vals='{\"preset\":\"hot\"}' hx-swap=\"none\" hx-on::after-request=\"location.reload()\">Hot</button> <button class=\"btn btn-xs btn-outline btn-error\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-vals='{\"preset\":\"nasty\"}' hx-swap=\"none\" hx-on::after-request=\"location.reload()\">Nasty</button> <button class=\"btn btn-xs btn-outline btn-error\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-vals='{\"preset\":\"hell\"}' hx-swap=\"none\" hx-on::after-request=\"location.reload()\">Hell</button></div></div><!-- Update interval slider --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Update interval</span> <span class=\"label-text-alt text-xs font-mono\" id=\"hz-interval-val\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -824,14 +824,14 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "\" class=\"range range-xs range-secondary\" name=\"region_count\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\" oninput=\"document.getElementById('hz-region-val').textContent=this.value\"></div><!-- Payload size slider --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Payload size</span> <span class=\"label-text-alt text-xs font-mono\" id=\"hz-payload-val\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "\" class=\"range range-xs range-secondary\" name=\"region_count\" hx-post=\"/realtime/tavern/hotzones/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\" oninput=\"document.getElementById('hz-region-val').textContent=this.value\" hx-on::after-request=\"location.reload()\"></div><!-- Payload size slider --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Payload size</span> <span class=\"label-text-alt text-xs font-mono\" id=\"hz-payload-val\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.PayloadSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 317, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 318, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
@@ -844,7 +844,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.PayloadSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 321, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 322, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 		if templ_7745c5c3_Err != nil {
@@ -872,7 +872,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 347, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 348, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {
@@ -895,7 +895,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Region %d", i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 347, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 348, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -973,7 +973,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.HeatThreshold1))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 425, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 426, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 		if templ_7745c5c3_Err != nil {
@@ -986,7 +986,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.HeatThreshold2))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 429, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 430, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -999,7 +999,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.HeatThreshold3))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 433, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 434, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -1012,7 +1012,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(settings.HeatBaseColor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 439, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 440, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 		if templ_7745c5c3_Err != nil {
@@ -1025,7 +1025,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(settings.HeatColor1)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 443, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 444, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1038,7 +1038,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(settings.HeatColor2)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 447, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 448, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -1051,7 +1051,7 @@ func hotZoneControls(settings demo.HotZoneSettings, paused bool) templ.Component
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(settings.HeatColor3)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 451, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_hotzones.templ`, Line: 452, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {

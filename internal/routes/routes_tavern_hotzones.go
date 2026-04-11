@@ -198,10 +198,9 @@ func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
 		if scope == demo.HotZoneSwapInner || scope == demo.HotZoneSwapCard {
 			s.SwapScope = scope
 		}
-		// Heat-map controls.
-		if c.FormValue("heat_enabled") != "" {
-			s.HeatEnabled = c.FormValue("heat_enabled") == "on"
-		}
+		// Heat-map controls. Checkbox sends "on" when checked,
+		// absent when unchecked — always update from the form.
+		s.HeatEnabled = c.FormValue("heat_enabled") == "on"
 		if v, err := strconv.Atoi(c.FormValue("heat_window")); err == nil && v >= 100 && v <= 5000 {
 			s.HeatWindowMS = v
 		}
