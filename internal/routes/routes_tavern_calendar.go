@@ -241,7 +241,7 @@ func (r *tavernCalendarRoutes) handleControls(c echo.Context) error {
 		if v, err := strconv.Atoi(c.FormValue("density")); err == nil && v >= 1 && v <= 12 {
 			s.Density = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("sim_speed")); err == nil && v >= 1 && v <= 5000 {
+		if v, err := strconv.Atoi(c.FormValue("sim_speed")); err == nil && v >= 10 && v <= 5000 {
 			s.SimSpeed = v
 		}
 		if v, err := strconv.Atoi(c.FormValue("burst_size")); err == nil && v >= 1 && v <= 8 {

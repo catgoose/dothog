@@ -17,7 +17,7 @@ type CalendarLabSettings struct {
 	VisibleCategories map[CalendarEventCategory]bool
 	Assignee          string // "" = all
 	Density           int    // max events shown per day cell (1–12)
-	SimSpeed          int    // ms between ticks (1–5000)
+	SimSpeed          int    // ms between ticks (10–5000)
 	BurstSize         int    // synthetic events per tick (1–8)
 	CompactMode       bool
 	HighlightWeekends bool
