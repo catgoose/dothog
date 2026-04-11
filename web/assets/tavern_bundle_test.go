@@ -34,6 +34,11 @@ func TestTavernBundleContract(t *testing.T) {
 		t.Error("tavern.min.js missing delegated command support (commandDelegate/commandTarget); expected v0.0.17+")
 	}
 
+	// Must contain tavern-hearth shorthand (v0.0.22+).
+	if !strings.Contains(src, "tavern-hearth") {
+		t.Error("tavern.min.js missing tavern-hearth shorthand; expected v0.0.22+")
+	}
+
 	// Must contain hot-policy support (v0.0.17+).
 	if !strings.Contains(src, "hotPolicy") {
 		t.Error("tavern.min.js missing hot-policy support; expected v0.0.17+")
