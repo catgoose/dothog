@@ -124,7 +124,17 @@
           })
         );
 
-        Tavern.command(resolvedURL, body).then(
+        // Use Tavern.command if available, fall back to raw fetch.
+        var p =
+          typeof Tavern !== "undefined" && typeof Tavern.command === "function"
+            ? Tavern.command(resolvedURL, body)
+            : fetch(resolvedURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+              });
+
+        p.then(
           function (response) {
             target.dispatchEvent(
               new CustomEvent("tavern:command-success", {
