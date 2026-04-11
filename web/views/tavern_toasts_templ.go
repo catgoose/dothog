@@ -44,7 +44,7 @@ func ToastLabPage(data ToastLabData) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"toast-lab-page\" class=\"max-w-[90rem] mx-auto p-4 space-y-3\"><div><h1 class=\"text-2xl font-bold\">Toast Lab</h1><p class=\"text-xs text-base-content/50\">Tavern SSE events consumed by client-side JS to render ephemeral toast notifications. Demonstrates event-driven client rendering, replay policy, and stale/recovering state.</p></div><div id=\"toast-lab-container\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/toasts\" tavern-reconnecting-class=\"opacity-60\" tavern-stale-class=\"opacity-40\" tavern-live-class=\"\"><div tavern-status-recovering class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span>&#9888;</span> Reconnecting&hellip;</div><div tavern-status-stale class=\"hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2\"><span>&#9888;</span> Connection lost — toasts may be stale.</div><!-- SSE swap targets --><div sse-swap=\"toast-event\" hx-target=\"#toast-event-sink\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"toast-stats\" hx-target=\"#toast-lab-stats\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"toast-log\" hx-target=\"#toast-lab-log\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div class=\"grid grid-cols-1 lg:grid-cols-12 gap-3\"><!-- Left rail: controls + stats --><div class=\"lg:col-span-3 space-y-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"toast-lab-page\" class=\"max-w-[90rem] mx-auto p-4 space-y-3\"><div><h1 class=\"text-2xl font-bold\">Toast Lab</h1><p class=\"text-xs text-base-content/50\">Tavern-js lifecycle event gallery. Primary toasts come from Tavern-js DOM events (disconnect, reconnect, replay gap, scope changes). App-signal toasts are secondary.</p></div><div id=\"toast-lab-container\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/toasts\" tavern-reconnecting-class=\"opacity-60\" tavern-stale-class=\"opacity-40\" tavern-live-class=\"\"><div tavern-status-recovering class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span>&#9888;</span> Reconnecting&hellip;</div><div tavern-status-stale class=\"hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2\"><span>&#9888;</span> Connection lost — data may be stale.</div><!-- SSE swap targets --><div sse-swap=\"toast-event\" hx-target=\"#toast-event-sink\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"toast-stats\" hx-target=\"#toast-lab-stats\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"toast-log\" hx-target=\"#toast-lab-log\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div class=\"grid grid-cols-1 lg:grid-cols-12 gap-3\"><!-- Left rail: controls + stats --><div class=\"lg:col-span-3 space-y-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -60,7 +60,7 @@ func ToastLabPage(data ToastLabData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div></div></div><!-- Center: toast stage --><div class=\"lg:col-span-5\"><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-3 space-y-2\"><div class=\"flex items-center justify-between\"><h2 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/60\">Live Toasts</h2><span class=\"text-xs text-base-content/40 font-mono\" id=\"toast-count\">0</span></div><!-- Hidden sink: SSE swaps JSON here, JS reads and removes it --><div id=\"toast-event-sink\" class=\"hidden\"></div><!-- Client-rendered toast stack --><div id=\"toast-stack\" class=\"space-y-2 min-h-[24rem]\" data-max-stack=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div></div></div><!-- Center: toast stage --><div class=\"lg:col-span-5\"><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-3 space-y-2\"><div class=\"flex items-center justify-between\"><h2 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/60\">Live Toasts</h2><span class=\"text-xs text-base-content/40 font-mono\" id=\"toast-count\">0</span></div><!-- Hidden sink for app-signal toasts via SSE --><div id=\"toast-event-sink\" class=\"hidden\"></div><!-- Client-rendered toast stack --><div id=\"toast-stack\" class=\"space-y-2 min-h-[24rem]\" data-max-stack=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -73,7 +73,7 @@ func ToastLabPage(data ToastLabData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\"><p class=\"text-xs text-base-content/30 py-4 text-center\" id=\"toast-empty\">Waiting for toasts&hellip;</p></div></div></div></div><!-- Right rail: lifecycle log --><div class=\"lg:col-span-4\"><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-3 space-y-1\"><h2 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/60\">Lifecycle Log</h2><div id=\"toast-lab-log\" class=\"max-h-[28rem] overflow-y-auto overflow-x-hidden text-xs font-mono space-y-0.5\" style=\"contain:paint\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\"><p class=\"text-xs text-base-content/30 py-4 text-center\" id=\"toast-empty\">Waiting for events&hellip;</p></div></div></div></div><!-- Right rail: event inspector --><div class=\"lg:col-span-4 space-y-3\"><!-- Event counters --><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-3 space-y-1\"><h2 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/60\">Tavern-js Events</h2><div id=\"toast-event-counters\" class=\"space-y-0.5 text-xs font-mono\"><div class=\"flex justify-between\"><span class=\"text-base-content/50\">disconnected</span><span id=\"cnt-disconnected\">0</span></div><div class=\"flex justify-between\"><span class=\"text-base-content/50\">reconnected</span><span id=\"cnt-reconnected\">0</span></div><div class=\"flex justify-between\"><span class=\"text-base-content/50\">replay-gap</span><span id=\"cnt-replay-gap\">0</span></div><div class=\"flex justify-between\"><span class=\"text-base-content/50\">transport-open</span><span id=\"cnt-transport-open\">0</span></div><div class=\"flex justify-between\"><span class=\"text-base-content/50\">topics-changed</span><span id=\"cnt-topics-changed\">0</span></div><div class=\"flex justify-between\"><span class=\"text-base-content/50\">live</span><span id=\"cnt-live\">0</span></div><div class=\"flex justify-between\"><span class=\"text-base-content/50\">recovering</span><span id=\"cnt-recovering\">0</span></div><div class=\"flex justify-between\"><span class=\"text-base-content/50\">stale</span><span id=\"cnt-stale\">0</span></div><div class=\"flex justify-between text-base-content/30\"><span>app-signal</span><span id=\"cnt-app-signal\">0</span></div></div></div></div><!-- Lifecycle log --><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-3 space-y-1\"><h2 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/60\">Lifecycle Log</h2><div id=\"toast-lab-log\" class=\"max-h-[20rem] overflow-y-auto overflow-x-hidden text-xs font-mono space-y-0.5\" style=\"contain:paint\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -81,7 +81,7 @@ func ToastLabPage(data ToastLabData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div></div></div></div></div></div></div><!-- Toast client-side renderer (loaded inline, only on this page) --><script>\n\t\t(function() {\n\t\t\tvar stack = document.getElementById('toast-stack');\n\t\t\tvar sink = document.getElementById('toast-event-sink');\n\t\t\tvar countEl = document.getElementById('toast-count');\n\t\t\tvar emptyEl = document.getElementById('toast-empty');\n\t\t\tvar maxStack = parseInt(stack.dataset.maxStack) || 8;\n\n\t\t\tvar severityClass = {\n\t\t\t\tsuccess: 'alert-success',\n\t\t\t\tinfo: 'alert-info',\n\t\t\t\twarning: 'alert-warning',\n\t\t\t\terror: 'alert-error'\n\t\t\t};\n\n\t\t\t// Report a lifecycle event to the server for stats tracking.\n\t\t\tfunction reportLifecycle(action) {\n\t\t\t\tfetch('/realtime/tavern/toasts/lifecycle?action=' + action, {method: 'POST'});\n\t\t\t}\n\n\t\t\tfunction updateCount() {\n\t\t\t\tvar n = stack.querySelectorAll('.toast-item').length;\n\t\t\t\tcountEl.textContent = n;\n\t\t\t\tif (emptyEl) emptyEl.style.display = n > 0 ? 'none' : '';\n\t\t\t}\n\n\t\t\tfunction addToast(evt) {\n\t\t\t\tif (emptyEl) emptyEl.style.display = 'none';\n\n\t\t\t\t// Enforce stack cap — drop oldest\n\t\t\t\tvar items = stack.querySelectorAll('.toast-item');\n\t\t\t\twhile (items.length >= maxStack) {\n\t\t\t\t\titems[0].remove();\n\t\t\t\t\treportLifecycle('dropped');\n\t\t\t\t\titems = stack.querySelectorAll('.toast-item');\n\t\t\t\t}\n\n\t\t\t\tvar el = document.createElement('div');\n\t\t\t\tel.className = 'toast-item alert ' + (severityClass[evt.severity] || 'alert-info') + ' py-2 px-3 text-sm shadow-sm flex items-start gap-2';\n\t\t\t\tel.dataset.toastId = evt.id;\n\n\t\t\t\tvar body = document.createElement('div');\n\t\t\t\tbody.className = 'flex-1 min-w-0';\n\t\t\t\tvar title = document.createElement('div');\n\t\t\t\ttitle.className = 'font-semibold text-xs';\n\t\t\t\ttitle.textContent = evt.title;\n\t\t\t\tvar detail = document.createElement('div');\n\t\t\t\tdetail.className = 'text-xs opacity-70 truncate';\n\t\t\t\tdetail.textContent = evt.body + ' — ' + evt.source;\n\t\t\t\tbody.appendChild(title);\n\t\t\t\tbody.appendChild(detail);\n\n\t\t\t\tvar dismiss = document.createElement('button');\n\t\t\t\tdismiss.className = 'btn btn-ghost btn-xs shrink-0';\n\t\t\t\tdismiss.innerHTML = '&times;';\n\t\t\t\tdismiss.onclick = function() {\n\t\t\t\t\tel.remove();\n\t\t\t\t\tupdateCount();\n\t\t\t\t\treportLifecycle('dismissed');\n\t\t\t\t};\n\n\t\t\t\tel.appendChild(body);\n\t\t\t\tel.appendChild(dismiss);\n\t\t\t\tstack.appendChild(el);\n\t\t\t\tupdateCount();\n\t\t\t\treportLifecycle('displayed');\n\n\t\t\t\t// Auto-dismiss unless sticky\n\t\t\t\tif (!evt.sticky && evt.duration_ms > 0) {\n\t\t\t\t\tsetTimeout(function() {\n\t\t\t\t\t\tif (el.parentNode) {\n\t\t\t\t\t\t\tel.remove();\n\t\t\t\t\t\t\tupdateCount();\n\t\t\t\t\t\t\treportLifecycle('dismissed');\n\t\t\t\t\t\t}\n\t\t\t\t\t}, evt.duration_ms);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\t// Watch the hidden sink for SSE-delivered JSON payloads\n\t\t\tvar observer = new MutationObserver(function() {\n\t\t\t\tvar raw = sink.textContent.trim();\n\t\t\t\tif (!raw) return;\n\t\t\t\tsink.textContent = '';\n\t\t\t\ttry {\n\t\t\t\t\tvar evt = JSON.parse(raw);\n\t\t\t\t\taddToast(evt);\n\t\t\t\t} catch(e) {\n\t\t\t\t\tconsole.warn('[toast-lab] failed to parse event:', e);\n\t\t\t\t}\n\t\t\t});\n\t\t\tobserver.observe(sink, { childList: true, characterData: true, subtree: true });\n\n\t\t\t// Update max stack when settings change\n\t\t\tdocument.addEventListener('htmx:afterSettle', function() {\n\t\t\t\tvar newMax = parseInt(stack.dataset.maxStack);\n\t\t\t\tif (newMax && newMax !== maxStack) maxStack = newMax;\n\t\t\t});\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div></div></div></div></div></div></div><script>\n\t\t(function() {\n\t\t\tvar container = document.getElementById('toast-lab-container');\n\t\t\tvar stack = document.getElementById('toast-stack');\n\t\t\tvar sink = document.getElementById('toast-event-sink');\n\t\t\tvar countEl = document.getElementById('toast-count');\n\t\t\tvar emptyEl = document.getElementById('toast-empty');\n\t\t\tvar maxStack = parseInt(stack.dataset.maxStack) || 8;\n\n\t\t\tvar severityMap = {\n\t\t\t\tsuccess: 'alert-success',\n\t\t\t\tinfo: 'alert-info',\n\t\t\t\twarning: 'alert-warning',\n\t\t\t\terror: 'alert-error'\n\t\t\t};\n\n\t\t\t// Event counters\n\t\t\tvar counters = {};\n\t\t\tfunction incrCounter(name) {\n\t\t\t\tcounters[name] = (counters[name] || 0) + 1;\n\t\t\t\tvar el = document.getElementById('cnt-' + name);\n\t\t\t\tif (el) el.textContent = counters[name];\n\t\t\t}\n\n\t\t\tfunction reportLifecycle(action) {\n\t\t\t\tfetch('/realtime/tavern/toasts/lifecycle?action=' + action, {method: 'POST'});\n\t\t\t}\n\n\t\t\tfunction updateCount() {\n\t\t\t\tvar n = stack.querySelectorAll('.toast-item').length;\n\t\t\t\tcountEl.textContent = n;\n\t\t\t\tif (emptyEl) emptyEl.style.display = n > 0 ? 'none' : '';\n\t\t\t}\n\n\t\t\t// Render a toast into the stack.\n\t\t\t// source: \"tavern-js\" or \"app\"\n\t\t\tfunction addToast(severity, title, detail, source, sticky) {\n\t\t\t\tif (emptyEl) emptyEl.style.display = 'none';\n\n\t\t\t\tvar items = stack.querySelectorAll('.toast-item');\n\t\t\t\twhile (items.length >= maxStack) {\n\t\t\t\t\titems[0].remove();\n\t\t\t\t\treportLifecycle('dropped');\n\t\t\t\t\titems = stack.querySelectorAll('.toast-item');\n\t\t\t\t}\n\n\t\t\t\tvar el = document.createElement('div');\n\t\t\t\tel.className = 'toast-item alert ' + (severityMap[severity] || 'alert-info') + ' py-2 px-3 text-sm shadow-sm flex items-start gap-2';\n\n\t\t\t\tvar badge = document.createElement('span');\n\t\t\t\tbadge.className = 'badge badge-xs shrink-0 ' + (source === 'tavern-js' ? 'badge-primary' : 'badge-ghost');\n\t\t\t\tbadge.textContent = source;\n\n\t\t\t\tvar body = document.createElement('div');\n\t\t\t\tbody.className = 'flex-1 min-w-0';\n\t\t\t\tvar titleEl = document.createElement('div');\n\t\t\t\ttitleEl.className = 'font-semibold text-xs';\n\t\t\t\ttitleEl.textContent = title;\n\t\t\t\tbody.appendChild(titleEl);\n\t\t\t\tif (detail) {\n\t\t\t\t\tvar detailEl = document.createElement('div');\n\t\t\t\t\tdetailEl.className = 'text-xs opacity-70 truncate';\n\t\t\t\t\tdetailEl.textContent = detail;\n\t\t\t\t\tbody.appendChild(detailEl);\n\t\t\t\t}\n\n\t\t\t\tvar dismiss = document.createElement('button');\n\t\t\t\tdismiss.className = 'btn btn-ghost btn-xs shrink-0';\n\t\t\t\tdismiss.innerHTML = '&times;';\n\t\t\t\tdismiss.onclick = function() {\n\t\t\t\t\tel.remove();\n\t\t\t\t\tupdateCount();\n\t\t\t\t\treportLifecycle('dismissed');\n\t\t\t\t};\n\n\t\t\t\tel.appendChild(badge);\n\t\t\t\tel.appendChild(body);\n\t\t\t\tel.appendChild(dismiss);\n\t\t\t\tstack.appendChild(el);\n\t\t\t\tupdateCount();\n\t\t\t\treportLifecycle('displayed');\n\n\t\t\t\tif (!sticky) {\n\t\t\t\t\tvar dur = parseInt(stack.dataset.dismissMs) || 5000;\n\t\t\t\t\tsetTimeout(function() {\n\t\t\t\t\t\tif (el.parentNode) {\n\t\t\t\t\t\t\tel.remove();\n\t\t\t\t\t\t\tupdateCount();\n\t\t\t\t\t\t\treportLifecycle('dismissed');\n\t\t\t\t\t\t}\n\t\t\t\t\t}, dur);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\t// --- Tavern-js lifecycle event listeners (primary toast source) ---\n\n\t\t\tcontainer.addEventListener('tavern:disconnected', function() {\n\t\t\t\tincrCounter('disconnected');\n\t\t\t\taddToast('warning', 'Disconnected', 'SSE connection lost', 'tavern-js', true);\n\t\t\t});\n\n\t\t\tcontainer.addEventListener('tavern:reconnected', function() {\n\t\t\t\tincrCounter('reconnected');\n\t\t\t\t// Dismiss any sticky disconnect toasts\n\t\t\t\tstack.querySelectorAll('.toast-item').forEach(function(el) {\n\t\t\t\t\tif (el.querySelector('.font-semibold') && el.querySelector('.font-semibold').textContent === 'Disconnected') {\n\t\t\t\t\t\tel.remove();\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\taddToast('success', 'Reconnected', 'SSE connection restored', 'tavern-js', false);\n\t\t\t\tupdateCount();\n\t\t\t});\n\n\t\t\tcontainer.addEventListener('tavern:replay-gap', function(e) {\n\t\t\t\tincrCounter('replay-gap');\n\t\t\t\tvar detail = e.detail && e.detail.lastEventId ? 'Last ID: ' + e.detail.lastEventId : 'Events were missed during disconnection';\n\t\t\t\taddToast('error', 'Replay Gap', detail, 'tavern-js', true);\n\t\t\t});\n\n\t\t\tcontainer.addEventListener('tavern:transport-open', function() {\n\t\t\t\tincrCounter('transport-open');\n\t\t\t\t// Log but don't toast — too noisy\n\t\t\t});\n\n\t\t\tcontainer.addEventListener('tavern:topics-changed', function(e) {\n\t\t\t\tincrCounter('topics-changed');\n\t\t\t\tvar detail = e.detail ? JSON.stringify(e.detail) : 'Topics updated';\n\t\t\t\taddToast('info', 'Topics Changed', detail, 'tavern-js', false);\n\t\t\t});\n\n\t\t\tcontainer.addEventListener('tavern:live', function() {\n\t\t\t\tincrCounter('live');\n\t\t\t\taddToast('success', 'Live', 'Region is receiving live data', 'tavern-js', false);\n\t\t\t});\n\n\t\t\tcontainer.addEventListener('tavern:recovering', function() {\n\t\t\t\tincrCounter('recovering');\n\t\t\t\taddToast('warning', 'Recovering', 'Replaying missed events', 'tavern-js', false);\n\t\t\t});\n\n\t\t\tcontainer.addEventListener('tavern:stale', function() {\n\t\t\t\tincrCounter('stale');\n\t\t\t\taddToast('error', 'Stale', 'Connection failed — displayed data may be outdated', 'tavern-js', true);\n\t\t\t});\n\n\t\t\t// --- App-signal toasts (secondary, from SSE JSON payloads) ---\n\n\t\t\tvar observer = new MutationObserver(function() {\n\t\t\t\tvar raw = sink.textContent.trim();\n\t\t\t\tif (!raw) return;\n\t\t\t\tsink.textContent = '';\n\t\t\t\ttry {\n\t\t\t\t\tvar evt = JSON.parse(raw);\n\t\t\t\t\tincrCounter('app-signal');\n\t\t\t\t\taddToast(evt.severity || 'info', evt.title, evt.body + ' — ' + evt.source, 'app', evt.sticky);\n\t\t\t\t} catch(e) {\n\t\t\t\t\tconsole.warn('[toast-lab] parse error:', e);\n\t\t\t\t}\n\t\t\t});\n\t\t\tobserver.observe(sink, { childList: true, characterData: true, subtree: true });\n\n\t\t\t// Update max stack when settings change\n\t\t\tdocument.addEventListener('htmx:afterSettle', function() {\n\t\t\t\tvar newMax = parseInt(stack.dataset.maxStack);\n\t\t\t\tif (newMax && newMax !== maxStack) maxStack = newMax;\n\t\t\t});\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -133,7 +133,7 @@ func ToastLabStatsFragment(settings demo.ToastLabSettings, stats demo.ToastLabSt
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%dms", settings.RateMS))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 211, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 296, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -146,7 +146,7 @@ func ToastLabStatsFragment(settings demo.ToastLabSettings, stats demo.ToastLabSt
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(string(settings.SeverityMix))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 215, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 300, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -159,7 +159,7 @@ func ToastLabStatsFragment(settings demo.ToastLabSettings, stats demo.ToastLabSt
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.Published))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 220, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 305, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -172,7 +172,7 @@ func ToastLabStatsFragment(settings demo.ToastLabSettings, stats demo.ToastLabSt
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.Displayed))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 224, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 309, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -185,7 +185,7 @@ func ToastLabStatsFragment(settings demo.ToastLabSettings, stats demo.ToastLabSt
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.Dismissed))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 228, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 313, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -198,7 +198,7 @@ func ToastLabStatsFragment(settings demo.ToastLabSettings, stats demo.ToastLabSt
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.Dropped))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 232, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 317, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -248,7 +248,7 @@ func ToastLabLogEntries(log []demo.ToastLabLogEntry) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(log[i].Timestamp.Format("15:04:05"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 244, Col: 98}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 329, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -261,7 +261,7 @@ func ToastLabLogEntries(log []demo.ToastLabLogEntry) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(log[i].Action)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 245, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 330, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -299,14 +299,14 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-3 space-y-2\"><h2 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/60\">Controls</h2><!-- Rate slider --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Rate</span> <span class=\"label-text-alt text-xs font-mono\" id=\"toast-rate-val\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-3 space-y-2\"><h2 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/60\">Controls</h2><!-- Rate slider --><div class=\"form-control\"><label class=\"label py-0\"><span class=\"label-text text-xs\">Sim rate</span> <span class=\"label-text-alt text-xs font-mono\" id=\"toast-rate-val\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%dms", settings.RateMS))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 261, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 346, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -319,7 +319,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.RateMS))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 265, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 350, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -332,7 +332,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%ds", settings.DismissDurMS/1000))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 280, Col: 123}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 365, Col: 123}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -345,7 +345,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.DismissDurMS))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 284, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 369, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -358,7 +358,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.StackSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 299, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 384, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -371,7 +371,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.StackSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 303, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 388, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -384,7 +384,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.BurstSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 318, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 403, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -397,7 +397,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", settings.BurstSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 322, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 407, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -453,7 +453,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, " hx-post=\"/realtime/tavern/toasts/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\"></label><!-- Manual emit buttons --><div class=\"space-y-1\"><span class=\"text-xs text-base-content/60\">Emit</span><div class=\"flex flex-wrap gap-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, " hx-post=\"/realtime/tavern/toasts/controls\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"closest .card-body\"></label><!-- Manual emit buttons (app signals) --><div class=\"space-y-1\"><span class=\"text-xs text-base-content/60\">App Signals</span><div class=\"flex flex-wrap gap-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -465,7 +465,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs("/realtime/tavern/toasts/emit?severity=" + string(sev))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 375, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 460, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -478,7 +478,7 @@ func toastLabControls(settings demo.ToastLabSettings, paused bool) templ.Compone
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(string(sev))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 378, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_toasts.templ`, Line: 463, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {

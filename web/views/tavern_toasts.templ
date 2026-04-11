@@ -20,8 +20,8 @@ templ ToastLabPage(data ToastLabData) {
 		<div>
 			<h1 class="text-2xl font-bold">Toast Lab</h1>
 			<p class="text-xs text-base-content/50">
-				Tavern SSE events consumed by client-side JS to render ephemeral toast notifications.
-				Demonstrates event-driven client rendering, replay policy, and stale/recovering state.
+				Tavern-js lifecycle event gallery. Primary toasts come from Tavern-js DOM events
+				(disconnect, reconnect, replay gap, scope changes). App-signal toasts are secondary.
 			</p>
 		</div>
 
@@ -37,7 +37,7 @@ templ ToastLabPage(data ToastLabData) {
 				<span>&#9888;</span> Reconnecting&hellip;
 			</div>
 			<div tavern-status-stale class="hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2">
-				<span>&#9888;</span> Connection lost — toasts may be stale.
+				<span>&#9888;</span> Connection lost — data may be stale.
 			</div>
 
 			<!-- SSE swap targets -->
@@ -67,22 +67,40 @@ templ ToastLabPage(data ToastLabData) {
 								<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Live Toasts</h2>
 								<span class="text-xs text-base-content/40 font-mono" id="toast-count">0</span>
 							</div>
-							<!-- Hidden sink: SSE swaps JSON here, JS reads and removes it -->
+							<!-- Hidden sink for app-signal toasts via SSE -->
 							<div id="toast-event-sink" class="hidden"></div>
 							<!-- Client-rendered toast stack -->
 							<div id="toast-stack" class="space-y-2 min-h-[24rem]" data-max-stack={ fmt.Sprintf("%d", data.Settings.StackSize) }>
-								<p class="text-xs text-base-content/30 py-4 text-center" id="toast-empty">Waiting for toasts&hellip;</p>
+								<p class="text-xs text-base-content/30 py-4 text-center" id="toast-empty">Waiting for events&hellip;</p>
 							</div>
 						</div>
 					</div>
 				</div>
 
-				<!-- Right rail: lifecycle log -->
-				<div class="lg:col-span-4">
+				<!-- Right rail: event inspector -->
+				<div class="lg:col-span-4 space-y-3">
+					<!-- Event counters -->
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-3 space-y-1">
+							<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Tavern-js Events</h2>
+							<div id="toast-event-counters" class="space-y-0.5 text-xs font-mono">
+								<div class="flex justify-between"><span class="text-base-content/50">disconnected</span><span id="cnt-disconnected">0</span></div>
+								<div class="flex justify-between"><span class="text-base-content/50">reconnected</span><span id="cnt-reconnected">0</span></div>
+								<div class="flex justify-between"><span class="text-base-content/50">replay-gap</span><span id="cnt-replay-gap">0</span></div>
+								<div class="flex justify-between"><span class="text-base-content/50">transport-open</span><span id="cnt-transport-open">0</span></div>
+								<div class="flex justify-between"><span class="text-base-content/50">topics-changed</span><span id="cnt-topics-changed">0</span></div>
+								<div class="flex justify-between"><span class="text-base-content/50">live</span><span id="cnt-live">0</span></div>
+								<div class="flex justify-between"><span class="text-base-content/50">recovering</span><span id="cnt-recovering">0</span></div>
+								<div class="flex justify-between"><span class="text-base-content/50">stale</span><span id="cnt-stale">0</span></div>
+								<div class="flex justify-between text-base-content/30"><span>app-signal</span><span id="cnt-app-signal">0</span></div>
+							</div>
+						</div>
+					</div>
+					<!-- Lifecycle log -->
 					<div class="card bg-base-200 shadow-sm">
 						<div class="card-body p-3 space-y-1">
 							<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Lifecycle Log</h2>
-							<div id="toast-lab-log" class="max-h-[28rem] overflow-y-auto overflow-x-hidden text-xs font-mono space-y-0.5" style="contain:paint">
+							<div id="toast-lab-log" class="max-h-[20rem] overflow-y-auto overflow-x-hidden text-xs font-mono space-y-0.5" style="contain:paint">
 								@ToastLabLogEntries(data.Log)
 							</div>
 						</div>
@@ -92,23 +110,30 @@ templ ToastLabPage(data ToastLabData) {
 		</div>
 	</div>
 
-	<!-- Toast client-side renderer (loaded inline, only on this page) -->
 	<script>
 		(function() {
+			var container = document.getElementById('toast-lab-container');
 			var stack = document.getElementById('toast-stack');
 			var sink = document.getElementById('toast-event-sink');
 			var countEl = document.getElementById('toast-count');
 			var emptyEl = document.getElementById('toast-empty');
 			var maxStack = parseInt(stack.dataset.maxStack) || 8;
 
-			var severityClass = {
+			var severityMap = {
 				success: 'alert-success',
 				info: 'alert-info',
 				warning: 'alert-warning',
 				error: 'alert-error'
 			};
 
-			// Report a lifecycle event to the server for stats tracking.
+			// Event counters
+			var counters = {};
+			function incrCounter(name) {
+				counters[name] = (counters[name] || 0) + 1;
+				var el = document.getElementById('cnt-' + name);
+				if (el) el.textContent = counters[name];
+			}
+
 			function reportLifecycle(action) {
 				fetch('/realtime/tavern/toasts/lifecycle?action=' + action, {method: 'POST'});
 			}
@@ -119,10 +144,11 @@ templ ToastLabPage(data ToastLabData) {
 				if (emptyEl) emptyEl.style.display = n > 0 ? 'none' : '';
 			}
 
-			function addToast(evt) {
+			// Render a toast into the stack.
+			// source: "tavern-js" or "app"
+			function addToast(severity, title, detail, source, sticky) {
 				if (emptyEl) emptyEl.style.display = 'none';
 
-				// Enforce stack cap — drop oldest
 				var items = stack.querySelectorAll('.toast-item');
 				while (items.length >= maxStack) {
 					items[0].remove();
@@ -131,19 +157,24 @@ templ ToastLabPage(data ToastLabData) {
 				}
 
 				var el = document.createElement('div');
-				el.className = 'toast-item alert ' + (severityClass[evt.severity] || 'alert-info') + ' py-2 px-3 text-sm shadow-sm flex items-start gap-2';
-				el.dataset.toastId = evt.id;
+				el.className = 'toast-item alert ' + (severityMap[severity] || 'alert-info') + ' py-2 px-3 text-sm shadow-sm flex items-start gap-2';
+
+				var badge = document.createElement('span');
+				badge.className = 'badge badge-xs shrink-0 ' + (source === 'tavern-js' ? 'badge-primary' : 'badge-ghost');
+				badge.textContent = source;
 
 				var body = document.createElement('div');
 				body.className = 'flex-1 min-w-0';
-				var title = document.createElement('div');
-				title.className = 'font-semibold text-xs';
-				title.textContent = evt.title;
-				var detail = document.createElement('div');
-				detail.className = 'text-xs opacity-70 truncate';
-				detail.textContent = evt.body + ' — ' + evt.source;
-				body.appendChild(title);
-				body.appendChild(detail);
+				var titleEl = document.createElement('div');
+				titleEl.className = 'font-semibold text-xs';
+				titleEl.textContent = title;
+				body.appendChild(titleEl);
+				if (detail) {
+					var detailEl = document.createElement('div');
+					detailEl.className = 'text-xs opacity-70 truncate';
+					detailEl.textContent = detail;
+					body.appendChild(detailEl);
+				}
 
 				var dismiss = document.createElement('button');
 				dismiss.className = 'btn btn-ghost btn-xs shrink-0';
@@ -154,34 +185,88 @@ templ ToastLabPage(data ToastLabData) {
 					reportLifecycle('dismissed');
 				};
 
+				el.appendChild(badge);
 				el.appendChild(body);
 				el.appendChild(dismiss);
 				stack.appendChild(el);
 				updateCount();
 				reportLifecycle('displayed');
 
-				// Auto-dismiss unless sticky
-				if (!evt.sticky && evt.duration_ms > 0) {
+				if (!sticky) {
+					var dur = parseInt(stack.dataset.dismissMs) || 5000;
 					setTimeout(function() {
 						if (el.parentNode) {
 							el.remove();
 							updateCount();
 							reportLifecycle('dismissed');
 						}
-					}, evt.duration_ms);
+					}, dur);
 				}
 			}
 
-			// Watch the hidden sink for SSE-delivered JSON payloads
+			// --- Tavern-js lifecycle event listeners (primary toast source) ---
+
+			container.addEventListener('tavern:disconnected', function() {
+				incrCounter('disconnected');
+				addToast('warning', 'Disconnected', 'SSE connection lost', 'tavern-js', true);
+			});
+
+			container.addEventListener('tavern:reconnected', function() {
+				incrCounter('reconnected');
+				// Dismiss any sticky disconnect toasts
+				stack.querySelectorAll('.toast-item').forEach(function(el) {
+					if (el.querySelector('.font-semibold') && el.querySelector('.font-semibold').textContent === 'Disconnected') {
+						el.remove();
+					}
+				});
+				addToast('success', 'Reconnected', 'SSE connection restored', 'tavern-js', false);
+				updateCount();
+			});
+
+			container.addEventListener('tavern:replay-gap', function(e) {
+				incrCounter('replay-gap');
+				var detail = e.detail && e.detail.lastEventId ? 'Last ID: ' + e.detail.lastEventId : 'Events were missed during disconnection';
+				addToast('error', 'Replay Gap', detail, 'tavern-js', true);
+			});
+
+			container.addEventListener('tavern:transport-open', function() {
+				incrCounter('transport-open');
+				// Log but don't toast — too noisy
+			});
+
+			container.addEventListener('tavern:topics-changed', function(e) {
+				incrCounter('topics-changed');
+				var detail = e.detail ? JSON.stringify(e.detail) : 'Topics updated';
+				addToast('info', 'Topics Changed', detail, 'tavern-js', false);
+			});
+
+			container.addEventListener('tavern:live', function() {
+				incrCounter('live');
+				addToast('success', 'Live', 'Region is receiving live data', 'tavern-js', false);
+			});
+
+			container.addEventListener('tavern:recovering', function() {
+				incrCounter('recovering');
+				addToast('warning', 'Recovering', 'Replaying missed events', 'tavern-js', false);
+			});
+
+			container.addEventListener('tavern:stale', function() {
+				incrCounter('stale');
+				addToast('error', 'Stale', 'Connection failed — displayed data may be outdated', 'tavern-js', true);
+			});
+
+			// --- App-signal toasts (secondary, from SSE JSON payloads) ---
+
 			var observer = new MutationObserver(function() {
 				var raw = sink.textContent.trim();
 				if (!raw) return;
 				sink.textContent = '';
 				try {
 					var evt = JSON.parse(raw);
-					addToast(evt);
+					incrCounter('app-signal');
+					addToast(evt.severity || 'info', evt.title, evt.body + ' — ' + evt.source, 'app', evt.sticky);
 				} catch(e) {
-					console.warn('[toast-lab] failed to parse event:', e);
+					console.warn('[toast-lab] parse error:', e);
 				}
 			});
 			observer.observe(sink, { childList: true, characterData: true, subtree: true });
@@ -257,7 +342,7 @@ templ toastLabControls(settings demo.ToastLabSettings, paused bool) {
 			<!-- Rate slider -->
 			<div class="form-control">
 				<label class="label py-0">
-					<span class="label-text text-xs">Rate</span>
+					<span class="label-text text-xs">Sim rate</span>
 					<span class="label-text-alt text-xs font-mono" id="toast-rate-val">{ fmt.Sprintf("%dms", settings.RateMS) }</span>
 				</label>
 				<input
@@ -365,9 +450,9 @@ templ toastLabControls(settings demo.ToastLabSettings, paused bool) {
 				/>
 			</label>
 
-			<!-- Manual emit buttons -->
+			<!-- Manual emit buttons (app signals) -->
 			<div class="space-y-1">
-				<span class="text-xs text-base-content/60">Emit</span>
+				<span class="text-xs text-base-content/60">App Signals</span>
 				<div class="flex flex-wrap gap-1">
 					for _, sev := range demo.AllToastSeverities {
 						<button
