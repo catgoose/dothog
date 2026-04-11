@@ -295,6 +295,8 @@ templ CalendarLabMonthBreakdown(data CalendarMonthData, dayEvents map[int][]demo
 			}
 		</div>
 		<p class="text-xs text-base-content/40 pt-1">Click a day to inspect or add events.</p>
+		<!-- Stable SSE target: cal-day-list always has a target even in month-breakdown mode. -->
+		<div id="cal-lab-day-list" class="hidden"></div>
 	</div>
 }
 

@@ -21,9 +21,9 @@ func TestCalendarLab_NewLab(t *testing.T) {
 	assert.Greater(t, lab.EventCount(), 0, "should have seed events")
 
 	settings := lab.Settings()
-	assert.Equal(t, 4, settings.Density)
-	assert.Equal(t, 2000, settings.SimSpeed)
-	assert.Equal(t, 1, settings.BurstSize)
+	assert.Equal(t, 8, settings.Density)
+	assert.Equal(t, 200, settings.SimSpeed)
+	assert.Equal(t, 5, settings.BurstSize)
 	for _, cat := range AllCalendarCategories {
 		assert.True(t, settings.VisibleCategories[cat], "category %s should default to visible", cat)
 	}
