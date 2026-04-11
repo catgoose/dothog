@@ -16,9 +16,9 @@ import (
 type CalendarLabSettings struct {
 	VisibleCategories map[CalendarEventCategory]bool
 	Assignee          string // "" = all
-	Density           int    // max events shown per day cell (1–8)
+	Density           int    // max events shown per day cell (1–12)
 	SimSpeed          int    // ms between ticks (100–5000)
-	BurstSize         int    // synthetic events per tick (1–5)
+	BurstSize         int    // synthetic events per tick (1–8)
 	CompactMode       bool
 	HighlightWeekends bool
 }
@@ -37,6 +37,7 @@ var CalendarLabPresets = []CalendarLabPreset{
 	{Name: "Steady", Density: 4, SimSpeed: 2000, BurstSize: 2},
 	{Name: "Busy", Density: 6, SimSpeed: 800, BurstSize: 3},
 	{Name: "Chaos", Density: 8, SimSpeed: 200, BurstSize: 5},
+	{Name: "Hell", Density: 12, SimSpeed: 100, BurstSize: 8},
 }
 
 // CalendarLabActivity records one simulator or user action for the activity log.

@@ -238,13 +238,13 @@ func (r *tavernCalendarRoutes) handleDeleteEvent(c echo.Context) error {
 // hx-include="closest .card-body".
 func (r *tavernCalendarRoutes) handleControls(c echo.Context) error {
 	r.lab.UpdateSettings(func(s *demo.CalendarLabSettings) {
-		if v, err := strconv.Atoi(c.FormValue("density")); err == nil && v >= 1 && v <= 8 {
+		if v, err := strconv.Atoi(c.FormValue("density")); err == nil && v >= 1 && v <= 12 {
 			s.Density = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("sim_speed")); err == nil && v >= 200 && v <= 5000 {
+		if v, err := strconv.Atoi(c.FormValue("sim_speed")); err == nil && v >= 100 && v <= 5000 {
 			s.SimSpeed = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("burst_size")); err == nil && v >= 1 && v <= 5 {
+		if v, err := strconv.Atoi(c.FormValue("burst_size")); err == nil && v >= 1 && v <= 8 {
 			s.BurstSize = v
 		}
 		s.Assignee = c.FormValue("assignee")
