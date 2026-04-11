@@ -35,7 +35,10 @@ templ TavernCalendarPage(data CalendarLabData) {
 
 		<script>
 			// Click-outside deselect: not a hot-region command, just a UI behavior.
+			// Guard: if the click target was detached by an SSE swap between
+			// pointerdown and click (common at high churn), skip the deselect.
 			function calLabDeselect(e) {
+				if (!e.target.isConnected) return;
 				if (e.target.closest('#cal-lab-month') || e.target.closest('#cal-lab-day-events') || e.target.closest('.card-body')) return;
 				document.querySelectorAll('[command-url]').forEach(function(el) { el.classList.remove('ring-2', 'ring-accent'); });
 				Tavern.command('/realtime/tavern/calendar/day/deselect');
