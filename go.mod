@@ -12,7 +12,7 @@ require (
 	github.com/catgoose/dorman v0.1.15
 	github.com/catgoose/linkwell v0.2.29
 	github.com/catgoose/promolog/sqlite v0.0.0-20260409215859-0fc0b83ab989
-	github.com/catgoose/tavern v0.4.78
+	github.com/catgoose/tavern v0.4.79
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/jmoiron/sqlx v1.4.0
