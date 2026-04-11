@@ -19,6 +19,20 @@ type HotZoneLabData struct {
 
 templ HotZoneLabPage(data HotZoneLabData) {
 	<div id="hz-lab-page" class="max-w-[90rem] mx-auto p-4 space-y-3">
+		<style>
+			#hz-lab-page [data-hz-card] {
+				transition: box-shadow 180ms ease, background-color 180ms ease, outline-color 180ms ease;
+			}
+
+			#hz-lab-page [data-hz-card].hz-card-hot {
+				outline: 2px solid color-mix(in oklab, var(--color-primary) 60%, transparent);
+				outline-offset: 2px;
+				background-color: color-mix(in oklab, var(--color-primary) 10%, var(--color-base-200));
+				box-shadow:
+					0 0 0 1px color-mix(in oklab, var(--color-primary) 40%, transparent),
+					0 0 16px color-mix(in oklab, var(--color-primary) 18%, transparent);
+			}
+		</style>
 		<div>
 			<h1 class="text-2xl font-bold">Hot-Zone Lab</h1>
 			<p class="text-xs text-base-content/50">
@@ -33,6 +47,7 @@ templ HotZoneLabPage(data HotZoneLabData) {
 			id="hz-lab-container"
 			hx-ext="sse"
 			sse-connect="/sse/tavern/hotzones"
+			tavern-debug
 			tavern-reconnecting-class="opacity-60"
 			tavern-stale-class="opacity-40 pointer-events-none"
 			tavern-live-class=""
@@ -409,7 +424,7 @@ templ hotZoneLifecycleScript() {
 			var container = document.getElementById('hz-lab-container');
 			if (!container) return;
 			var hotTimers = {};
-			var hotClasses = ['ring-1', 'ring-primary/40', 'bg-primary/5'];
+			var hotClass = 'hz-card-hot';
 			var cooldownMS = 1000;
 
 			function reportLifecycle(action, mode) {
@@ -420,15 +435,15 @@ templ hotZoneLifecycleScript() {
 
 			// Mark a region card as "hot" — stays lit while updates keep
 			// arriving, cools off after a quiet window.
-			function markHot(target) {
-				if (!target || !target.id || !target.id.startsWith('hz-region-')) return;
-				var regionID = target.id.replace('hz-region-', '');
+			function markHot(elt) {
+				if (!elt || !elt.id || !elt.id.startsWith('hz-region-')) return;
+				var regionID = elt.id.replace('hz-region-', '');
 				var card = document.querySelector('[data-hz-card="' + regionID + '"]');
 				if (!card) return;
-				hotClasses.forEach(function(cls) { card.classList.add(cls); });
+				card.classList.add(hotClass);
 				if (hotTimers[regionID]) clearTimeout(hotTimers[regionID]);
 				hotTimers[regionID] = setTimeout(function() {
-					hotClasses.forEach(function(cls) { card.classList.remove(cls); });
+					card.classList.remove(hotClass);
 					delete hotTimers[regionID];
 				}, cooldownMS);
 			}
@@ -449,7 +464,8 @@ templ hotZoneLifecycleScript() {
 				reportLifecycle('failed', currentMode());
 			});
 			document.body.addEventListener('htmx:afterSwap', function(evt) {
-				markHot(evt.detail && evt.detail.target);
+				var elt = (evt.detail && evt.detail.elt) || evt.target;
+				markHot(elt);
 			});
 		})();
 	</script>
