@@ -43,4 +43,21 @@ func TestTavernBundleContract(t *testing.T) {
 	if !strings.Contains(src, "staleClass") || !strings.Contains(src, "liveClass") {
 		t.Error("tavern.min.js missing stale/live region-state support; expected v0.0.17+")
 	}
+
+	// Must contain event names the app dispatches/listens for.
+	// These are stable CustomEvent names baked into the bundle (tavern: prefix).
+	requiredEvents := []string{
+		"tavern:reconnected",
+		"tavern:replay-gap",
+		"tavern:disconnected",
+		"tavern:policy-activated",
+		"tavern:policy-deactivated",
+		"tavern:command-success",
+		"tavern:command-error",
+	}
+	for _, evt := range requiredEvents {
+		if !strings.Contains(src, evt) {
+			t.Errorf("tavern.min.js missing event %q; templates depend on this event name", evt)
+		}
+	}
 }

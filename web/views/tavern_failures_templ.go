@@ -33,11 +33,15 @@ func TavernFailuresPage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\tbody:has(#failures-page) main { view-transition-name: none !important; }\n\t</style><div id=\"failures-page\" class=\"max-w-5xl mx-auto p-4 space-y-4\" style=\"overflow-anchor:none\"><div><h1 class=\"text-2xl font-bold\">Failures Lab</h1><p class=\"text-xs text-base-content/50\">Tavern's negative-path behavior on a single page. Trigger known failure modes and see how the broker handles them.</p></div><!-- Live event stream + result panel share one SSE connection. --><div id=\"failures-container\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/failures\" tavern-reconnecting-class=\"opacity-60 pointer-events-none\" tavern-stale-class=\"opacity-40\" tavern-live-class=\"\"><div tavern-status-recovering class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span>&#9888;</span> Reconnecting &mdash; replaying missed events&hellip;</div><div tavern-status-stale class=\"hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2\"><span>&#9888;</span> Connection lost &mdash; displayed data may be stale.</div><div sse-swap=\"failures-event\" hx-target=\"#failures-events\" hx-swap=\"afterbegin settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"failures-result\" hx-target=\"#failures-result\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div class=\"grid grid-cols-1 lg:grid-cols-2 gap-4\"><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-2\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/60\">Live Events</h2><p class=\"text-xs text-base-content/40\">Replay window of 5 &mdash; exceed it and the next Last-Event-ID resume will gap-fall-back.</p><div id=\"failures-latest-id\" class=\"text-xs text-base-content/40 font-mono\">latest: &mdash;</div><div id=\"failures-events\" class=\"max-h-64 overflow-y-auto overflow-x-hidden font-mono text-xs space-y-0.5\" style=\"contain:paint\"><p class=\"text-base-content/30 py-2\">Waiting for events...</p></div></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-2\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/60\">Result</h2><p class=\"text-xs text-base-content/40\">Outcome of the last failure scenario. Click a button below.</p><div id=\"failures-result\" class=\"min-h-24\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\tbody:has(#failures-page) main { view-transition-name: none !important; }\n\t</style><div id=\"failures-page\" class=\"max-w-5xl mx-auto p-4 space-y-4\" style=\"overflow-anchor:none\"><div><h1 class=\"text-2xl font-bold\">Failures Lab</h1><p class=\"text-xs text-base-content/50\">Tavern's negative-path behavior on a single page. Trigger known failure modes and see how the broker handles them.</p></div><!-- Live event stream + result panel share one SSE connection. --><div id=\"failures-container\" hx-ext=\"sse\" sse-connect=\"/sse/tavern/failures\" tavern-reconnecting-class=\"opacity-60 pointer-events-none\" tavern-stale-class=\"opacity-40\" tavern-live-class=\"\"><div tavern-status-recovering class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span>&#9888;</span> Reconnecting &mdash; replaying missed events&hellip;</div><div tavern-status-stale class=\"hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2\"><span>&#9888;</span> Connection lost &mdash; displayed data may be stale.</div><div sse-swap=\"failures-event\" hx-target=\"#failures-events\" hx-swap=\"afterbegin settle:0 transition:false\" style=\"display:none\"></div><div sse-swap=\"failures-result\" hx-target=\"#failures-result\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div><div class=\"grid grid-cols-1 lg:grid-cols-2 gap-4\"><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-2\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/60\">Live Events</h2><p class=\"text-xs text-base-content/40\">Replay window of 5 &mdash; exceed it and the next Last-Event-ID resume will gap-fall-back.</p><div id=\"failures-latest-id\" class=\"text-xs text-base-content/40 font-mono\">latest: &mdash;</div><div id=\"failures-events\" class=\"max-h-64 overflow-y-auto overflow-x-hidden font-mono text-xs space-y-0.5\" style=\"contain:paint\"><p class=\"text-base-content/30 py-2\">Waiting for events...</p></div></div></div><div class=\"card bg-base-200 shadow-sm\"><div class=\"card-body p-4 space-y-2\"><h2 class=\"card-title text-sm font-semibold uppercase tracking-wider text-base-content/60\">Scenario Report</h2><div id=\"failures-result\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = FailuresResult("ready", "Click a scenario button to trigger a failure mode and see how Tavern responds.", "info").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = FailuresReport(FailuresReportData{
+			Scenario:       "ready",
+			Level:          "info",
+			Interpretation: "Click a scenario button to trigger a failure mode.",
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -86,7 +90,7 @@ func FailuresEvent(seq int64, id, timestamp string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(timestamp)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 103, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 104, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -99,7 +103,7 @@ func FailuresEvent(seq int64, id, timestamp string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 104, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 105, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -112,7 +116,7 @@ func FailuresEvent(seq int64, id, timestamp string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", seq))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 105, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 106, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -126,9 +130,17 @@ func FailuresEvent(seq int64, id, timestamp string) templ.Component {
 	})
 }
 
-// FailuresResult renders the result panel content. The level controls
-// styling: "info" (default), "warning", "error".
-func FailuresResult(title, detail, level string) templ.Component {
+// FailuresReportData holds the structured fields for a scenario report.
+type FailuresReportData struct {
+	Scenario       string // e.g. "Malformed Last-Event-ID"
+	ResumeToken    string // e.g. "evt-42" or ""
+	Interpretation string // how the route classified the token
+	BrokerOutcome  string // what Tavern did
+	Level          string // "info", "warning", "error"
+}
+
+// FailuresReport renders a structured scenario report card.
+func FailuresReport(d FailuresReportData) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -149,7 +161,7 @@ func FailuresResult(title, detail, level string) templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var7 = []any{"rounded p-3 border", failuresResultClass(level)}
+		var templ_7745c5c3_Var7 = []any{"rounded p-3 border space-y-2", failuresResultClass(d.Level)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var7...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -167,11 +179,11 @@ func FailuresResult(title, detail, level string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"><div class=\"flex items-center gap-2 mb-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"><div class=\"flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var9 = []any{"badge badge-xs", failuresResultBadge(level)}
+		var templ_7745c5c3_Var9 = []any{"badge badge-xs", failuresResultBadge(d.Level)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var9...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -194,9 +206,9 @@ func FailuresResult(title, detail, level string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(level)
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(d.Level)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 114, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 123, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -207,28 +219,76 @@ func FailuresResult(title, detail, level string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(d.Scenario)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 115, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 124, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span></div><p class=\"text-xs text-base-content/70\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(detail)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 117, Col: 50}
+		if d.ResumeToken != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"flex items-baseline gap-2 text-xs\"><span class=\"text-base-content/50 w-24 shrink-0\">Resume token</span> <code class=\"font-mono text-base-content/80\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(d.ResumeToken)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 129, Col: 64}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</code></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		if d.Interpretation != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"flex items-baseline gap-2 text-xs\"><span class=\"text-base-content/50 w-24 shrink-0\">Interpretation</span> <span class=\"text-base-content/70\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(d.Interpretation)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 135, Col: 57}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</span></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</p></div>")
+		if d.BrokerOutcome != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"flex items-baseline gap-2 text-xs\"><span class=\"text-base-content/50 w-24 shrink-0\">Broker outcome</span> <span class=\"text-base-content/70\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var15 string
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(d.BrokerOutcome)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/tavern_failures.templ`, Line: 141, Col: 56}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</span></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -274,12 +334,12 @@ func tavernFailuresScript() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var14 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var14 == nil {
-			templ_7745c5c3_Var14 = templ.NopComponent
+		templ_7745c5c3_Var16 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var16 == nil {
+			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<script>\n\t\t// Track the latest event ID seen on the live stream so scenarios\n\t\t// can capture a known-good ID for deterministic replay expiration.\n\t\tvar failuresLastSeenID = '';\n\n\t\t// Update latest ID display whenever a new event arrives.\n\t\tdocument.body.addEventListener('htmx:sseMessage', function(evt) {\n\t\t\tif (evt.detail.type !== 'failures-event') return;\n\t\t\t// Extract the event ID from the badge in the incoming HTML.\n\t\t\tvar tmp = document.createElement('div');\n\t\t\ttmp.innerHTML = evt.detail.data;\n\t\t\tvar badge = tmp.querySelector('.badge');\n\t\t\tif (badge) {\n\t\t\t\tfailuresLastSeenID = badge.textContent.trim();\n\t\t\t\tvar el = document.getElementById('failures-latest-id');\n\t\t\t\tif (el) el.textContent = 'latest: ' + failuresLastSeenID;\n\t\t\t}\n\t\t});\n\n\t\t// Reconnect the SSE container with a synthetic resume token.\n\t\t// EventSource can't set custom headers, so the resume hint is\n\t\t// passed as a ?resume= query parameter. The server reads either\n\t\t// the real Last-Event-ID header or ?resume= equivalently.\n\t\tfunction failuresReconnectWith(lastID) {\n\t\t\tvar container = document.getElementById('failures-container');\n\t\t\tif (!container) return;\n\t\t\tvar sseConnect = container.getAttribute('sse-connect');\n\t\t\tcontainer.removeAttribute('sse-connect');\n\t\t\thtmx.process(container);\n\n\t\t\tvar newURL = sseConnect.split('?')[0] + '?resume=' + encodeURIComponent(lastID);\n\t\t\tsetTimeout(function() {\n\t\t\t\tcontainer.setAttribute('sse-connect', newURL);\n\t\t\t\thtmx.process(container);\n\t\t\t}, 100);\n\t\t}\n\n\t\t// --- Scenarios ---\n\n\t\t// Malformed: reconnect with a token that doesn't match the evt-N scheme.\n\t\tfunction runMalformedResume() {\n\t\t\tfailuresReconnectWith('this-is-not-a-valid-id');\n\t\t}\n\n\t\t// Expired: the server captures the current latest ID, publishes\n\t\t// enough events to overflow the 5-event replay window, then\n\t\t// returns the captured (now expired) ID for the client to resume with.\n\t\tfunction runExpiredResume() {\n\t\t\tfetch('/realtime/tavern/failures/scenario/expired', { method: 'POST' })\n\t\t\t\t.then(function(r) { return r.json(); })\n\t\t\t\t.then(function(data) {\n\t\t\t\t\tif (data.resume_id) failuresReconnectWith(data.resume_id);\n\t\t\t\t});\n\t\t}\n\n\t\t// Gap fallback: the server captures the latest ID, overflows the\n\t\t// replay window, clears the buffer entirely, then returns the\n\t\t// captured ID. The broker's gap-fallback policy fires on reconnect.\n\t\tfunction runGapFallback() {\n\t\t\tfetch('/realtime/tavern/failures/scenario/gap', { method: 'POST' })\n\t\t\t\t.then(function(r) { return r.json(); })\n\t\t\t\t.then(function(data) {\n\t\t\t\t\tif (data.resume_id) failuresReconnectWith(data.resume_id);\n\t\t\t\t});\n\t\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<script>\n\t\t// Track the latest event ID seen on the live stream so scenarios\n\t\t// can capture a known-good ID for deterministic replay expiration.\n\t\tvar failuresLastSeenID = '';\n\n\t\t// Update latest ID display whenever a new event arrives.\n\t\tdocument.body.addEventListener('htmx:sseMessage', function(evt) {\n\t\t\tif (evt.detail.type !== 'failures-event') return;\n\t\t\t// Extract the event ID from the badge in the incoming HTML.\n\t\t\tvar tmp = document.createElement('div');\n\t\t\ttmp.innerHTML = evt.detail.data;\n\t\t\tvar badge = tmp.querySelector('.badge');\n\t\t\tif (badge) {\n\t\t\t\tfailuresLastSeenID = badge.textContent.trim();\n\t\t\t\tvar el = document.getElementById('failures-latest-id');\n\t\t\t\tif (el) el.textContent = 'latest: ' + failuresLastSeenID;\n\t\t\t}\n\t\t});\n\n\t\t// Reconnect the SSE container with a synthetic resume token.\n\t\t// EventSource can't set custom headers, so the resume hint is\n\t\t// passed as a ?resume= query parameter. The server reads either\n\t\t// the real Last-Event-ID header or ?resume= equivalently.\n\t\tfunction failuresReconnectWith(lastID) {\n\t\t\tvar container = document.getElementById('failures-container');\n\t\t\tif (!container) return;\n\t\t\tvar sseConnect = container.getAttribute('sse-connect');\n\t\t\tcontainer.removeAttribute('sse-connect');\n\t\t\thtmx.process(container);\n\n\t\t\tvar newURL = sseConnect.split('?')[0] + '?resume=' + encodeURIComponent(lastID);\n\t\t\tsetTimeout(function() {\n\t\t\t\tcontainer.setAttribute('sse-connect', newURL);\n\t\t\t\thtmx.process(container);\n\t\t\t}, 100);\n\t\t}\n\n\t\t// --- Scenarios ---\n\n\t\t// Malformed: reconnect with a token that doesn't match the evt-N scheme.\n\t\tfunction runMalformedResume() {\n\t\t\tfailuresReconnectWith('this-is-not-a-valid-id');\n\t\t}\n\n\t\t// Expired: the server captures the current latest ID, publishes\n\t\t// enough events to overflow the 5-event replay window, then\n\t\t// returns the captured (now expired) ID for the client to resume with.\n\t\tfunction runExpiredResume() {\n\t\t\tfetch('/realtime/tavern/failures/scenario/expired', { method: 'POST' })\n\t\t\t\t.then(function(r) { return r.json(); })\n\t\t\t\t.then(function(data) {\n\t\t\t\t\tif (data.resume_id) failuresReconnectWith(data.resume_id);\n\t\t\t\t});\n\t\t}\n\n\t\t// Gap fallback: the server captures the latest ID, overflows the\n\t\t// replay window, clears the buffer entirely, then returns the\n\t\t// captured ID. The broker's gap-fallback policy fires on reconnect.\n\t\tfunction runGapFallback() {\n\t\t\tfetch('/realtime/tavern/failures/scenario/gap', { method: 'POST' })\n\t\t\t\t.then(function(r) { return r.json(); })\n\t\t\t\t.then(function(data) {\n\t\t\t\t\tif (data.resume_id) failuresReconnectWith(data.resume_id);\n\t\t\t\t});\n\t\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

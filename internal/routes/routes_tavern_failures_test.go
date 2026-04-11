@@ -39,22 +39,26 @@ func TestResumeDescriptionFrame_Malformed(t *testing.T) {
 	frame := resumeDescriptionFrame("this-is-not-a-valid-id")
 
 	// Should contain the malformed classification.
-	assert.Contains(t, frame, "malformed Last-Event-ID")
+	assert.Contains(t, frame, "Malformed Last-Event-ID")
 	// Should include the actual token in the detail.
 	assert.Contains(t, frame, "this-is-not-a-valid-id")
 	// Should be an SSE event targeting failures-result.
 	assert.Contains(t, frame, "event: failures-result")
+	// Should describe broker behavior.
+	assert.Contains(t, frame, "gap policy")
 }
 
 func TestResumeDescriptionFrame_ValidShaped(t *testing.T) {
 	frame := resumeDescriptionFrame("evt-42")
 
 	// Should classify as a normal resume attempt.
-	assert.Contains(t, frame, "resume attempted")
+	assert.Contains(t, frame, "Resume attempted")
 	assert.Contains(t, frame, "evt-42")
 	assert.Contains(t, frame, "event: failures-result")
 	// Should NOT say malformed.
-	assert.NotContains(t, frame, "malformed")
+	assert.NotContains(t, frame, "Malformed")
+	// Should describe the broker lookup path.
+	assert.Contains(t, frame, "replay buffer")
 }
 
 func TestResumeDescriptionFrame_SSEFormat(t *testing.T) {

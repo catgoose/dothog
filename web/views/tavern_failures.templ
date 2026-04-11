@@ -51,12 +51,13 @@ templ TavernFailuresPage() {
 
 				<div class="card bg-base-200 shadow-sm">
 					<div class="card-body p-4 space-y-2">
-						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Result</h2>
-						<p class="text-xs text-base-content/40">
-							Outcome of the last failure scenario. Click a button below.
-						</p>
-						<div id="failures-result" class="min-h-24">
-							@FailuresResult("ready", "Click a scenario button to trigger a failure mode and see how Tavern responds.", "info")
+						<h2 class="card-title text-sm font-semibold uppercase tracking-wider text-base-content/60">Scenario Report</h2>
+						<div id="failures-result">
+							@FailuresReport(FailuresReportData{
+								Scenario:      "ready",
+								Level:         "info",
+								Interpretation: "Click a scenario button to trigger a failure mode.",
+							})
 						</div>
 					</div>
 				</div>
@@ -106,15 +107,40 @@ templ FailuresEvent(seq int64, id, timestamp string) {
 	</div>
 }
 
-// FailuresResult renders the result panel content. The level controls
-// styling: "info" (default), "warning", "error".
-templ FailuresResult(title, detail, level string) {
-	<div class={ "rounded p-3 border", failuresResultClass(level) }>
-		<div class="flex items-center gap-2 mb-1">
-			<span class={ "badge badge-xs", failuresResultBadge(level) }>{ level }</span>
-			<span class="text-sm font-semibold">{ title }</span>
+// FailuresReportData holds the structured fields for a scenario report.
+type FailuresReportData struct {
+	Scenario       string // e.g. "Malformed Last-Event-ID"
+	ResumeToken    string // e.g. "evt-42" or ""
+	Interpretation string // how the route classified the token
+	BrokerOutcome  string // what Tavern did
+	Level          string // "info", "warning", "error"
+}
+
+// FailuresReport renders a structured scenario report card.
+templ FailuresReport(d FailuresReportData) {
+	<div class={ "rounded p-3 border space-y-2", failuresResultClass(d.Level) }>
+		<div class="flex items-center gap-2">
+			<span class={ "badge badge-xs", failuresResultBadge(d.Level) }>{ d.Level }</span>
+			<span class="text-sm font-semibold">{ d.Scenario }</span>
 		</div>
-		<p class="text-xs text-base-content/70">{ detail }</p>
+		if d.ResumeToken != "" {
+			<div class="flex items-baseline gap-2 text-xs">
+				<span class="text-base-content/50 w-24 shrink-0">Resume token</span>
+				<code class="font-mono text-base-content/80">{ d.ResumeToken }</code>
+			</div>
+		}
+		if d.Interpretation != "" {
+			<div class="flex items-baseline gap-2 text-xs">
+				<span class="text-base-content/50 w-24 shrink-0">Interpretation</span>
+				<span class="text-base-content/70">{ d.Interpretation }</span>
+			</div>
+		}
+		if d.BrokerOutcome != "" {
+			<div class="flex items-baseline gap-2 text-xs">
+				<span class="text-base-content/50 w-24 shrink-0">Broker outcome</span>
+				<span class="text-base-content/70">{ d.BrokerOutcome }</span>
+			</div>
+		}
 	</div>
 }
 

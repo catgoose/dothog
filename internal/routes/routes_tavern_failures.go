@@ -33,10 +33,15 @@ func (ar *appRoutes) initFailuresRoutes(broker *tavern.SSEBroker) {
 	// scenarios are easy to trigger.
 	broker.SetReplayPolicy(topicFailuresLive, 5)
 	broker.SetReplayGapPolicy(topicFailuresLive, tavern.GapFallbackToSnapshot, func() string {
-		// Snapshot fallback HTML — published into the live region when the
+		// Snapshot fallback HTML — published into the result panel when the
 		// replay buffer can't satisfy a Last-Event-ID resume.
 		return tavern.NewSSEMessage("failures-result",
-			renderFailuresResult("snapshot fallback", "Replay window couldn't satisfy Last-Event-ID — falling back to snapshot.", "warning"),
+			renderFailuresReport(views.FailuresReportData{
+				Scenario:       "Snapshot fallback",
+				Interpretation: "Replay buffer could not satisfy Last-Event-ID.",
+				BrokerOutcome:  "Gap policy fired — snapshot fallback applied.",
+				Level:          "warning",
+			}),
 		).String()
 	})
 
@@ -107,7 +112,12 @@ func (r *failuresRoutes) handleClearReplay(c echo.Context) error {
 	r.broker.ClearReplay(topicFailuresLive)
 	r.broker.Publish(topicFailuresLive,
 		tavern.NewSSEMessage("failures-result",
-			renderFailuresResult("replay cleared", "Replay buffer cleared. The next Last-Event-ID resume will gap-fall-back.", "info"),
+			renderFailuresReport(views.FailuresReportData{
+				Scenario:       "Clear replay buffer",
+				Interpretation: "No resume attempted.",
+				BrokerOutcome:  "Replay buffer emptied. Next Last-Event-ID resume will gap-fallback.",
+				Level:          "info",
+			}),
 		).String(),
 	)
 	return c.NoContent(http.StatusNoContent)
@@ -188,17 +198,20 @@ func (r *failuresRoutes) startBackgroundTrickle(ctx context.Context) {
 // the resume attempt was interpreted. The client renders this in the result
 // panel. It is delivered via tavern.WithStreamSnapshot before any live events.
 func resumeDescriptionFrame(lastEventID string) string {
-	var title, detail, level string
+	var d views.FailuresReportData
+	d.ResumeToken = lastEventID
 	if !looksLikeFailuresEventID(lastEventID) {
-		title = "malformed Last-Event-ID"
-		detail = fmt.Sprintf("Resume header %q does not match the broker's ID scheme. Tavern still attempts SubscribeFromID; missing IDs trigger the gap policy.", lastEventID)
-		level = "warning"
+		d.Scenario = "Malformed Last-Event-ID"
+		d.Interpretation = fmt.Sprintf("Token %q does not match the evt-N scheme.", lastEventID)
+		d.BrokerOutcome = "Replay lookup still attempted. Missing IDs trigger the gap policy."
+		d.Level = "warning"
 	} else {
-		title = "resume attempted"
-		detail = fmt.Sprintf("Tavern looked up Last-Event-ID %q in the replay buffer. If it's no longer present, the gap policy fires (snapshot fallback in this lab).", lastEventID)
-		level = "info"
+		d.Scenario = "Resume attempted"
+		d.Interpretation = fmt.Sprintf("Token %q is valid-shaped and was previously issued by this lab.", lastEventID)
+		d.BrokerOutcome = "Looked up in replay buffer. If expired, the gap policy fires (snapshot fallback)."
+		d.Level = "info"
 	}
-	html := renderFailuresResult(title, detail, level)
+	html := renderFailuresReport(d)
 	return tavern.NewSSEMessage("failures-result", html).String()
 }
 
@@ -219,6 +232,6 @@ func renderFailuresEvent(seq int64, id, timestamp string) string {
 	return renderToString("render failures event", views.FailuresEvent(seq, id, timestamp))
 }
 
-func renderFailuresResult(title, detail, level string) string {
-	return renderToString("render failures result", views.FailuresResult(title, detail, level))
+func renderFailuresReport(d views.FailuresReportData) string {
+	return renderToString("render failures report", views.FailuresReport(d))
 }
