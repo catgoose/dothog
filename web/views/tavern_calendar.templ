@@ -512,7 +512,7 @@ templ calendarLabControls(settings demo.CalendarLabSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="cal-speed-val">{ fmt.Sprintf("%dms", settings.SimSpeed) }</span>
 				</label>
 				<input
-					type="range" min="100" max="5000" step="100"
+					type="range" min="1" max="5000" step="50"
 					value={ fmt.Sprintf("%d", settings.SimSpeed) }
 					class="range range-xs range-secondary"
 					name="sim_speed"
