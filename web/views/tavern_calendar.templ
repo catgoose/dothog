@@ -493,7 +493,7 @@ templ calendarLabControls(settings demo.CalendarLabSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="cal-density-val">{ fmt.Sprintf("%d", settings.Density) }</span>
 				</label>
 				<input
-					type="range" min="1" max="8"
+					type="range" min="1" max="12"
 					value={ fmt.Sprintf("%d", settings.Density) }
 					class="range range-xs range-primary"
 					name="density"
@@ -512,7 +512,7 @@ templ calendarLabControls(settings demo.CalendarLabSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="cal-speed-val">{ fmt.Sprintf("%dms", settings.SimSpeed) }</span>
 				</label>
 				<input
-					type="range" min="200" max="5000" step="200"
+					type="range" min="100" max="5000" step="100"
 					value={ fmt.Sprintf("%d", settings.SimSpeed) }
 					class="range range-xs range-secondary"
 					name="sim_speed"
@@ -531,7 +531,7 @@ templ calendarLabControls(settings demo.CalendarLabSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="cal-burst-val">{ fmt.Sprintf("%d", settings.BurstSize) }</span>
 				</label>
 				<input
-					type="range" min="1" max="5"
+					type="range" min="1" max="8"
 					value={ fmt.Sprintf("%d", settings.BurstSize) }
 					class="range range-xs range-accent"
 					name="burst_size"
