@@ -1,0 +1,405 @@
+// setup:feature:demo
+
+package views
+
+import (
+	"catgoose/dothog/internal/demo"
+	"fmt"
+)
+
+// ToastLabData is the view-model for the toast lab page.
+type ToastLabData struct {
+	Settings demo.ToastLabSettings
+	Stats    demo.ToastLabStats
+	Log      []demo.ToastLabLogEntry
+	Paused   bool
+}
+
+templ ToastLabPage(data ToastLabData) {
+	<div id="toast-lab-page" class="max-w-[90rem] mx-auto p-4 space-y-3">
+		<div>
+			<h1 class="text-2xl font-bold">Toast Lab</h1>
+			<p class="text-xs text-base-content/50">
+				Tavern SSE events consumed by client-side JS to render ephemeral toast notifications.
+				Demonstrates event-driven client rendering, replay policy, and stale/recovering state.
+			</p>
+		</div>
+
+		<div
+			id="toast-lab-container"
+			hx-ext="sse"
+			sse-connect="/sse/tavern/toasts"
+			tavern-reconnecting-class="opacity-60"
+			tavern-stale-class="opacity-40"
+			tavern-live-class=""
+		>
+			<div tavern-status-recovering class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+				<span>&#9888;</span> Reconnecting&hellip;
+			</div>
+			<div tavern-status-stale class="hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2">
+				<span>&#9888;</span> Connection lost — toasts may be stale.
+			</div>
+
+			<!-- SSE swap targets -->
+			<div sse-swap="toast-event" hx-target="#toast-event-sink" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="toast-stats" hx-target="#toast-lab-stats" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+			<div sse-swap="toast-log" hx-target="#toast-lab-log" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
+
+			<div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+				<!-- Left rail: controls + stats -->
+				<div class="lg:col-span-3 space-y-3">
+					@toastLabControls(data.Settings, data.Paused)
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-3 space-y-1">
+							<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Stats</h2>
+							<div id="toast-lab-stats">
+								@ToastLabStatsFragment(data.Settings, data.Stats, data.Paused)
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Center: toast stage -->
+				<div class="lg:col-span-5">
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-3 space-y-2">
+							<div class="flex items-center justify-between">
+								<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Live Toasts</h2>
+								<span class="text-xs text-base-content/40 font-mono" id="toast-count">0</span>
+							</div>
+							<!-- Hidden sink: SSE swaps JSON here, JS reads and removes it -->
+							<div id="toast-event-sink" class="hidden"></div>
+							<!-- Client-rendered toast stack -->
+							<div id="toast-stack" class="space-y-2 min-h-[24rem]" data-max-stack={ fmt.Sprintf("%d", data.Settings.StackSize) }>
+								<p class="text-xs text-base-content/30 py-4 text-center" id="toast-empty">Waiting for toasts&hellip;</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Right rail: lifecycle log -->
+				<div class="lg:col-span-4">
+					<div class="card bg-base-200 shadow-sm">
+						<div class="card-body p-3 space-y-1">
+							<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Lifecycle Log</h2>
+							<div id="toast-lab-log" class="max-h-[28rem] overflow-y-auto overflow-x-hidden text-xs font-mono space-y-0.5" style="contain:paint">
+								@ToastLabLogEntries(data.Log)
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Toast client-side renderer (loaded inline, only on this page) -->
+	<script>
+		(function() {
+			var stack = document.getElementById('toast-stack');
+			var sink = document.getElementById('toast-event-sink');
+			var countEl = document.getElementById('toast-count');
+			var emptyEl = document.getElementById('toast-empty');
+			var maxStack = parseInt(stack.dataset.maxStack) || 8;
+
+			var severityClass = {
+				success: 'alert-success',
+				info: 'alert-info',
+				warning: 'alert-warning',
+				error: 'alert-error'
+			};
+
+			function updateCount() {
+				var n = stack.querySelectorAll('.toast-item').length;
+				countEl.textContent = n;
+				if (emptyEl) emptyEl.style.display = n > 0 ? 'none' : '';
+			}
+
+			function addToast(evt) {
+				if (emptyEl) emptyEl.style.display = 'none';
+
+				// Enforce stack cap
+				var items = stack.querySelectorAll('.toast-item');
+				while (items.length >= maxStack) {
+					items[0].remove();
+					items = stack.querySelectorAll('.toast-item');
+				}
+
+				var el = document.createElement('div');
+				el.className = 'toast-item alert ' + (severityClass[evt.severity] || 'alert-info') + ' py-2 px-3 text-sm shadow-sm flex items-start gap-2';
+				el.dataset.toastId = evt.id;
+
+				var body = document.createElement('div');
+				body.className = 'flex-1 min-w-0';
+				var title = document.createElement('div');
+				title.className = 'font-semibold text-xs';
+				title.textContent = evt.title;
+				var detail = document.createElement('div');
+				detail.className = 'text-xs opacity-70 truncate';
+				detail.textContent = evt.body + ' — ' + evt.source;
+				body.appendChild(title);
+				body.appendChild(detail);
+
+				var dismiss = document.createElement('button');
+				dismiss.className = 'btn btn-ghost btn-xs shrink-0';
+				dismiss.innerHTML = '&times;';
+				dismiss.onclick = function() {
+					el.remove();
+					updateCount();
+				};
+
+				el.appendChild(body);
+				el.appendChild(dismiss);
+				stack.appendChild(el);
+				updateCount();
+
+				// Auto-dismiss unless sticky
+				if (!evt.sticky && evt.duration_ms > 0) {
+					setTimeout(function() {
+						if (el.parentNode) {
+							el.remove();
+							updateCount();
+						}
+					}, evt.duration_ms);
+				}
+			}
+
+			// Watch the hidden sink for SSE-delivered JSON payloads
+			var observer = new MutationObserver(function() {
+				var raw = sink.textContent.trim();
+				if (!raw) return;
+				sink.textContent = '';
+				try {
+					var evt = JSON.parse(raw);
+					addToast(evt);
+				} catch(e) {
+					console.warn('[toast-lab] failed to parse event:', e);
+				}
+			});
+			observer.observe(sink, { childList: true, characterData: true, subtree: true });
+
+			// Update max stack when settings change
+			document.addEventListener('htmx:afterSettle', function() {
+				var newMax = parseInt(stack.dataset.maxStack);
+				if (newMax && newMax !== maxStack) maxStack = newMax;
+			});
+		})();
+	</script>
+}
+
+// ToastLabStatsFragment renders the stats region.
+templ ToastLabStatsFragment(settings demo.ToastLabSettings, stats demo.ToastLabStats, paused bool) {
+	<div class="space-y-1 text-xs">
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Simulator</span>
+			if paused {
+				<span class="badge badge-xs badge-warning">paused</span>
+			} else {
+				<span class="badge badge-xs badge-success">running</span>
+			}
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Rate</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%dms", settings.RateMS) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Mix</span>
+			<span class="font-mono">{ string(settings.SeverityMix) }</span>
+		</div>
+		<div class="divider my-1"></div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Published</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", stats.Published) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Displayed</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", stats.Displayed) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Dismissed</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", stats.Dismissed) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Dropped</span>
+			<span class="font-mono tabular-nums text-error">{ fmt.Sprintf("%d", stats.Dropped) }</span>
+		</div>
+	</div>
+}
+
+// ToastLabLogEntries renders the lifecycle log.
+templ ToastLabLogEntries(log []demo.ToastLabLogEntry) {
+	if len(log) == 0 {
+		<p class="text-base-content/30 py-2">No activity yet.</p>
+	} else {
+		for i := len(log) - 1; i >= 0; i-- {
+			<div class="flex items-start gap-2 py-0.5 border-b border-base-300/50 last:border-0">
+				<span class="text-base-content/40 tabular-nums shrink-0">{ log[i].Timestamp.Format("15:04:05") }</span>
+				<span class="text-base-content/70 break-all">{ log[i].Action }</span>
+			</div>
+		}
+	}
+}
+
+// toastLabControls renders the operator control panel.
+templ toastLabControls(settings demo.ToastLabSettings, paused bool) {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body p-3 space-y-2">
+			<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Controls</h2>
+
+			<!-- Rate slider -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Rate</span>
+					<span class="label-text-alt text-xs font-mono" id="toast-rate-val">{ fmt.Sprintf("%dms", settings.RateMS) }</span>
+				</label>
+				<input
+					type="range" min="100" max="5000" step="100"
+					value={ fmt.Sprintf("%d", settings.RateMS) }
+					class="range range-xs range-primary"
+					name="rate_ms"
+					hx-post="/realtime/tavern/toasts/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+					oninput="document.getElementById('toast-rate-val').textContent=this.value+'ms'"
+				/>
+			</div>
+
+			<!-- Dismiss duration slider -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Auto-dismiss</span>
+					<span class="label-text-alt text-xs font-mono" id="toast-dismiss-val">{ fmt.Sprintf("%ds", settings.DismissDurMS/1000) }</span>
+				</label>
+				<input
+					type="range" min="1000" max="30000" step="1000"
+					value={ fmt.Sprintf("%d", settings.DismissDurMS) }
+					class="range range-xs range-secondary"
+					name="dismiss_dur"
+					hx-post="/realtime/tavern/toasts/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+					oninput="document.getElementById('toast-dismiss-val').textContent=Math.round(this.value/1000)+'s'"
+				/>
+			</div>
+
+			<!-- Stack size slider -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Stack size</span>
+					<span class="label-text-alt text-xs font-mono" id="toast-stack-val">{ fmt.Sprintf("%d", settings.StackSize) }</span>
+				</label>
+				<input
+					type="range" min="3" max="20"
+					value={ fmt.Sprintf("%d", settings.StackSize) }
+					class="range range-xs range-accent"
+					name="stack_size"
+					hx-post="/realtime/tavern/toasts/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+					oninput="document.getElementById('toast-stack-val').textContent=this.value"
+				/>
+			</div>
+
+			<!-- Burst size slider -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Burst size</span>
+					<span class="label-text-alt text-xs font-mono" id="toast-burst-val">{ fmt.Sprintf("%d", settings.BurstSize) }</span>
+				</label>
+				<input
+					type="range" min="1" max="10"
+					value={ fmt.Sprintf("%d", settings.BurstSize) }
+					class="range range-xs range-warning"
+					name="burst_size"
+					hx-post="/realtime/tavern/toasts/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+					oninput="document.getElementById('toast-burst-val').textContent=this.value"
+				/>
+			</div>
+
+			<!-- Severity mix -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Severity mix</span>
+				</label>
+				<select
+					name="severity_mix"
+					class="select select-sm select-bordered w-full"
+					hx-post="/realtime/tavern/toasts/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+				>
+					<option value="balanced" selected?={ settings.SeverityMix == demo.ToastMixBalanced }>Balanced</option>
+					<option value="warning-heavy" selected?={ settings.SeverityMix == demo.ToastMixWarningHeavy }>Warning-heavy</option>
+					<option value="error-heavy" selected?={ settings.SeverityMix == demo.ToastMixErrorHeavy }>Error-heavy</option>
+					<option value="success-only" selected?={ settings.SeverityMix == demo.ToastMixSuccessOnly }>Success only</option>
+				</select>
+			</div>
+
+			<!-- Replay toggle -->
+			<label class="label cursor-pointer gap-2 py-0">
+				<span class="label-text text-xs">Replay on reconnect</span>
+				<input
+					type="checkbox"
+					name="replay_recent"
+					class="toggle toggle-xs toggle-primary"
+					checked?={ settings.ReplayRecent }
+					hx-post="/realtime/tavern/toasts/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+				/>
+			</label>
+
+			<!-- Manual emit buttons -->
+			<div class="space-y-1">
+				<span class="text-xs text-base-content/60">Emit</span>
+				<div class="flex flex-wrap gap-1">
+					for _, sev := range demo.AllToastSeverities {
+						<button
+							class="btn btn-xs btn-outline flex-1"
+							hx-post={ "/realtime/tavern/toasts/emit?severity=" + string(sev) }
+							hx-swap="none"
+						>
+							{ string(sev) }
+						</button>
+					}
+				</div>
+			</div>
+
+			<!-- Burst + Pause -->
+			<div class="flex gap-1">
+				<button
+					class="btn btn-xs btn-warning flex-1"
+					hx-post="/realtime/tavern/toasts/burst"
+					hx-swap="none"
+				>
+					Burst
+				</button>
+				<button
+					class="btn btn-xs btn-outline flex-1"
+					hx-post="/realtime/tavern/toasts/pause"
+					hx-swap="none"
+				>
+					if paused {
+						Resume
+					} else {
+						Pause
+					}
+				</button>
+				<button
+					class="btn btn-xs btn-outline btn-error"
+					hx-post="/realtime/tavern/toasts/reset"
+					hx-swap="none"
+				>
+					Reset
+				</button>
+			</div>
+		</div>
+	</div>
+}
