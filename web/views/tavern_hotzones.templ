@@ -23,7 +23,8 @@ templ HotZoneLabPage(data HotZoneLabData) {
 			<h1 class="text-2xl font-bold">Hot-Zone Lab</h1>
 			<p class="text-xs text-base-content/50">
 				Stress surface for SSE region churn and command delivery.
-				Compare hx-post vs Tavern.command() under varying update frequencies.
+				Compare hx-post vs Tavern.command(), inner vs full-card swap scope,
+				and find the threshold where naive interaction degrades.
 				<a href="https://github.com/catgoose/dothog/issues/641" class="link link-primary" target="_blank">#641</a>
 			</p>
 		</div>
@@ -104,8 +105,10 @@ func hotZoneGridClass(count int) string {
 		return "grid grid-cols-1 md:grid-cols-2 gap-3"
 	case count <= 4:
 		return "grid grid-cols-1 md:grid-cols-2 gap-3"
-	default:
+	case count <= 6:
 		return "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
+	default:
+		return "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3"
 	}
 }
 
@@ -153,12 +156,32 @@ templ HotZoneStats(settings demo.HotZoneSettings, stats [2]demo.HotZoneCommandSt
 			}
 		</div>
 		<div class="flex justify-between">
-			<span class="text-base-content/60">Update interval</span>
+			<span class="text-base-content/60">Preset</span>
+			if settings.Preset != "" {
+				<span class="font-mono">{ string(settings.Preset) }</span>
+			} else {
+				<span class="font-mono text-base-content/40">custom</span>
+			}
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Interval</span>
 			<span class="font-mono tabular-nums">{ fmt.Sprintf("%dms", settings.UpdateIntervalMS) }</span>
 		</div>
 		<div class="flex justify-between">
-			<span class="text-base-content/60">Active mode</span>
+			<span class="text-base-content/60">Regions</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", settings.RegionCount) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Payload</span>
+			<span class="font-mono tabular-nums">{ fmt.Sprintf("%d", settings.PayloadSize) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Command mode</span>
 			<span class="font-mono">{ string(settings.CommandMode) }</span>
+		</div>
+		<div class="flex justify-between">
+			<span class="text-base-content/60">Swap scope</span>
+			<span class="font-mono">{ string(settings.SwapScope) }</span>
 		</div>
 		<div class="divider my-1"></div>
 		for _, s := range stats {
@@ -205,6 +228,24 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 		<div class="card-body p-3 space-y-2">
 			<h2 class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Controls</h2>
 
+			<!-- Presets -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Preset</span>
+					if settings.Preset != "" {
+						<span class="badge badge-xs badge-ghost font-mono">{ string(settings.Preset) }</span>
+					} else {
+						<span class="badge badge-xs badge-ghost font-mono">custom</span>
+					}
+				</label>
+				<div class="flex gap-1 flex-wrap">
+					<button class="btn btn-xs btn-outline" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"normal"}' hx-swap="none">Normal</button>
+					<button class="btn btn-xs btn-outline btn-warning" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hot"}' hx-swap="none">Hot</button>
+					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"nasty"}' hx-swap="none">Nasty</button>
+					<button class="btn btn-xs btn-outline btn-error" hx-post="/realtime/tavern/hotzones/controls" hx-vals='{"preset":"hell"}' hx-swap="none">Hell</button>
+				</div>
+			</div>
+
 			<!-- Update interval slider -->
 			<div class="form-control">
 				<label class="label py-0">
@@ -212,7 +253,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="hz-interval-val">{ fmt.Sprintf("%dms", settings.UpdateIntervalMS) }</span>
 				</label>
 				<input
-					type="range" min="50" max="5000" step="50"
+					type="range" min="25" max="5000" step="1"
 					value={ fmt.Sprintf("%d", settings.UpdateIntervalMS) }
 					class="range range-xs range-primary"
 					name="update_interval"
@@ -231,7 +272,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="hz-region-val">{ fmt.Sprintf("%d", settings.RegionCount) }</span>
 				</label>
 				<input
-					type="range" min="1" max="6"
+					type="range" min="1" max="8"
 					value={ fmt.Sprintf("%d", settings.RegionCount) }
 					class="range range-xs range-secondary"
 					name="region_count"
@@ -250,7 +291,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="hz-payload-val">{ fmt.Sprintf("%d", settings.PayloadSize) }</span>
 				</label>
 				<input
-					type="range" min="10" max="2000" step="10"
+					type="range" min="10" max="4000" step="10"
 					value={ fmt.Sprintf("%d", settings.PayloadSize) }
 					class="range range-xs range-accent"
 					name="payload_size"
@@ -276,7 +317,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					hx-include="closest .card-body"
 				>
 					<option value="0" selected?={ settings.FocusedRegion == 0 }>Random</option>
-					for i := 1; i <= 6; i++ {
+					for i := 1; i <= 8; i++ {
 						<option value={ fmt.Sprintf("%d", i) } selected?={ settings.FocusedRegion == i }>{ fmt.Sprintf("Region %d", i) }</option>
 					}
 				</select>
@@ -297,6 +338,24 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 				>
 					<option value="tavern-command" selected?={ settings.CommandMode == demo.HotZoneModeTavern }>Tavern.command()</option>
 					<option value="hx-post" selected?={ settings.CommandMode == demo.HotZoneModeHXPost }>hx-post</option>
+				</select>
+			</div>
+
+			<!-- Swap scope -->
+			<div class="form-control">
+				<label class="label py-0">
+					<span class="label-text text-xs">Swap scope</span>
+				</label>
+				<select
+					name="swap_scope"
+					class="select select-sm select-bordered w-full"
+					hx-post="/realtime/tavern/hotzones/controls"
+					hx-trigger="change"
+					hx-swap="none"
+					hx-include="closest .card-body"
+				>
+					<option value="inner" selected?={ settings.SwapScope == demo.HotZoneSwapInner }>Inner content (stable)</option>
+					<option value="card" selected?={ settings.SwapScope == demo.HotZoneSwapCard }>Full card (fragile)</option>
 				</select>
 			</div>
 

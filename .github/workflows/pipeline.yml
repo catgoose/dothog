@@ -54,6 +54,7 @@ jobs:
         run: |
           go get -u ./...
           go mod tidy
+          go mod vendor
           go mod edit -go=$(go version | sed -n 's/.*go\([0-9.]*\).*/\1/p')
 
       - name: Update Go version in README
@@ -70,7 +71,7 @@ jobs:
       - name: Check for changes
         id: check-changes
         run: |
-          git add go.mod go.sum README.md web/assets/public/
+          git add go.mod go.sum vendor/ README.md web/assets/public/
           if git diff --staged --quiet; then
             echo "changes_detected=false" >> $GITHUB_OUTPUT
           else

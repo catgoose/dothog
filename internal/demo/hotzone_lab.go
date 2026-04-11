@@ -28,14 +28,65 @@ type HotZoneRegion struct {
 	PayloadRunes int // how many filler runes per update
 }
 
+// HotZoneSwapScope controls the granularity of SSE replacement.
+type HotZoneSwapScope string
+
+const (
+	HotZoneSwapInner HotZoneSwapScope = "inner" // replace only the inner content (stable)
+	HotZoneSwapCard  HotZoneSwapScope = "card"  // replace the entire card (fragile)
+)
+
+// HotZonePreset is a named pressure profile.
+type HotZonePreset string
+
+const (
+	HotZonePresetNormal HotZonePreset = "normal"
+	HotZonePresetHot    HotZonePreset = "hot"
+	HotZonePresetNasty  HotZonePreset = "nasty"
+	HotZonePresetHell   HotZonePreset = "hell"
+)
+
 // HotZoneSettings holds operator-controlled simulation parameters.
 type HotZoneSettings struct {
-	CommandMode      HotZoneMode // which interaction pattern the UI uses
-	UpdateIntervalMS int         // ms between ticks (50–5000)
-	RegionCount      int         // how many regions to show (1–6)
-	PayloadSize      int         // filler chars per region update (10–2000)
-	FocusedRegion    int         // 0 = random, 1–6 = only update that region
-	BurstMode        bool        // burst: publish all regions every tick
+	Preset           HotZonePreset    // active preset name
+	CommandMode      HotZoneMode      // which interaction pattern the UI uses
+	SwapScope        HotZoneSwapScope // how much of the region gets replaced
+	UpdateIntervalMS int              // ms between ticks (25–5000)
+	RegionCount      int              // how many regions to show (1–8)
+	PayloadSize      int              // filler chars per region update (10–4000)
+	FocusedRegion    int              // 0 = random, 1–8 = only update that region
+	BurstMode        bool             // burst: publish all regions every tick
+}
+
+// ApplyPreset sets fields to the named preset's values.
+func (s *HotZoneSettings) ApplyPreset(p HotZonePreset) {
+	s.Preset = p
+	switch p {
+	case HotZonePresetHot:
+		s.UpdateIntervalMS = 200
+		s.RegionCount = 6
+		s.PayloadSize = 500
+		s.BurstMode = true
+		s.FocusedRegion = 0
+	case HotZonePresetNasty:
+		s.UpdateIntervalMS = 75
+		s.RegionCount = 6
+		s.PayloadSize = 1500
+		s.BurstMode = true
+		s.FocusedRegion = 0
+	case HotZonePresetHell:
+		s.UpdateIntervalMS = 25
+		s.RegionCount = 8
+		s.PayloadSize = 4000
+		s.BurstMode = true
+		s.FocusedRegion = 0
+	default: // normal
+		s.UpdateIntervalMS = 500
+		s.RegionCount = 4
+		s.PayloadSize = 100
+		s.BurstMode = false
+		s.FocusedRegion = 0
+	}
 }
 
 // HotZoneCommandStat tracks command lifecycle metrics per mode.
@@ -52,7 +103,7 @@ type HotZoneCommandStat struct {
 // HotZoneLab wraps the shared state for the hot-zone stress surface.
 type HotZoneLab struct {
 	activity   []HotZoneActivity
-	regions    [6]HotZoneRegion
+	regions    [8]HotZoneRegion
 	settings   HotZoneSettings
 	hxDispatched     atomic.Int64
 	hxReceived       atomic.Int64
@@ -76,12 +127,14 @@ type HotZoneActivity struct {
 func NewHotZoneLab() *HotZoneLab {
 	lab := &HotZoneLab{
 		settings: HotZoneSettings{
+			Preset:           HotZonePresetNormal,
 			UpdateIntervalMS: 500,
 			RegionCount:      4,
 			PayloadSize:      100,
 			BurstMode:        false,
 			FocusedRegion:    0,
 			CommandMode:      HotZoneModeTavern,
+			SwapScope:        HotZoneSwapInner,
 		},
 	}
 	for i := range lab.regions {
@@ -127,7 +180,7 @@ func (l *HotZoneLab) TogglePause() bool {
 func (l *HotZoneLab) Region(id int) HotZoneRegion {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	if id < 1 || id > 6 {
+	if id < 1 || id > 8 {
 		return HotZoneRegion{}
 	}
 	return l.regions[id-1]

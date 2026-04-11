@@ -167,22 +167,35 @@ func (r *tavernHotZoneRoutes) handleSSE(c echo.Context) error {
 
 func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
 	r.lab.UpdateSettings(func(s *demo.HotZoneSettings) {
-		if v, err := strconv.Atoi(c.FormValue("update_interval")); err == nil && v >= 50 && v <= 5000 {
+		// Preset application (overrides individual fields).
+		if preset := demo.HotZonePreset(c.FormValue("preset")); preset != "" {
+			switch preset {
+			case demo.HotZonePresetNormal, demo.HotZonePresetHot, demo.HotZonePresetNasty, demo.HotZonePresetHell:
+				s.ApplyPreset(preset)
+				return
+			}
+		}
+		s.Preset = "" // manual adjustment clears preset label
+		if v, err := strconv.Atoi(c.FormValue("update_interval")); err == nil && v >= 25 && v <= 5000 {
 			s.UpdateIntervalMS = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("region_count")); err == nil && v >= 1 && v <= 6 {
+		if v, err := strconv.Atoi(c.FormValue("region_count")); err == nil && v >= 1 && v <= 8 {
 			s.RegionCount = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("payload_size")); err == nil && v >= 10 && v <= 2000 {
+		if v, err := strconv.Atoi(c.FormValue("payload_size")); err == nil && v >= 10 && v <= 4000 {
 			s.PayloadSize = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("focused_region")); err == nil && v >= 0 && v <= 6 {
+		if v, err := strconv.Atoi(c.FormValue("focused_region")); err == nil && v >= 0 && v <= 8 {
 			s.FocusedRegion = v
 		}
 		s.BurstMode = c.FormValue("burst_mode") == "on"
 		mode := demo.HotZoneMode(c.FormValue("command_mode"))
 		if mode == demo.HotZoneModeHXPost || mode == demo.HotZoneModeTavern {
 			s.CommandMode = mode
+		}
+		scope := demo.HotZoneSwapScope(c.FormValue("swap_scope"))
+		if scope == demo.HotZoneSwapInner || scope == demo.HotZoneSwapCard {
+			s.SwapScope = scope
 		}
 	})
 	r.publishStats()
@@ -217,7 +230,7 @@ func (r *tavernHotZoneRoutes) handleCommand(c echo.Context) error {
 	if err != nil {
 		regionID, err = strconv.Atoi(c.QueryParam("region"))
 	}
-	if err != nil || regionID < 1 || regionID > 6 {
+	if err != nil || regionID < 1 || regionID > 8 {
 		return c.String(http.StatusBadRequest, "invalid region")
 	}
 	mode := demo.HotZoneMode(c.FormValue("mode"))
