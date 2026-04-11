@@ -125,12 +125,20 @@ templ NotificationsPage(identity demo.NotificationIdentity, filters map[demo.Not
 					tavern-role="scoped"
 					tavern-scope="notifications"
 					tavern-reconnecting-class="opacity-50 pointer-events-none"
+					tavern-stale-class="opacity-40"
+					tavern-live-class=""
 					tavern-gap-action="banner"
 					tavern-gap-banner-text="Some notifications may have been missed during disconnection."
 				>
 					<div tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
 						<span class="loading loading-spinner loading-xs"></span>
 						Reconnecting...
+					</div>
+					<div tavern-status-recovering class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+						<span>&#9888;</span> Reconnecting&hellip;
+					</div>
+					<div tavern-status-stale class="hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2">
+						<span>&#9888;</span> Connection lost — data may be stale.
 					</div>
 					<!-- Bind notification events without swapping so htmx:sseMessage still fires; rendering is handled by the coalesced JS queue below. -->
 					<div hx-trigger="sse:notification" hx-swap="none" style="display:none"></div>

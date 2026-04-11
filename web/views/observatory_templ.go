@@ -49,7 +49,7 @@ func ObservatoryPage(data ObservatoryData) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\tbody:has(#obs-page) main { view-transition-name: none !important; }\n\t</style><div id=\"obs-page\" class=\"max-w-5xl mx-auto p-4 space-y-4\" style=\"overflow-anchor:none\"><div class=\"flex items-center justify-between flex-wrap gap-2\"><h1 class=\"text-2xl font-bold\">Broker Observatory</h1><div class=\"text-xs text-base-content/50\">Observing a dedicated demo broker with metrics, backpressure, and admission control.</div></div><div id=\"observatory-container\" hx-ext=\"sse\" sse-connect=\"/sse/observatory\" tavern-reconnecting-class=\"opacity-50\" tavern-debug><div sse-swap=\"observatory-update\" hx-swap=\"innerHTML settle:0 transition:false\" hx-target=\"#observatory-panels\" style=\"display:none\"></div><div id=\"observatory-panels\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\tbody:has(#obs-page) main { view-transition-name: none !important; }\n\t</style><div id=\"obs-page\" class=\"max-w-5xl mx-auto p-4 space-y-4\" style=\"overflow-anchor:none\"><div class=\"flex items-center justify-between flex-wrap gap-2\"><h1 class=\"text-2xl font-bold\">Broker Observatory</h1><div class=\"text-xs text-base-content/50\">Observing a dedicated demo broker with metrics, backpressure, and admission control.</div></div><div id=\"observatory-container\" hx-ext=\"sse\" sse-connect=\"/sse/observatory\" tavern-reconnecting-class=\"opacity-50\" tavern-stale-class=\"opacity-40\" tavern-live-class=\"\" tavern-debug><div tavern-status-recovering class=\"hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2\"><span>&#9888;</span> Reconnecting&hellip;</div><div tavern-status-stale class=\"hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2\"><span>&#9888;</span> Connection lost — data may be stale.</div><div sse-swap=\"observatory-update\" hx-swap=\"innerHTML settle:0 transition:false\" hx-target=\"#observatory-panels\" style=\"display:none\"></div><div id=\"observatory-panels\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -72,7 +72,7 @@ func ObservatoryPage(data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", len(data.Topics)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 53, Col: 189}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 61, Col: 189}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -182,7 +182,7 @@ func ObservatoryControls(data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", data.MaxPerTopic))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 95, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 103, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -205,7 +205,7 @@ func ObservatoryControls(data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", data.MaxPerTopic))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 104, Col: 122}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 112, Col: 122}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -267,7 +267,7 @@ func observatoryPanels(data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", totalSubs(data.Counts)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 141, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 149, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -280,7 +280,7 @@ func observatoryPanels(data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", data.Metrics.TotalPublished))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 142, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 150, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -315,7 +315,7 @@ func observatoryPanels(data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", data.Metrics.TotalDropped))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 145, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 153, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -339,7 +339,7 @@ func observatoryPanels(data ObservatoryData) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(evt.Timestamp.Format("15:04:05.000"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 167, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 175, Col: 103}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -374,7 +374,7 @@ func observatoryPanels(data ObservatoryData) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(evt.TierName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 168, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 176, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -387,7 +387,7 @@ func observatoryPanels(data ObservatoryData) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(evt.Topic)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 169, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 177, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -400,7 +400,7 @@ func observatoryPanels(data ObservatoryData) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(evt.SubscriberID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 170, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 178, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -447,7 +447,7 @@ func observatoryTopicRow(topic string, data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(topic)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 181, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 189, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -460,7 +460,7 @@ func observatoryTopicRow(topic string, data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", data.Counts[topic]))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 182, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 190, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -473,7 +473,7 @@ func observatoryTopicRow(topic string, data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", topicPublished(data.Metrics, topic)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 184, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 192, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -508,7 +508,7 @@ func observatoryTopicRow(topic string, data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", topicDropped(data.Metrics, topic)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 188, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 196, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -521,7 +521,7 @@ func observatoryTopicRow(topic string, data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", topicPeak(data.Metrics, topic)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 191, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 199, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -534,7 +534,7 @@ func observatoryTopicRow(topic string, data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.1f/s", topicThroughput(data, topic)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 192, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 200, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -547,7 +547,7 @@ func observatoryTopicRow(topic string, data ObservatoryData) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(formatLatency(data, topic))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 193, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/observatory.templ`, Line: 201, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {

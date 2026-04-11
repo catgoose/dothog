@@ -27,10 +27,18 @@ templ FeedPage(events []demo.ActivityEvent, lastID int) {
 		</div>
 		<div id="feed-container" hx-ext="sse" sse-connect="/sse/activity"
 			tavern-reconnecting-class="opacity-50"
+			tavern-stale-class="opacity-40"
+			tavern-live-class=""
 			tavern-gap-action="banner"
 		>
 			<div tavern-status class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
 				Reconnecting…
+			</div>
+			<div tavern-status-recovering class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+				<span>&#9888;</span> Reconnecting&hellip;
+			</div>
+			<div tavern-status-stale class="hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2">
+				<span>&#9888;</span> Connection lost — data may be stale.
 			</div>
 			<div sse-swap="activity-event" hx-swap="beforeend settle:0 transition:false" hx-target="#feed-items" style="display:none"></div>
 			<div id="feed-items" class="space-y-2 overflow-x-hidden" style="contain:paint">

@@ -36,8 +36,16 @@ templ ObservatoryPage(data ObservatoryData) {
 			hx-ext="sse"
 			sse-connect="/sse/observatory"
 			tavern-reconnecting-class="opacity-50"
+			tavern-stale-class="opacity-40"
+			tavern-live-class=""
 			tavern-debug
 		>
+			<div tavern-status-recovering class="hidden text-xs text-warning flex items-center gap-1 py-1 px-2 rounded bg-warning/10 mb-2">
+				<span>&#9888;</span> Reconnecting&hellip;
+			</div>
+			<div tavern-status-stale class="hidden text-xs text-error flex items-center gap-1 py-1 px-2 rounded bg-error/10 mb-2">
+				<span>&#9888;</span> Connection lost — data may be stale.
+			</div>
 			<div sse-swap="observatory-update" hx-swap="innerHTML settle:0 transition:false" hx-target="#observatory-panels" style="display:none"></div>
 			<div id="observatory-panels">
 				@observatoryPanels(data)
