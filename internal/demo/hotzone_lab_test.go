@@ -40,9 +40,9 @@ func TestHotZoneLab_ApplyPreset(t *testing.T) {
 		burst    bool
 	}{
 		{HotZonePresetNormal, 500, 4, 100, false},
-		{HotZonePresetHot, 200, 6, 500, true},
-		{HotZonePresetNasty, 75, 6, 1500, true},
-		{HotZonePresetHell, 25, 8, 4000, true},
+		{HotZonePresetHot, 200, 8, 1000, true},
+		{HotZonePresetNasty, 75, 16, 4000, true},
+		{HotZonePresetHell, 25, 32, 10240, true},
 	}
 	for _, tt := range tests {
 		t.Run(string(tt.preset), func(t *testing.T) {

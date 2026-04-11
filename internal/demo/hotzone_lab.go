@@ -52,8 +52,8 @@ type HotZoneSettings struct {
 	CommandMode      HotZoneMode      // which interaction pattern the UI uses
 	SwapScope        HotZoneSwapScope // how much of the region gets replaced
 	UpdateIntervalMS int              // ms between ticks (25–5000)
-	RegionCount      int              // how many regions to show (1–8)
-	PayloadSize      int              // filler chars per region update (10–4000)
+	RegionCount      int              // how many regions to show (1–64)
+	PayloadSize      int              // filler chars per region update (10–10240)
 	FocusedRegion    int              // 0 = random, 1–8 = only update that region
 	BurstMode        bool             // burst: publish all regions every tick
 	// Heat-map visualization settings (client-side only).
@@ -82,20 +82,20 @@ func (s *HotZoneSettings) ApplyPreset(p HotZonePreset) {
 	switch p {
 	case HotZonePresetHot:
 		s.UpdateIntervalMS = 200
-		s.RegionCount = 6
-		s.PayloadSize = 500
+		s.RegionCount = 8
+		s.PayloadSize = 1000
 		s.BurstMode = true
 		s.FocusedRegion = 0
 	case HotZonePresetNasty:
 		s.UpdateIntervalMS = 75
-		s.RegionCount = 6
-		s.PayloadSize = 1500
+		s.RegionCount = 16
+		s.PayloadSize = 4000
 		s.BurstMode = true
 		s.FocusedRegion = 0
 	case HotZonePresetHell:
 		s.UpdateIntervalMS = 25
-		s.RegionCount = 8
-		s.PayloadSize = 4000
+		s.RegionCount = 32
+		s.PayloadSize = 10240
 		s.BurstMode = true
 		s.FocusedRegion = 0
 	default: // normal
@@ -121,7 +121,7 @@ type HotZoneCommandStat struct {
 // HotZoneLab wraps the shared state for the hot-zone stress surface.
 type HotZoneLab struct {
 	activity   []HotZoneActivity
-	regions    [8]HotZoneRegion
+	regions    [64]HotZoneRegion
 	settings   HotZoneSettings
 	hxDispatched     atomic.Int64
 	hxReceived       atomic.Int64
@@ -208,7 +208,7 @@ func (l *HotZoneLab) TogglePause() bool {
 func (l *HotZoneLab) Region(id int) HotZoneRegion {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	if id < 1 || id > 8 {
+	if id < 1 || id > 64 {
 		return HotZoneRegion{}
 	}
 	return l.regions[id-1]

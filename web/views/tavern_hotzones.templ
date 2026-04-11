@@ -134,13 +134,17 @@ templ HotZoneLabPage(data HotZoneLabData) {
 func hotZoneGridClass(count int) string {
 	switch {
 	case count <= 2:
-		return "grid grid-cols-1 md:grid-cols-2 gap-3"
+		return "grid grid-cols-1 md:grid-cols-2 gap-2"
 	case count <= 4:
-		return "grid grid-cols-1 md:grid-cols-2 gap-3"
-	case count <= 6:
-		return "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
+		return "grid grid-cols-1 md:grid-cols-2 gap-2"
+	case count <= 8:
+		return "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2"
+	case count <= 16:
+		return "grid grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-1"
+	case count <= 32:
+		return "grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-1"
 	default:
-		return "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3"
+		return "grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-1"
 	}
 }
 
@@ -322,7 +326,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="hz-region-val">{ fmt.Sprintf("%d", settings.RegionCount) }</span>
 				</label>
 				<input
-					type="range" min="1" max="8"
+					type="range" min="1" max="64"
 					value={ fmt.Sprintf("%d", settings.RegionCount) }
 					class="range range-xs range-secondary"
 					name="region_count"
@@ -342,7 +346,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="hz-payload-val">{ fmt.Sprintf("%d", settings.PayloadSize) }</span>
 				</label>
 				<input
-					type="range" min="10" max="4000" step="10"
+					type="range" min="10" max="10240" step="10"
 					value={ fmt.Sprintf("%d", settings.PayloadSize) }
 					class="range range-xs range-accent"
 					name="payload_size"
@@ -368,7 +372,7 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					hx-include="closest .card-body"
 				>
 					<option value="0" selected?={ settings.FocusedRegion == 0 }>Random</option>
-					for i := 1; i <= 8; i++ {
+					for i := 1; i <= 64; i++ {
 						<option value={ fmt.Sprintf("%d", i) } selected?={ settings.FocusedRegion == i }>{ fmt.Sprintf("Region %d", i) }</option>
 					}
 				</select>

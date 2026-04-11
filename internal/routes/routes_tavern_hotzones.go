@@ -180,13 +180,13 @@ func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
 		if v, err := strconv.Atoi(c.FormValue("update_interval")); err == nil && v >= 25 && v <= 5000 {
 			s.UpdateIntervalMS = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("region_count")); err == nil && v >= 1 && v <= 8 {
+		if v, err := strconv.Atoi(c.FormValue("region_count")); err == nil && v >= 1 && v <= 64 {
 			s.RegionCount = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("payload_size")); err == nil && v >= 10 && v <= 4000 {
+		if v, err := strconv.Atoi(c.FormValue("payload_size")); err == nil && v >= 10 && v <= 10240 {
 			s.PayloadSize = v
 		}
-		if v, err := strconv.Atoi(c.FormValue("focused_region")); err == nil && v >= 0 && v <= 8 {
+		if v, err := strconv.Atoi(c.FormValue("focused_region")); err == nil && v >= 0 && v <= 64 {
 			s.FocusedRegion = v
 		}
 		s.BurstMode = c.FormValue("burst_mode") == "on"
@@ -263,7 +263,7 @@ func (r *tavernHotZoneRoutes) handleCommand(c echo.Context) error {
 	if err != nil {
 		regionID, err = strconv.Atoi(c.QueryParam("region"))
 	}
-	if err != nil || regionID < 1 || regionID > 8 {
+	if err != nil || regionID < 1 || regionID > 64 {
 		return c.String(http.StatusBadRequest, "invalid region")
 	}
 	mode := demo.HotZoneMode(c.FormValue("mode"))
