@@ -99,7 +99,8 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 			return errWalk
 		}
 		if info.IsDir() {
-			if filepath.Base(path) == "_template_setup" || filepath.Base(path) == ".git" {
+			base := filepath.Base(path)
+			if base == "_template_setup" || base == ".git" || base == "vendor" {
 				return filepath.SkipDir
 			}
 			return nil
@@ -290,6 +291,17 @@ func setupTempDir(t *testing.T) string {
 
 func assertBuildSucceeds(t *testing.T, dir string) {
 	t.Helper()
+
+	// Re-vendor after module rename so vendor/modules.txt stays consistent.
+	if _, err := os.Stat(filepath.Join(dir, "vendor")); err == nil {
+		ctxV, cancelV := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer cancelV()
+		cmdV := exec.CommandContext(ctxV, "go", "mod", "vendor")
+		cmdV.Dir = dir
+		cmdV.WaitDelay = 10 * time.Second
+		outV, errV := cmdV.CombinedOutput()
+		require.NoError(t, errV, "go mod vendor failed: %s", string(outV))
+	}
 
 	// Regenerate templ files after feature stripping removed gated code.
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
@@ -785,6 +797,7 @@ func TestSetup_NoDothogReferences(t *testing.T) {
 		"log":              true,
 		"node_modules":     true,
 		"_template_setup":  true,
+		"vendor":           true,
 	}
 
 	var violations []string
