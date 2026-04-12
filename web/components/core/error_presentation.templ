@@ -1,0 +1,27 @@
+package components
+
+// RenderError dispatches an ErrorPresentation to the appropriate surface renderer.
+// This is the single entry point for the unified error rendering contract.
+templ RenderError(p ErrorPresentation) {
+	switch p.Surface {
+		case SurfaceBanner:
+			@ErrorStatusFromContext(p.toErrorContext())
+		case SurfaceInline:
+			@InlineErrorPanel(p.toErrorContext())
+		case SurfaceInlineFull:
+			@InlineFullErrorPanel(p.toErrorContext(), string(p.Size))
+		case SurfaceFullPage:
+			@renderFullPageFromPresentation(p)
+		default:
+			@InlineErrorPanel(p.toErrorContext())
+	}
+}
+
+// renderFullPageFromPresentation composes the full-page surface from the unified contract.
+templ renderFullPageFromPresentation(p ErrorPresentation) {
+	@ErrorPageShell(p.Title, p.Theme) {
+		@ErrorPageContent(p.Status, p.Title, p.Detail, p.Route, p.RequestID) {
+			@ErrorControls(p.Controls)
+		}
+	}
+}

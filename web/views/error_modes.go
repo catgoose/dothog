@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	corecomponents "catgoose/dothog/web/components/core"
+
 	"github.com/catgoose/linkwell"
 )
 
@@ -33,4 +35,33 @@ func errorModesInlineFullEC() linkwell.ErrorContext {
 			linkwell.DismissButton(linkwell.LabelDismiss),
 		},
 	}
+}
+
+// ContractDemoPresentations returns sample ErrorPresentations for the contract demo.
+func ContractDemoPresentations() []corecomponents.ErrorPresentation {
+	return []corecomponents.ErrorPresentation{
+		corecomponents.NewBannerError(500, "Background job failed",
+			linkwell.DismissButton(linkwell.LabelDismiss),
+			linkwell.ReportIssueButton(linkwell.LabelReportIssue, "req-contract-500"),
+		),
+		corecomponents.NewInlineError(422, "Validation failed",
+			linkwell.DismissButton(linkwell.LabelDismiss),
+		),
+		corecomponents.NewInlineFullError(429, "Rate limited", corecomponents.SizeMD,
+			linkwell.DismissButton(linkwell.LabelDismiss),
+		),
+	}
+}
+
+// ContractFullPagePresentation returns a full-page ErrorPresentation for the contract demo.
+func ContractFullPagePresentation(theme string) corecomponents.ErrorPresentation {
+	return corecomponents.NewFullPageError(
+		503, "Service Unavailable",
+		"A downstream dependency is not responding. This page was rendered through the unified error contract.",
+		"/patterns/errors/modes/contract/full-page",
+		"req-contract-503",
+		theme,
+		linkwell.GoHomeButton(linkwell.LabelGoHome, "/", ""),
+		linkwell.ReportIssueButton(linkwell.LabelReportIssue, "req-contract-503"),
+	)
 }
