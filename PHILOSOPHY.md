@@ -876,7 +876,7 @@ There are four error rendering surfaces. Recovery scope should match render scop
 
 - **`banner`** — page-global contextual error delivered via OOB swap. Does not own layout; the user stays on their current page.
 - **`inline`** — compact local error within a container, rendered near the trigger element. No page navigation, no lost state.
-- **`inline-full`** — container-owning error for panels and embedded regions. Fills the entire container with a centered error display, like a full-page error scoped to a sub-region (e.g., a rate-limited calendar preview).
+- **`inline-full`** — container-owning error for panels and embedded regions. Fills the entire container with a centered error display, like a full-page error scoped to a sub-region (e.g., a rate-limited calendar preview). Comes in **sm/md/lg** size variants (`InlineFullErrorPanel(ec, size)`) chosen by the container owner to match the replaced content's density.
 - **`full-page`** — document-level blocking/failure state. Standalone HTML page with composable action row via `ErrorPageShell` + `ErrorPageContent` children.
 
 The composable primitives (`ErrorPageShell`, `ErrorPageContent`, `ErrorPageHeader`, `ErrorPageDetails`) support slotted action rows so each full-page error can carry its own recovery controls — "Go Home" for 404, "Go Back + Retry" for 429, "Go Home + Report Issue" for 500.

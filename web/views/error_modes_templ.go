@@ -36,7 +36,7 @@ func ErrorModesPage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><h1 class=\"text-2xl font-bold mb-4\">Error Modes</h1><div role=\"alert\" class=\"alert alert-info text-sm\"><span>Demonstrates the four error rendering surfaces: <strong>banner</strong>, <strong>inline</strong>, <strong>full-page</strong>, and <strong>inline-full</strong> (placeholder). Recovery scope should match render scope.</span></div><!-- Banner Mode --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Banner</h2><p class=\"text-sm text-base-content/70 mb-3\">Page-global contextual error. Does not own layout — swaps OOB into <code class=\"text-xs bg-base-200 px-1 rounded\">#error-status</code>. The user stays on their current page.</p><div class=\"flex flex-wrap gap-2\"><button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/500\" hx-target=\"#errors-modes-banner-result\" hx-swap=\"innerHTML\">Trigger 500 Banner</button></div><div id=\"errors-modes-banner-result\" class=\"mt-2\"></div></div></div><!-- Inline Mode --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Inline</h2><p class=\"text-sm text-base-content/70 mb-3\">Compact local error within a container. Replaces content in-place near the element that triggered the error. No page navigation, no lost state.</p><button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/modes/inline\" hx-target=\"#errors-modes-inline-result\" hx-swap=\"innerHTML\">Trigger Inline Error</button><div id=\"errors-modes-inline-result\" class=\"mt-2\"></div></div></div><!-- Full-Page Mode --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Full-Page</h2><p class=\"text-sm text-base-content/70 mb-3\">Document-level blocking error state. Standalone HTML page with composable action row. Each example demonstrates a different set of recovery controls.</p><div class=\"flex flex-wrap gap-2\"><a href=\"/patterns/errors/modes/full-page/404\" class=\"btn btn-sm btn-primary btn-outline\" target=\"_blank\">404 — Go Home</a> <a href=\"/patterns/errors/modes/full-page/429\" class=\"btn btn-sm btn-warning btn-outline\" target=\"_blank\">429 — Go Back + Retry</a> <a href=\"/patterns/errors/modes/full-page/500\" class=\"btn btn-sm btn-error btn-outline\" target=\"_blank\">500 — Go Home + Report</a></div></div></div><!-- Inline-Full Mode (Placeholder) --><div class=\"card bg-base-100 shadow border border-base-300 border-dashed opacity-70\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Inline-Full <span class=\"badge badge-sm badge-ghost\">planned</span></h2><p class=\"text-sm text-base-content/70 mb-3\">Container-owning error for panels and embedded regions. Fills the entire container with a centered error display — like full-page but scoped to a sub-region. Useful for embedded views like calendar previews under rate-limiting.</p></div></div><!-- Taxonomy Summary --><div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><h1 class=\"text-2xl font-bold mb-4\">Error Modes</h1><div role=\"alert\" class=\"alert alert-info text-sm\"><span>Demonstrates the four error rendering surfaces: <strong>banner</strong>, <strong>inline</strong>, <strong>full-page</strong>, and <strong>inline-full</strong> (placeholder). Recovery scope should match render scope.</span></div><!-- Banner Mode --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Banner</h2><p class=\"text-sm text-base-content/70 mb-3\">Page-global contextual error. Does not own layout — swaps OOB into <code class=\"text-xs bg-base-200 px-1 rounded\">#error-status</code>. The user stays on their current page.</p><div class=\"flex flex-wrap gap-2\"><button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/500\" hx-target=\"#errors-modes-banner-result\" hx-swap=\"innerHTML\">Trigger 500 Banner</button></div><div id=\"errors-modes-banner-result\" class=\"mt-2\"></div></div></div><!-- Inline Mode --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Inline</h2><p class=\"text-sm text-base-content/70 mb-3\">Compact local error within a container. Replaces content in-place near the element that triggered the error. No page navigation, no lost state.</p><button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/modes/inline\" hx-target=\"#errors-modes-inline-result\" hx-swap=\"innerHTML\">Trigger Inline Error</button><div id=\"errors-modes-inline-result\" class=\"mt-2\"></div></div></div><!-- Full-Page Mode --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Full-Page</h2><p class=\"text-sm text-base-content/70 mb-3\">Document-level blocking error state. Standalone HTML page with composable action row. Each example demonstrates a different set of recovery controls.</p><div class=\"flex flex-wrap gap-2\"><a href=\"/patterns/errors/modes/full-page/404\" class=\"btn btn-sm btn-primary btn-outline\" target=\"_blank\">404 — Go Home</a> <a href=\"/patterns/errors/modes/full-page/429\" class=\"btn btn-sm btn-warning btn-outline\" target=\"_blank\">429 — Go Back + Retry</a> <a href=\"/patterns/errors/modes/full-page/500\" class=\"btn btn-sm btn-error btn-outline\" target=\"_blank\">500 — Go Home + Report</a></div></div></div><!-- Inline-Full Mode --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Inline-Full</h2><p class=\"text-sm text-base-content/70 mb-3\">Container-owning error for panels and embedded regions. Fills the entire container with a centered error display — like full-page but scoped to a sub-region. Comes in sm/md/lg size variants chosen by the container owner.</p><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\"><!-- SM --><div><p class=\"text-xs font-semibold text-base-content/50 mb-1\">Small (sm)</p><button class=\"btn btn-xs btn-error btn-outline mb-2\" hx-get=\"/patterns/errors/modes/inline-full/sm\" hx-target=\"#errors-modes-inline-full-sm\" hx-swap=\"innerHTML\">Trigger SM</button><div id=\"errors-modes-inline-full-sm\" class=\"min-h-[80px] border border-base-300 rounded-lg\"></div></div><!-- MD --><div><p class=\"text-xs font-semibold text-base-content/50 mb-1\">Medium (md)</p><button class=\"btn btn-xs btn-error btn-outline mb-2\" hx-get=\"/patterns/errors/modes/inline-full/md\" hx-target=\"#errors-modes-inline-full-md\" hx-swap=\"innerHTML\">Trigger MD</button><div id=\"errors-modes-inline-full-md\" class=\"min-h-[120px] border border-base-300 rounded-lg\"></div></div><!-- LG --><div class=\"md:col-span-1\"><p class=\"text-xs font-semibold text-base-content/50 mb-1\">Large (lg)</p><button class=\"btn btn-xs btn-error btn-outline mb-2\" hx-get=\"/patterns/errors/modes/inline-full/lg\" hx-target=\"#errors-modes-inline-full-lg\" hx-swap=\"innerHTML\">Trigger LG</button><div id=\"errors-modes-inline-full-lg\" class=\"min-h-[180px] border border-base-300 rounded-lg\"></div></div></div></div></div><!-- Taxonomy Summary --><div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -52,7 +52,7 @@ func ErrorModesPage() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = errorModeCard("Inline-Full", "Container fill (planned)", "Container-owning error for panels and embedded regions. Scoped full-page experience.").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = errorModeCard("Inline-Full", "Container fill (sm/md/lg)", "Container-owning error for panels and embedded regions. Size variant chosen by container owner.").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -92,7 +92,7 @@ func errorModeCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_modes.templ`, Line: 115, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_modes.templ`, Line: 147, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -105,7 +105,7 @@ func errorModeCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_modes.templ`, Line: 116, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_modes.templ`, Line: 148, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -118,7 +118,7 @@ func errorModeCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(desc)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_modes.templ`, Line: 117, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/error_modes.templ`, Line: 149, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -163,7 +163,7 @@ func ErrorModesInlineResult() templ.Component {
 }
 
 // ErrorModes404 renders a standalone 404 full-page error with a "Go Home" action.
-func ErrorModes404() templ.Component {
+func ErrorModes404(theme string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -220,7 +220,7 @@ func ErrorModes404() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = corecomponents.ErrorPageShell("Not Found", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = corecomponents.ErrorPageShell("Not Found", theme).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -229,7 +229,7 @@ func ErrorModes404() templ.Component {
 }
 
 // ErrorModes429 renders a standalone 429 full-page error with "Go Back" and "Retry" actions.
-func ErrorModes429() templ.Component {
+func ErrorModes429(theme string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -286,7 +286,7 @@ func ErrorModes429() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = corecomponents.ErrorPageShell("Too Many Requests", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = corecomponents.ErrorPageShell("Too Many Requests", theme).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -295,7 +295,7 @@ func ErrorModes429() templ.Component {
 }
 
 // ErrorModes500 renders a standalone 500 full-page error with "Go Home" and "Report Issue" actions.
-func ErrorModes500() templ.Component {
+func ErrorModes500(theme string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -352,7 +352,37 @@ func ErrorModes500() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = corecomponents.ErrorPageShell("Internal Server Error", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = corecomponents.ErrorPageShell("Internal Server Error", theme).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// ErrorModesInlineFullResult renders an inline-full error panel at the given size for the modes demo.
+func ErrorModesInlineFullResult(size string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var16 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var16 == nil {
+			templ_7745c5c3_Var16 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = corecomponents.InlineFullErrorPanel(errorModesInlineFullEC(), size).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

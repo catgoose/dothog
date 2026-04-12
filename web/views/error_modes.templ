@@ -84,18 +84,50 @@ templ ErrorModesPage() {
 			</div>
 		</div>
 
-		<!-- Inline-Full Mode (Placeholder) -->
-		<div class="card bg-base-100 shadow border border-base-300 border-dashed opacity-70">
+		<!-- Inline-Full Mode -->
+		<div class="card bg-base-100 shadow border border-base-300">
 			<div class="card-body p-4">
-				<h2 class="card-title text-base">
-					Inline-Full
-					<span class="badge badge-sm badge-ghost">planned</span>
-				</h2>
+				<h2 class="card-title text-base">Inline-Full</h2>
 				<p class="text-sm text-base-content/70 mb-3">
 					Container-owning error for panels and embedded regions. Fills the entire
 					container with a centered error display — like full-page but scoped to
-					a sub-region. Useful for embedded views like calendar previews under rate-limiting.
+					a sub-region. Comes in sm/md/lg size variants chosen by the container owner.
 				</p>
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+					<!-- SM -->
+					<div>
+						<p class="text-xs font-semibold text-base-content/50 mb-1">Small (sm)</p>
+						<button
+							class="btn btn-xs btn-error btn-outline mb-2"
+							hx-get="/patterns/errors/modes/inline-full/sm"
+							hx-target="#errors-modes-inline-full-sm"
+							hx-swap="innerHTML"
+						>Trigger SM</button>
+						<div id="errors-modes-inline-full-sm" class="min-h-[80px] border border-base-300 rounded-lg"></div>
+					</div>
+					<!-- MD -->
+					<div>
+						<p class="text-xs font-semibold text-base-content/50 mb-1">Medium (md)</p>
+						<button
+							class="btn btn-xs btn-error btn-outline mb-2"
+							hx-get="/patterns/errors/modes/inline-full/md"
+							hx-target="#errors-modes-inline-full-md"
+							hx-swap="innerHTML"
+						>Trigger MD</button>
+						<div id="errors-modes-inline-full-md" class="min-h-[120px] border border-base-300 rounded-lg"></div>
+					</div>
+					<!-- LG -->
+					<div class="md:col-span-1">
+						<p class="text-xs font-semibold text-base-content/50 mb-1">Large (lg)</p>
+						<button
+							class="btn btn-xs btn-error btn-outline mb-2"
+							hx-get="/patterns/errors/modes/inline-full/lg"
+							hx-target="#errors-modes-inline-full-lg"
+							hx-swap="innerHTML"
+						>Trigger LG</button>
+						<div id="errors-modes-inline-full-lg" class="min-h-[180px] border border-base-300 rounded-lg"></div>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -104,7 +136,7 @@ templ ErrorModesPage() {
 			@errorModeCard("Banner", "OOB swap to #error-status", "Page-global contextual error. Does not own layout. User stays on their current page.")
 			@errorModeCard("Inline", "hx-target on trigger", "Compact local error within a container. Replaces content near the trigger element.")
 			@errorModeCard("Full-Page", "Standalone HTML document", "Document-level blocking error. Owns the entire viewport with composable action row.")
-			@errorModeCard("Inline-Full", "Container fill (planned)", "Container-owning error for panels and embedded regions. Scoped full-page experience.")
+			@errorModeCard("Inline-Full", "Container fill (sm/md/lg)", "Container-owning error for panels and embedded regions. Size variant chosen by container owner.")
 		</div>
 	</div>
 }
@@ -125,8 +157,8 @@ templ ErrorModesInlineResult() {
 }
 
 // ErrorModes404 renders a standalone 404 full-page error with a "Go Home" action.
-templ ErrorModes404() {
-	@corecomponents.ErrorPageShell("Not Found", "") {
+templ ErrorModes404(theme string) {
+	@corecomponents.ErrorPageShell("Not Found", theme) {
 		@corecomponents.ErrorPageContent(404, "Not Found", "The page you requested does not exist.", "/patterns/errors/modes/full-page/404", "") {
 			<div class="flex items-center justify-center gap-3">
 				<a href="/" class="btn btn-primary btn-sm">Go Home</a>
@@ -136,8 +168,8 @@ templ ErrorModes404() {
 }
 
 // ErrorModes429 renders a standalone 429 full-page error with "Go Back" and "Retry" actions.
-templ ErrorModes429() {
-	@corecomponents.ErrorPageShell("Too Many Requests", "") {
+templ ErrorModes429(theme string) {
+	@corecomponents.ErrorPageShell("Too Many Requests", theme) {
 		@corecomponents.ErrorPageContent(429, "Too Many Requests", "Please wait a moment before trying again.", "/patterns/errors/modes/full-page/429", "") {
 			<div class="flex items-center justify-center gap-3">
 				<button class="btn btn-ghost btn-sm" onclick="history.back()">Go Back</button>
@@ -148,8 +180,8 @@ templ ErrorModes429() {
 }
 
 // ErrorModes500 renders a standalone 500 full-page error with "Go Home" and "Report Issue" actions.
-templ ErrorModes500() {
-	@corecomponents.ErrorPageShell("Internal Server Error", "") {
+templ ErrorModes500(theme string) {
+	@corecomponents.ErrorPageShell("Internal Server Error", theme) {
 		@corecomponents.ErrorPageContent(500, "Internal Server Error", "An unexpected error occurred while processing your request.", "/patterns/errors/modes/full-page/500", "req-demo-500-abc123") {
 			<div class="flex items-center justify-center gap-3">
 				<a href="/" class="btn btn-primary btn-sm">Go Home</a>
@@ -167,4 +199,9 @@ templ ErrorModes500() {
 			</div>
 		}
 	}
+}
+
+// ErrorModesInlineFullResult renders an inline-full error panel at the given size for the modes demo.
+templ ErrorModesInlineFullResult(size string) {
+	@corecomponents.InlineFullErrorPanel(errorModesInlineFullEC(), size)
 }

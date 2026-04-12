@@ -234,6 +234,157 @@ templ inlineErrorActions(controls []linkwell.Control) {
 	</div>
 }
 
+// InlineFullErrorPanel renders a container-owning error that fills its parent.
+// Size must be "sm", "md", or "lg" and controls text size, padding, and layout density.
+templ InlineFullErrorPanel(ec linkwell.ErrorContext, size string) {
+	switch size {
+		case "sm":
+			@inlineFullSM(ec)
+		case "lg":
+			@inlineFullLG(ec)
+		default:
+			@inlineFullMD(ec)
+	}
+}
+
+// inlineFullSM renders a compact inline-full error: small text, tight padding, single-row actions.
+templ inlineFullSM(ec linkwell.ErrorContext) {
+	<div class="flex flex-col items-center justify-center h-full min-h-[80px] bg-error/5 border border-error/20 rounded-lg p-2 text-center">
+		<p class="text-xs font-semibold text-error">
+			<span class="badge badge-xs badge-error badge-outline mr-1">{ strconv.Itoa(ec.StatusCode) }</span>
+			{ ec.Message }
+		</p>
+		if ec.Err != nil {
+			<p class="text-xs text-base-content/60 mt-0.5">{ ec.Err.Error() }</p>
+		}
+		<div class="flex items-center gap-1.5 mt-1.5">
+			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
+				<button
+					class="btn btn-xs border-error/20 bg-error/10 text-error hover:bg-error/20"
+					x-data="dismissError"
+					x-on:click="dismiss()"
+				>
+					{ dismiss.Label }
+				</button>
+			}
+			for _, ctrl := range inlineActionControls(ec.Controls) {
+				<button
+					{ hxAttrsFromControl(ctrl)... }
+					class="btn btn-xs border-error/20 bg-error/10 text-error hover:bg-error/20"
+					disabled?={ ctrl.Disabled }
+				>
+					{ ctrl.Label }
+				</button>
+			}
+			if report, ok := inlineReportControl(ec.Controls); ok {
+				<button
+					{ hxAttrsFromControl(report)... }
+					class="btn btn-xs border-error/20 bg-error/10 text-error hover:bg-error/20"
+				>
+					{ report.Label }
+				</button>
+			}
+		</div>
+	</div>
+}
+
+// inlineFullMD renders the standard inline-full error: moderate text, two-row actions.
+templ inlineFullMD(ec linkwell.ErrorContext) {
+	<div class="flex flex-col items-center justify-center h-full min-h-[120px] bg-error/5 border border-error/20 rounded-lg p-3 text-center">
+		<p class="text-sm font-semibold text-error">
+			<span class="badge badge-sm badge-error badge-outline mr-1">{ strconv.Itoa(ec.StatusCode) }</span>
+			{ ec.Message }
+		</p>
+		if ec.Err != nil {
+			<p class="text-xs text-base-content/60 mt-1">{ ec.Err.Error() }</p>
+		}
+		if ec.Route != "" {
+			<p class="text-xs text-base-content/40 mt-0.5">Route: { ec.Route }</p>
+		}
+		<div class="flex items-center gap-2 mt-2">
+			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
+				<button
+					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
+					x-data="dismissError"
+					x-on:click="dismiss()"
+				>
+					{ dismiss.Label }
+				</button>
+			}
+			for _, ctrl := range inlineActionControls(ec.Controls) {
+				<button
+					{ hxAttrsFromControl(ctrl)... }
+					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
+					disabled?={ ctrl.Disabled }
+				>
+					{ ctrl.Label }
+				</button>
+			}
+			if report, ok := inlineReportControl(ec.Controls); ok {
+				<button
+					{ hxAttrsFromControl(report)... }
+					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20 gap-1"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"></path>
+					</svg>
+					{ report.Label }
+				</button>
+			}
+		</div>
+	</div>
+}
+
+// inlineFullLG renders a spacious inline-full error: large status display, generous padding, centered layout.
+templ inlineFullLG(ec linkwell.ErrorContext) {
+	<div class="flex flex-col items-center justify-center h-full min-h-[180px] bg-error/5 border border-error/20 rounded-lg p-6 text-center">
+		<p class="text-5xl font-black text-error/20 select-none leading-none">{ strconv.Itoa(ec.StatusCode) }</p>
+		<p class="text-base font-semibold text-error mt-1">{ ec.Message }</p>
+		if ec.Err != nil {
+			<p class="text-sm text-base-content/60 mt-1">{ ec.Err.Error() }</p>
+		}
+		if ec.Route != "" {
+			<p class="text-xs text-base-content/40 mt-0.5">Route: { ec.Route }</p>
+		}
+		if ec.RequestID != "" {
+			<p class="text-xs text-base-content/40">
+				Request ID: <code class="font-mono bg-base-200 px-1 py-0.5 rounded">{ ec.RequestID }</code>
+			</p>
+		}
+		<div class="flex items-center gap-2 mt-4">
+			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
+				<button
+					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
+					x-data="dismissError"
+					x-on:click="dismiss()"
+				>
+					{ dismiss.Label }
+				</button>
+			}
+			for _, ctrl := range inlineActionControls(ec.Controls) {
+				<button
+					{ hxAttrsFromControl(ctrl)... }
+					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
+					disabled?={ ctrl.Disabled }
+				>
+					{ ctrl.Label }
+				</button>
+			}
+			if report, ok := inlineReportControl(ec.Controls); ok {
+				<button
+					{ hxAttrsFromControl(report)... }
+					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20 gap-1"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"></path>
+					</svg>
+					{ report.Label }
+				</button>
+			}
+		</div>
+	</div>
+}
+
 // ErrorStatus is the backward-compatible wrapper. All existing call sites are unchanged.
 templ ErrorStatus(statusCode int, message string, err error, route string, requestID string, closable bool) {
 	@ErrorStatusFromContext(linkwell.ErrorContext{
