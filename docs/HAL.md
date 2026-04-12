@@ -172,7 +172,7 @@ This project — Dothog — uses HTML as its hypermedia format. HTMX extends HTM
 
 **If you are building a JSON API that other programs consume:** HAL is a meaningful improvement over bare JSON. Your API consumers discover URLs instead of hardcoding them. Your API can evolve its URL structure without breaking clients. Link relations carry semantic meaning via the IANA registry. This is real value. It is incomplete value — the client still needs out-of-band knowledge for mutations — but it is value.
 
-**If you are building both:** serve HTML to browsers, HAL+JSON to API clients, from the same resource. This is content negotiation. The browser gets `text/html` with full hypermedia controls. The API client gets `application/hal+json` with navigation links. Same resource, same relationships, different media types. The `/hypermedia/hal` demo shows exactly this — the same bookshop resource graph rendered as interactive HTML cards alongside the raw HAL+JSON.
+**If you are building both:** the architectural ideal is to serve HTML to browsers and HAL+JSON to API clients from the same URL, using `Accept`-header content negotiation. The browser gets `text/html` with full hypermedia controls. The API client gets `application/hal+json` with navigation links. Same resource, same relationships, different media types. The `/api/hal` demo does not yet implement this — the HTML page and HAL+JSON endpoints use separate route trees. But the demo renders the same bookshop resource graph as interactive HTML cards alongside the raw HAL+JSON, making the structural relationship between the two representations visible even though they are not yet served from the same URL.
 
 **THE NOVICE said: "So HAL is good enough?"**
 
@@ -262,11 +262,11 @@ Resource
 
 | Path | What It Does |
 |------|-------------|
-| `/hypermedia/hal` | Interactive HAL explorer — navigate a bookshop resource graph via HTMX |
-| `/hypermedia/hal/api/catalog` | HAL+JSON root resource |
-| `/hypermedia/hal/api/books` | HAL+JSON book collection with `_embedded` |
-| `/hypermedia/hal/api/books/:id` | HAL+JSON individual book with author link |
-| `/hypermedia/hal/api/authors/:id` | HAL+JSON author with book links |
-| `/hypermedia/hal/explore?url=...` | HTMX fragment endpoint — renders any HAL resource as an interactive card |
+| `/api/hal` | Interactive HAL explorer — HTML page that navigates the bookshop resource graph via HTMX |
+| `/api/hal/api/catalog` | HAL+JSON root resource |
+| `/api/hal/api/books` | HAL+JSON book collection with `_embedded` |
+| `/api/hal/api/books/:id` | HAL+JSON individual book with author link |
+| `/api/hal/api/authors/:id` | HAL+JSON author with book links |
+| `/api/hal/explore?url=...` | HTMX fragment endpoint — renders any HAL resource as an interactive card |
 
-The explorer fetches HAL+JSON from the API endpoints and renders it as interactive HTML alongside the raw JSON. Every `_link` becomes a clickable button that navigates to the target resource. Every `_embedded` resource becomes an expandable card. The dual view makes the relationship between HAL and HTML visible: same data, same relationships, different affordances.
+Note: The HTML page (`/api/hal`) and the HAL+JSON endpoints (`/api/hal/api/...`) use separate route trees. Representation selection is route-based, not `Accept`-header-based. The explorer fetches HAL+JSON from the API endpoints and renders it as interactive HTML alongside the raw JSON. Every `_link` becomes a clickable button that navigates to the target resource. Every `_embedded` resource becomes an expandable card. The dual view makes the structural relationship between HAL and HTML visible — same data, same relationships, different affordances — even though they are served from different URLs.

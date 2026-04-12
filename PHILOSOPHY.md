@@ -280,13 +280,15 @@ The key constraint: every resource must be reachable without JavaScript. Links a
 
 ### HAL: Content Negotiation for APIs
 
-Content negotiation extends beyond the HTML/fragment split. The same resource graph can serve `application/hal+json` — [HAL](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal) adds `_links` and `_embedded` to JSON, giving API clients navigable relationships without out-of-band URL construction. A browser sees HTML with HTMX controls. A `curl` user sees HAL+JSON with link relations. Same resource, same relationships, different media type.
+Content negotiation extends beyond the HTML/fragment split. [HAL](https://datatracker.ietf.org/doc/html/draft-kelly-json-hal) (`application/hal+json`) adds `_links` and `_embedded` to JSON, giving API clients navigable relationships without out-of-band URL construction. In the ideal model, a browser sees HTML with HTMX controls and a `curl` user sees HAL+JSON with link relations — same resource, same URL, different media type.
 
-HAL gives JSON what `<a>` tags give HTML. It does not give JSON what `<form>` tags give HTML — and that gap is where the interesting architectural questions live. The `/hypermedia/hal` demo renders both representations side by side so the gap is visible. See [docs/HAL.md](docs/HAL.md) for the full Socratic inquiry into what HAL provides, what it doesn't, and what Fielding would say about both.
+The current `/api/hal` demo does not yet implement same-URL negotiation. The HTML page and the HAL+JSON endpoints live at separate routes (`/api/hal` for the page, `/api/hal/api/...` for the JSON resources). This teaches HAL structure and link traversal, but the representation selection is route-based rather than `Accept`-header-based. True content negotiation — where a single URL serves HTML or HAL+JSON depending on the client's `Accept` header — is the architectural goal described above; the demo is an incremental step toward it.
+
+HAL gives JSON what `<a>` tags give HTML. It does not give JSON what `<form>` tags give HTML — and that gap is where the interesting architectural questions live. See [docs/HAL.md](docs/HAL.md) for the full Socratic inquiry into what HAL provides, what it doesn't, and what Fielding would say about both.
 
 ### Accept Header: The Full Negotiation Mechanism
 
-The current architecture keys content negotiation off the `HX-Request` header (HTMX partials vs. full pages) and explicit `Accept: application/hal+json` (HAL responses). But the HTTP spec defines a richer negotiation vocabulary that the same pattern extends to naturally.
+The current architecture keys content negotiation off the `HX-Request` header (HTMX partials vs. full pages). The HAL demo serves `application/hal+json` from dedicated API routes rather than via `Accept`-header dispatch, but the HTTP spec defines a richer negotiation vocabulary that the same pattern extends to naturally.
 
 The `Accept` header supports quality factors: `Accept: text/html, application/hal+json;q=0.9, application/json;q=0.8` tells the server the client prefers HTML, will accept HAL, and will settle for plain JSON. The server picks the best match from what it can produce. This is how content negotiation was designed to work — the client declares capabilities, the server selects the optimal representation.
 

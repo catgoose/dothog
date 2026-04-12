@@ -78,7 +78,7 @@ templ HALPage(rawJSON string, resource HALResourceView) {
 				"URI Templates (RFC 6570) allow parameterized links. The explorer detects these and shows an input field.")
 			@halPatternCard("Content Negotiation",
 				"Accept: application/hal+json",
-				"The same endpoints serve HAL+JSON to API clients. The explorer uses HTMX to render them as HTML fragments.")
+				"The HAL+JSON endpoints live under /api/hal/api/... while this page lives at /api/hal. The explorer fetches the JSON and renders it as HTML fragments — route-based separation, not yet same-URL Accept-header negotiation.")
 		</div>
 	</div>
 }
