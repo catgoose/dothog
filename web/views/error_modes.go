@@ -20,3 +20,17 @@ func errorModesInlineEC() linkwell.ErrorContext {
 		},
 	}
 }
+
+func errorModesInlineFullEC() linkwell.ErrorContext {
+	return linkwell.ErrorContext{
+		StatusCode: http.StatusTooManyRequests,
+		Message:    "Too Many Requests",
+		Err:        errors.New("rate limit exceeded for this panel"),
+		Route:      "/patterns/errors/modes/inline-full",
+		RequestID:  "req-demo-429-inline",
+		Closable:   true,
+		Controls: []linkwell.Control{
+			linkwell.DismissButton(linkwell.LabelDismiss),
+		},
+	}
+}
