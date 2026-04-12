@@ -52,16 +52,18 @@ const (
 	HotZonePresetHell   HotZonePreset = "hell"
 )
 
-// HotZonePaletteColors defines the 8-color palette used by text grid cells.
-var HotZonePaletteColors = [8]string{
-	"#22c55e", // green
-	"#06b6d4", // cyan
-	"#f59e0b", // amber
-	"#d946ef", // magenta
-	"#ef4444", // red
-	"#3b82f6", // blue
-	"#1e293b", // dark
-	"#e2e8f0", // light
+// HotZonePalette defines bg/fg pairs for text grid cells.
+// Each entry is [background, foreground] — foreground is a
+// high-contrast complement of the background.
+var HotZonePalette = [8][2]string{
+	{"#22c55e", "#0a3d1e"}, // green bg, dark green fg
+	{"#06b6d4", "#042f38"}, // cyan bg, dark cyan fg
+	{"#f59e0b", "#4a2f00"}, // amber bg, dark amber fg
+	{"#d946ef", "#3d0f47"}, // magenta bg, dark magenta fg
+	{"#ef4444", "#4a0e0e"}, // red bg, dark red fg
+	{"#3b82f6", "#0f2554"}, // blue bg, dark blue fg
+	{"#1e293b", "#cbd5e1"}, // dark bg, light fg
+	{"#e2e8f0", "#1e293b"}, // light bg, dark fg
 }
 
 var glyphs = []string{"█", "■", "●", "+", "▓", "◆", "▲", "◉"}
@@ -212,7 +214,7 @@ func generateCells(gridSize int) []HotZoneCell {
 	for i := range cells {
 		cells[i] = HotZoneCell{
 			Glyph:   glyphs[rand.IntN(len(glyphs))],
-			Palette: rand.IntN(len(HotZonePaletteColors)),
+			Palette: rand.IntN(len(HotZonePalette)),
 		}
 	}
 	return cells

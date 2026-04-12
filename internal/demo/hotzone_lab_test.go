@@ -140,7 +140,7 @@ func TestHotZoneLab_PaletteValid(t *testing.T) {
 	for _, r := range regions {
 		for _, c := range r.Cells {
 			assert.GreaterOrEqual(t, c.Palette, 0)
-			assert.Less(t, c.Palette, len(HotZonePaletteColors))
+			assert.Less(t, c.Palette, len(HotZonePalette))
 			assert.NotEmpty(t, c.Glyph)
 		}
 	}
