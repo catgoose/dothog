@@ -61,7 +61,7 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 templ header(csrfToken string, devMode bool, appName string, extraCSS []string) {
 	<head>
 		@components.CsrfMeta(csrfToken)
-		<meta name="htmx-config" content='{"globalViewTransitions":true,"refreshOnHistoryMiss":true,"responseHandling":[{"code":".*","swap":true}]}'/>
+		<meta name="htmx-config" content='{"globalViewTransitions":false,"refreshOnHistoryMiss":true,"responseHandling":[{"code":".*","swap":true}]}'/>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<meta name="description" content={ appName + " - IT operations dashboard for managing infrastructure, inventory, and real-time monitoring" }/>

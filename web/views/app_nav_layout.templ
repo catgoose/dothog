@@ -22,17 +22,20 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 					tavern-reconnecting-class="app-lifeline-disconnected"
 					style="display:none"
 				></div>
-				<!-- Mobile topbar (CSS shows/hides) -->
-				<div class="app-topbar sticky top-0 z-50 bg-base-100 border-b border-base-300 items-center justify-between px-4 py-2.5">
-					if cfg.Topbar != nil {
-						@cfg.Topbar
-					} else {
-						<a href="/" class="font-bold text-lg">{ cfg.AppName }</a>
-					}
+				<!-- Sticky header group: banner + nav stick together -->
+				<div class="app-header sticky top-0 z-50 bg-base-100">
+					<div id="error-status"></div>
+					<!-- Mobile topbar (CSS shows/hides) -->
+					<div class="app-topbar bg-base-100 border-b border-base-300 items-center justify-between px-4 py-2.5">
+						if cfg.Topbar != nil {
+							@cfg.Topbar
+						} else {
+							<a href="/" class="font-bold text-lg">{ cfg.AppName }</a>
+						}
+					</div>
+					<!-- Nav bar (CSS positions: bottom on mobile, top on desktop) -->
+					@appNav(cfg)
 				</div>
-				<!-- Nav bar (CSS positions: bottom on mobile, top on desktop) -->
-				@appNav(cfg)
-				<div id="error-status" class="sticky top-0 z-40"></div>
 				// setup:feature:demo:start
 			@components.LocalContextBar(links, currentPath)
 			// setup:feature:demo:end
@@ -40,7 +43,7 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 					@components.ContextStrip(crumbs)
 				}
 				<!-- Main Content (z-0 keeps content below sticky nav z-50) -->
-				<main class="app-main flex-1 p-4 md:p-6 relative z-0">
+				<main class="app-main flex-1 p-4 md:p-6 relative z-0 overflow-clip">
 					@Layout(content)
 				</main>
 				// setup:feature:demo:start

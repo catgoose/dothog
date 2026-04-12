@@ -263,15 +263,6 @@ templ inlineFullXS(ec linkwell.ErrorContext) {
 			{ ec.Message }
 		</p>
 		<div class="flex items-center gap-1 mt-1">
-			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
-				<button
-					class="btn btn-xs h-5 min-h-5 text-[0.6rem] border-error/20 bg-error/10 text-error hover:bg-error/20"
-					x-data="dismissError"
-					x-on:click="dismiss()"
-				>
-					{ dismiss.Label }
-				</button>
-			}
 			for _, ctrl := range inlineActionControls(ec.Controls) {
 				<button
 					{ hxAttrsFromControl(ctrl)... }
@@ -279,6 +270,15 @@ templ inlineFullXS(ec linkwell.ErrorContext) {
 					disabled?={ ctrl.Disabled }
 				>
 					{ ctrl.Label }
+				</button>
+			}
+			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
+				<button
+					class="btn btn-xs h-5 min-h-5 text-[0.6rem] border-error/20 bg-error/10 text-error hover:bg-error/20"
+					x-data="dismissError"
+					x-on:click="dismiss()"
+				>
+					{ dismiss.Label }
 				</button>
 			}
 		</div>
@@ -296,15 +296,6 @@ templ inlineFullSM(ec linkwell.ErrorContext) {
 			<p class="text-xs text-base-content/60 mt-0.5">{ ec.Err.Error() }</p>
 		}
 		<div class="flex items-center gap-1.5 mt-1.5">
-			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
-				<button
-					class="btn btn-xs border-error/20 bg-error/10 text-error hover:bg-error/20"
-					x-data="dismissError"
-					x-on:click="dismiss()"
-				>
-					{ dismiss.Label }
-				</button>
-			}
 			for _, ctrl := range inlineActionControls(ec.Controls) {
 				<button
 					{ hxAttrsFromControl(ctrl)... }
@@ -312,6 +303,15 @@ templ inlineFullSM(ec linkwell.ErrorContext) {
 					disabled?={ ctrl.Disabled }
 				>
 					{ ctrl.Label }
+				</button>
+			}
+			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
+				<button
+					class="btn btn-xs border-error/20 bg-error/10 text-error hover:bg-error/20"
+					x-data="dismissError"
+					x-on:click="dismiss()"
+				>
+					{ dismiss.Label }
 				</button>
 			}
 			if report, ok := inlineReportControl(ec.Controls); ok {
@@ -340,15 +340,6 @@ templ inlineFullMD(ec linkwell.ErrorContext) {
 			<p class="text-xs text-base-content/40 mt-0.5">Route: { ec.Route }</p>
 		}
 		<div class="flex items-center gap-2 mt-2">
-			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
-				<button
-					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
-					x-data="dismissError"
-					x-on:click="dismiss()"
-				>
-					{ dismiss.Label }
-				</button>
-			}
 			for _, ctrl := range inlineActionControls(ec.Controls) {
 				<button
 					{ hxAttrsFromControl(ctrl)... }
@@ -356,6 +347,15 @@ templ inlineFullMD(ec linkwell.ErrorContext) {
 					disabled?={ ctrl.Disabled }
 				>
 					{ ctrl.Label }
+				</button>
+			}
+			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
+				<button
+					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
+					x-data="dismissError"
+					x-on:click="dismiss()"
+				>
+					{ dismiss.Label }
 				</button>
 			}
 			if report, ok := inlineReportControl(ec.Controls); ok {
@@ -390,15 +390,6 @@ templ inlineFullLG(ec linkwell.ErrorContext) {
 			</p>
 		}
 		<div class="flex items-center gap-2 mt-4">
-			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
-				<button
-					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
-					x-data="dismissError"
-					x-on:click="dismiss()"
-				>
-					{ dismiss.Label }
-				</button>
-			}
 			for _, ctrl := range inlineActionControls(ec.Controls) {
 				<button
 					{ hxAttrsFromControl(ctrl)... }
@@ -406,6 +397,15 @@ templ inlineFullLG(ec linkwell.ErrorContext) {
 					disabled?={ ctrl.Disabled }
 				>
 					{ ctrl.Label }
+				</button>
+			}
+			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
+				<button
+					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
+					x-data="dismissError"
+					x-on:click="dismiss()"
+				>
+					{ dismiss.Label }
 				</button>
 			}
 			if report, ok := inlineReportControl(ec.Controls); ok {
@@ -485,17 +485,9 @@ templ inlineFull3XL(ec linkwell.ErrorContext) {
 }
 
 // inlineFullActions renders the shared action row for xl+ inline-full variants.
+// Order: action controls first (Retry, etc.), dismiss last, report after dismiss.
 templ inlineFullActions(ec linkwell.ErrorContext, btnSize string) {
 	<div class="flex items-center gap-2 mt-4">
-		if dismiss, ok := inlineDismissControl(ec.Controls); ok {
-			<button
-				class={ "btn border-error/20 bg-error/10 text-error hover:bg-error/20", btnSize }
-				x-data="dismissError"
-				x-on:click="dismiss()"
-			>
-				{ dismiss.Label }
-			</button>
-		}
 		for _, ctrl := range inlineActionControls(ec.Controls) {
 			<button
 				{ hxAttrsFromControl(ctrl)... }
@@ -503,6 +495,15 @@ templ inlineFullActions(ec linkwell.ErrorContext, btnSize string) {
 				disabled?={ ctrl.Disabled }
 			>
 				{ ctrl.Label }
+			</button>
+		}
+		if dismiss, ok := inlineDismissControl(ec.Controls); ok {
+			<button
+				class={ "btn border-error/20 bg-error/10 text-error hover:bg-error/20", btnSize }
+				x-data="dismissError"
+				x-on:click="dismiss()"
+			>
+				{ dismiss.Label }
 			</button>
 		}
 		if report, ok := inlineReportControl(ec.Controls); ok {

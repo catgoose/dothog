@@ -103,13 +103,21 @@ templ ErrorModesPage() {
 					} {
 						<div>
 							<p class="text-xs font-semibold text-base-content/50 mb-1">{ s.Label }</p>
-							<button
-								class="btn btn-xs btn-error btn-outline mb-2"
-								hx-get={ "/patterns/errors/modes/inline-full/" + s.Size }
-								hx-target={ "#errors-modes-inline-full-" + s.Size }
-								hx-swap="innerHTML"
-							>{ "Trigger " + s.Size }</button>
-							<div id={ "errors-modes-inline-full-" + s.Size } class={ s.MinH + " border border-base-300 rounded-lg" }></div>
+							<div class="flex gap-1 mb-2">
+								<button
+									class="btn btn-xs btn-error btn-outline"
+									hx-get={ "/patterns/errors/modes/inline-full/" + s.Size }
+									hx-target={ "#errors-modes-inline-full-" + s.Size }
+									hx-swap="innerHTML"
+								>{ "Trigger " + s.Size }</button>
+								<button
+									class="btn btn-xs btn-warning btn-outline"
+									hx-get={ "/patterns/errors/modes/inline-full/" + s.Size + "?retry=true" }
+									hx-target={ "#errors-modes-inline-full-" + s.Size }
+									hx-swap="innerHTML"
+								>+ Retry</button>
+							</div>
+							<div id={ "errors-modes-inline-full-" + s.Size } class={ s.MinH + " border border-base-300 rounded-lg bg-base-100" }></div>
 						</div>
 					}
 				</div>
@@ -121,13 +129,21 @@ templ ErrorModesPage() {
 					} {
 						<div>
 							<p class="text-xs font-semibold text-base-content/50 mb-1">{ s.Label }</p>
-							<button
-								class="btn btn-xs btn-error btn-outline mb-2"
-								hx-get={ "/patterns/errors/modes/inline-full/" + s.Size }
-								hx-target={ "#errors-modes-inline-full-" + s.Size }
-								hx-swap="innerHTML"
-							>{ "Trigger " + s.Size }</button>
-							<div id={ "errors-modes-inline-full-" + s.Size } class={ s.MinH + " border border-base-300 rounded-lg" }></div>
+							<div class="flex gap-1 mb-2">
+								<button
+									class="btn btn-xs btn-error btn-outline"
+									hx-get={ "/patterns/errors/modes/inline-full/" + s.Size }
+									hx-target={ "#errors-modes-inline-full-" + s.Size }
+									hx-swap="innerHTML"
+								>{ "Trigger " + s.Size }</button>
+								<button
+									class="btn btn-xs btn-warning btn-outline"
+									hx-get={ "/patterns/errors/modes/inline-full/" + s.Size + "?retry=true" }
+									hx-target={ "#errors-modes-inline-full-" + s.Size }
+									hx-swap="innerHTML"
+								>+ Retry</button>
+							</div>
+							<div id={ "errors-modes-inline-full-" + s.Size } class={ s.MinH + " border border-base-300 rounded-lg bg-base-100" }></div>
 						</div>
 					}
 				</div>
@@ -139,13 +155,21 @@ templ ErrorModesPage() {
 					} {
 						<div>
 							<p class="text-xs font-semibold text-base-content/50 mb-1">{ s.Label }</p>
-							<button
-								class="btn btn-xs btn-error btn-outline mb-2"
-								hx-get={ "/patterns/errors/modes/inline-full/" + s.Size }
-								hx-target={ "#errors-modes-inline-full-" + s.Size }
-								hx-swap="innerHTML"
-							>{ "Trigger " + s.Size }</button>
-							<div id={ "errors-modes-inline-full-" + s.Size } class={ s.MinH + " border border-base-300 rounded-lg" }></div>
+							<div class="flex gap-1 mb-2">
+								<button
+									class="btn btn-xs btn-error btn-outline"
+									hx-get={ "/patterns/errors/modes/inline-full/" + s.Size }
+									hx-target={ "#errors-modes-inline-full-" + s.Size }
+									hx-swap="innerHTML"
+								>{ "Trigger " + s.Size }</button>
+								<button
+									class="btn btn-xs btn-warning btn-outline"
+									hx-get={ "/patterns/errors/modes/inline-full/" + s.Size + "?retry=true" }
+									hx-target={ "#errors-modes-inline-full-" + s.Size }
+									hx-swap="innerHTML"
+								>+ Retry</button>
+							</div>
+							<div id={ "errors-modes-inline-full-" + s.Size } class={ s.MinH + " border border-base-300 rounded-lg bg-base-100" }></div>
 						</div>
 					}
 				</div>
@@ -167,10 +191,11 @@ templ ErrorModesPage() {
 						<button
 							class="btn btn-xs btn-error btn-outline"
 							hx-get="/patterns/errors/modes/contract/banner"
-							hx-target="#contract-banner-result"
-							hx-swap="innerHTML"
+							hx-swap="none"
 						>RenderError(banner)</button>
-						<div id="contract-banner-result" class="mt-2"></div>
+						<p class="mt-2 text-xs text-base-content/50">
+							Renders into <code class="bg-base-200 px-1 rounded">#error-status</code> above via OOB swap.
+						</p>
 					</div>
 					<div>
 						<p class="text-xs font-semibold text-base-content/50 mb-1">Inline (via contract)</p>
@@ -277,6 +302,11 @@ templ ErrorModes500(theme string) {
 // ErrorModesInlineFullResult renders an inline-full error panel at the given size for the modes demo.
 templ ErrorModesInlineFullResult(size string) {
 	@corecomponents.InlineFullErrorPanel(errorModesInlineFullEC(), size)
+}
+
+// ErrorModesInlineFullRetryResult renders an inline-full error with a retry button at the given size.
+templ ErrorModesInlineFullRetryResult(size string) {
+	@corecomponents.InlineFullErrorPanel(errorModesInlineFullRetryEC(size), size)
 }
 
 // ErrorModesContractResult renders an error via the unified contract for the demo.

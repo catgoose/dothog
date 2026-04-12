@@ -37,6 +37,23 @@ func errorModesInlineFullEC() linkwell.ErrorContext {
 	}
 }
 
+func errorModesInlineFullRetryEC(size string) linkwell.ErrorContext {
+	target := "#errors-modes-inline-full-" + size
+	retryURL := "/patterns/errors/modes/inline-full/" + size
+	return linkwell.ErrorContext{
+		StatusCode: http.StatusTooManyRequests,
+		Message:    "Too Many Requests",
+		Err:        errors.New("rate limit exceeded for this panel"),
+		Route:      retryURL,
+		RequestID:  "req-demo-429-inline",
+		Closable:   true,
+		Controls: []linkwell.Control{
+			linkwell.RetryButton(linkwell.LabelRetry, linkwell.HxMethodGet, retryURL, target),
+			linkwell.DismissButton(linkwell.LabelDismiss),
+		},
+	}
+}
+
 // ContractDemoPresentations returns sample ErrorPresentations for the contract demo.
 func ContractDemoPresentations() []corecomponents.ErrorPresentation {
 	return []corecomponents.ErrorPresentation{

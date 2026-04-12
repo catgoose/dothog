@@ -38,6 +38,9 @@ func (ar *appRoutes) initErrorModesRoutes() {
 	for _, size := range []string{"xs", "sm", "md", "lg", "xl", "2xl", "3xl"} {
 		size := size // capture
 		ar.e.GET(base+"/inline-full/"+size, func(c echo.Context) error {
+			if c.QueryParam("retry") == "true" {
+				return handler.RenderComponent(c, views.ErrorModesInlineFullRetryResult(size))
+			}
 			return handler.RenderComponent(c, views.ErrorModesInlineFullResult(size))
 		})
 	}
