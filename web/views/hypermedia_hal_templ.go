@@ -102,7 +102,7 @@ func HALPage(rawJSON string, resource HALResourceView) templ.Component {
 		}
 		templ_7745c5c3_Err = halPatternCard("Content Negotiation",
 			"Accept: application/hal+json",
-			"The same endpoints serve HAL+JSON to API clients. The explorer uses HTMX to render them as HTML fragments.").Render(ctx, templ_7745c5c3_Buffer)
+			"The HAL+JSON endpoints live under /api/hal/api/... while this page lives at /api/hal. The explorer fetches the JSON and renders it as HTML fragments — route-based separation, not yet same-URL Accept-header negotiation.").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
