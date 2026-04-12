@@ -32,7 +32,9 @@ func (ar *appRoutes) initInventoryRoutes(db *demo.DB) {
 	ar.e.GET(inventoryBase+"/items/:id", d.handleItemRow)
 	ar.e.GET(inventoryBase+"/items/:id/edit", d.handleEditItemForm)
 	ar.e.PUT(inventoryBase+"/items/:id", d.handleUpdateItem)
+	ar.e.POST(inventoryBase+"/items/:id", d.handleUpdateItem)           // POST fallback for PUT
 	ar.e.DELETE(inventoryBase+"/items/:id", d.handleDeleteItem)
+	ar.e.POST(inventoryBase+"/items/:id/delete", d.handleDeleteItem)    // POST fallback for DELETE
 }
 
 func (d *inventoryRoutes) handleInventoryPage(c echo.Context) error {

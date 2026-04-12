@@ -207,6 +207,8 @@ The pragmatic approach: forms that must work without JavaScript use POST with a 
 </button>
 ```
 
+The inventory edit and delete flows apply this pattern: `POST /apps/inventory/items/:id` parallels the PUT handler, and `POST /apps/inventory/items/:id/delete` parallels DELETE. HTMX-enhanced controls use the correct methods; `<noscript>` forms provide the POST fallbacks.
+
 The browser vendors had [proposals to extend form methods](https://www.w3.org/Bugs/Public/show_bug.cgi?id=10671) but never shipped them. The gap has existed since HTML 4. HTMX closes it by extending the browser's hypermedia vocabulary rather than replacing the browser as a hypermedia client.
 
 ## Resource Identification
