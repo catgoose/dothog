@@ -1,0 +1,170 @@
+// setup:feature:demo
+package views
+
+import (
+	corecomponents "catgoose/dothog/web/components/core"
+)
+
+// ErrorModesPage is the demo page for /patterns/errors/modes.
+templ ErrorModesPage() {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<h1 class="text-2xl font-bold mb-4">Error Modes</h1>
+		<div role="alert" class="alert alert-info text-sm">
+			<span>
+				Demonstrates the four error rendering surfaces: <strong>banner</strong>, <strong>inline</strong>,
+				<strong>full-page</strong>, and <strong>inline-full</strong> (placeholder).
+				Recovery scope should match render scope.
+			</span>
+		</div>
+
+		<!-- Banner Mode -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Banner</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					Page-global contextual error. Does not own layout — swaps OOB into
+					<code class="text-xs bg-base-200 px-1 rounded">#error-status</code>.
+					The user stays on their current page.
+				</p>
+				<div class="flex flex-wrap gap-2">
+					<button
+						class="btn btn-sm btn-error btn-outline"
+						hx-get="/patterns/errors/trigger/500"
+						hx-target="#errors-modes-banner-result"
+						hx-swap="innerHTML"
+					>Trigger 500 Banner</button>
+				</div>
+				<div id="errors-modes-banner-result" class="mt-2"></div>
+			</div>
+		</div>
+
+		<!-- Inline Mode -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Inline</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					Compact local error within a container. Replaces content in-place near the
+					element that triggered the error. No page navigation, no lost state.
+				</p>
+				<button
+					class="btn btn-sm btn-error btn-outline"
+					hx-get="/patterns/errors/modes/inline"
+					hx-target="#errors-modes-inline-result"
+					hx-swap="innerHTML"
+				>Trigger Inline Error</button>
+				<div id="errors-modes-inline-result" class="mt-2"></div>
+			</div>
+		</div>
+
+		<!-- Full-Page Mode -->
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Full-Page</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					Document-level blocking error state. Standalone HTML page with composable
+					action row. Each example demonstrates a different set of recovery controls.
+				</p>
+				<div class="flex flex-wrap gap-2">
+					<a
+						href="/patterns/errors/modes/full-page/404"
+						class="btn btn-sm btn-primary btn-outline"
+						target="_blank"
+					>404 — Go Home</a>
+					<a
+						href="/patterns/errors/modes/full-page/429"
+						class="btn btn-sm btn-warning btn-outline"
+						target="_blank"
+					>429 — Go Back + Retry</a>
+					<a
+						href="/patterns/errors/modes/full-page/500"
+						class="btn btn-sm btn-error btn-outline"
+						target="_blank"
+					>500 — Go Home + Report</a>
+				</div>
+			</div>
+		</div>
+
+		<!-- Inline-Full Mode (Placeholder) -->
+		<div class="card bg-base-100 shadow border border-base-300 border-dashed opacity-70">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">
+					Inline-Full
+					<span class="badge badge-sm badge-ghost">planned</span>
+				</h2>
+				<p class="text-sm text-base-content/70 mb-3">
+					Container-owning error for panels and embedded regions. Fills the entire
+					container with a centered error display — like full-page but scoped to
+					a sub-region. Useful for embedded views like calendar previews under rate-limiting.
+				</p>
+			</div>
+		</div>
+
+		<!-- Taxonomy Summary -->
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			@errorModeCard("Banner", "OOB swap to #error-status", "Page-global contextual error. Does not own layout. User stays on their current page.")
+			@errorModeCard("Inline", "hx-target on trigger", "Compact local error within a container. Replaces content near the trigger element.")
+			@errorModeCard("Full-Page", "Standalone HTML document", "Document-level blocking error. Owns the entire viewport with composable action row.")
+			@errorModeCard("Inline-Full", "Container fill (planned)", "Container-owning error for panels and embedded regions. Scoped full-page experience.")
+		</div>
+	</div>
+}
+
+templ errorModeCard(title, method, desc string) {
+	<div class="card bg-base-100 shadow border border-base-300">
+		<div class="card-body p-4">
+			<h3 class="font-semibold text-sm">{ title }</h3>
+			<code class="text-xs text-primary bg-base-200 px-2 py-1 rounded">{ method }</code>
+			<p class="text-sm text-base-content/70">{ desc }</p>
+		</div>
+	</div>
+}
+
+// ErrorModesInlineResult renders an inline error panel for the modes demo.
+templ ErrorModesInlineResult() {
+	@corecomponents.InlineErrorPanel(errorModesInlineEC())
+}
+
+// ErrorModes404 renders a standalone 404 full-page error with a "Go Home" action.
+templ ErrorModes404() {
+	@corecomponents.ErrorPageShell("Not Found", "") {
+		@corecomponents.ErrorPageContent(404, "Not Found", "The page you requested does not exist.", "/patterns/errors/modes/full-page/404", "") {
+			<div class="flex items-center justify-center gap-3">
+				<a href="/" class="btn btn-primary btn-sm">Go Home</a>
+			</div>
+		}
+	}
+}
+
+// ErrorModes429 renders a standalone 429 full-page error with "Go Back" and "Retry" actions.
+templ ErrorModes429() {
+	@corecomponents.ErrorPageShell("Too Many Requests", "") {
+		@corecomponents.ErrorPageContent(429, "Too Many Requests", "Please wait a moment before trying again.", "/patterns/errors/modes/full-page/429", "") {
+			<div class="flex items-center justify-center gap-3">
+				<button class="btn btn-ghost btn-sm" onclick="history.back()">Go Back</button>
+				<button class="btn btn-primary btn-sm" onclick="location.reload()">Retry</button>
+			</div>
+		}
+	}
+}
+
+// ErrorModes500 renders a standalone 500 full-page error with "Go Home" and "Report Issue" actions.
+templ ErrorModes500() {
+	@corecomponents.ErrorPageShell("Internal Server Error", "") {
+		@corecomponents.ErrorPageContent(500, "Internal Server Error", "An unexpected error occurred while processing your request.", "/patterns/errors/modes/full-page/500", "req-demo-500-abc123") {
+			<div class="flex items-center justify-center gap-3">
+				<a href="/" class="btn btn-primary btn-sm">Go Home</a>
+				<button
+					class="btn btn-ghost btn-sm gap-1.5"
+					hx-get="/report-issue/req-demo-500-abc123"
+					hx-target="#report-modal-container"
+					hx-swap="beforeend"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"></path>
+					</svg>
+					Report Issue
+				</button>
+			</div>
+		}
+	}
+}

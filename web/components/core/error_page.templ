@@ -2,15 +2,17 @@ package components
 
 import (
 	"catgoose/dothog/internal/version"
+	"strconv"
+
 	"github.com/catgoose/linkwell"
 )
 
-// ErrorPage renders a self-contained HTML error page for non-HTMX requests.
-// It includes its own HTML shell with Tailwind, DaisyUI, HTMX, and HyperScript
-// so it works outside the normal SPA layout.
-templ ErrorPage(ec linkwell.ErrorContext) {
+// ErrorPageShell renders a standalone HTML page shell with all required assets.
+// Use this as the outer wrapper for any full-page error that lives outside the
+// normal SPA layout.
+templ ErrorPageShell(title, theme string) {
 	<!DOCTYPE html>
-	<html lang="en" data-theme={ errorPageTheme(ec) }>
+	<html lang="en" data-theme={ shellTheme(theme) }>
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -19,8 +21,8 @@ templ ErrorPage(ec linkwell.ErrorContext) {
 			<link rel="stylesheet" href={ version.Asset("/public/css/tailwind.css") } type="text/css"/>
 			<link rel="stylesheet" href={ version.Asset("/public/css/daisyui.css") } type="text/css"/>
 			<link rel="icon" href={ version.Asset("/public/images/favicon.svg") } type="image/x-svg+xml"/>
-			<title>Error</title>
-			if ec.Theme == "" {
+			<title>{ title }</title>
+			if theme == "" {
 				<script>
 					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 						document.documentElement.dataset.theme = 'dark';
@@ -28,16 +30,74 @@ templ ErrorPage(ec linkwell.ErrorContext) {
 				</script>
 			}
 		</head>
-		<body class="min-h-screen flex items-center justify-center bg-base-200">
-			<div class="card bg-base-100 shadow-xl max-w-lg w-full">
-				<div class="card-body">
-					@ErrorStatusFromContext(ec)
-				</div>
-			</div>
+		<body class="min-h-screen bg-base-200 flex items-start justify-center pt-[12vh]">
+			{ children... }
 			<div id="report-modal-container"></div>
 			// setup:feature:demo:start
 			<div id="report-email-container"></div>
 			// setup:feature:demo:end
 		</body>
 	</html>
+}
+
+// ErrorPageContent renders the centered content block for a full-page error.
+// Pass custom action-row buttons as children.
+templ ErrorPageContent(statusCode int, title, detail, route, requestID string) {
+	<div class="w-full max-w-xl px-6">
+		@ErrorPageHeader(statusCode, title, detail)
+		@ErrorPageDetails(route, requestID)
+		{ children... }
+	</div>
+}
+
+// ErrorPageHeader renders the big faded status code number, title, and optional detail.
+templ ErrorPageHeader(statusCode int, title, detail string) {
+	<div class="text-center pt-16 pb-10">
+		<p class="text-[10rem] font-black leading-none text-base-content/5 select-none">{ strconv.Itoa(statusCode) }</p>
+		<h1 class="text-xl font-semibold -mt-4">{ title }</h1>
+		if detail != "" {
+			<p class="text-sm text-base-content/50 mt-2">{ detail }</p>
+		}
+	</div>
+}
+
+// ErrorPageDetails renders the route and request-ID info box with a copy button.
+templ ErrorPageDetails(route, requestID string) {
+	if route != "" || requestID != "" {
+		<div class="border border-base-300 rounded-lg divide-y divide-base-300 text-sm mb-6 w-full">
+			if route != "" {
+				<div class="flex items-center justify-between px-4 py-2.5">
+					<span class="text-base-content/50">Route</span>
+					<code class="font-mono text-xs">{ route }</code>
+				</div>
+			}
+			if requestID != "" {
+				<div class="flex items-center justify-between px-4 py-2.5">
+					<span class="text-base-content/50">Request ID</span>
+					<div class="flex items-center gap-1.5">
+						<code class="font-mono text-xs">{ requestID }</code>
+						<button
+							class="p-0.5 rounded hover:bg-base-200 transition-colors relative shrink-0"
+							_={ "on click call navigator.clipboard.writeText('" + requestID + "') then put 'Copied!' into .copy-label in me then wait 1500ms then put '' into .copy-label in me" }
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-base-content/30 hover:text-base-content/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+							</svg>
+							<span class="copy-label absolute -top-7 left-1/2 -translate-x-1/2 bg-neutral text-neutral-content text-xs rounded px-2 py-0.5 whitespace-nowrap shadow empty:hidden"></span>
+						</button>
+					</div>
+				</div>
+			}
+		</div>
+	}
+}
+
+// ErrorPage renders a self-contained HTML error page for non-HTMX requests.
+// It composes the standalone primitives with ErrorControls as the action row.
+templ ErrorPage(ec linkwell.ErrorContext) {
+	@ErrorPageShell("Error", ec.Theme) {
+		@ErrorPageContent(ec.StatusCode, ec.Message, errorDetail(ec), ec.Route, ec.RequestID) {
+			@ErrorControls(ec.Controls)
+		}
+	}
 }

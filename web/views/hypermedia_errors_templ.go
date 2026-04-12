@@ -32,7 +32,7 @@ func ErrorsPage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><h1 class=\"text-2xl font-bold mb-4\">Error Patterns</h1><div role=\"alert\" class=\"alert alert-info text-sm\"><span>Demonstrates: <strong>banner errors</strong>, <strong>inline form errors</strong>, <strong>OOB error swaps</strong>, <strong>RESTful error responses</strong>, <strong>report issue</strong>.</span></div><!-- Banner Errors --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Banner Errors</h2><p class=\"text-sm text-base-content/70 mb-3\">Click a button to trigger a server error. The error banner swaps OOB into <code class=\"text-xs bg-base-200 px-1 rounded\">#error-status</code> at the top of the page. Includes <strong>Report Issue</strong> and contextual recovery controls.</p><div class=\"flex flex-wrap gap-2\"><button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/404\" hx-target=\"#errors-banner-result\" hx-swap=\"innerHTML\">Trigger 404</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/400\" hx-target=\"#errors-banner-result\" hx-swap=\"innerHTML\">Trigger 400</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/500\" hx-target=\"#errors-banner-result\" hx-swap=\"innerHTML\">Trigger 500</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/403\" hx-target=\"#errors-banner-result\" hx-swap=\"innerHTML\">Trigger 403</button></div><div id=\"errors-banner-result\" class=\"mt-2\"></div></div></div><!-- Inline Form Errors --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Inline Form Errors</h2><p class=\"text-sm text-base-content/70 mb-3\">Submit with empty or invalid fields to see inline error rendering. The server returns a 422 with the error swapped into the form's error target.</p><form hx-post=\"/patterns/errors/form\" hx-target=\"#errors-form-result\" hx-swap=\"innerHTML\" class=\"space-y-3 max-w-sm\"><div class=\"fieldset\"><label class=\"label\">Name (required)</label> <input type=\"text\" name=\"name\" class=\"input input-sm w-full\" placeholder=\"Leave empty to trigger error\"></div><div class=\"fieldset\"><label class=\"label\">Email (must contain @)</label> <input type=\"text\" name=\"email\" class=\"input input-sm w-full\" placeholder=\"bad-email\"></div><button type=\"submit\" class=\"btn btn-sm btn-primary\">Submit</button><div id=\"errors-form-result\"></div></form></div></div><!-- OOB Error Swap --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">OOB Error Swap</h2><p class=\"text-sm text-base-content/70 mb-3\">The server returns a success component alongside an OOB error swap. The error banner appears in <code class=\"text-xs bg-base-200 px-1 rounded\">#error-status</code> while the primary content updates normally.</p><button class=\"btn btn-sm btn-warning btn-outline\" hx-get=\"/patterns/errors/oob-warning\" hx-target=\"#errors-oob-result\" hx-swap=\"innerHTML\">Load with Warning</button><div id=\"errors-oob-result\" class=\"mt-2\"></div></div></div><!-- Retry Pattern --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Retry with Recovery</h2><p class=\"text-sm text-base-content/70 mb-3\">Simulates a flaky endpoint. First request fails with a retry button; clicking retry succeeds. Demonstrates server-driven error recovery via hypermedia controls.</p><button class=\"btn btn-sm btn-secondary btn-outline\" hx-get=\"/patterns/errors/flaky\" hx-target=\"#errors-retry-result\" hx-swap=\"innerHTML\">Call Flaky Endpoint</button><div id=\"errors-retry-result\" class=\"mt-2\"></div></div></div><!-- Pattern Summary --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 space-y-6 max-w-4xl mx-auto\"><h1 class=\"text-2xl font-bold mb-4\">Error Patterns</h1><div role=\"alert\" class=\"alert alert-info text-sm\"><span>Demonstrates: <strong>banner errors</strong>, <strong>inline form errors</strong>, <strong>OOB error swaps</strong>, <strong>RESTful error responses</strong>, <strong>report issue</strong>. See also: <a href=\"/patterns/errors/modes\" class=\"link link-primary\" hx-boost=\"true\">Error Modes</a> — full taxonomy (banner, inline, full-page, inline-full).</span></div><!-- Banner Errors --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Banner Errors</h2><p class=\"text-sm text-base-content/70 mb-3\">Click a button to trigger a server error. The error banner swaps OOB into <code class=\"text-xs bg-base-200 px-1 rounded\">#error-status</code> at the top of the page. Includes <strong>Report Issue</strong> and contextual recovery controls.</p><div class=\"flex flex-wrap gap-2\"><button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/404\" hx-target=\"#errors-banner-result\" hx-swap=\"innerHTML\">Trigger 404</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/400\" hx-target=\"#errors-banner-result\" hx-swap=\"innerHTML\">Trigger 400</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/500\" hx-target=\"#errors-banner-result\" hx-swap=\"innerHTML\">Trigger 500</button> <button class=\"btn btn-sm btn-error btn-outline\" hx-get=\"/patterns/errors/trigger/403\" hx-target=\"#errors-banner-result\" hx-swap=\"innerHTML\">Trigger 403</button></div><div id=\"errors-banner-result\" class=\"mt-2\"></div></div></div><!-- Inline Form Errors --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Inline Form Errors</h2><p class=\"text-sm text-base-content/70 mb-3\">Submit with empty or invalid fields to see inline error rendering. The server returns a 422 with the error swapped into the form's error target.</p><form hx-post=\"/patterns/errors/form\" hx-target=\"#errors-form-result\" hx-swap=\"innerHTML\" class=\"space-y-3 max-w-sm\"><div class=\"fieldset\"><label class=\"label\">Name (required)</label> <input type=\"text\" name=\"name\" class=\"input input-sm w-full\" placeholder=\"Leave empty to trigger error\"></div><div class=\"fieldset\"><label class=\"label\">Email (must contain @)</label> <input type=\"text\" name=\"email\" class=\"input input-sm w-full\" placeholder=\"bad-email\"></div><button type=\"submit\" class=\"btn btn-sm btn-primary\">Submit</button><div id=\"errors-form-result\"></div></form></div></div><!-- OOB Error Swap --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">OOB Error Swap</h2><p class=\"text-sm text-base-content/70 mb-3\">The server returns a success component alongside an OOB error swap. The error banner appears in <code class=\"text-xs bg-base-200 px-1 rounded\">#error-status</code> while the primary content updates normally.</p><button class=\"btn btn-sm btn-warning btn-outline\" hx-get=\"/patterns/errors/oob-warning\" hx-target=\"#errors-oob-result\" hx-swap=\"innerHTML\">Load with Warning</button><div id=\"errors-oob-result\" class=\"mt-2\"></div></div></div><!-- Retry Pattern --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4\"><h2 class=\"card-title text-base\">Retry with Recovery</h2><p class=\"text-sm text-base-content/70 mb-3\">Simulates a flaky endpoint. First request fails with a retry button; clicking retry succeeds. Demonstrates server-driven error recovery via hypermedia controls.</p><button class=\"btn btn-sm btn-secondary btn-outline\" hx-get=\"/patterns/errors/flaky\" hx-target=\"#errors-retry-result\" hx-swap=\"innerHTML\">Call Flaky Endpoint</button><div id=\"errors-retry-result\" class=\"mt-2\"></div></div></div><!-- Pattern Summary --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -96,7 +96,7 @@ func errorPatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 131, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 134, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -109,7 +109,7 @@ func errorPatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 132, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 135, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -122,7 +122,7 @@ func errorPatternCard(title, method, desc string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(desc)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 133, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 136, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -165,7 +165,7 @@ func ErrorsFormSuccess(name, email string) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 141, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 144, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -178,7 +178,7 @@ func ErrorsFormSuccess(name, email string) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 141, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 144, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -226,7 +226,7 @@ func ErrorsFormError(errors []string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 152, Col: 12}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_errors.templ`, Line: 155, Col: 12}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {

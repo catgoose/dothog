@@ -228,6 +228,7 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initHypermediaRoutes()
 	ar.initHALRoutes()
 	ar.initErrorsRoutes()
+	ar.initErrorModesRoutes()
 	// setup:feature:sse:start
 	ar.initRealtimeRoutes(ar.broker)
 	ar.initNotificationsRoutes(ar.broker)

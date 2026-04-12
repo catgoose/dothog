@@ -870,6 +870,17 @@ return handler.HandleHypermediaError(c, 404, "Task not found", err,
 
 The error middleware detects this and renders it as HTML with embedded controls. The user sees a "Task not found" message with a "Go back" button and a "Home" link — not a stack trace, not a raw 404, not a blank page. The error tells them what happened and gives them a way out.
 
+### Error-surface taxonomy
+
+There are four error rendering surfaces. Recovery scope should match render scope.
+
+- **`banner`** — page-global contextual error delivered via OOB swap. Does not own layout; the user stays on their current page.
+- **`inline`** — compact local error within a container, rendered near the trigger element. No page navigation, no lost state.
+- **`inline-full`** — container-owning error for panels and embedded regions. Fills the entire container with a centered error display, like a full-page error scoped to a sub-region (e.g., a rate-limited calendar preview).
+- **`full-page`** — document-level blocking/failure state. Standalone HTML page with composable action row via `ErrorPageShell` + `ErrorPageContent` children.
+
+The composable primitives (`ErrorPageShell`, `ErrorPageContent`, `ErrorPageHeader`, `ErrorPageDetails`) support slotted action rows so each full-page error can carry its own recovery controls — "Go Home" for 404, "Go Back + Retry" for 429, "Go Home + Report Issue" for 500.
+
 ### Global banner vs. inline errors
 
 Errors render in two places depending on context:
