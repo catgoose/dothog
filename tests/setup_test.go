@@ -18,6 +18,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// buildSem limits concurrent derived-app builds (templ generate + go build)
+// to avoid OOM/timeout on CI runners with constrained resources.
+var buildSem = make(chan struct{}, 2)
+
 func TestSetupReplacesAppNameAndModule(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
@@ -291,6 +295,10 @@ func setupTempDir(t *testing.T) string {
 
 func assertBuildSucceeds(t *testing.T, dir string) {
 	t.Helper()
+
+	// Limit concurrent builds to avoid OOM/timeout on CI.
+	buildSem <- struct{}{}
+	t.Cleanup(func() { <-buildSem })
 
 	// Regenerate templ files after feature stripping removed gated code.
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
