@@ -143,6 +143,34 @@ func TestHandleError_CanceledContextPreventsRender(t *testing.T) {
 	assert.Empty(t, rec.Body.String(), "canceled context should prevent any rendering")
 }
 
+// TestAppNavCoversHubs ensures every linkwell hub path declared in
+// routes_links.go has a corresponding entry in the app navigation.
+// When a new hub is added, this test fails as a reminder to add it to
+// appNavNavConfig with an appropriate icon.
+func TestAppNavCoversHubs(t *testing.T) {
+	cfg := appNavNavConfig()
+	navPaths := make(map[string]bool, len(cfg.Items))
+	for _, item := range cfg.Items {
+		navPaths[item.Href] = true
+	}
+
+	// Hub paths from routes_links.go. Keep this in sync when adding hubs.
+	hubPaths := []string{
+		"/apps",
+		"/platform",
+		"/patterns",
+		"/components",
+		"/realtime",
+		"/api",
+		"/admin",
+		"/dashboard",
+	}
+
+	for _, hp := range hubPaths {
+		assert.True(t, navPaths[hp], "hub %s missing from app nav — add it to appNavNavConfig()", hp)
+	}
+}
+
 func TestHandleComponent(t *testing.T) {
 	c, rec := newEchoContext(http.MethodGet, "/", nil)
 	e := echo.New()
