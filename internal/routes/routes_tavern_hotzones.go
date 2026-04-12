@@ -23,7 +23,6 @@ const (
 	topicHZActivity = "hz/activity"
 )
 
-// topicHZRegion returns the SSE topic for a specific region.
 func topicHZRegion(id int) string {
 	return fmt.Sprintf("hz/region/%d", id)
 }
@@ -34,10 +33,9 @@ type tavernHotZoneRoutes struct {
 }
 
 func (ar *appRoutes) initTavernHotZoneRoutes(broker *tavern.SSEBroker) {
-	images := demo.LoadHotZoneImages("web/assets/public/images/hotzones/anime")
 	r := &tavernHotZoneRoutes{
 		broker: broker,
-		lab:    demo.NewHotZoneLab(images),
+		lab:    demo.NewHotZoneLab(),
 	}
 
 	broker.SetReplayPolicy(topicHZActivity, 10)
@@ -54,8 +52,7 @@ func (ar *appRoutes) initTavernHotZoneRoutes(broker *tavern.SSEBroker) {
 }
 
 func (r *tavernHotZoneRoutes) handlePage(c echo.Context) error {
-	data := r.buildPageData()
-	return handler.RenderBaseLayout(c, views.HotZoneLabPage(data))
+	return handler.RenderBaseLayout(c, views.HotZoneLabPage(r.buildPageData()))
 }
 
 func (r *tavernHotZoneRoutes) handleSSE(c echo.Context) error {
@@ -164,7 +161,6 @@ func (r *tavernHotZoneRoutes) handleSSE(c echo.Context) error {
 
 func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
 	r.lab.UpdateSettings(func(s *demo.HotZoneSettings) {
-		// Preset application (overrides individual fields).
 		if preset := demo.HotZonePreset(c.FormValue("preset")); preset != "" {
 			switch preset {
 			case demo.HotZonePresetNormal, demo.HotZonePresetHot, demo.HotZonePresetNasty, demo.HotZonePresetHell:
@@ -172,12 +168,15 @@ func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
 				return
 			}
 		}
-		s.Preset = "" // manual adjustment clears preset label
+		s.Preset = ""
 		if v, err := strconv.Atoi(c.FormValue("update_interval")); err == nil && v >= 25 && v <= 5000 {
 			s.UpdateIntervalMS = v
 		}
 		if v, err := strconv.Atoi(c.FormValue("region_count")); err == nil && v >= 1 && v <= 64 {
 			s.RegionCount = v
+		}
+		if v, err := strconv.Atoi(c.FormValue("grid_size")); err == nil && v >= 2 && v <= 16 {
+			s.GridSize = v
 		}
 		if v, err := strconv.Atoi(c.FormValue("focused_region")); err == nil && v >= 0 && v <= 64 {
 			s.FocusedRegion = v
@@ -189,8 +188,6 @@ func (r *tavernHotZoneRoutes) handleControls(c echo.Context) error {
 			s.JitterMaxMS = v
 		}
 		s.BurstMode = c.FormValue("burst_mode") == "on"
-		s.AllowGIF = c.FormValue("allow_gif") == "on"
-		s.ShowMeta = c.FormValue("show_meta") == "on"
 		mode := demo.HotZoneMode(c.FormValue("command_mode"))
 		if mode == demo.HotZoneModeHXPost || mode == demo.HotZoneModeTavern {
 			s.CommandMode = mode
@@ -255,8 +252,6 @@ func (r *tavernHotZoneRoutes) handleReset(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-// handleCommand toggles the lock state of a region. Locked regions are
-// skipped by the simulator, demonstrating command-up / SSE-render-down.
 func (r *tavernHotZoneRoutes) handleCommand(c echo.Context) error {
 	regionID, err := strconv.Atoi(c.FormValue("region"))
 	if err != nil {
@@ -287,7 +282,6 @@ func (r *tavernHotZoneRoutes) handleCommand(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-// handleLifecycle receives client-reported command lifecycle events.
 func (r *tavernHotZoneRoutes) handleLifecycle(c echo.Context) error {
 	action := c.FormValue("action")
 	if action == "" {

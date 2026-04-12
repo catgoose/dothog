@@ -5,9 +5,6 @@ package demo
 import (
 	"fmt"
 	"math/rand/v2"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,30 +13,33 @@ import (
 // HotZoneMode describes how a region handles user commands.
 type HotZoneMode string
 
-// Command delivery modes for hot-zone regions.
 const (
 	HotZoneModeHXPost HotZoneMode = "hx-post"
 	HotZoneModeTavern HotZoneMode = "tavern-command"
 )
 
+// HotZoneCell represents one cell in a region's text grid.
+type HotZoneCell struct {
+	Glyph    string
+	Palette  int // index into the color palette (0–7)
+}
+
 // HotZoneRegion is a single independently-updating UI region.
 type HotZoneRegion struct {
 	LastUpdate time.Time
 	Label      string
-	ImagePath  string // public URL path to the current image
-	ImageAlt   string // alt text / character name
-	Series     string // series name derived from filename prefix
-	Counter    int64  // number of SSE updates published
+	Cells      []HotZoneCell
+	Counter    int64
 	ID         int
-	Locked     bool // true = simulator skips this region
+	Locked     bool
 }
 
 // HotZoneSwapScope controls the granularity of SSE replacement.
 type HotZoneSwapScope string
 
 const (
-	HotZoneSwapInner HotZoneSwapScope = "inner" // replace only the inner content (stable)
-	HotZoneSwapCard  HotZoneSwapScope = "card"  // replace the entire card (fragile)
+	HotZoneSwapInner HotZoneSwapScope = "inner"
+	HotZoneSwapCard  HotZoneSwapScope = "card"
 )
 
 // HotZonePreset is a named pressure profile.
@@ -52,29 +52,42 @@ const (
 	HotZonePresetHell   HotZonePreset = "hell"
 )
 
+// HotZonePaletteColors defines the 8-color palette used by text grid cells.
+var HotZonePaletteColors = [8]string{
+	"#22c55e", // green
+	"#06b6d4", // cyan
+	"#f59e0b", // amber
+	"#d946ef", // magenta
+	"#ef4444", // red
+	"#3b82f6", // blue
+	"#1e293b", // dark
+	"#e2e8f0", // light
+}
+
+var glyphs = []string{"█", "■", "●", "+", "▓", "◆", "▲", "◉"}
+
 // HotZoneSettings holds operator-controlled simulation parameters.
 type HotZoneSettings struct {
-	Preset           HotZonePreset    // active preset name
-	CommandMode      HotZoneMode      // which interaction pattern the UI uses
-	SwapScope        HotZoneSwapScope // how much of the region gets replaced
-	UpdateIntervalMS int              // ms between ticks (25–5000)
-	RegionCount      int              // how many regions to show (1–64)
-	FocusedRegion    int              // 0 = random, 1–64 = only update that region
-	JitterMinMS      int              // min random jitter added to interval (0–2000)
-	JitterMaxMS      int              // max random jitter added to interval (0–5000)
-	BurstMode        bool             // burst: publish all regions every tick
-	AllowGIF         bool             // include .gif images in the pool
-	ShowMeta         bool             // show series/character metadata on cards
-	// Heat-map visualization settings (client-side only).
-	HeatEnabled    bool   // toggle heat gradient on/off
-	HeatWindowMS   int    // rolling window for rate calculation (100–5000)
-	HeatThreshold1 int    // updates/sec for first color stop
-	HeatThreshold2 int    // updates/sec for second color stop
-	HeatThreshold3 int    // updates/sec for third color stop
-	HeatColor1     string // hex color at threshold 1
-	HeatColor2     string // hex color at threshold 2
-	HeatColor3     string // hex color at threshold 3
-	HeatBaseColor  string // hex color for idle/quiet state
+	Preset           HotZonePreset
+	CommandMode      HotZoneMode
+	SwapScope        HotZoneSwapScope
+	UpdateIntervalMS int // ms between ticks (25–5000)
+	RegionCount      int // 1–64
+	GridSize         int // N for NxN grid (2–16)
+	FocusedRegion    int // 0 = random, 1–64 = focused
+	JitterMinMS      int // 0–2000
+	JitterMaxMS      int // 0–5000
+	BurstMode        bool
+	// Heat-map visualization (client-side).
+	HeatEnabled    bool
+	HeatWindowMS   int
+	HeatThreshold1 int
+	HeatThreshold2 int
+	HeatThreshold3 int
+	HeatColor1     string
+	HeatColor2     string
+	HeatColor3     string
+	HeatBaseColor  string
 }
 
 // DefaultHeatSettings returns sensible heat-map defaults.
@@ -88,46 +101,43 @@ func (s *HotZoneSettings) ApplyPreset(p HotZonePreset) {
 	s.HeatWindowMS, s.HeatThreshold1, s.HeatThreshold2, s.HeatThreshold3,
 		s.HeatColor1, s.HeatColor2, s.HeatColor3, s.HeatBaseColor = DefaultHeatSettings()
 	s.HeatEnabled = true
-	s.ShowMeta = true
 	switch p {
 	case HotZonePresetHot:
 		s.UpdateIntervalMS = 200
 		s.RegionCount = 8
+		s.GridSize = 8
 		s.JitterMinMS = 0
 		s.JitterMaxMS = 200
 		s.BurstMode = true
 		s.FocusedRegion = 0
-		s.AllowGIF = false
 	case HotZonePresetNasty:
 		s.UpdateIntervalMS = 75
 		s.RegionCount = 16
+		s.GridSize = 8
 		s.JitterMinMS = 0
 		s.JitterMaxMS = 100
 		s.BurstMode = true
 		s.FocusedRegion = 0
-		s.AllowGIF = false
 	case HotZonePresetHell:
 		s.UpdateIntervalMS = 25
 		s.RegionCount = 32
+		s.GridSize = 8
 		s.JitterMinMS = 0
 		s.JitterMaxMS = 50
 		s.BurstMode = true
 		s.FocusedRegion = 0
-		s.AllowGIF = false
 	default: // normal
 		s.UpdateIntervalMS = 500
 		s.RegionCount = 4
+		s.GridSize = 8
 		s.JitterMinMS = 100
 		s.JitterMaxMS = 500
 		s.BurstMode = false
 		s.FocusedRegion = 0
-		s.AllowGIF = false
 	}
 }
 
 // HotZoneCommandStat tracks command lifecycle metrics per mode.
-// Client-reported: Dispatched, Succeeded, Failed.
-// Server-reported: Received.
 type HotZoneCommandStat struct {
 	Mode       HotZoneMode
 	Dispatched int64
@@ -136,66 +146,11 @@ type HotZoneCommandStat struct {
 	Failed     int64
 }
 
-// HotZoneImagePool holds the available image paths for the gallery.
-type HotZoneImagePool struct {
-	All    []HotZoneImage // all images
-	Static []HotZoneImage // non-GIF images
-}
-
-// HotZoneImage represents one available image.
-type HotZoneImage struct {
-	Path   string // public URL path
-	Alt    string // derived alt text
-	Series string // series name from filename prefix
-	IsGIF  bool
-}
-
-// LoadHotZoneImages scans a directory for image files and returns a pool.
-func LoadHotZoneImages(dir string) HotZoneImagePool {
-	var pool HotZoneImagePool
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return pool
-	}
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		name := e.Name()
-		ext := strings.ToLower(filepath.Ext(name))
-		switch ext {
-		case ".jpg", ".jpeg", ".png", ".gif", ".webp":
-		default:
-			continue
-		}
-		img := HotZoneImage{
-			Path:  "/public/images/hotzones/anime/" + name,
-			IsGIF: ext == ".gif",
-		}
-		// Derive series and alt from normalized filename: "series-name-character.ext"
-		base := strings.TrimSuffix(name, ext)
-		parts := strings.SplitN(base, "-", 2)
-		if len(parts) == 2 {
-			img.Series = parts[0]
-			img.Alt = strings.ReplaceAll(parts[1], "-", " ")
-		} else {
-			img.Series = ""
-			img.Alt = strings.ReplaceAll(base, "-", " ")
-		}
-		pool.All = append(pool.All, img)
-		if !img.IsGIF {
-			pool.Static = append(pool.Static, img)
-		}
-	}
-	return pool
-}
-
 // HotZoneLab wraps the shared state for the hot-zone stress surface.
 type HotZoneLab struct {
 	activity         []HotZoneActivity
 	regions          []HotZoneRegion
 	settings         HotZoneSettings
-	images           HotZoneImagePool
 	hxDispatched     atomic.Int64
 	hxReceived       atomic.Int64
 	hxOK             atomic.Int64
@@ -214,23 +169,21 @@ type HotZoneActivity struct {
 	Action    string
 }
 
-// NewHotZoneLab creates a lab with default settings and the given image pool.
-func NewHotZoneLab(images HotZoneImagePool) *HotZoneLab {
+// NewHotZoneLab creates a lab with default settings.
+func NewHotZoneLab() *HotZoneLab {
 	wMS, t1, t2, t3, c1, c2, c3, base := DefaultHeatSettings()
 	lab := &HotZoneLab{
-		images: images,
 		settings: HotZoneSettings{
 			Preset:           HotZonePresetNormal,
 			UpdateIntervalMS: 500,
 			RegionCount:      4,
+			GridSize:         8,
 			JitterMinMS:      100,
 			JitterMaxMS:      500,
 			BurstMode:        false,
 			FocusedRegion:    0,
 			CommandMode:      HotZoneModeTavern,
 			SwapScope:        HotZoneSwapInner,
-			AllowGIF:         false,
-			ShowMeta:         true,
 			HeatEnabled:      true,
 			HeatWindowMS:     wMS,
 			HeatThreshold1:   t1,
@@ -248,22 +201,21 @@ func NewHotZoneLab(images HotZoneImagePool) *HotZoneLab {
 			ID:    i + 1,
 			Label: fmt.Sprintf("Region %d", i+1),
 		}
-		lab.regions[i].ImagePath, lab.regions[i].ImageAlt, lab.regions[i].Series = lab.pickImage()
+		lab.regions[i].Cells = generateCells(lab.settings.GridSize)
 	}
 	return lab
 }
 
-// pickImage selects a random image from the pool respecting AllowGIF.
-func (l *HotZoneLab) pickImage() (path, alt, series string) {
-	pool := l.images.All
-	if !l.settings.AllowGIF && len(l.images.Static) > 0 {
-		pool = l.images.Static
+func generateCells(gridSize int) []HotZoneCell {
+	n := gridSize * gridSize
+	cells := make([]HotZoneCell, n)
+	for i := range cells {
+		cells[i] = HotZoneCell{
+			Glyph:   glyphs[rand.IntN(len(glyphs))],
+			Palette: rand.IntN(len(HotZonePaletteColors)),
+		}
 	}
-	if len(pool) == 0 {
-		return "", "no images", ""
-	}
-	img := pool[rand.IntN(len(pool))]
-	return img.Path, img.Alt, img.Series
+	return cells
 }
 
 // Settings returns a snapshot of the current settings.
@@ -326,14 +278,14 @@ func (l *HotZoneLab) ToggleLock(id int) bool {
 	return l.regions[id-1].Locked
 }
 
-// SimTick runs one simulation tick. Returns the IDs of regions that were
-// updated so the caller can publish selectively.
+// SimTick runs one simulation tick.
 func (l *HotZoneLab) SimTick() []int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	now := time.Now().UTC()
 	n := l.settings.RegionCount
+	gs := l.settings.GridSize
 	var updated []int
 
 	if l.settings.BurstMode {
@@ -343,7 +295,7 @@ func (l *HotZoneLab) SimTick() []int {
 			}
 			l.regions[i].Counter++
 			l.regions[i].LastUpdate = now
-			l.regions[i].ImagePath, l.regions[i].ImageAlt, l.regions[i].Series = l.pickImage()
+			l.regions[i].Cells = generateCells(gs)
 			updated = append(updated, i+1)
 		}
 	} else if l.settings.FocusedRegion > 0 && l.settings.FocusedRegion <= n {
@@ -351,7 +303,7 @@ func (l *HotZoneLab) SimTick() []int {
 		if !l.regions[idx].Locked {
 			l.regions[idx].Counter++
 			l.regions[idx].LastUpdate = now
-			l.regions[idx].ImagePath, l.regions[idx].ImageAlt, l.regions[idx].Series = l.pickImage()
+			l.regions[idx].Cells = generateCells(gs)
 			updated = append(updated, idx+1)
 		}
 	} else {
@@ -359,7 +311,7 @@ func (l *HotZoneLab) SimTick() []int {
 		if !l.regions[idx].Locked {
 			l.regions[idx].Counter++
 			l.regions[idx].LastUpdate = now
-			l.regions[idx].ImagePath, l.regions[idx].ImageAlt, l.regions[idx].Series = l.pickImage()
+			l.regions[idx].Cells = generateCells(gs)
 			updated = append(updated, idx+1)
 		}
 	}
