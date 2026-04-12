@@ -140,7 +140,7 @@ github.com/bep/godartsass/v2/internal/godartsasstesting
 # github.com/bep/golibsass v1.2.0
 ## explicit; go 1.13
 github.com/bep/golibsass/libsass/libsasserrors
-# github.com/catgoose/chuck v0.1.11
+# github.com/catgoose/chuck v0.1.12
 ## explicit; go 1.26.2
 github.com/catgoose/chuck
 github.com/catgoose/chuck/dbrepo
@@ -150,13 +150,13 @@ github.com/catgoose/chuck/schema
 # github.com/catgoose/crooner v1.4.16
 ## explicit; go 1.26.1
 github.com/catgoose/crooner
-# github.com/catgoose/dorman v0.1.15
+# github.com/catgoose/dorman v0.1.16
 ## explicit; go 1.26.2
 github.com/catgoose/dorman
 # github.com/catgoose/linkwell v0.2.30
 ## explicit; go 1.26.2
 github.com/catgoose/linkwell
-# github.com/catgoose/promolog v0.2.27
+# github.com/catgoose/promolog v0.2.28
 ## explicit; go 1.26.2
 github.com/catgoose/promolog
 # github.com/catgoose/promolog/sqlite v0.0.0-20260409215859-0fc0b83ab989

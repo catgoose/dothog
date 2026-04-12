@@ -9,7 +9,7 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.16
-	github.com/catgoose/dorman v0.1.15
+	github.com/catgoose/dorman v0.1.16
 	github.com/catgoose/linkwell v0.2.30
 	github.com/catgoose/promolog/sqlite v0.0.0-20260409215859-0fc0b83ab989
 	github.com/catgoose/tavern v0.4.79
@@ -47,8 +47,8 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bep/godartsass/v2 v2.5.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
-	github.com/catgoose/chuck v0.1.11
-	github.com/catgoose/promolog v0.2.27
+	github.com/catgoose/chuck v0.1.12
+	github.com/catgoose/promolog v0.2.28
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
