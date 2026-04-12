@@ -123,6 +123,10 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 }
 
 // appNavNavConfig returns a NavConfig with icons for use with the AppNavLayout.
+// This is a curated projection of the hub topology declared in routes_links.go,
+// enriched with SVG icon paths. Not all items correspond to hubs (e.g. "/" and
+// "/settings" are standalone), but every hub MUST appear here.
+// TestAppNavCoversHubs enforces alignment between this list and the hub declarations.
 func appNavNavConfig() linkwell.NavConfig {
 	return linkwell.NavConfig{
 		AppName: appName,
