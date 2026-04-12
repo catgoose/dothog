@@ -131,7 +131,6 @@ func (ar *appRoutes) InitRoutes() error {
 	if err != nil {
 		return fmt.Errorf("handler init: %w", err)
 	}
-	ar.e.GET("/", handler.HandleComponent(views.HomePage(cfg.AppName)))
 	// setup:feature:demo:start
 	ar.e.GET("/", handler.HandleComponent(views.ArchitecturePage()))
 	// setup:feature:demo:end
