@@ -108,24 +108,7 @@ templ HotZoneLabPage(data HotZoneLabData) {
 						for _, reg := range data.Regions {
 							<div class="card bg-base-200 shadow-sm overflow-hidden flex flex-col" data-hz-card={ fmt.Sprintf("%d", reg.ID) }>
 								<div class="flex-1" id={ fmt.Sprintf("hz-region-%d", reg.ID) }>
-									@HotZoneRegionContent(reg, data.Settings)
-								</div>
-								<div class="px-2 py-1.5 border-t border-base-300/50 space-y-1">
-									<div class="flex items-center justify-between">
-										<span class="text-[0.6rem] font-semibold text-base-content/60 truncate">{ reg.Label }</span>
-										<div class="flex items-center gap-1 shrink-0">
-											<span class="hz-rate-badge badge badge-xs badge-ghost font-mono tabular-nums">0/s</span>
-											if reg.Locked {
-												<span class="badge badge-xs badge-warning">locked</span>
-											}
-											<span class="badge badge-xs badge-ghost font-mono">{ fmt.Sprintf("#%d", reg.Counter) }</span>
-										</div>
-									</div>
-									if data.Settings.CommandMode == demo.HotZoneModeTavern {
-										<button class={ "btn btn-xs w-full", lockBtnClass(reg.Locked) } command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=tavern-command", reg.ID) }>Tavern.command()</button>
-									} else {
-										<button class={ "btn btn-xs btn-secondary w-full", lockBtnClass(reg.Locked) } command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=hx-post", reg.ID) }>hx-post</button>
-									}
+									@HotZoneRegionFrame(reg, data.Settings)
 								</div>
 							</div>
 						}
@@ -137,16 +120,32 @@ templ HotZoneLabPage(data HotZoneLabData) {
 	</div>
 }
 
-// HotZoneRegionContent renders only the text grid — the swappable inner
-// content. Info strip and command button live in the outer card shell so
-// they never move during SSE updates.
-templ HotZoneRegionContent(region demo.HotZoneRegion, settings demo.HotZoneSettings) {
+// HotZoneRegionFrame renders the swappable region content, including
+// the footer metadata and command button state.
+templ HotZoneRegionFrame(region demo.HotZoneRegion, settings demo.HotZoneSettings) {
 	<div class="p-1">
 		<div style={ fmt.Sprintf("display:grid;grid-template-columns:repeat(%d,1fr);gap:1px;aspect-ratio:1/1;", settings.GridSize) }>
 			for _, cell := range region.Cells {
 				<span class={ "hz-cell", fmt.Sprintf("hz-p%d", cell.Palette) }>{ cell.Glyph }</span>
 			}
 		</div>
+	</div>
+	<div class="px-2 py-1.5 border-t border-base-300/50 space-y-1">
+		<div class="flex items-center justify-between">
+			<span class="text-[0.6rem] font-semibold text-base-content/60 truncate">{ region.Label }</span>
+			<div class="flex items-center gap-1 shrink-0">
+				<span class="hz-rate-badge badge badge-xs badge-ghost font-mono tabular-nums">0/s</span>
+				if region.Locked {
+					<span class="badge badge-xs badge-warning">locked</span>
+				}
+				<span class="badge badge-xs badge-ghost font-mono">{ fmt.Sprintf("#%d", region.Counter) }</span>
+			</div>
+		</div>
+		if settings.CommandMode == demo.HotZoneModeTavern {
+			<button class={ "btn btn-xs w-full", lockBtnClass(region.Locked) } command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=tavern-command", region.ID) }>Tavern.command()</button>
+		} else {
+			<button class={ "btn btn-xs btn-secondary w-full", lockBtnClass(region.Locked) } command-url={ fmt.Sprintf("/realtime/tavern/hotzones/command?region=%d&mode=hx-post", region.ID) }>hx-post</button>
+		}
 	</div>
 }
 

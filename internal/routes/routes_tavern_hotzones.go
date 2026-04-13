@@ -324,7 +324,7 @@ func (r *tavernHotZoneRoutes) renderRegionFrame(id int) string {
 	region := r.lab.Region(id)
 	settings := r.lab.Settings()
 	return tavern.NewSSEMessage(fmt.Sprintf("hz-region-%d", id),
-		renderToString("hz region", views.HotZoneRegionContent(region, settings)),
+		renderToString("hz region", views.HotZoneRegionFrame(region, settings)),
 	).String()
 }
 
