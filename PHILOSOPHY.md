@@ -262,6 +262,23 @@ In a hypermedia system, patterns exist for reasons that aren't always visible fr
 
 This applies at every level: the `From` query parameter on breadcrumbs, the `ErrorTarget` field on Controls, the `OOBTarget` on error contexts — each of these exists because a specific interaction broke without it. If you can't explain why it's there, you haven't yet earned the right to take it away.
 
+## Explore First, Normalize Later
+
+Abstractions earn their place. A shared component, a unified navigation model, a factory — these are worth having once the pattern they encode is actually visible. Before that, they're guesses, and guesses calcify. The working rule is: **build concrete cases first, let repeated local solutions reveal the shared model, then normalize aggressively.**
+
+Most useful UI and navigation patterns in this system were discovered this way. A screen needed a parent link, so a parent link was added. Another screen needed a sibling link. A third screen needed a contextual back target. For a while these were route-specific chrome — local, ad hoc, slightly inconsistent. That was correct. Forcing them into a shared component on the first occurrence would have baked in the wrong shape, because the relationship between the screens was not yet knowable. Once three or four cases existed, the real model became obvious, and the local additions collapsed into a coherent relation-driven navigation model.
+
+Exploration is allowed. Consolidation is required. The dangerous state is the middle: a pattern has clearly emerged across several screens, and no one has gone back to name it. That is how a codebase starts permanently exposing its implementation history in the UI — every screen a fossil of the order it was built in. When you recognize a pattern that has shown up three or more times, stop adding the fourth local copy and unify. The unifying pass is not optional follow-up work; it is the completion of the exploration.
+
+Signals that a pattern is ready to be named:
+
+- three or more screens solve the same problem with slightly different chrome
+- a contributor asks "how do I do X on this screen" and the answer is "copy it from the other screen"
+- a change to the shared concept requires editing N places and missing any one is a visible bug
+- the code review conversation is about whether the new local copy matches the existing local copies
+
+When any of these show up, the next change in that area should be the consolidation, not another instance. This is the counterpart to Chesterton's Fence: don't remove structure you don't understand, and don't leave ad hoc structure in place once you do understand it.
+
 ## Server-Side State, Client-Side Rendering
 
 State lives on the server. The client is a thin rendering layer. When state changes, the server sends new HTML. The browser's job is to display it and let the user interact with the controls embedded in it.
