@@ -60,9 +60,9 @@ templ ErrorTracesBody(traces []promolog.TraceSummary) {
 		</tbody>
 	}
 	for _, t := range traces {
-		<tbody x-data="traceRow">
+		<tbody class="trace-group">
 			@ErrorTraceRow(t)
-			<tr class="detail-row" x-show="expanded"></tr>
+			<tr class="detail-row hidden"></tr>
 		</tbody>
 	}
 }
@@ -76,10 +76,17 @@ templ ErrorTraceRow(t promolog.TraceSummary) {
 		hx-target="next tr.detail-row"
 		hx-swap="innerHTML"
 		hx-trigger="expand"
-		x-on:click="toggle()"
+		_="on click
+		  set tb to the closest <tbody/>
+		  toggle .rotate-90 on the first <svg.chevron/> in me
+		  toggle .hidden on the next <tr.detail-row/>
+		  if not (tb matches '.loaded')
+		    add .loaded to tb
+		    call htmx.trigger(me, 'expand')
+		  end"
 	>
 		<td class="px-1">
-			<svg class="chevron w-4 h-4 text-base-content/40 transition-transform" x-bind:class="expanded && 'rotate-90'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+			<svg class="chevron w-4 h-4 text-base-content/40 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
 			</svg>
 		</td>
@@ -132,7 +139,10 @@ templ ErrorTraceDetailContent(trace *promolog.Trace) {
 					</button>
 					<button
 						class="btn btn-sm btn-ghost"
-						x-on:click="collapse()"
+						_="on click
+						  set tb to the closest <tbody/>
+						  add .hidden to the first <tr.detail-row/> in tb
+						  remove .rotate-90 from the first <svg.chevron/> in tb"
 					>
 						Close
 					</button>
@@ -186,18 +196,17 @@ templ ErrorTraceDetailContent(trace *promolog.Trace) {
 							{{ pairs := sortedAttrs(entry.Attrs) }}
 							<div
 								class={ "rounded-lg border p-2", templ.KV("border-error/30 bg-error/5", entry.Level == "ERROR"), templ.KV("border-warning/30 bg-warning/5", entry.Level == "WARN"), templ.KV("border-base-300 bg-base-200", entry.Level != "ERROR" && entry.Level != "WARN") }
-								if len(pairs) > 0 {
-									x-data="expandable"
-								}
 							>
 								<div
 									class="flex items-center gap-2 cursor-pointer select-none"
 									if len(pairs) > 0 {
-										x-on:click="toggle()"
+										_="on click
+										  toggle .rotate-90 on the first <svg.chevron/> in me
+										  toggle .hidden on the next .log-attrs"
 									}
 								>
 									if len(pairs) > 0 {
-										<svg class="chevron w-3 h-3 text-base-content/40 transition-transform shrink-0" x-bind:class="open && 'rotate-90'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+										<svg class="chevron w-3 h-3 text-base-content/40 transition-transform shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
 											<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
 										</svg>
 									} else {
@@ -210,7 +219,7 @@ templ ErrorTraceDetailContent(trace *promolog.Trace) {
 									}
 								</div>
 								if len(pairs) > 0 {
-									<div class="mt-2 ml-5 pl-3 border-l-2 border-base-300" x-show="open" x-transition>
+									<div class="log-attrs hidden mt-2 ml-5 pl-3 border-l-2 border-base-300">
 										<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5">
 											for _, pair := range pairs {
 												<span class="text-xs font-mono text-base-content/50">{ pair[0] }</span>

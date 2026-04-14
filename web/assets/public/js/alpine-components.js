@@ -31,26 +31,6 @@ document.addEventListener('alpine:init', function () {
     };
   });
 
-  // -- Error trace row (error_traces.templ) -----------------------------
-  Alpine.data('traceRow', function () {
-    return {
-      expanded: false,
-      loaded: false,
-      toggle: function () {
-        this.expanded = !this.expanded;
-        if (this.expanded && !this.loaded) {
-          this.loaded = true;
-          // $el is the <tr> with x-on:click (the evaluation element),
-          // which is also the element carrying hx-get and hx-trigger="expand".
-          htmx.trigger(this.$el, 'expand');
-        }
-      },
-      collapse: function () {
-        this.expanded = false;
-      }
-    };
-  });
-
   // -- Theme picker (settings_app.templ) ---------------------------------
   Alpine.data('themePicker', function () {
     var root = null;
@@ -98,14 +78,6 @@ document.addEventListener('alpine:init', function () {
         var theme = event.target.value;
         if (theme) this.setTheme(theme);
       }
-    };
-  });
-
-  // -- Expandable (log entry attrs in error_traces.templ) ---------------
-  Alpine.data('expandable', function () {
-    return {
-      open: false,
-      toggle: function () { this.open = !this.open; }
     };
   });
 
