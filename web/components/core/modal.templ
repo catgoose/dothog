@@ -51,8 +51,7 @@ templ Modal(cfg linkwell.ModalConfig) {
 								hx-swap={ string(cfg.HxSwap) }
 							}
 							hx-include={ "#" + cfg.ID + " .modal-body" }
-							x-data="modalSubmit"
-							x-on:htmx:after-request="closeDialog()"
+							_="on htmx:afterRequest call (closest <dialog/>).close()"
 						>
 							{ btn.Label }
 						</button>

@@ -174,24 +174,28 @@ templ Components3Page(data Components3PageData) {
 				<h2 class="card-title text-base">Locale Formatting — Intl APIs</h2>
 				<p class="text-sm text-base-content/70 mb-3">
 					Browser-native formatting using <code class="text-xs bg-base-200 px-1 rounded">Intl</code> APIs.
-					Server renders raw data, Alpine formats for your locale.
+					Server renders raw data, hyperscript formats for your locale.
 				</p>
 				<div class="space-y-2 mt-2">
-					<div x-data="intlRelativeTime" class="flex justify-between">
+					<div class="flex justify-between">
 						<span class="text-sm text-base-content/60">Relative time:</span>
-						<span class="text-sm font-mono" x-text="formatted">2 hours ago</span>
+						<span class="text-sm font-mono"
+							_="on load set my innerText to (new Intl.RelativeTimeFormat(navigator.language, {numeric:'auto'})).format(-2, 'hour')">2 hours ago</span>
 					</div>
-					<div x-data="intlCurrency" class="flex justify-between">
+					<div class="flex justify-between">
 						<span class="text-sm text-base-content/60">Currency:</span>
-						<span class="text-sm font-mono" x-text="formatted">$1,234.56</span>
+						<span class="text-sm font-mono"
+							_="on load set my innerText to (new Intl.NumberFormat(navigator.language, {style:'currency', currency:'USD'})).format(1234.56)">$1,234.56</span>
 					</div>
-					<div x-data="intlList" class="flex justify-between">
+					<div class="flex justify-between">
 						<span class="text-sm text-base-content/60">List:</span>
-						<span class="text-sm font-mono" x-text="formatted">Alice, Bob, and Charlie</span>
+						<span class="text-sm font-mono"
+							_="on load set my innerText to (new Intl.ListFormat(navigator.language, {style:'long', type:'conjunction'})).format(['Alice','Bob','Charlie'])">Alice, Bob, and Charlie</span>
 					</div>
-					<div x-data="intlDate" class="flex justify-between">
+					<div class="flex justify-between">
 						<span class="text-sm text-base-content/60">Date:</span>
-						<span class="text-sm font-mono" x-text="formatted">Friday, March 28, 2026</span>
+						<span class="text-sm font-mono"
+							_="on load set my innerText to (new Intl.DateTimeFormat(navigator.language, {dateStyle:'full'})).format(new Date())">Friday, March 28, 2026</span>
 					</div>
 				</div>
 			</div>
@@ -202,7 +206,7 @@ templ Components3Page(data Components3PageData) {
 			@componentPatternCard3("Optimistic UI", "POST /favorite/:id", "HyperScript toggles state immediately; server response reconciles after 800ms.")
 			@componentPatternCard3("Undo Delete", "DELETE + POST /restore", "Soft-delete returns an undo toast; restore POST swaps the item back in.")
 			@componentPatternCard3("Native Elements", "(no JS)", "details, datalist, meter, progress, mark — semantic HTML elements that work without JavaScript.")
-			@componentPatternCard3("Locale Formatting", "(client only)", "Intl.RelativeTimeFormat, NumberFormat, ListFormat, DateTimeFormat — browser-native locale-aware formatting via Alpine.")
+			@componentPatternCard3("Locale Formatting", "(client only)", "Intl.RelativeTimeFormat, NumberFormat, ListFormat, DateTimeFormat — browser-native locale-aware formatting via hyperscript.")
 		</div>
 	</div>
 }

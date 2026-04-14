@@ -15,7 +15,7 @@ type ReportEmailData struct {
 // It is swapped OOB into #report-email-container and auto-opens via hyperscript.
 templ ReportEmailModal(data ReportEmailData) {
 	<div id="report-email-container" hx-swap-oob="innerHTML">
-		<dialog id="report-email-modal" class="modal" x-data="autoModal">
+		<dialog id="report-email-modal" class="modal" _="on load call me.showModal()">
 			<div class="modal-box max-w-3xl">
 				<form method="dialog">
 					<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">X</button>

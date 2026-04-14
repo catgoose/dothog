@@ -60,19 +60,22 @@ templ ErrorStatusFromContext(ec linkwell.ErrorContext) {
 templ errorStatusBody(ec linkwell.ErrorContext) {
 	<p class="font-semibold text-sm mb-2">Something went wrong</p>
 	<div
-		x-data="errorCopy"
 		class="relative w-full bg-error-content/10 border border-error-content/20 rounded px-3 py-1.5"
 		data-error-json={ errorJSON(ec) }
 	>
 		<button
 			class="absolute top-1.5 right-1.5 inline-flex items-center p-1 rounded hover:bg-error-content/20 transition-colors"
-			x-on:click="copyError()"
+			_="on click
+			  call navigator.clipboard.writeText((closest [data-error-json])'s @data-error-json)
+			  remove .hidden from the next <.copy-tip/>
+			  wait 1500ms
+			  add .hidden to the next <.copy-tip/>"
 		>
 			<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
 			</svg>
 		</button>
-		<span x-ref="copyTip" class="hidden absolute top-8 right-1.5 bg-base-content text-base-100 text-xs rounded px-2 py-0.5 whitespace-nowrap shadow">Copied!</span>
+		<span class="copy-tip hidden absolute top-8 right-1.5 bg-base-content text-base-100 text-xs rounded px-2 py-0.5 whitespace-nowrap shadow">Copied!</span>
 		<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs pr-6">
 			<dt class="font-semibold">Status</dt>
 			<dd>{ strconv.Itoa(ec.StatusCode) } { ec.Message }</dd>
@@ -213,8 +216,7 @@ templ inlineErrorActions(controls []linkwell.Control) {
 			if dismiss, ok := inlineDismissControl(controls); ok {
 				<button
 					class="join-item btn btn-sm border-error-content/20 bg-error-content/10 text-error-content hover:bg-error-content/20"
-					x-data="dismissError"
-					x-on:click="dismiss()"
+					_="on click set (closest div[id])'s innerHTML to ''"
 				>
 					{ dismiss.Label }
 				</button>
@@ -275,8 +277,7 @@ templ inlineFullXS(ec linkwell.ErrorContext) {
 			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 				<button
 					class="btn btn-xs h-5 min-h-5 text-[0.6rem] border-error/20 bg-error/10 text-error hover:bg-error/20"
-					x-data="dismissError"
-					x-on:click="dismiss()"
+					_="on click set (closest div[id])'s innerHTML to ''"
 				>
 					{ dismiss.Label }
 				</button>
@@ -308,8 +309,7 @@ templ inlineFullSM(ec linkwell.ErrorContext) {
 			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 				<button
 					class="btn btn-xs border-error/20 bg-error/10 text-error hover:bg-error/20"
-					x-data="dismissError"
-					x-on:click="dismiss()"
+					_="on click set (closest div[id])'s innerHTML to ''"
 				>
 					{ dismiss.Label }
 				</button>
@@ -352,8 +352,7 @@ templ inlineFullMD(ec linkwell.ErrorContext) {
 			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 				<button
 					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
-					x-data="dismissError"
-					x-on:click="dismiss()"
+					_="on click set (closest div[id])'s innerHTML to ''"
 				>
 					{ dismiss.Label }
 				</button>
@@ -402,8 +401,7 @@ templ inlineFullLG(ec linkwell.ErrorContext) {
 			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 				<button
 					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
-					x-data="dismissError"
-					x-on:click="dismiss()"
+					_="on click set (closest div[id])'s innerHTML to ''"
 				>
 					{ dismiss.Label }
 				</button>
@@ -500,8 +498,7 @@ templ inlineFullActions(ec linkwell.ErrorContext, btnSize string) {
 		if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 			<button
 				class={ "btn border-error/20 bg-error/10 text-error hover:bg-error/20", btnSize }
-				x-data="dismissError"
-				x-on:click="dismiss()"
+				_="on click set (closest div[id])'s innerHTML to ''"
 			>
 				{ dismiss.Label }
 			</button>

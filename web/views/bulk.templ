@@ -64,11 +64,15 @@ templ BulkTableContainer(cols []linkwell.TableCol, body templ.Component, info li
 			<table class="table table-sm w-full">
 				<thead>
 					<tr>
-						<th class="w-10" x-data="bulkSelectAll">
+						<th class="w-10">
 							<input
 								type="checkbox"
 								class="checkbox checkbox-sm select-all-check"
-								x-on:change="toggleAll()"
+								_="on change
+								  set checked to my checked
+								  for cb in <.row-check/> in (closest <table/>)
+								    set cb's checked to checked
+								  end"
 							/>
 						</th>
 						for _, col := range cols {
@@ -104,7 +108,13 @@ templ BulkItemsBody(items []demo.Item) {
 
 // BulkItemRow renders a single row with a leading checkbox for bulk selection.
 templ BulkItemRow(item demo.Item) {
-	<tr class="cursor-pointer" x-data="bulkRowToggle" x-on:click="toggleRow($event)">
+	<tr class="cursor-pointer"
+		_="on click
+		  if event.target's tagName is not 'INPUT'
+		    set cb to the first <.row-check/> in me
+		    set cb's checked to not cb's checked
+		  end"
+	>
 		<td>
 			<input
 				type="checkbox"

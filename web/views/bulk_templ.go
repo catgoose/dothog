@@ -126,7 +126,7 @@ func BulkTableContainer(cols []linkwell.TableCol, body templ.Component, info lin
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"bulk-table-container\"><div class=\"overflow-x-auto\"><table class=\"table table-sm w-full\"><thead><tr><th class=\"w-10\" x-data=\"bulkSelectAll\"><input type=\"checkbox\" class=\"checkbox checkbox-sm select-all-check\" x-on:change=\"toggleAll()\"></th>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"bulk-table-container\"><div class=\"overflow-x-auto\"><table class=\"table table-sm w-full\"><thead><tr><th class=\"w-10\"><input type=\"checkbox\" class=\"checkbox checkbox-sm select-all-check\" _=\"on change\n\t\t\t\t\t\t\t\t  set checked to my checked\n\t\t\t\t\t\t\t\t  for cb in <.row-check/> in (closest <table/>)\n\t\t\t\t\t\t\t\t    set cb's checked to checked\n\t\t\t\t\t\t\t\t  end\"></th>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -151,7 +151,7 @@ func BulkTableContainer(cols []linkwell.TableCol, body templ.Component, info lin
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(col.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 78, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 82, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func BulkTableContainer(cols []linkwell.TableCol, body templ.Component, info lin
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(bulkSortIndicator(col))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 78, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 82, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -174,7 +174,7 @@ func BulkTableContainer(cols []linkwell.TableCol, body templ.Component, info lin
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(col.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 81, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 85, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -274,14 +274,14 @@ func BulkItemRow(item demo.Item) templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<tr class=\"cursor-pointer\" x-data=\"bulkRowToggle\" x-on:click=\"toggleRow($event)\"><td><input type=\"checkbox\" name=\"ids\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<tr class=\"cursor-pointer\" _=\"on click\n\t\t  if event.target's tagName is not 'INPUT'\n\t\t    set cb to the first <.row-check/> in me\n\t\t    set cb's checked to not cb's checked\n\t\t  end\"><td><input type=\"checkbox\" name=\"ids\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 112, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 122, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -294,7 +294,7 @@ func BulkItemRow(item demo.Item) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 116, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 126, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -307,7 +307,7 @@ func BulkItemRow(item demo.Item) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(item.Category)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 117, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 127, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -320,7 +320,7 @@ func BulkItemRow(item demo.Item) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", item.Price))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 118, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 128, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -333,7 +333,7 @@ func BulkItemRow(item demo.Item) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.Stock))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 119, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/bulk.templ`, Line: 129, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
