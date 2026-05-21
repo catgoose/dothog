@@ -87,3 +87,6 @@ vendor/bundle/
 
 # Local working notes
 plan.md
+plans/
+.agents/
+docs/audit/

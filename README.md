@@ -891,7 +891,7 @@ The wizard walks you through:
 | Avatar Photos    | User photo sync from Azure (requires Graph)           | Selected   |
 | Database (MSSQL) | SQL Server database with SQLx                         | Selected   |
 | SSE              | Server-Sent Events real-time updates (requires Caddy) | Selected   |
-| Caddy (HTTPS)    | Caddy reverse proxy with TLS termination              | Selected   |
+| Caddy            | Optional HTTPS/H3 front-proxy in front of templ       | Selected   |
 | Demo Content     | SQLite demo tables, hypermedia examples               | Unselected |
 
 Deselected features have their code, routes, imports, and related files stripped from the project. Dependencies are auto-resolved (SSE includes Caddy, Avatar includes Graph).
@@ -938,11 +938,18 @@ npm ci
 go tool mage watch
 ```
 
-Dothog starts with TLS on the configured port. Edit `.env.development` to change settings.
+Dothog's Echo origin runs as plain HTTP in development. `mage watch` puts
+templ's HTTP proxy in front of it; when the `caddy` feature is selected, Caddy
+sits in front of templ and provides HTTPS/H3. Without `caddy`, the dev URL is
+`http://localhost:<TEMPL_HTTP_PORT>`. With `caddy`, the dev URL is
+`https://localhost:<CADDY_TLS_PORT>`. Edit `.env.development` to change settings.
 
-### HTTPS Development Setup
+### HTTPS Development Setup (Caddy feature only)
 
-Dothog uses TLS with self-signed certificates in development. Generate them with:
+Only the `caddy` feature provides local HTTPS — and the cert is consumed by
+Caddy, not by Echo. Setup generates `localhost.crt` / `localhost.key` for you
+when `caddy` is selected; without `caddy`, no certificates are needed. If you
+want to regenerate them by hand:
 
 ```bash
 openssl req -x509 -newkey rsa:2048 -keyout localhost.key -out localhost.crt \

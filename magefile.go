@@ -32,10 +32,10 @@ var (
 	buildPath  = "build"
 	binPath    = "./bin"
 	// The following ports are templated by setup (internal/setup or mage setup):
-	// - APP_TLS_PORT: Echo TLS port (SERVER_LISTEN_PORT)
+	// - APP_HTTP_PORT: Echo origin port (SERVER_LISTEN_PORT) — plain HTTP in dev
 	// - TEMPL_HTTP_PORT: templ's local HTTP proxy port
-	// - CADDY_TLS_PORT: Caddy TLS termination port
-	proxyURL               = fmt.Sprintf("https://%s:{{APP_TLS_PORT}}", proxyHost)
+	// - CADDY_TLS_PORT: Caddy TLS termination port (only when caddy feature is selected)
+	proxyURL               = fmt.Sprintf("http://%s:{{APP_HTTP_PORT}}", proxyHost)
 	proxyPort              = "{{TEMPL_HTTP_PORT}}"
 	// setup:feature:caddy:start
 	caddyTLSPort           = "{{CADDY_TLS_PORT}}"
@@ -156,7 +156,7 @@ func resolveProxyURL() string {
 	}
 	if base := serverListenPortFromEnvFile(envFile); base != "" {
 		if _, err := strconv.Atoi(base); err == nil {
-			return fmt.Sprintf("https://%s:%s", proxyHost, base)
+			return fmt.Sprintf("http://%s:%s", proxyHost, base)
 		}
 	}
 	return proxyURL
@@ -492,11 +492,10 @@ func Watch() error {
 		// setup:feature:caddy:end
 	}
 
-	// setup:feature:caddy:start
-	// Signal to the Go server that it's behind the templ proxy chain.
-	// Echo skips gzip middleware when this is set — Caddy handles compression.
+	// Signal to the Go server that it's behind the templ HTTP proxy in
+	// `mage watch`. Echo skips gzip middleware and 103 Early Hints when this
+	// is set — those don't survive the templ proxy (or Caddy in front of it).
 	os.Setenv("TEMPL_PROXY", "true")
-	// setup:feature:caddy:end
 
 	errc := make(chan error, len(tasks))
 	for _, t := range tasks {
@@ -684,7 +683,7 @@ func SetupTo(dest, appName string) error {
 	}
 
 	fmt.Printf("Copying template to %s...\n", absDest)
-	if err := setup.CopyRepoTo(src, absDest, []string{".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp"}); err != nil {
+	if err := setup.CopyRepoTo(src, absDest, []string{".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp", "localhost.crt", "localhost.key"}); err != nil {
 		return fmt.Errorf("copy: %w", err)
 	}
 

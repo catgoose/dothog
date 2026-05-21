@@ -322,9 +322,10 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 
 	// Preload critical assets. In production (direct H2), send 103 Early Hints
 	// so the browser fetches CSS/JS while the server generates the response.
-	// Behind the dev proxy chain (TEMPL_PROXY), 1xx responses get mangled, so
-	// fall back to Link headers on the final response — the browser still gets
-	// the preload hint, just slightly later.
+	// In `mage watch` the templ HTTP proxy (and optional Caddy in front of it)
+	// is always in the chain — TEMPL_PROXY=true is set there — and 1xx
+	// responses get mangled, so fall back to Link headers on the final
+	// response. The browser still gets the preload hint, just slightly later.
 	behindProxy := os.Getenv("TEMPL_PROXY") != ""
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

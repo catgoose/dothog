@@ -140,7 +140,7 @@ No explicit request body size limits. Echo's default is 4MB. For file upload end
 
 ### TLS at the Application
 
-Dev mode supports `StartTLS` with local certificates. Production assumes deployment behind a TLS-terminating proxy. The app itself does not manage certificates or ACME.
+Dev mode runs the Echo origin as plain HTTP. When `mage watch` is used with the `caddy` feature, Caddy fronts the templ proxy chain with local self-signed certificates and provides HTTPS/H3. Production assumes deployment behind a TLS-terminating proxy. The app itself does not manage certificates or ACME.
 
 ### Session Cookie Secure Flag
 

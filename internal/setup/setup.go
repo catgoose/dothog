@@ -247,7 +247,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	if err != nil || baseNum >= 60000 {
 		return fmt.Errorf("BASE_PORT must be < 60000, got: %s", basePort)
 	}
-	appTLSPort := basePort
+	appHTTPPort := basePort
 	templHTTPPort := strconv.Itoa(baseNum + 1)
 	caddyTLSPort := strconv.Itoa(baseNum + 2)
 
@@ -305,7 +305,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	}
 	mageContent := string(mageData)
 	mageContent = binaryNameRe.ReplaceAllString(mageContent, `binaryName = "`+binaryName+`"`)
-	mageContent = strings.ReplaceAll(mageContent, "{{APP_TLS_PORT}}", appTLSPort)
+	mageContent = strings.ReplaceAll(mageContent, "{{APP_HTTP_PORT}}", appHTTPPort)
 	mageContent = strings.ReplaceAll(mageContent, "{{TEMPL_HTTP_PORT}}", templHTTPPort)
 	mageContent = strings.ReplaceAll(mageContent, "{{CADDY_TLS_PORT}}", caddyTLSPort)
 	if err := os.WriteFile(magePath, []byte(mageContent), 0644); err != nil {
@@ -319,7 +319,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 			continue
 		}
 		content := string(data)
-		content = strings.ReplaceAll(content, "{{APP_TLS_PORT}}", appTLSPort)
+		content = strings.ReplaceAll(content, "{{APP_HTTP_PORT}}", appHTTPPort)
 		content = strings.ReplaceAll(content, "{{TEMPL_HTTP_PORT}}", templHTTPPort)
 		content = strings.ReplaceAll(content, "{{CADDY_TLS_PORT}}", caddyTLSPort)
 		if err := os.WriteFile(p, []byte(content), 0644); err != nil {
@@ -342,7 +342,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	if data, err := os.ReadFile(envDevPath); err == nil {
 		content := composeSetupEnv(string(data))
 		content = strings.ReplaceAll(content, "{{APP_NAME}}", opts.AppName)
-		content = strings.ReplaceAll(content, "{{APP_TLS_PORT}}", appTLSPort)
+		content = strings.ReplaceAll(content, "{{APP_HTTP_PORT}}", appHTTPPort)
 		content = strings.ReplaceAll(content, "{{TEMPL_HTTP_PORT}}", templHTTPPort)
 		content = strings.ReplaceAll(content, "{{CADDY_TLS_PORT}}", caddyTLSPort)
 		// Strip feature-gated blocks that were not selected.
@@ -383,8 +383,8 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		content = strings.ReplaceAll(content, "build /"+templateName, "build /"+binaryName)
 		content = strings.ReplaceAll(content, "/usr/local/bin/"+templateName, "/usr/local/bin/"+binaryName)
 		content = strings.ReplaceAll(content, `ENTRYPOINT ["`+templateName+`"]`, `ENTRYPOINT ["`+binaryName+`"]`)
-		content = strings.ReplaceAll(content, "SERVER_LISTEN_PORT=3000", "SERVER_LISTEN_PORT="+appTLSPort)
-		content = strings.ReplaceAll(content, "EXPOSE 3000", "EXPOSE "+appTLSPort)
+		content = strings.ReplaceAll(content, "SERVER_LISTEN_PORT=3000", "SERVER_LISTEN_PORT="+appHTTPPort)
+		content = strings.ReplaceAll(content, "EXPOSE 3000", "EXPOSE "+appHTTPPort)
 		if err := os.WriteFile(dockerfilePath, []byte(content), 0644); err != nil {
 			return err
 		}
@@ -441,7 +441,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	templateReadme := filepath.Join(dir, TemplateSetupDir, "README.template.md")
 	if data, err := os.ReadFile(templateReadme); err == nil {
 		content := string(data)
-		content = strings.ReplaceAll(content, "{{APP_TLS_PORT}}", appTLSPort)
+		content = strings.ReplaceAll(content, "{{APP_HTTP_PORT}}", appHTTPPort)
 		content = strings.ReplaceAll(content, "{{TEMPL_HTTP_PORT}}", templHTTPPort)
 		content = strings.ReplaceAll(content, "{{CADDY_TLS_PORT}}", caddyTLSPort)
 		content = strings.ReplaceAll(content, "{{APP_NAME}}", opts.AppName)
@@ -451,8 +451,8 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		content = strings.ReplaceAll(content, "{{FEATURE_TABLE}}", buildFeatureTable(opts.Features))
 		content = strings.ReplaceAll(content, "{{FEATURE_SECTIONS}}", buildFeatureSections(opts.Features))
 		content = strings.ReplaceAll(content, "{{TECH_STACK}}", buildTechStack(opts.Features))
-		content = strings.ReplaceAll(content, "{{QUICK_START}}", buildQuickStart(binaryName, appTLSPort))
-		content = strings.ReplaceAll(content, "{{ENV_TABLE}}", buildEnvTable(opts.Features, opts.AppName, appTLSPort))
+		content = strings.ReplaceAll(content, "{{QUICK_START}}", buildQuickStart(binaryName, appHTTPPort))
+		content = strings.ReplaceAll(content, "{{ENV_TABLE}}", buildEnvTable(opts.Features, opts.AppName, appHTTPPort))
 		if err := os.WriteFile(filepath.Join(dir, "README.md"), []byte(content), 0644); err != nil {
 			return err
 		}
@@ -584,6 +584,13 @@ func removeOptionalContent(dir string, opts Options) error {
 	// Remove the setup package itself — it only exists for template setup (#377).
 	_ = os.RemoveAll(filepath.Join(dir, "internal", "setup"))
 	_ = os.Remove(filepath.Join(dir, "tests", "setup_test.go"))
+
+	// Remove the mage setup target and the README template source — both
+	// reference the (now removed) internal/setup package and only exist to
+	// drive setup itself. Without this, derived apps fail to build their
+	// magefile because mage_setup.go still imports internal/setup.
+	_ = os.Remove(filepath.Join(dir, "mage_setup.go"))
+	_ = os.RemoveAll(filepath.Join(dir, TemplateSetupDir))
 
 	// Replace demo-specific e2e tests with a minimal smoke suite (#356).
 	// Keep helpers.ts and playwright.config.ts (they contain general utilities
@@ -1149,7 +1156,7 @@ var featureDescriptions = map[string]struct{ label, desc string }{
 	FeatureMSSQL:           {"MSSQL", "Microsoft SQL Server dialect support"},
 	FeaturePostgres:        {"PostgreSQL", "PostgreSQL dialect support"},
 	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration"},
-	FeatureCaddy:           {"Caddy (HTTPS)", "Caddy reverse proxy with TLS termination"},
+	FeatureCaddy:           {"Caddy HTTPS/H3 front-proxy", "Optional HTTPS/H3 front-proxy that sits in front of the templ watcher for local dev. Without it, dev runs plain HTTP."},
 	FeatureDemo:            {"Demo Content", "Demo pages, seed data, and example routes"},
 	FeatureSessionSettings: {"Session Settings", "Per-session theme and layout preferences"},
 	FeatureAlpine:          {"Alpine.js", "Coordinated view state and browser-API bridges"},
@@ -1256,9 +1263,9 @@ Real-time event broker with topic-based publish/subscribe. HTMX SSE extension is
 	}
 
 	if keep[FeatureCaddy] {
-		sb.WriteString(`### Caddy (HTTPS)
+		sb.WriteString(`### Caddy (HTTPS/H3 front-proxy)
 
-Caddy provides TLS termination for local development. Certificates are generated during setup or can be provided manually. See the HTTPS Development Setup section for trust store installation.
+Caddy sits in front of the templ watcher and provides HTTPS/H3 for local development. The Echo origin remains plain HTTP. Without the ` + "`caddy`" + ` feature, ` + "`mage watch`" + ` exposes the templ HTTP proxy directly with no TLS in the chain. Certificates are generated during setup (only when ` + "`caddy`" + ` is selected) or can be provided manually. See the HTTPS Development Setup section for trust store installation.
 
 `)
 	}
@@ -1335,7 +1342,7 @@ func buildTechStack(features []string) string {
 }
 
 // buildQuickStart generates the Quick Start section with binary name and port.
-func buildQuickStart(binaryName, appTLSPort string) string {
+func buildQuickStart(binaryName, appHTTPPort string) string {
 	var sb strings.Builder
 
 	sb.WriteString("### From Source\n\n")
@@ -1347,7 +1354,7 @@ func buildQuickStart(binaryName, appTLSPort string) string {
 	sb.WriteString("### From Docker\n\n")
 	sb.WriteString("```bash\n")
 	sb.WriteString("docker build -t " + binaryName + " .\n")
-	sb.WriteString("docker run -p " + appTLSPort + ":" + appTLSPort + " " + binaryName + "\n")
+	sb.WriteString("docker run -p " + appHTTPPort + ":" + appHTTPPort + " " + binaryName + "\n")
 	sb.WriteString("```\n\n")
 
 	sb.WriteString("### From Release Binary\n\n")
@@ -1370,7 +1377,7 @@ func buildQuickStart(binaryName, appTLSPort string) string {
 }
 
 // buildEnvTable generates a markdown table of environment variables based on features.
-func buildEnvTable(features []string, appName, appTLSPort string) string {
+func buildEnvTable(features []string, appName, appHTTPPort string) string {
 	expanded := ExpandFeatureDeps(features)
 	keep := make(map[string]bool)
 	for _, f := range expanded {
@@ -1385,7 +1392,7 @@ func buildEnvTable(features []string, appName, appTLSPort string) string {
 	sb.WriteString("| --- | --- | --- |\n")
 
 	// Always included
-	sb.WriteString("| `SERVER_LISTEN_PORT` | Echo server port | " + appTLSPort + " |\n")
+	sb.WriteString("| `SERVER_LISTEN_PORT` | Echo server port | " + appHTTPPort + " |\n")
 	sb.WriteString("| `APP_NAME` | Application name | " + appName + " |\n")
 	sb.WriteString("| `LOG_LEVEL` | DEBUG, INFO, WARN, ERROR | INFO |\n")
 	sb.WriteString("| `DATABASE_URL` | Database connection string (database enabled when set) | -- |\n")
@@ -1627,7 +1634,10 @@ func removeEmptyDirs(dir string) error {
 	return nil
 }
 
-// CopyRepoTo copies directory tree from src to dest, skipping named dirs and symlinks.
+// CopyRepoTo copies directory tree from src to dest, skipping any entry
+// (file or directory) whose basename appears in exclude, and skipping symlinks.
+// The legacy parameter name "excludeDirs" is kept for callers; entries may name
+// either directories (e.g. "node_modules") or files (e.g. "localhost.crt").
 func CopyRepoTo(src, dest string, excludeDirs []string) error {
 	exclude := make(map[string]bool)
 	for _, d := range excludeDirs {
@@ -1655,8 +1665,11 @@ func CopyRepoTo(src, dest string, excludeDirs []string) error {
 		if rel == "." {
 			return os.MkdirAll(dest, info.Mode())
 		}
-		if info.IsDir() && exclude[filepath.Base(path)] {
-			return filepath.SkipDir
+		if exclude[filepath.Base(path)] {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
 		}
 		destPath := filepath.Join(dest, rel)
 		if info.IsDir() {

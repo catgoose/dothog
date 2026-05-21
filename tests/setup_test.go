@@ -54,7 +54,7 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 	require.Contains(t, mageContent, `binaryName = "test-app"`)
 	require.Contains(t, mageContent, "12345")
 	require.Contains(t, mageContent, "12346")
-	require.NotContains(t, mageContent, "{{APP_TLS_PORT}}")
+	require.NotContains(t, mageContent, "{{APP_HTTP_PORT}}")
 	require.NotContains(t, mageContent, "{{TEMPL_HTTP_PORT}}")
 	require.NotContains(t, mageContent, "{{CADDY_TLS_PORT}}")
 
@@ -84,7 +84,7 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 		".env.development should have APP_NAME substituted with the real app name")
 	require.NotContains(t, string(envBytes), "{{APP_NAME}}",
 		".env.development must not contain unreplaced {{APP_NAME}} placeholder")
-	require.NotContains(t, string(envBytes), "{{APP_TLS_PORT}}")
+	require.NotContains(t, string(envBytes), "{{APP_HTTP_PORT}}")
 	require.NotContains(t, string(envBytes), "# setup:env")
 
 	gitignorePath := filepath.Join(dest, ".gitignore")
@@ -172,7 +172,7 @@ func TestSetupUsesRandomPortWhenPOmitted(t *testing.T) {
 	mageContent := string(mageBytes)
 	require.Contains(t, mageContent, baseStr)
 	require.Contains(t, mageContent, templStr)
-	require.NotContains(t, mageContent, "{{APP_TLS_PORT}}")
+	require.NotContains(t, mageContent, "{{APP_HTTP_PORT}}")
 	require.NotContains(t, mageContent, "{{TEMPL_HTTP_PORT}}")
 
 	airPath := filepath.Join(dest, ".air", "server.toml")
