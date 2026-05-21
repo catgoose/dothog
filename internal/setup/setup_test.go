@@ -150,6 +150,58 @@ func TestFeatureFileTag(t *testing.T) {
 	}
 }
 
+func TestPrunePackageJSON_RemovesCapacitorDepsWhenFeatureIsStripped(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "package.json")
+	err := os.WriteFile(path, []byte(`{
+  "dependencies": {
+    "@alpinejs/csp": "^3.15.11",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0"
+  },
+  "devDependencies": {
+    "daisyui": "^5.0.0"
+  }
+}
+`), 0644)
+	require.NoError(t, err)
+
+	err = prunePackageJSON(path, map[string]bool{FeatureCapacitor: true})
+	require.NoError(t, err)
+
+	data, err := os.ReadFile(path)
+	require.NoError(t, err)
+	content := string(data)
+	require.Contains(t, content, `"@alpinejs/csp"`)
+	require.NotContains(t, content, `"@capacitor/cli"`)
+	require.NotContains(t, content, `"@capacitor/core"`)
+	require.NotContains(t, content, `"@capacitor/ios"`)
+}
+
+func TestPrunePackageJSON_LeavesCapacitorDepsWhenFeatureIsKept(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "package.json")
+	err := os.WriteFile(path, []byte(`{
+  "dependencies": {
+    "@capacitor/cli": "^8.3.0"
+  }
+}
+`), 0644)
+	require.NoError(t, err)
+
+	err = prunePackageJSON(path, map[string]bool{})
+	require.NoError(t, err)
+
+	data, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Contains(t, string(data), `"@capacitor/cli"`)
+}
+
 // ---------------------------------------------------------------------------
 // parseFeatureBlockStart
 // ---------------------------------------------------------------------------

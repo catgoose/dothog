@@ -3,6 +3,7 @@ package setup
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -671,6 +672,9 @@ func removeOptionalContent(dir string, opts Options) error {
 		_ = os.Remove(filepath.Join(dir, "Gemfile"))
 		_ = os.Remove(filepath.Join(dir, ".github", "workflows", "ios.yml"))
 	}
+	if err := prunePackageJSON(filepath.Join(dir, "package.json"), removeTags); err != nil {
+		return fmt.Errorf("pruning package.json: %w", err)
+	}
 	// Alpine.js is always included (implicit feature); no removal needed.
 
 	// Favicon handling: demo uses hot dog, non-demo uses generic defaults.
@@ -746,6 +750,51 @@ func removeOptionalContent(dir string, opts Options) error {
 	}
 
 	return removeEmptyDirs(dir)
+}
+
+func prunePackageJSON(path string, removeTags map[string]bool) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	var pkg map[string]any
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return err
+	}
+
+	if removeTags[FeatureCapacitor] {
+		pruneJSONDeps(pkg, "dependencies", "@capacitor/cli", "@capacitor/core", "@capacitor/ios")
+	}
+
+	out, err := json.MarshalIndent(pkg, "", "  ")
+	if err != nil {
+		return err
+	}
+	out = append(out, '\n')
+	return os.WriteFile(path, out, 0644)
+}
+
+func pruneJSONDeps(pkg map[string]any, key string, names ...string) {
+	raw, ok := pkg[key]
+	if !ok {
+		return
+	}
+	deps, ok := raw.(map[string]any)
+	if !ok {
+		return
+	}
+	for _, name := range names {
+		delete(deps, name)
+	}
+	if len(deps) == 0 {
+		delete(pkg, key)
+		return
+	}
+	pkg[key] = deps
 }
 
 // featureFileTag returns the feature tag if the first non-blank line is

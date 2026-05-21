@@ -505,6 +505,11 @@ func TestSetup_FeaturesNone(t *testing.T) {
 		require.True(t, os.IsNotExist(err), "%s should be removed when capacitor not selected", f)
 	}
 	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
+	packageJSON, err := os.ReadFile(filepath.Join(dest, "package.json"))
+	require.NoError(t, err)
+	require.NotContains(t, string(packageJSON), `"@capacitor/cli"`)
+	require.NotContains(t, string(packageJSON), `"@capacitor/core"`)
+	require.NotContains(t, string(packageJSON), `"@capacitor/ios"`)
 
 	// Entire docs/ directory should be removed — it's all dothog-specific.
 	assertDirRemoved(t, filepath.Join(dest, "docs"))
@@ -785,6 +790,11 @@ func TestSetup_PWAWithoutCapacitor(t *testing.T) {
 	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
 	_, err = os.Stat(filepath.Join(dest, ".github", "workflows", "ios.yml"))
 	require.True(t, os.IsNotExist(err), "ios.yml should not exist with PWA-only setup")
+	packageJSON, err := os.ReadFile(filepath.Join(dest, "package.json"))
+	require.NoError(t, err)
+	require.NotContains(t, string(packageJSON), `"@capacitor/cli"`)
+	require.NotContains(t, string(packageJSON), `"@capacitor/core"`)
+	require.NotContains(t, string(packageJSON), `"@capacitor/ios"`)
 }
 
 // TestSetup_NoDothogReferences runs setup with all features enabled and verifies
