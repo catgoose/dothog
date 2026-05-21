@@ -12,7 +12,30 @@ go tool mage setup
 go tool mage setup -n "My App" -m "github.com/you/my-app" -p 12345
 go tool mage setup -n "My App" --features auth,database,sse,caddy
 go tool mage setup -n "My App" --features none  # bare HTMX app
+
+# Cross-host generation (autodetects from runtime.GOOS when omitted)
+go tool mage setup -n "My App" --platform linux
+go tool mage setup -n "My App" --platform windows
 ```
+
+## Host Platforms
+
+Setup supports `linux` and `windows` as derived-app hosts. When `--platform`
+is omitted, setup autodetects from `runtime.GOOS`; unsupported hosts (for
+example `darwin`) are rejected with a clear error instead of producing a
+silently broken scaffold. The platform decision shapes the static dev-tooling
+configs that differ between the two hosts:
+
+- `.air/server.toml` — `bin`/`cmd` reference `./tmp/main` on Linux,
+  `./tmp/main.exe` on Windows.
+- `.air/lint.toml` — `bin = "/bin/echo"` on Linux, `bin = "cmd"` plus
+  `args_bin = ["/c", "exit"]` on Windows so Air has a real exec target.
+- Generated README's "From Source" block shows `./<binary>` (Linux) or
+  `.\<binary>.exe` (Windows).
+
+`magefile.go` itself uses `runtime.GOOS` at runtime (Tailwind binary path,
+dev binary extension, `Build`/`Compile`/`Run` output), so the same generated
+file works on either host.
 
 ## What Setup Does
 

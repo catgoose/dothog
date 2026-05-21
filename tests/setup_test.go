@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -895,3 +896,147 @@ func TestSetup_NoDothogReferences(t *testing.T) {
 	// --- Confirm the derived app compiles ---
 	assertBuildSucceeds(t, dest)
 }
+
+// ---------------------------------------------------------------------------
+// Platform-aware setup generation
+// ---------------------------------------------------------------------------
+
+// TestSetup_PlatformWindowsRewritesAir verifies that --platform windows
+// emits Windows-correct Air configs (tmp/main.exe + cmd noop) without
+// requiring a Windows host. The Linux variant of this assertion is covered
+// implicitly by every other setup integration test (which run on Linux CI).
+func TestSetup_PlatformWindowsRewritesAir(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Windows App",
+		ModulePath: "github.com/example/windows-app",
+		BasePort:   "44400",
+		Platform:   setup.PlatformWindows,
+		Features:   []string{},
+		Force:      true,
+	})
+	require.NoError(t, err)
+
+	serverBytes, err := os.ReadFile(filepath.Join(dest, ".air", "server.toml"))
+	require.NoError(t, err)
+	server := string(serverBytes)
+	require.Contains(t, server, `bin = "./tmp/main.exe"`)
+	require.Contains(t, server, `go build -o ./tmp/main.exe . && templ generate --notify-proxy -proxyport=44401`)
+
+	lintBytes, err := os.ReadFile(filepath.Join(dest, ".air", "lint.toml"))
+	require.NoError(t, err)
+	lint := string(lintBytes)
+	require.Contains(t, lint, `bin = "cmd"`)
+	require.Contains(t, lint, `args_bin = ["/c", "exit"]`)
+	require.NotContains(t, lint, `/bin/echo`)
+
+	// README QuickStart should show the Windows From Source form.
+	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
+	require.NoError(t, err)
+	readme := string(readmeBytes)
+	require.Contains(t, readme, "go build -o windows-app.exe .")
+	require.Contains(t, readme, ".\\windows-app.exe")
+}
+
+func TestSetup_PlatformLinuxLeavesAirAsLinux(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Linux App",
+		ModulePath: "github.com/example/linux-app",
+		BasePort:   "44500",
+		Platform:   setup.PlatformLinux,
+		Features:   []string{},
+		Force:      true,
+	})
+	require.NoError(t, err)
+
+	serverBytes, err := os.ReadFile(filepath.Join(dest, ".air", "server.toml"))
+	require.NoError(t, err)
+	server := string(serverBytes)
+	require.Contains(t, server, `bin = "./tmp/main"`)
+	require.NotContains(t, server, `./tmp/main.exe`)
+
+	lintBytes, err := os.ReadFile(filepath.Join(dest, ".air", "lint.toml"))
+	require.NoError(t, err)
+	lint := string(lintBytes)
+	require.Contains(t, lint, `bin = "/bin/echo"`)
+	require.NotContains(t, lint, `bin = "cmd"`)
+
+	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
+	require.NoError(t, err)
+	readme := string(readmeBytes)
+	require.Contains(t, readme, "go build -o linux-app .")
+	require.Contains(t, readme, "./linux-app\n")
+}
+
+// TestSetup_PlatformAutodetectMatchesGOOS covers the empty/unspecified path:
+// setup.Run should resolve the host platform via runtime.GOOS. On Linux CI
+// that means the generated tree must look like the explicit-linux test.
+func TestSetup_PlatformAutodetectMatchesGOOS(t *testing.T) {
+	if runtime.GOOS != setup.PlatformLinux && runtime.GOOS != setup.PlatformWindows {
+		t.Skipf("autodetect test only runs on supported hosts; got %q", runtime.GOOS)
+	}
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Auto App",
+		ModulePath: "github.com/example/auto-app",
+		BasePort:   "44600",
+		// Platform left empty → autodetect.
+		Features: []string{},
+		Force:    true,
+	})
+	require.NoError(t, err)
+
+	serverBytes, err := os.ReadFile(filepath.Join(dest, ".air", "server.toml"))
+	require.NoError(t, err)
+	server := string(serverBytes)
+	if runtime.GOOS == setup.PlatformWindows {
+		require.Contains(t, server, `./tmp/main.exe`)
+	} else {
+		require.Contains(t, server, `bin = "./tmp/main"`)
+		require.NotContains(t, server, `./tmp/main.exe`)
+	}
+}
+
+// TestSetup_PlatformUnsupportedRejected verifies darwin/freebsd fail clearly.
+func TestSetup_PlatformUnsupportedRejected(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Mac App",
+		ModulePath: "github.com/example/mac-app",
+		BasePort:   "44700",
+		Platform:   "darwin",
+		Force:      true,
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "unsupported setup platform")
+}
+

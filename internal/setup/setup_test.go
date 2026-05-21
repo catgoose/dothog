@@ -1037,3 +1037,117 @@ func TestHasCaddyFeature(t *testing.T) {
 		})
 	}
 }
+
+// ---------------------------------------------------------------------------
+// resolvePlatform
+// ---------------------------------------------------------------------------
+
+func TestResolvePlatform(t *testing.T) {
+	tests := []struct {
+		name      string
+		in        string
+		want      string
+		expectErr bool
+	}{
+		{name: "linux explicit", in: "linux", want: PlatformLinux},
+		{name: "windows explicit", in: "windows", want: PlatformWindows},
+		{name: "case insensitive", in: "LINUX", want: PlatformLinux},
+		{name: "whitespace tolerated", in: "  windows  ", want: PlatformWindows},
+		{name: "rejects darwin", in: "darwin", expectErr: true},
+		{name: "rejects unknown", in: "freebsd", expectErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := resolvePlatform(tt.in)
+			if tt.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// applyPlatformAdjustments — .air/* rewrites per platform
+// ---------------------------------------------------------------------------
+
+func writeAirFixture(t *testing.T, dir string) {
+	t.Helper()
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, ".air"), 0o755))
+	server := `root = "."
+tmp_dir = "tmp"
+
+[build]
+  args_bin = ["-env=development"]
+  bin = "./tmp/main"
+  cmd = "go build -o ./tmp/main . && templ generate --notify-proxy -proxyport=33849"
+  exclude_dir = ["assets", "tmp"]
+  include_ext = ["go"]
+`
+	lint := `root = "."
+
+[build]
+  args_bin = []
+  bin = "/bin/echo"
+  cmd = "mage lint"
+  include_ext = ["go"]
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, ".air", "server.toml"), []byte(server), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, ".air", "lint.toml"), []byte(lint), 0o644))
+}
+
+func TestApplyPlatformAdjustments_LinuxLeavesFilesUntouched(t *testing.T) {
+	dir := t.TempDir()
+	writeAirFixture(t, dir)
+
+	srvBefore, err := os.ReadFile(filepath.Join(dir, ".air", "server.toml"))
+	require.NoError(t, err)
+	lintBefore, err := os.ReadFile(filepath.Join(dir, ".air", "lint.toml"))
+	require.NoError(t, err)
+
+	require.NoError(t, applyPlatformAdjustments(dir, PlatformLinux))
+
+	srvAfter, err := os.ReadFile(filepath.Join(dir, ".air", "server.toml"))
+	require.NoError(t, err)
+	lintAfter, err := os.ReadFile(filepath.Join(dir, ".air", "lint.toml"))
+	require.NoError(t, err)
+
+	require.Equal(t, string(srvBefore), string(srvAfter), "Linux must not rewrite server.toml")
+	require.Equal(t, string(lintBefore), string(lintAfter), "Linux must not rewrite lint.toml")
+}
+
+func TestApplyPlatformAdjustments_WindowsRewritesAir(t *testing.T) {
+	dir := t.TempDir()
+	writeAirFixture(t, dir)
+
+	require.NoError(t, applyPlatformAdjustments(dir, PlatformWindows))
+
+	srv, err := os.ReadFile(filepath.Join(dir, ".air", "server.toml"))
+	require.NoError(t, err)
+	srvStr := string(srv)
+	require.Contains(t, srvStr, `bin = "./tmp/main.exe"`)
+	require.Contains(t, srvStr, `cmd = "go build -o ./tmp/main.exe . && templ generate --notify-proxy -proxyport=33849"`)
+	require.NotContains(t, srvStr, `bin = "./tmp/main"`+"\n", "must rewrite the Linux bin line")
+
+	lint, err := os.ReadFile(filepath.Join(dir, ".air", "lint.toml"))
+	require.NoError(t, err)
+	lintStr := string(lint)
+	require.Contains(t, lintStr, `bin = "cmd"`)
+	require.Contains(t, lintStr, `args_bin = ["/c", "exit"]`)
+	require.NotContains(t, lintStr, `/bin/echo`)
+}
+
+// buildQuickStart platform shaping
+func TestBuildQuickStart_PlatformShapesFromSource(t *testing.T) {
+	linux := buildQuickStart("asdfasdf", "33848", PlatformLinux)
+	require.Contains(t, linux, "go build -o asdfasdf .")
+	require.Contains(t, linux, "./asdfasdf\n")
+	require.NotContains(t, linux, "asdfasdf.exe\n")
+
+	windows := buildQuickStart("asdfasdf", "33848", PlatformWindows)
+	require.Contains(t, windows, "go build -o asdfasdf.exe .")
+	require.Contains(t, windows, ".\\asdfasdf.exe\n")
+	require.Contains(t, windows, "```powershell")
+}

@@ -58,6 +58,8 @@ var (
 	publicCSSDir           = filepath.Join(publicSourceDir, "css")
 )
 
+const templWatchIgnorePattern = `(^|[\\/])mage_output_file\.go$`
+
 // DaisyUIComponents is the list of DaisyUI CSS component URLs.
 var daisyUIComponents = []string{
 	"npm/daisyui@5/base/rootscrollgutter.css",
@@ -162,9 +164,27 @@ func resolveProxyURL() string {
 	return proxyURL
 }
 
+// tailwindLocalBin returns the path to the locally-installed Tailwind CLI,
+// with `.exe` appended on Windows so os/exec can resolve it.
+func tailwindLocalBin() string {
+	bin := filepath.Join(binPath, "tailwindcss")
+	if runtime.GOOS == "windows" {
+		bin += ".exe"
+	}
+	return bin
+}
+
+// hostBinaryExt returns the executable extension for the host platform.
+func hostBinaryExt() string {
+	if runtime.GOOS == "windows" {
+		return ".exe"
+	}
+	return ""
+}
+
 // Tailwind runs the Tailwind CSS compilation
 func Tailwind() error {
-	return sh.Run(filepath.Join(binPath, "tailwindcss"),
+	return sh.Run(tailwindLocalBin(),
 		"-i", "web/styles/input.css",
 		"-o", filepath.Join(publicCSSDir, "tailwind.css"),
 		"-m")
@@ -172,11 +192,11 @@ func Tailwind() error {
 
 // TailwindWatch runs Tailwind in watch mode
 func TailwindWatch() error {
-	if _, err := os.Stat(filepath.Join(binPath, "tailwindcss")); os.IsNotExist(err) {
+	if _, err := os.Stat(tailwindLocalBin()); os.IsNotExist(err) {
 		fmt.Println("Tailwind binary not found. Running update...")
 		mg.Deps(TailwindUpdate)
 	}
-	return sh.Run(filepath.Join(binPath, "tailwindcss"),
+	return sh.Run(tailwindLocalBin(),
 		"-i", "web/styles/input.css",
 		"-o", filepath.Join(publicCSSDir, "tailwind.css"),
 		"-m", "-w")
@@ -235,7 +255,7 @@ func TailwindUpdate() error {
 	if err := os.Chmod(outPath, 0755); err != nil {
 		return err
 	}
-	linkPath := filepath.Join(binPath, "tailwindcss")
+	linkPath := tailwindLocalBin()
 	if runtime.GOOS != "windows" {
 		os.Remove(linkPath)
 		if err := os.Symlink(assetName, linkPath); err != nil {
@@ -342,14 +362,17 @@ func UpdateAssets() error {
 	return nil
 }
 
-// Air runs the Air live reload tool
+// Air runs the Air live reload tool.
+// CGO_ENABLED is set via the process env (not as a unix-shell prefix on the
+// build.cmd string) so the same command works on Windows cmd.exe.
 func Air() error {
 	fmt.Println("running air")
-
+	os.Setenv("CGO_ENABLED", "0")
+	devBin := "./tmp/main" + hostBinaryExt()
 	return sh.Run("go", "tool", "air",
 		"-c", ".air/server.toml",
-		"-build.cmd", fmt.Sprintf("CGO_ENABLED=0 go build -o ./tmp/main . && %s",
-			getTemplNotifyProxyCmd()))
+		"-build.cmd", fmt.Sprintf("go build -o %s . && %s",
+			devBin, getTemplNotifyProxyCmd()))
 }
 
 // Templ runs Templ in watch mode
@@ -455,14 +478,14 @@ func Compile() error {
 	ldflags := "-w -X catgoose/dothog/internal/version.BuildDate=" + time.Now().UTC().Format("2006-01-02")
 	return sh.Run("go", "build",
 		"-ldflags", ldflags,
-		"-o", filepath.Join(buildPath, binaryName),
+		"-o", filepath.Join(buildPath, binaryName+hostBinaryExt()),
 		"main.go")
 }
 
 // Run executes the compiled binary
 func Run() error {
 	mg.Deps(Build)
-	return sh.Run(filepath.Join(buildPath, binaryName))
+	return sh.Run(filepath.Join(buildPath, binaryName+hostBinaryExt()))
 }
 
 // EnvCheck verifies the environment file exists
@@ -630,6 +653,7 @@ func getTemplCmd() []string {
 	return []string{
 		"go", "tool", "templ", "generate",
 		"-watch",
+		"-ignore-pattern=" + templWatchIgnorePattern,
 		"-open-browser=false",
 		"-proxy=" + resolveProxyURL(),
 		"-proxybind=" + proxyHost,
@@ -691,12 +715,13 @@ func SetupTo(dest, appName string) error {
 		AppName:    appName,
 		ModulePath: envOr("SETUP_MODULE", ""),
 		BasePort:   envOr("SETUP_PORT", ""),
+		Platform:   envOr("SETUP_PLATFORM", ""),
 	}
 	if featuresEnv := os.Getenv("SETUP_FEATURES"); featuresEnv != "" {
 		opts.Features = parseFeatureFlag(featuresEnv)
 	}
-	fmt.Printf("Running setup (app=%q, module=%q, port=%q, features=%v)...\n",
-		opts.AppName, opts.ModulePath, opts.BasePort, opts.Features)
+	fmt.Printf("Running setup (app=%q, module=%q, port=%q, platform=%q, features=%v)...\n",
+		opts.AppName, opts.ModulePath, opts.BasePort, opts.Platform, opts.Features)
 	if err := setup.Run(ctx, absDest, opts); err != nil {
 		return fmt.Errorf("setup: %w", err)
 	}
