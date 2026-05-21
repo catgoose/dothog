@@ -928,7 +928,8 @@ func TestSetup_PlatformWindowsRewritesAir(t *testing.T) {
 	require.NoError(t, err)
 	server := string(serverBytes)
 	require.Contains(t, server, `bin = "./tmp/main.exe"`)
-	require.Contains(t, server, `go build -o ./tmp/main.exe . && templ generate --notify-proxy -proxyport=44401`)
+	require.Contains(t, server, `cmd = "go tool mage airBuild"`,
+		"server cmd must invoke Air rebuilds through go tool mage so Windows avoids shell-only operators")
 
 	lintBytes, err := os.ReadFile(filepath.Join(dest, ".air", "lint.toml"))
 	require.NoError(t, err)
@@ -971,6 +972,7 @@ func TestSetup_PlatformLinuxLeavesAirAsLinux(t *testing.T) {
 	server := string(serverBytes)
 	require.Contains(t, server, `bin = "./tmp/main"`)
 	require.NotContains(t, server, `./tmp/main.exe`)
+	require.Contains(t, server, `cmd = "go tool mage airBuild"`)
 
 	lintBytes, err := os.ReadFile(filepath.Join(dest, ".air", "lint.toml"))
 	require.NoError(t, err)
@@ -1021,6 +1023,7 @@ func TestSetup_PlatformAutodetectMatchesGOOS(t *testing.T) {
 		require.Contains(t, server, `bin = "./tmp/main"`)
 		require.NotContains(t, server, `./tmp/main.exe`)
 	}
+	require.Contains(t, server, `cmd = "go tool mage airBuild"`)
 }
 
 // TestSetup_PlatformUnsupportedRejected verifies darwin/freebsd fail clearly.
@@ -1043,4 +1046,3 @@ func TestSetup_PlatformUnsupportedRejected(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported setup platform")
 }
-

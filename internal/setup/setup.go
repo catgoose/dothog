@@ -1094,15 +1094,6 @@ func applyPlatformAdjustments(dir, platform string) error {
 		content = strings.ReplaceAll(content,
 			`bin = "./tmp/main"`,
 			`bin = "./tmp/main.exe"`)
-		content = strings.ReplaceAll(content,
-			`cmd = "go build -o ./tmp/main . && templ generate --notify-proxy -proxyport={{TEMPL_HTTP_PORT}}"`,
-			`cmd = "go build -o ./tmp/main.exe . && templ generate --notify-proxy -proxyport={{TEMPL_HTTP_PORT}}"`)
-		// Port placeholder was already substituted upstream; rewrite the
-		// resolved form too in case substitution ran before this step.
-		content = regexp.MustCompile(`go build -o \./tmp/main \. && templ generate --notify-proxy -proxyport=\d+`).
-			ReplaceAllStringFunc(content, func(match string) string {
-				return strings.Replace(match, "./tmp/main ", "./tmp/main.exe ", 1)
-			})
 		if err := os.WriteFile(airServer, []byte(content), 0644); err != nil {
 			return err
 		}

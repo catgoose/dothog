@@ -1082,7 +1082,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = ["-env=development"]
   bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main . && templ generate --notify-proxy -proxyport=33849"
+  cmd = "go tool mage airBuild"
   exclude_dir = ["assets", "tmp"]
   include_ext = ["go"]
 `
@@ -1128,7 +1128,7 @@ func TestApplyPlatformAdjustments_WindowsRewritesAir(t *testing.T) {
 	require.NoError(t, err)
 	srvStr := string(srv)
 	require.Contains(t, srvStr, `bin = "./tmp/main.exe"`)
-	require.Contains(t, srvStr, `cmd = "go build -o ./tmp/main.exe . && templ generate --notify-proxy -proxyport=33849"`)
+	require.Contains(t, srvStr, `cmd = "go tool mage airBuild"`)
 	require.NotContains(t, srvStr, `bin = "./tmp/main"`+"\n", "must rewrite the Linux bin line")
 
 	lint, err := os.ReadFile(filepath.Join(dir, ".air", "lint.toml"))

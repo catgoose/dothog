@@ -363,16 +363,20 @@ func UpdateAssets() error {
 }
 
 // Air runs the Air live reload tool.
-// CGO_ENABLED is set via the process env (not as a unix-shell prefix on the
-// build.cmd string) so the same command works on Windows cmd.exe.
 func Air() error {
 	fmt.Println("running air")
-	os.Setenv("CGO_ENABLED", "0")
-	devBin := "./tmp/main" + hostBinaryExt()
-	return sh.Run("go", "tool", "air",
-		"-c", ".air/server.toml",
-		"-build.cmd", fmt.Sprintf("go build -o %s . && %s",
-			devBin, getTemplNotifyProxyCmd()))
+	return sh.Run("go", "tool", "air", "-c", ".air/server.toml")
+}
+
+// AirBuild performs Air's rebuild step without relying on shell operators.
+// CGO_ENABLED is set via the process env so the same target works on Windows.
+func AirBuild() error {
+	if err := sh.RunWithV(map[string]string{"CGO_ENABLED": "0"},
+		"go", "build", "-o", "./tmp/main"+hostBinaryExt(), "."); err != nil {
+		return err
+	}
+	cmd := getTemplNotifyProxyArgs()
+	return sh.RunV(cmd[0], cmd[1:]...)
 }
 
 // Templ runs Templ in watch mode
@@ -661,10 +665,15 @@ func getTemplCmd() []string {
 	}
 }
 
-// Helper function to get Templ notify proxy command
-func getTemplNotifyProxyCmd() string {
-	return fmt.Sprintf("go tool templ generate --notify-proxy -proxy=%s -proxybind=%s -proxyport=%s",
-		resolveProxyURL(), proxyHost, resolvePort(proxyPort, 1))
+// Helper function to get Templ notify proxy args
+func getTemplNotifyProxyArgs() []string {
+	return []string{
+		"go", "tool", "templ", "generate",
+		"--notify-proxy",
+		"-proxy=" + resolveProxyURL(),
+		"-proxybind=" + proxyHost,
+		"-proxyport=" + resolvePort(proxyPort, 1),
+	}
 }
 
 // Helper function to download a file

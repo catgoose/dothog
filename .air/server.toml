@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = ["-env=development"]
   bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main . && templ generate --notify-proxy -proxyport={{TEMPL_HTTP_PORT}}"
+  cmd = "go tool mage airBuild"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "node_modules", "db", "log", "e2e", "test-results", "playwright-report", "ios", "android", "_template_setup", "web/assets/public/css", "web/assets/public/js", "web/assets/public/images"]
   exclude_file = ["magefile.go", "mage_setup.go", "mage_output_file.go"]

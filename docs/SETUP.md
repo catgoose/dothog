@@ -27,7 +27,8 @@ silently broken scaffold. The platform decision shapes the static dev-tooling
 configs that differ between the two hosts:
 
 - `.air/server.toml` — `bin`/`cmd` reference `./tmp/main` on Linux,
-  `./tmp/main.exe` on Windows.
+  `./tmp/main.exe` on Windows; `cmd = "go tool mage airBuild"` on both so
+  Air rebuilds stay repo-local and avoid shell-only operators.
 - `.air/lint.toml` — `bin = "/bin/echo"` on Linux, `bin = "cmd"` plus
   `args_bin = ["/c", "exit"]` on Windows so Air has a real exec target.
 - Generated README's "From Source" block shows `./<binary>` (Linux) or
