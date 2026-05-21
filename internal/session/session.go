@@ -174,6 +174,12 @@ func GetSettings(r *http.Request) *Settings {
 	return NewDefaultSettings("")
 }
 
+// ContextWithSettings returns a derived context that GetSettings can read.
+// Test code uses this to seed a session without running the full middleware.
+func ContextWithSettings(ctx context.Context, s *Settings) context.Context {
+	return context.WithValue(ctx, settingsCtxKey, s)
+}
+
 func getOrCreateSessionCookie(w http.ResponseWriter, r *http.Request, cookieName string) (string, error) {
 	if cookie, err := r.Cookie(cookieName); err == nil && cookie.Value != "" {
 		return cookie.Value, nil

@@ -214,8 +214,9 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initLifelineRoutes(ar.broker)
 	// setup:feature:sse:end
 	// setup:feature:session_settings:start
+	ar.initThemeRoutes()
 	// setup:feature:sse:start
-	ar.initThemeRoutes(ar.broker)
+	ar.initThemeSSE(ar.broker)
 	// setup:feature:sse:end
 	// setup:feature:session_settings:end
 
