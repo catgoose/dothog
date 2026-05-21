@@ -3,20 +3,20 @@ package handler
 
 import (
 	"catgoose/dothog/internal/logger"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/middleware"
 	"catgoose/dothog/internal/version"
 	"catgoose/dothog/web/views"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/catgoose/linkwell"
 	"net/http"
 	"strings"
 
 	corecomponents "catgoose/dothog/web/components/core"
 
-	"github.com/a-h/templ"
 	"catgoose/dothog/internal/env"
+	"github.com/a-h/templ"
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
@@ -291,12 +291,20 @@ func HandleHypermediaError(c echo.Context, statusCode int, message string, err e
 // navigation. HTMX requests return a hypermedia error with back/home/report
 // controls, rendered as an OOB banner by ErrorHandlerMiddleware.
 // Register with e.RouteNotFound.
+//
+// Both branches return a 404 error so Echo's HTTPErrorHandler runs and the
+// per-request log buffer is promoted into the error-trace store. The non-HTMX
+// branch renders the response first and relies on the handler's committed-
+// response short-circuit to avoid double-rendering.
 func HandleNotFound(c echo.Context) error {
 	if c.Request().Header.Get("HX-Request") == "true" {
 		return HandleHypermediaError(c, http.StatusNotFound, "Not Found", nil)
 	}
 	c.Response().Status = http.StatusNotFound
-	return RenderBaseLayout(c, views.NotFoundPage(c.Request().URL.Path))
+	if err := RenderBaseLayout(c, views.NotFoundPage(c.Request().URL.Path)); err != nil {
+		return err
+	}
+	return echo.NewHTTPError(http.StatusNotFound, "Not Found")
 }
 
 // HandleComponent is a handler that renders a templ component

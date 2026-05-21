@@ -473,7 +473,7 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
-	assertDirExists(t, filepath.Join(dest, "internal", "database"))          // database is implicit (always kept)
+	assertDirExists(t, filepath.Join(dest, "internal", "database")) // database is implicit (always kept)
 	assertDirRemoved(t, filepath.Join(dest, "internal", "repository"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "domain"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "demo"))
@@ -640,7 +640,6 @@ func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 
-
 	// MSSQL files should be removed
 }
 
@@ -759,6 +758,56 @@ func TestSetup_FeaturesDemoWithoutSSE(t *testing.T) {
 	require.True(t, os.IsNotExist(err), "htmx.ext.sse.js should be removed when sse stripped")
 }
 
+// TestSetup_SessionSettingsWithoutSSE pins down the theme-persistence
+// regression: a scaffold that keeps session_settings but omits sse must
+// still register POST /settings/theme so theme changes survive a reload.
+// Before the fix, initThemeRoutes was nested under both session_settings
+// AND sse markers, so stripping sse silently removed the registration.
+func TestSetup_SessionSettingsWithoutSSE(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Session Settings No SSE App",
+		ModulePath: "github.com/test/session-no-sse-app",
+		BasePort:   "20660",
+		NoCaddy:    true,
+		Force:      true,
+		Features:   []string{"session_settings"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	// routes.go must still call initThemeRoutes (no broker arg) so
+	// POST /settings/theme is registered without sse.
+	routesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes.go"))
+	require.NoError(t, err)
+	routesContent := string(routesBytes)
+	require.Contains(t, routesContent, "ar.initThemeRoutes()",
+		"routes.go must call ar.initThemeRoutes() without a broker when sse is stripped")
+	require.NotContains(t, routesContent, "ar.initThemeSSE",
+		"routes.go must not reference initThemeSSE when sse is stripped")
+
+	// routes_theme.go must still be present and have the POST /settings/theme
+	// registration, with no remaining tavern import (sse bits stripped).
+	themeBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes_theme.go"))
+	require.NoError(t, err)
+	themeContent := string(themeBytes)
+	require.Contains(t, themeContent, `POST("/settings/theme"`,
+		"routes_theme.go must keep the POST /settings/theme route when sse is stripped")
+	require.NotContains(t, themeContent, "github.com/catgoose/tavern",
+		"routes_theme.go must not import tavern when sse is stripped")
+	require.NotContains(t, themeContent, "ar.broker",
+		"routes_theme.go must not reference ar.broker when sse is stripped")
+}
+
 // TestSetup_PWAWithoutCapacitor verifies that selecting PWA does not pull in
 // Capacitor files (#353). PWA is a web feature; Capacitor is a separate opt-in.
 func TestSetup_PWAWithoutCapacitor(t *testing.T) {
@@ -834,12 +883,12 @@ func TestSetup_NoDothogReferences(t *testing.T) {
 
 	// Directories and file extensions to skip.
 	skipDirs := map[string]bool{
-		".git":             true,
-		".claude":          true,
-		"log":              true,
-		"node_modules":     true,
-		"_template_setup":  true,
-		"vendor":           true,
+		".git":            true,
+		".claude":         true,
+		"log":             true,
+		"node_modules":    true,
+		"_template_setup": true,
+		"vendor":          true,
 	}
 
 	var violations []string
