@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -504,6 +505,11 @@ func TestSetup_FeaturesNone(t *testing.T) {
 		require.True(t, os.IsNotExist(err), "%s should be removed when capacitor not selected", f)
 	}
 	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
+	packageJSON, err := os.ReadFile(filepath.Join(dest, "package.json"))
+	require.NoError(t, err)
+	require.NotContains(t, string(packageJSON), `"@capacitor/cli"`)
+	require.NotContains(t, string(packageJSON), `"@capacitor/core"`)
+	require.NotContains(t, string(packageJSON), `"@capacitor/ios"`)
 
 	// Entire docs/ directory should be removed — it's all dothog-specific.
 	assertDirRemoved(t, filepath.Join(dest, "docs"))
@@ -784,6 +790,11 @@ func TestSetup_PWAWithoutCapacitor(t *testing.T) {
 	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
 	_, err = os.Stat(filepath.Join(dest, ".github", "workflows", "ios.yml"))
 	require.True(t, os.IsNotExist(err), "ios.yml should not exist with PWA-only setup")
+	packageJSON, err := os.ReadFile(filepath.Join(dest, "package.json"))
+	require.NoError(t, err)
+	require.NotContains(t, string(packageJSON), `"@capacitor/cli"`)
+	require.NotContains(t, string(packageJSON), `"@capacitor/core"`)
+	require.NotContains(t, string(packageJSON), `"@capacitor/ios"`)
 }
 
 // TestSetup_NoDothogReferences runs setup with all features enabled and verifies
@@ -894,4 +905,154 @@ func TestSetup_NoDothogReferences(t *testing.T) {
 
 	// --- Confirm the derived app compiles ---
 	assertBuildSucceeds(t, dest)
+}
+
+// ---------------------------------------------------------------------------
+// Platform-aware setup generation
+// ---------------------------------------------------------------------------
+
+// TestSetup_PlatformWindowsRewritesAir verifies that --platform windows
+// emits Windows-correct Air configs (tmp/main.exe + cmd noop) without
+// requiring a Windows host. The Linux variant of this assertion is covered
+// implicitly by every other setup integration test (which run on Linux CI).
+func TestSetup_PlatformWindowsRewritesAir(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Windows App",
+		ModulePath: "github.com/example/windows-app",
+		BasePort:   "44400",
+		Platform:   setup.PlatformWindows,
+		Features:   []string{},
+		Force:      true,
+	})
+	require.NoError(t, err)
+
+	serverBytes, err := os.ReadFile(filepath.Join(dest, ".air", "server.toml"))
+	require.NoError(t, err)
+	server := string(serverBytes)
+	require.Contains(t, server, `bin = "./tmp/main.exe"`)
+	require.Contains(t, server, `cmd = "go tool mage airBuild"`,
+		"server cmd must invoke Air rebuilds through go tool mage so Windows avoids shell-only operators")
+
+	lintBytes, err := os.ReadFile(filepath.Join(dest, ".air", "lint.toml"))
+	require.NoError(t, err)
+	lint := string(lintBytes)
+	require.Contains(t, lint, `bin = "cmd"`)
+	require.Contains(t, lint, `args_bin = ["/c", "exit"]`)
+	require.NotContains(t, lint, `/bin/echo`)
+	require.Contains(t, lint, `cmd = "go tool mage lint"`,
+		"lint cmd must invoke mage via go tool so generated apps don't need a global mage on PATH")
+
+	// README QuickStart should show the Windows From Source form.
+	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
+	require.NoError(t, err)
+	readme := string(readmeBytes)
+	require.Contains(t, readme, "go build -o windows-app.exe .")
+	require.Contains(t, readme, ".\\windows-app.exe")
+}
+
+func TestSetup_PlatformLinuxLeavesAirAsLinux(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Linux App",
+		ModulePath: "github.com/example/linux-app",
+		BasePort:   "44500",
+		Platform:   setup.PlatformLinux,
+		Features:   []string{},
+		Force:      true,
+	})
+	require.NoError(t, err)
+
+	serverBytes, err := os.ReadFile(filepath.Join(dest, ".air", "server.toml"))
+	require.NoError(t, err)
+	server := string(serverBytes)
+	require.Contains(t, server, `bin = "./tmp/main"`)
+	require.NotContains(t, server, `./tmp/main.exe`)
+	require.Contains(t, server, `cmd = "go tool mage airBuild"`)
+
+	lintBytes, err := os.ReadFile(filepath.Join(dest, ".air", "lint.toml"))
+	require.NoError(t, err)
+	lint := string(lintBytes)
+	require.Contains(t, lint, `bin = "/bin/echo"`)
+	require.NotContains(t, lint, `bin = "cmd"`)
+	require.Contains(t, lint, `cmd = "go tool mage lint"`,
+		"lint cmd must invoke mage via go tool so generated apps don't need a global mage on PATH")
+
+	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
+	require.NoError(t, err)
+	readme := string(readmeBytes)
+	require.Contains(t, readme, "go build -o linux-app .")
+	require.Contains(t, readme, "./linux-app\n")
+}
+
+// TestSetup_PlatformAutodetectMatchesGOOS covers the empty/unspecified path:
+// setup.Run should resolve the host platform via runtime.GOOS. On Linux CI
+// that means the generated tree must look like the explicit-linux test.
+func TestSetup_PlatformAutodetectMatchesGOOS(t *testing.T) {
+	if runtime.GOOS != setup.PlatformLinux && runtime.GOOS != setup.PlatformWindows {
+		t.Skipf("autodetect test only runs on supported hosts; got %q", runtime.GOOS)
+	}
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Auto App",
+		ModulePath: "github.com/example/auto-app",
+		BasePort:   "44600",
+		// Platform left empty → autodetect.
+		Features: []string{},
+		Force:    true,
+	})
+	require.NoError(t, err)
+
+	serverBytes, err := os.ReadFile(filepath.Join(dest, ".air", "server.toml"))
+	require.NoError(t, err)
+	server := string(serverBytes)
+	if runtime.GOOS == setup.PlatformWindows {
+		require.Contains(t, server, `./tmp/main.exe`)
+	} else {
+		require.Contains(t, server, `bin = "./tmp/main"`)
+		require.NotContains(t, server, `./tmp/main.exe`)
+	}
+	require.Contains(t, server, `cmd = "go tool mage airBuild"`)
+}
+
+// TestSetup_PlatformUnsupportedRejected verifies darwin/freebsd fail clearly.
+func TestSetup_PlatformUnsupportedRejected(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Mac App",
+		ModulePath: "github.com/example/mac-app",
+		BasePort:   "44700",
+		Platform:   "darwin",
+		Force:      true,
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "unsupported setup platform")
 }

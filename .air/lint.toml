@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "/bin/echo"
-  cmd = "mage lint"
+  cmd = "go tool mage lint"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "build", "bin"]
   exclude_file = ["magefile.go", "mage_output_file.go"]

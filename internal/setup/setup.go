@@ -3,12 +3,14 @@ package setup
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -116,15 +118,44 @@ func ExpandFeatureDeps(features []string) []string {
 	return out
 }
 
+// Supported derived-app host platforms.
+const (
+	PlatformLinux   = "linux"
+	PlatformWindows = "windows"
+)
+
+// SupportedPlatforms lists the host OSes setup can target.
+var SupportedPlatforms = []string{PlatformLinux, PlatformWindows}
+
 // Options configures the template setup run.
 type Options struct {
 	ConfirmFunc func(msg string) (bool, error)
 	AppName     string
 	ModulePath  string
 	BasePort    string
-	Features    []string
-	Force       bool
-	NoCaddy     bool
+	// Platform is the derived-app host OS ("linux" or "windows"). When empty,
+	// setup.Run autodetects from runtime.GOOS; unsupported hosts (e.g. darwin)
+	// fail with a clear error.
+	Platform string
+	Features []string
+	Force    bool
+	NoCaddy  bool
+}
+
+// resolvePlatform returns the canonical host platform for the requested value,
+// or an error when the host is not supported. Empty input falls back to
+// runtime.GOOS; unsupported values (including any GOOS other than linux/windows)
+// fail with a clear message rather than producing a silently broken scaffold.
+func resolvePlatform(requested string) (string, error) {
+	v := strings.ToLower(strings.TrimSpace(requested))
+	if v == "" {
+		v = runtime.GOOS
+	}
+	switch v {
+	case PlatformLinux, PlatformWindows:
+		return v, nil
+	}
+	return "", fmt.Errorf("unsupported setup platform %q (supported: %s)", v, strings.Join(SupportedPlatforms, ", "))
 }
 
 func binaryNameFromApp(name string) string {
@@ -218,6 +249,11 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		return fmt.Errorf("APP_NAME is required")
 	}
 	binaryName := binaryNameFromApp(opts.AppName)
+
+	platform, err := resolvePlatform(opts.Platform)
+	if err != nil {
+		return err
+	}
 
 	currentModule, err := readModulePath(dir)
 	if err != nil {
@@ -325,6 +361,10 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		if err := os.WriteFile(p, []byte(content), 0644); err != nil {
 			return err
 		}
+	}
+
+	if err := applyPlatformAdjustments(dir, platform); err != nil {
+		return fmt.Errorf("applying platform adjustments: %w", err)
 	}
 
 	// Legacy --no-caddy flag: remove Caddyfile if requested.
@@ -451,7 +491,7 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		content = strings.ReplaceAll(content, "{{FEATURE_TABLE}}", buildFeatureTable(opts.Features))
 		content = strings.ReplaceAll(content, "{{FEATURE_SECTIONS}}", buildFeatureSections(opts.Features))
 		content = strings.ReplaceAll(content, "{{TECH_STACK}}", buildTechStack(opts.Features))
-		content = strings.ReplaceAll(content, "{{QUICK_START}}", buildQuickStart(binaryName, appHTTPPort))
+		content = strings.ReplaceAll(content, "{{QUICK_START}}", buildQuickStart(binaryName, appHTTPPort, platform))
 		content = strings.ReplaceAll(content, "{{ENV_TABLE}}", buildEnvTable(opts.Features, opts.AppName, appHTTPPort))
 		if err := os.WriteFile(filepath.Join(dir, "README.md"), []byte(content), 0644); err != nil {
 			return err
@@ -632,6 +672,9 @@ func removeOptionalContent(dir string, opts Options) error {
 		_ = os.Remove(filepath.Join(dir, "Gemfile"))
 		_ = os.Remove(filepath.Join(dir, ".github", "workflows", "ios.yml"))
 	}
+	if err := prunePackageJSON(filepath.Join(dir, "package.json"), removeTags); err != nil {
+		return fmt.Errorf("pruning package.json: %w", err)
+	}
 	// Alpine.js is always included (implicit feature); no removal needed.
 
 	// Favicon handling: demo uses hot dog, non-demo uses generic defaults.
@@ -707,6 +750,51 @@ func removeOptionalContent(dir string, opts Options) error {
 	}
 
 	return removeEmptyDirs(dir)
+}
+
+func prunePackageJSON(path string, removeTags map[string]bool) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	var pkg map[string]any
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return err
+	}
+
+	if removeTags[FeatureCapacitor] {
+		pruneJSONDeps(pkg, "dependencies", "@capacitor/cli", "@capacitor/core", "@capacitor/ios")
+	}
+
+	out, err := json.MarshalIndent(pkg, "", "  ")
+	if err != nil {
+		return err
+	}
+	out = append(out, '\n')
+	return os.WriteFile(path, out, 0644)
+}
+
+func pruneJSONDeps(pkg map[string]any, key string, names ...string) {
+	raw, ok := pkg[key]
+	if !ok {
+		return
+	}
+	deps, ok := raw.(map[string]any)
+	if !ok {
+		return
+	}
+	for _, name := range names {
+		delete(deps, name)
+	}
+	if len(deps) == 0 {
+		delete(pkg, key)
+		return
+	}
+	pkg[key] = deps
 }
 
 // featureFileTag returns the feature tag if the first non-blank line is
@@ -1032,6 +1120,55 @@ func removeOrphanedImportLines(content, baseDir, modulePath string) string {
 }
 
 // ---------------------------------------------------------------------------
+// Platform-aware artifact adjustments
+// ---------------------------------------------------------------------------
+
+// applyPlatformAdjustments rewrites the static dev-tooling configs that
+// differ between Linux and Windows hosts (Air's server + lint configs).
+// magefile.go uses runtime.GOOS at runtime, so it is unchanged here.
+//
+// Linux is the source-of-truth in the template; only Windows requires
+// rewrites. Unknown platforms are rejected by resolvePlatform before this
+// runs, so no default branch is needed.
+func applyPlatformAdjustments(dir, platform string) error {
+	if platform != PlatformWindows {
+		return nil
+	}
+
+	airServer := filepath.Join(dir, ".air", "server.toml")
+	if data, err := os.ReadFile(airServer); err == nil {
+		content := string(data)
+		// Air invokes `bin` directly after `cmd` succeeds; on Windows the
+		// produced binary needs the `.exe` extension to be exec-able.
+		content = strings.ReplaceAll(content,
+			`bin = "./tmp/main"`,
+			`bin = "./tmp/main.exe"`)
+		if err := os.WriteFile(airServer, []byte(content), 0644); err != nil {
+			return err
+		}
+	}
+
+	airLint := filepath.Join(dir, ".air", "lint.toml")
+	if data, err := os.ReadFile(airLint); err == nil {
+		content := string(data)
+		// `/bin/echo` is the Linux noop placeholder; on Windows use cmd.exe
+		// with `/c exit` so Air has a real binary to exec after `mage lint`
+		// produces output.
+		content = strings.ReplaceAll(content,
+			`bin = "/bin/echo"`,
+			`bin = "cmd"`)
+		content = strings.ReplaceAll(content,
+			`args_bin = []`,
+			`args_bin = ["/c", "exit"]`)
+		if err := os.WriteFile(airLint, []byte(content), 0644); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ---------------------------------------------------------------------------
 // Certificate generation
 // ---------------------------------------------------------------------------
 
@@ -1342,14 +1479,25 @@ func buildTechStack(features []string) string {
 }
 
 // buildQuickStart generates the Quick Start section with binary name and port.
-func buildQuickStart(binaryName, appHTTPPort string) string {
+// Platform shapes the "From Source" invocation so Windows-targeted scaffolds
+// build to a `.exe` and invoke it with the Windows path separator/prefix; the
+// "From Release Binary" block always shows both targets because release
+// downloads exist for both.
+func buildQuickStart(binaryName, appHTTPPort, platform string) string {
 	var sb strings.Builder
 
 	sb.WriteString("### From Source\n\n")
-	sb.WriteString("```bash\n")
-	sb.WriteString("go build -o " + binaryName + " .\n")
-	sb.WriteString("./" + binaryName + "\n")
-	sb.WriteString("```\n\n")
+	if platform == PlatformWindows {
+		sb.WriteString("```powershell\n")
+		sb.WriteString("go build -o " + binaryName + ".exe .\n")
+		sb.WriteString(".\\" + binaryName + ".exe\n")
+		sb.WriteString("```\n\n")
+	} else {
+		sb.WriteString("```bash\n")
+		sb.WriteString("go build -o " + binaryName + " .\n")
+		sb.WriteString("./" + binaryName + "\n")
+		sb.WriteString("```\n\n")
+	}
 
 	sb.WriteString("### From Docker\n\n")
 	sb.WriteString("```bash\n")

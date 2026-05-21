@@ -635,7 +635,7 @@ func hasFeature(features []string, tag string) bool {
 func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPrinted bool, err error) {
 	for _, a := range args {
 		switch a {
-		case "-n", "-m", "-p", "--force", "--no-caddy", "--features", "-h", "--help":
+		case "-n", "-m", "-p", "--force", "--no-caddy", "--features", "--platform", "-h", "--help":
 			hasFlags = true
 			break
 		}
@@ -690,6 +690,13 @@ func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPri
 			break
 		}
 	}
+	// --platform flag (linux|windows; empty = autodetect)
+	for i, a := range args {
+		if a == "--platform" && i+1 < len(args) {
+			opts.Platform = args[i+1]
+			break
+		}
+	}
 	// --no-caddy is a deprecated alias: if features not explicitly set,
 	// apply it by setting features to all-except-caddy
 	if opts.NoCaddy && opts.Features == nil {
@@ -707,7 +714,7 @@ func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPri
 // parseFeatureFlag is defined in magefile.go (survives mage_setup.go removal).
 
 func printSetupUsage() {
-	fmt.Println(`Usage: go tool mage setup [-n APP_NAME] [-m MODULE_PATH] [-p BASE_PORT] [--features FEATURES] [--no-caddy] [--force]
+	fmt.Println(`Usage: go tool mage setup [-n APP_NAME] [-m MODULE_PATH] [-p BASE_PORT] [--features FEATURES] [--no-caddy] [--platform OS] [--force]
 
   -n APP_NAME        Human-readable app name (e.g. "My App"). Required.
   -m MODULE_PATH     Go module path (e.g. "github.com/you/my-app").
@@ -715,6 +722,7 @@ func printSetupUsage() {
   --features LIST    Comma-separated feature tags to keep: auth,graph,avatar,database,sse,caddy,demo,alpine.
                      "all" = keep everything (default), "none" = bare HTMX app.
   --no-caddy         Deprecated. Equivalent to omitting caddy from --features.
+  --platform OS      Target host OS for the derived app's dev tooling: linux or windows. Defaults to the current host's GOOS.
   --force            Allow re-running setup even if module is already customized.`)
 }
 
