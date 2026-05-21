@@ -218,19 +218,14 @@ func main() {
 	// setup:feature:avatar:end
 
 	go func() {
-		if appenv.Dev() {
-			logger.Info("Starting Echo server with TLS (development mode)", "port", cfg.ServerPort)
-			if err := e.StartTLS(fmt.Sprintf(":%s", cfg.ServerPort), "localhost.crt", "localhost.key"); err != nil {
-				if err != http.ErrServerClosed {
-					logger.Fatal("Failed to start Echo server with TLS", "error", err)
-				}
-			}
-		} else {
-			logger.Info("Starting Echo server without TLS (production mode)", "port", cfg.ServerPort)
-			if err := e.Start(fmt.Sprintf(":%s", cfg.ServerPort)); err != nil {
-				if err != http.ErrServerClosed {
-					logger.Fatal("Failed to start Echo server", "error", err)
-				}
+		// Dev: plain HTTP on cfg.ServerPort. `mage watch` puts templ in front
+		// (and optionally Caddy in front of that) — TLS lives in those layers,
+		// not at the Echo origin.
+		// Prod: TLS termination is expected at the reverse proxy.
+		logger.Info("Starting Echo server", "port", cfg.ServerPort, "dev", appenv.Dev())
+		if err := e.Start(fmt.Sprintf(":%s", cfg.ServerPort)); err != nil {
+			if err != http.ErrServerClosed {
+				logger.Fatal("Failed to start Echo server", "error", err)
 			}
 		}
 	}()

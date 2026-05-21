@@ -743,12 +743,12 @@ npm ci
 go tool mage watch
 ```
 
-Harmony starts with TLS on the configured port. Edit `.env.development` to change settings.
+Harmony's Echo origin runs as plain HTTP in development; TLS only appears when the `caddy` feature is enabled and Caddy fronts the templ proxy. Edit `.env.development` to change settings.
 
 Access the application at:
 
-- Direct TLS: `https://localhost:{APP_TLS_PORT}`
-- Via Caddy: `https://localhost:{CADDY_TLS_PORT}`
+- Direct HTTP (Echo origin): `http://localhost:{APP_HTTP_PORT}`
+- Via Caddy (when enabled): `https://localhost:{CADDY_TLS_PORT}`
 
 ### HTTPS Development Setup
 

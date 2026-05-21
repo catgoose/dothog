@@ -17,7 +17,7 @@ go tool mage setup -n "My App" --features none  # bare HTMX app
 ## What Setup Does
 
 1. **Rewrites module path** — replaces `catgoose/dothog` with your module path in all `.go` files and `go.mod`
-2. **Configures ports** — sets `APP_TLS_PORT`, `TEMPL_HTTP_PORT` (base+1), `CADDY_TLS_PORT` (base+2) in `.env.development`, Caddyfile, air config
+2. **Configures ports** — sets `APP_HTTP_PORT`, `TEMPL_HTTP_PORT` (base+1), `CADDY_TLS_PORT` (base+2) in `.env.development`, Caddyfile, air config
 3. **Sets app name** — updates binary name in `magefile.go`, Dockerfile, logger, package.json
 4. **Strips features** — removes code blocks and files for features you didn't select
 5. **Generates README** — from `_template_setup/README.template.md` with your app name and ports
@@ -61,7 +61,7 @@ If `sse` is not selected, everything between `:start` and `:end` (inclusive) is 
 | `mssql` | MSSQL dialect | — | Microsoft SQL Server production dialect |
 | `postgres` | PostgreSQL dialect | — | PostgreSQL production dialect |
 | `sse` | SSE | — | Server-Sent Events (requires caddy selected separately) |
-| `caddy` | Caddy (HTTPS) | — | Caddy reverse proxy with TLS |
+| `caddy` | Caddy HTTPS/H3 front-proxy | — | Optional HTTPS/H3 front-proxy in front of templ. Without it dev runs plain HTTP. |
 | `link_relations` | Link Relations | — | Context bars, breadcrumbs, site map |
 | `web_standards` | Web Standards | — | Server-Timing, Vary, Permissions-Policy, Early Hints |
 | `browser_apis` | Browser APIs | sse | sendBeacon and BroadcastChannel support (auto-includes sse) |

@@ -35,7 +35,7 @@ var featureLabels = map[string]string{
 	setup.FeaturePostgres:        "PostgreSQL dialect",
 	// Real-time
 	setup.FeatureSSE:             "SSE (requires Caddy)",
-	setup.FeatureCaddy:           "Caddy (HTTPS)",
+	setup.FeatureCaddy:           "Caddy HTTPS/H3 front-proxy (adds local TLS)",
 	// Navigation
 	setup.FeatureLinkRelations:   "Link Relations (context bars, breadcrumbs, site map)",
 	// Performance & Security
@@ -160,7 +160,7 @@ func Setup() error {
 		if err := os.MkdirAll(filepath.Dir(absTarget), 0755); err != nil {
 			return err
 		}
-		if err := setup.CopyRepoTo(".", absTarget, []string{".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp"}); err != nil {
+		if err := setup.CopyRepoTo(".", absTarget, []string{".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp", "localhost.crt", "localhost.key"}); err != nil {
 			return fmt.Errorf("copying template: %w", err)
 		}
 		gitInit, _ := huhConfirm("Run git init in the new directory?")
@@ -275,7 +275,7 @@ func runWizard() (*setup.Options, error) {
 			huh.NewInput().
 				Title("Base port").
 				Placeholder("5-digit port < 60000").
-				Description(fmt.Sprintf("APP_TLS_PORT=BASE, TEMPL_HTTP=BASE+1, CADDY_TLS=BASE+2 (default: %s)", defaultPort)).
+				Description(fmt.Sprintf("APP_HTTP=BASE, TEMPL_HTTP=BASE+1, CADDY_TLS=BASE+2 (default: %s)", defaultPort)).
 				Value(&basePort),
 		).Title("App Configuration"),
 	)
@@ -709,7 +709,7 @@ func printSetupUsage() {
 
   -n APP_NAME        Human-readable app name (e.g. "My App"). Required.
   -m MODULE_PATH     Go module path (e.g. "github.com/you/my-app").
-  -p BASE_PORT       5-digit base port < 60000; APP_TLS_PORT=BASE_PORT, TEMPL_HTTP_PORT=BASE_PORT+1, CADDY_TLS_PORT=BASE_PORT+2.
+  -p BASE_PORT       5-digit base port < 60000; APP_HTTP_PORT=BASE_PORT, TEMPL_HTTP_PORT=BASE_PORT+1, CADDY_TLS_PORT=BASE_PORT+2.
   --features LIST    Comma-separated feature tags to keep: auth,graph,avatar,database,sse,caddy,demo,alpine.
                      "all" = keep everything (default), "none" = bare HTMX app.
   --no-caddy         Deprecated. Equivalent to omitting caddy from --features.

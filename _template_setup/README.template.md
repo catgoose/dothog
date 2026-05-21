@@ -75,11 +75,27 @@ go tool mage watch
 
 This starts templ in watch mode, Air for live reload, and Tailwind in watch mode.
 
-Access the application at: `https://localhost:{{APP_TLS_PORT}}`
+The Echo origin serves plain HTTP on `APP_HTTP_PORT={{APP_HTTP_PORT}}`. The templ
+watcher proxies it on `TEMPL_HTTP_PORT={{TEMPL_HTTP_PORT}}` — that is the URL
+`mage watch` opens by default:
 
-### HTTPS Development Setup
+```
+http://localhost:{{TEMPL_HTTP_PORT}}
+```
 
-When Caddy is configured, the app uses self-signed certificates for local HTTPS.
+If the `caddy` feature is enabled, Caddy fronts the templ proxy with HTTPS/H3
+on `CADDY_TLS_PORT={{CADDY_TLS_PORT}}` and `mage watch` opens
+`https://localhost:{{CADDY_TLS_PORT}}` instead. The Echo origin stays HTTP in
+both modes — TLS lives in Caddy, not in the app.
+
+### HTTPS Development Setup (Caddy feature only)
+
+When the `caddy` feature is selected, setup generates `localhost.crt` /
+`localhost.key` (or reuses pre-existing files) for Caddy to terminate TLS.
+Without the `caddy` feature there is no local HTTPS and no certificates are
+generated.
+
+Trust the certificate on your system:
 
 **Linux (Ubuntu/Debian):**
 
