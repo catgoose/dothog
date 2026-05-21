@@ -2,3 +2,5 @@ cover.out
 cover.html
 *.test
 *.exe
+.agents/
+plan.md

@@ -18,6 +18,9 @@
     - [Column Lists](#column-lists)
     - [Seed Data](#seed-data)
     - [Table Dependency Ordering](#table-dependency-ordering)
+    - [Owned Views](#owned-views)
+    - [Owned Procedures (MSSQL)](#owned-procedures-mssql)
+    - [Code-Object Validate and Apply](#code-object-validate-and-apply)
     - [Schema Snapshots](#schema-snapshots)
     - [Live Schema Snapshots](#live-schema-snapshots)
     - [Schema Validation](#schema-validation)
@@ -228,7 +231,7 @@ schema.Col("Code", schema.TypeVarchar(10)).PrimaryKey().NotNull()
 
 ### Foreign Key References
 
-`References` defines a foreign key. Chain `OnDelete` and `OnUpdate` for referential actions:
+`References` defines a foreign key against an unqualified target. Chain `OnDelete` and `OnUpdate` for referential actions:
 
 ```go
 schema.Col("TaskID", schema.TypeInt()).NotNull().
@@ -238,7 +241,28 @@ schema.Col("AssigneeID", schema.TypeInt()).
     References("Users", "ID").OnDelete("SET NULL").OnUpdate("CASCADE")
 ```
 
+For schema-qualified targets use `ReferencesQualified` (or `ReferencesObject` with a `chuck.ObjectName`):
+
+```go
+schema.Col("AgentID", schema.TypeInt()).NotNull().
+    ReferencesQualified("sg", "SalesAgents", "ID")
+```
+
 Supported actions: `CASCADE`, `SET NULL`, `SET DEFAULT`, `RESTRICT`, `NO ACTION`.
+
+### Schema-Qualified Tables
+
+Tables can declare a schema namespace that is preserved through DDL generation, foreign-key metadata, snapshots, validation, diffing, ensure, and live introspection:
+
+```go
+schema.NewTable("SalesAgents").WithSchema("sg")
+// or equivalently:
+schema.NewQualifiedTable("sg", "SalesAgents")
+```
+
+On MSSQL this renders as `[sg].[SalesAgents]`; on Postgres as `"sg"."sales_agents"` (with the usual identifier normalization). Dependency ordering keys on the fully qualified `(schema, name)` pair, so `sg.SalesAgents` and `cl.SalesAgents` are treated as distinct nodes.
+
+**SQLite fallback.** SQLite has no schema namespace, so the schema component is dropped from emitted SQL. When two declared schema-qualified tables would collapse to the same bare SQLite table name (e.g. `sg.SalesAgents` and `cl.SalesAgents`), `Ensure` and `CheckSchemaCompatibility` fail fast with `ErrSQLiteSchemaCollision` rather than silently merging them.
 
 ### CHECK Constraints
 
@@ -378,6 +402,369 @@ for _, t := range dropOrder {
 ```
 
 Self-referential foreign keys (`WithParent()`) are handled gracefully. Circular dependencies return `ErrCyclicDependency`.
+
+#### MSSQL Destructive Bootstrap: Dropping Inbound Foreign Keys
+
+On MSSQL, inline foreign keys declared via `chuck/schema` emit auto-generated constraint names (e.g. `FK__Goals__AgentID__1234ABCD`). `DropOrder` puts tables in the right teardown order, but `DROP TABLE` still fails while an inbound FK pins the table — the constraint must be dropped by name first.
+
+`InboundForeignKeys` queries `sys.foreign_keys` for every FK whose parent or referenced table belongs to the owned set, deriving membership from your declared `*TableDef` slice rather than a handwritten parallel list. `DropInboundForeignKeys` executes the matching `ALTER TABLE ... DROP CONSTRAINT` statements so a destructive rebuild can proceed:
+
+```go
+tables := []*schema.TableDef{UsersTable, TasksTable, CommentsTable}
+
+// Detach auto-named FKs first; on non-MSSQL engines this is a no-op.
+if _, err := schema.DropInboundForeignKeys(ctx, db, dialect, tables...); err != nil {
+    log.Fatal(err)
+}
+
+dropOrder, _ := schema.DropOrder(tables...)
+for _, t := range dropOrder {
+    db.ExecContext(ctx, t.DropSQL(dialect))
+}
+```
+
+For dry-run logging, call `InboundForeignKeys` and feed each entry to `DropForeignKeySQL` to inspect the generated statements without executing them.
+
+### Owned Views
+
+Views live next to owned tables as first-class `ViewDef` values, so schema ownership stays in one package instead of splitting `TableDef` declarations from handwritten `CREATE VIEW` constants. A view carries an optional schema namespace and a SELECT body; the package emits dialect-aware lifecycle SQL through the same identifier-rendering path as `TableDef`.
+
+```go
+var ActiveTasksView = schema.NewView("v_active_tasks",
+    `SELECT "id", "title" FROM "tasks" WHERE "deleted_at" IS NULL`)
+
+// Or schema-qualified, mirroring NewQualifiedTable.
+var PTOUsageView = schema.NewQualifiedView("sg", "v_pto_usage",
+    `SELECT [AgentID], SUM([Hours]) AS [TotalHours] FROM [sg].[PTOEntries] GROUP BY [AgentID]`)
+
+// Create / replace / drop -- rendered per dialect.
+db.Exec(ActiveTasksView.CreateSQL(dialect))
+for _, stmt := range ActiveTasksView.CreateOrReplaceSQL(dialect) {
+    db.Exec(stmt)
+}
+db.Exec(ActiveTasksView.DropSQL(dialect))
+```
+
+Lifecycle SQL is rendered per dialect:
+
+- **Postgres** uses native `CREATE OR REPLACE VIEW ... AS ...` and `DROP VIEW IF EXISTS ...`.
+- **MSSQL** uses `CREATE OR ALTER VIEW ... AS ...` (MSSQL 2016+) and wraps the drop in a `sys.views` existence probe, matching the table-drop pattern.
+- **SQLite** has no `CREATE OR REPLACE` / `CREATE OR ALTER` for views, so `CreateOrReplaceSQL` returns a `DROP VIEW IF EXISTS` followed by `CREATE VIEW` -- run them in order. The schema component is dropped on SQLite because it has no namespace.
+
+The view body is taken verbatim; callers own its inner quoting and any references to owned tables. Ordering between owned views and the tables they read is caller-owned: create views after their tables, drop them before. This keeps the API thin and avoids forcing a generalized scheduler for what is usually a short linear chain on top of owned tables.
+
+### Owned Procedures (MSSQL)
+
+Stored procedures live next to owned tables and views as first-class `ProcedureDef` values, so MSSQL refresh / migration entrypoints stop being raw checked-in `.sql` files outside chuck ownership. Identity mirrors `ViewDef`: an optional schema namespace plus a name, rendered through the same `ObjectName` path so qualified procedures emit `[schema].[name]` consistently with `TableDef` and `ViewDef`.
+
+The definition payload is the full T-SQL text that follows the qualified procedure name: optional parameter declarations, optional `WITH ...` options, the required `AS` keyword, and the body. T-SQL grammar places parameters and options between the name and `AS`, so chuck cannot inject `AS` on the caller's behalf without closing off those slots — the caller owns everything from parameters through `AS` through the body.
+
+```go
+var RefreshDashboardProc = schema.NewQualifiedProcedure("sg",
+    "usp_RefreshDashboard",
+    `@AgentID INT, @AsOf DATETIME2 = NULL
+WITH RECOMPILE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE FROM [sg].[Dashboard] WHERE [AgentID] = @AgentID;
+    INSERT INTO [sg].[Dashboard] ([AgentID], [Total])
+        SELECT [AgentID], SUM([Hours])
+        FROM [sg].[PTOEntries]
+        WHERE [AgentID] = @AgentID AND (@AsOf IS NULL OR [RecordedAt] <= @AsOf)
+        GROUP BY [AgentID];
+END`)
+
+// Apply (idempotent on MSSQL 2016+):
+stmt, err := RefreshDashboardProc.CreateOrAlterSQL(dialect)
+if err != nil { return err }
+if _, err := db.ExecContext(ctx, stmt); err != nil { return err }
+
+// Tear down:
+stmt, err = RefreshDashboardProc.DropSQL(dialect)
+if err != nil { return err }
+if _, err := db.ExecContext(ctx, stmt); err != nil { return err }
+```
+
+For a zero-parameter procedure the definition simply begins with `AS`:
+
+```go
+schema.NewQualifiedProcedure("sg", "usp_Ping",
+    "AS BEGIN SET NOCOUNT ON; SELECT 1 AS Probe; END")
+```
+
+Lifecycle rules:
+
+- **MSSQL** uses `CREATE OR ALTER PROCEDURE [schema].[name] <definition>` (MSSQL 2016+) for the apply path and wraps the drop in a `sys.procedures` existence probe so callers can run it unconditionally during teardown.
+- **Postgres / SQLite** are explicitly unsupported in this first pass — the lifecycle methods return `schema.ErrProcedureDialectUnsupported` instead of silently no-op'ing. Use `errors.Is(err, schema.ErrProcedureDialectUnsupported)` to branch your bootstrap when the same code path runs against a non-MSSQL engine.
+
+The definition is taken verbatim. Callers own all inner identifier quoting, parameter declarations, procedure options, the `AS` keyword itself, and the body; chuck contributes only the `CREATE OR ALTER PROCEDURE <qualified-name>` preamble. Ordering between procedures and the tables / views they read is caller-owned: create procedures after their dependencies, drop them before. SQL Agent jobs and `msdb`-level admin objects are intentionally out of scope for this primitive.
+
+### Code-Object Validate and Apply
+
+Tables stay on the strict `Ensure(...)` / `DiffSchema(...)` / `ValidateSchema(...)` covenant — relational data must never be auto-migrated, and drift in a table is always an error to escalate. Views and procedures are different: their bodies are code, callers usually want them to track the declaration the same way application code tracks `main.go`, and the safe answer is an idempotent re-apply. Chuck exposes explicit verb helpers so bootstrap code can pick the behavior intentionally rather than receiving it as a side effect of `Ensure`:
+
+```go
+// Views (all dialects):
+schema.ApplyView(ctx, db, dialect, RefreshDashboardView)
+schema.ApplyViews(ctx, db, dialect, v1, v2, v3) // caller-ordered, dependency-aware
+schema.ValidateView(ctx, db, dialect, RefreshDashboardView)
+schema.ValidateViews(ctx, db, dialect, v1, v2, v3)
+
+// Procedures (MSSQL only):
+schema.ApplyProcedure(ctx, db, dialect, RefreshDashboardProc)
+schema.ApplyProcedures(ctx, db, dialect, p1, p2)
+schema.ValidateProcedure(ctx, db, dialect, RefreshDashboardProc)
+schema.ValidateProcedures(ctx, db, dialect, p1, p2)
+```
+
+`Apply*` is one-way: declared definition overwrites the live object. It is idempotent on Postgres / MSSQL (`CREATE OR REPLACE` / `CREATE OR ALTER`) and effectively idempotent on SQLite (`DROP IF EXISTS` + `CREATE`). `Apply*` does no pre-flight drift check — callers that want validate-then-apply semantics call `Validate*` first and apply only when drift is reported.
+
+`Validate*` confirms the object exists and, where the engine stores definitions verbatim, also confirms the body / definition text matches the declaration after canonical normalization (whitespace collapse, trailing-semicolon strip, CREATE-preamble strip):
+
+| Object     | Engine   | Existence | Body / definition comparison                                                                        |
+| ---------- | -------- | --------- | --------------------------------------------------------------------------------------------------- |
+| View       | SQLite   | yes       | yes (`sqlite_master.sql` stored verbatim)                                                           |
+| View       | MSSQL    | yes       | yes (`sys.sql_modules.definition` stored verbatim)                                                  |
+| View       | Postgres | yes       | **fails loud** — returns `ErrViewBodyComparisonUnsupported`; `pg_get_viewdef` canonicalizes too aggressively to support honest text comparison |
+| Procedure  | MSSQL    | yes       | yes (`sys.sql_modules.definition` stored verbatim)                                                  |
+| Procedure  | other    | n/a       | returns `schema.ErrProcedureDialectUnsupported`                                                     |
+
+Postgres view-body comparison is intentionally not attempted: `pg_get_viewdef` expands `SELECT *` into explicit column lists, fully qualifies references, and inserts casts, so a textual compare against the declared body produces false drift on legitimate-looking declarations. Rather than silently returning success on existence, `ValidateView` on Postgres fails loud with a `*schema.ViewDriftError` whose single entry has `BodyComparisonSkipped=true` and unwraps to `schema.ErrViewBodyComparisonUnsupported`. Callers that want existence-only semantics on Postgres can opt in explicitly:
+
+```go
+if err := schema.ValidateView(ctx, db, dialect, viewDef); err != nil {
+    if errors.Is(err, schema.ErrViewBodyComparisonUnsupported) {
+        // Postgres: view exists, body compare unavailable — treat as success.
+    } else {
+        return err // ErrViewMissing or infra failure: still hard fail.
+    }
+}
+```
+
+Callers that need a stricter body assertion can fetch the live body via `schema.LiveViewBody(ctx, db, dialect, viewDef)` and run their own comparison against a canonicalized form they trust.
+
+Drift surfaces as a structured error:
+
+```go
+err := schema.ValidateViews(ctx, db, dialect, v1, v2, v3)
+if err != nil {
+    var drift *schema.ViewDriftError
+    if errors.As(err, &drift) {
+        for _, d := range drift.Drifts {
+            // d.Object, d.Missing, d.BodyMismatch, d.BodyComparisonSkipped,
+            // d.DeclaredBody, d.LiveBody, d.Reason
+        }
+    }
+    // For single-cause results, the error also unwraps to a sentinel:
+    if errors.Is(err, schema.ErrViewMissing)  { /* none of the views exist */ }
+    if errors.Is(err, schema.ErrViewBodyDrift) { /* every drifted view is a body mismatch */ }
+    if errors.Is(err, schema.ErrViewBodyComparisonUnsupported) {
+        // Every drift was a body-compare-skip (Postgres). Existence confirmed
+        // for all — callers that want existence-only semantics treat this as
+        // success.
+    }
+}
+```
+
+`schema.ProcedureDriftError` has the same shape with sentinels `schema.ErrProcedureMissing` and `schema.ErrProcedureDefinitionDrift`. Mixed-cause aggregate results (some missing + some drifted) intentionally do not unwrap to either sentinel, so callers can't branch on a single cause when the real failure mode is heterogeneous.
+
+The intended ordering in bootstrap code stays caller-owned:
+
+```go
+// Tables strict — drift always fails, never auto-applies.
+if _, err := schema.Ensure(ctx, db, dialect, tables); err != nil { return err }
+
+// Views second — apply unconditionally, or validate-then-apply.
+if err := schema.ApplyViews(ctx, db, dialect, views...); err != nil { return err }
+
+// Procedures last — MSSQL only; non-MSSQL deployments skip this branch.
+if dialect.Engine() == chuck.MSSQL {
+    if err := schema.ApplyProcedures(ctx, db, dialect, procs...); err != nil { return err }
+}
+```
+
+Chuck does not provide a generalized object-graph scheduler that hides this ordering, because the dependency chain on top of an owned table set is almost always short and linear and a scheduler abstraction would obscure more than it would help. Pick the order in code; the helpers preserve it.
+
+#### Opt-in ownership notice (apply-owned decoration)
+
+Owned views and procedures can carry an embedded "owned by https://github.com/catgoose/chuck" notice so DB-side readers (an operator inspecting `sqlite_master.sql` or `sys.sql_modules.definition`) can tell the object is code-owned and find the project directly. The notice is **opt-in** and **apply-owned**: configured once in a `schema.CodeObjectOptions` struct and injected into the live SQL only by the `Apply*WithOptions` helpers. The matching `Validate*WithOptions` helpers strip the configured prefix from the live text before comparison and tolerate its absence, so validate-only callers can pass options without forcing markers to exist in the database.
+
+```go
+opts := schema.CodeObjectOptions{
+    OwnershipNotice: schema.DefaultOwnershipNotice,
+    DocPreamble:     "Generated by bootstrap. See docs/schema.md for runbook.",
+}
+
+if err := schema.ApplyViewsWithOptions(ctx, db, dialect, opts, views...); err != nil {
+    return err
+}
+if err := schema.ValidateViewsWithOptions(ctx, db, dialect, opts, views...); err != nil {
+    return err
+}
+
+if dialect.Engine() == chuck.MSSQL {
+    if err := schema.ApplyProceduresWithOptions(ctx, db, dialect, opts, procs...); err != nil {
+        return err
+    }
+    if err := schema.ValidateProceduresWithOptions(ctx, db, dialect, opts, procs...); err != nil {
+        return err
+    }
+}
+```
+
+`CodeObjectOptions` has two comment lanes, both apply-owned:
+
+- **`OwnershipNotice`** — apply-owned marker. `schema.DefaultOwnershipNotice` is intentionally soft (it says out-of-band changes "may" fail validation or be overwritten) because the `Validate*` / `Apply*` lanes are explicit and Postgres view validation is existence-only. Callers can supply any string.
+- **`DocPreamble`** — optional caller-controlled doc comment. Intended for purpose / contact / runbook links. **Not** treated as proof of ownership; it is metadata only.
+
+A third lane lives on the object itself:
+
+- **`ViewDef.WithDocAnnotation(text)` / `ProcedureDef.WithDocAnnotation(text)`** — per-object doc comment carried by the declaration. Unlike `DocPreamble` (which is shared across many objects and caller-controlled), the annotation hangs directly off the owned object and renders into the live SQL. Validation ignores leading comment-only front matter, so changing the text in code does **not** by itself produce drift.
+
+```go
+v := schema.NewView("v_open_tasks",
+    "SELECT id FROM tasks WHERE done = 0").
+    WithDocAnnotation("v_open_tasks v1: returns currently-open task ids")
+```
+
+When all three are set the rendered order is **`OwnershipNotice`, then `DocPreamble`, then per-object annotation**, then the payload. The chuck-owned marker sits at the top so DB readers see it first; the per-object annotation sits closest to the SQL body so it reads like a docstring on the object. Each non-empty segment becomes its own `/* ... */` SQL block comment, with a blank line between comment blocks, and the payload starts on the next line after the final block. `Validate*WithOptions` strips configured front matter and then ignores any remaining leading block comments on both sides before comparing the executable statement body/definition, so comment-only changes do not report drift.
+
+Apply-owned tolerance, summarized:
+
+| Live body shape | `ValidateView` (bare) | `ValidateViewWithOptions(opts)` |
+| --- | --- | --- |
+| Raw declared body (no comment) | pass | pass |
+| Raw declared body + configured prefix (preamble + notice) | drift | pass |
+| Raw declared body + a different leading comment | pass | pass |
+| Raw declared body + stale configured prefix that no longer matches `opts` | drift | drift |
+
+Per-object annotation behavior (`WithDocAnnotation`):
+
+| Declared annotation vs. live annotation | `ValidateViewWithOptions(opts)` |
+| --- | --- |
+| Same text in code and live SQL | pass |
+| Annotation changed in code (live still has prior text) | pass |
+| Annotation added in code (live has no annotation) | pass |
+| Annotation removed in code (live still carries old annotation) | pass |
+
+Bare `ApplyView` / `ValidateView` / `ApplyProcedure` / `ValidateProcedure` are unchanged: they neither inject nor tolerate markers.
+
+#### Renaming or retiring an owned view or procedure
+
+Use **`WithReplaces(names ...chuck.ObjectName)`** on `ViewDef` or `ProcedureDef` to declare prior names that the apply path should drop and the validate path should flag as stale if they still exist. Same-type only: views replace views, procedures replace procedures. No schema-wide pruning, no automatic name inference.
+
+```go
+v := schema.NewView("v_open_tasks",
+    "SELECT id FROM tasks WHERE done = 0").
+    WithReplaces(
+        chuck.ObjectName{Name: "v_open_tasks_v1"},
+        chuck.ObjectName{Schema: "legacy", Name: "v_OpenTasks"},
+    )
+
+if err := schema.ApplyViewsWithOptions(ctx, db, dialect, opts, v); err != nil {
+    return err
+}
+if err := schema.ValidateViewsWithOptions(ctx, db, dialect, opts, v); err != nil {
+    return err // on SQLite/MSSQL, unwraps to schema.ErrViewReplacementStillExists when stale replacement is sole drift cause
+}
+```
+
+Apply semantics: each listed name is dropped with the same dialect-aware `DROP IF EXISTS` pattern as a regular owned-object drop, then the current view (or procedure) is created. Validate semantics: each listed name is queried in the live database; any name still present surfaces as a `ViewDrift` / `ProcedureDrift` entry with `ReplacementStale=true` and the aggregated error unwraps to `schema.ErrViewReplacementStillExists` / `schema.ErrProcedureReplacementStillExists` when stale replacements are the only drift cause.
+
+Batch helpers (`ApplyViewsWithOptions`, `ValidateViewsWithOptions`, and the procedure analogues) dedupe duplicate names across defs by structured `ObjectName` (schema + name match exactly), so the same prior name is only dropped or checked once even when multiple defs name it.
+
+Engine notes:
+
+- **SQLite** stores the view text verbatim in `sqlite_master.sql`, so both comments are fully visible there.
+- **MSSQL** stores both view and procedure text verbatim in `sys.sql_modules.definition`.
+- **Postgres** `pg_get_viewdef` reconstructs the SELECT from the parse tree and discards comments, so the notice will be present in the `CREATE OR REPLACE VIEW` statement chuck issues but will not be visible when an operator reads `pg_get_viewdef` output. This does not produce false drift because Postgres view validation is existence-only (`ErrViewBodyComparisonUnsupported`).
+
+#### Opt-in snapshot operational metadata
+
+For provenance — when an owned object was first applied, last applied, last
+changed, what the current definition hashes to, and which source rev/tool
+version applied it — chuck can record one row per owned object in a small
+snapshot ledger alongside your data. The ledger is **opt-in** and **snapshot
+only**: one current row per owned object, no append-only history table in
+this first pass.
+
+```go
+cfg := schema.MetadataConfig{
+    Owner:       "bootstrap",                         // required
+    Schema:      "ops",                               // optional; ignored on SQLite
+    SourceRepo:  "https://github.com/example/repo",   // optional provenance
+    SourceRev:   commitSHA,                           // optional provenance
+    ToolVersion: "v1.4.2",                            // optional provenance
+}
+
+// Create the ledger tables once, in your own bootstrap. Chuck does NOT
+// implicitly CREATE SCHEMA for you when cfg.Schema is set.
+if err := schema.EnsureMetadataTables(ctx, db, dialect, cfg); err != nil {
+    return err
+}
+
+// Wire the ledger config into your existing CodeObjectOptions. Apply* writes
+// a row after each successful apply when Metadata is non-nil; bare apply and
+// the Validate* lane both ignore Metadata.
+opts := schema.CodeObjectOptions{
+    OwnershipNotice: schema.DefaultOwnershipNotice,
+    DocPreamble:     "bootstrap: applied by example/repo",
+    Metadata:        &cfg,
+}
+if err := schema.ApplyViewsWithOptions(ctx, db, dialect, opts, views...); err != nil {
+    return err
+}
+```
+
+Two tables are written:
+
+- **`chuck_database_metadata`** — one row per `Owner`, tracking when that
+  owner first applied anything and when it last applied anything.
+- **`chuck_object_metadata`** — one row per `(owner, object_type,
+  object_schema, object_name)` with `first_applied_at_utc`,
+  `last_applied_at_utc`, `last_changed_at_utc`, `definition_hash`, and the
+  optional `source_repo` / `source_rev` / `tool_version` provenance columns.
+
+Snapshot semantics on each successful apply:
+
+- **New row**: `first_applied = last_applied = last_changed = now`.
+- **Same hash as last apply**: only `last_applied` advances. `last_changed`
+  and `first_applied` stay frozen.
+- **Different hash**: `last_applied` and `last_changed` advance,
+  `definition_hash` is replaced, `first_applied` stays frozen.
+
+The hash is computed over the canonical form of the rendered body or
+definition — leading block-comment front matter (ownership notice, doc
+preamble, per-object annotation) is stripped before hashing. Comment-only
+changes therefore do not move `last_changed`, matching the comment-insensitive
+validation contract.
+
+The ledger is independent of drift detection: `Validate*WithOptions` does not
+read the ledger and does not produce drift over missing or stale ledger
+rows. Empty provenance fields are stored as SQL `NULL` so the ledger can
+distinguish "not recorded" from "recorded as empty string".
+
+When `OwnershipNotice` and `Metadata` are both set, the rendered chuck-owned
+ownership comment carries an extra single-line pointer to the ledger so DB
+readers inspecting the live view or procedure can jump straight to the row
+that records its provenance:
+
+```sql
+CREATE VIEW "v_open_tasks" AS
+/* Owned by https://github.com/catgoose/chuck. Do not edit in database.
+Out-of-band changes may fail validation or be overwritten by apply/bootstrap.
+Provenance recorded in "ops"."chuck_object_metadata". */
+SELECT id FROM tasks WHERE done = 0
+```
+
+The pointer uses the dialect-quoted, schema-qualified form of
+`chuck_object_metadata` (bare on SQLite; bracketed on MSSQL; double-quoted
+on Postgres). It is only added when an ownership notice is already
+rendering — `Metadata` alone never invents a fresh ownership block — and is
+omitted when `Metadata` is `nil`, so the pointer text stays honest about
+whether the ledger is actually enabled. Comment-only changes do not move
+`last_changed` and do not produce drift.
 
 ### Schema Snapshots
 
@@ -758,7 +1145,7 @@ Before chuck: hand-roll WHERE clauses, duplicate column lists, maintain separate
 
 After chuck: `dbrepo.NewWhere().NotDeleted().HasStatus("active")`.
 
-The `dbrepo` package provides composable helpers that keep SQL visible. Functions use `@Name` placeholders with `sql.Named()` for dialect-agnostic parameter binding.
+The `dbrepo` package provides composable helpers that keep SQL visible. By default, the named fragment helpers (`SetClause`, `Placeholders`, `InsertInto`, `UpsertInto`, etc.) and `UpdateBuilder` emit `@Name` placeholders paired with `sql.Named()`. This works directly against `database/sql` drivers that translate `sql.NamedArg` into native parameter syntax (e.g. `mattn/go-sqlite3`, `microsoft/go-mssqldb`, `jackc/pgx`), but it is **not** universally driver-agnostic: `lib/pq` and `sqlx.Rebind` do not understand `@Name` tokens, so callers on that stack must use the positional-bind escape hatches (`BulkInsertInto`, `UpdateBuilder.SetValues` -- see [UpdateBuilder](#updatebuilder)).
 
 ### Building Queries
 
@@ -778,6 +1165,23 @@ dbrepo.ColumnsQ(d, "ID", "Name")                // `"id", "name"` (Postgres, nor
 dbrepo.SetClauseQ(d, "Name", "Email")           // `"name" = @Name, "email" = @Email`
 dbrepo.InsertIntoQ(d, "Users", "Name", "Email") // `INSERT INTO "users" ("name", "email") VALUES (@Name, @Email)`
 ```
+
+Schema-qualified table names (`schema.table`) are rendered with each part quoted separately. SQLite drops the schema component because it has no schema namespace:
+
+```go
+dbrepo.InsertIntoQ(mssql, "sg.SalesAgents", "Name")
+// INSERT INTO [sg].[SalesAgents] ([Name]) VALUES (@Name)
+
+dbrepo.NewSelect("sg.SalesAgents", "ID", "Name").WithDialect(pg).Build()
+// SELECT ID, Name FROM "sg"."sales_agents"
+
+dbrepo.NewSelect("Tasks", "Tasks.ID").
+    Join("sg.SalesAgents sa", "sa.ID = Tasks.AgentID").
+    WithDialect(mssql).Build()
+// SELECT [Tasks].[ID] FROM [Tasks] JOIN [sg].[SalesAgents] sa ON sa.ID = Tasks.AgentID
+```
+
+`SelectBuilder` column lists also accept three-part `schema.table.column` references; bare names and expressions (anything with whitespace or parentheses) pass through unquoted.
 
 Convert a map to deterministic named args for use with `db.ExecContext`:
 
@@ -942,6 +1346,30 @@ query, args := ub.Build()
 Chain `.Returning("id")` for Postgres/SQLite RETURNING clause support (no-op on MSSQL).
 
 WhereBuilder's semantic filters are most valuable here -- accidentally updating soft-deleted rows is a real bug that `.NotDeleted()` prevents.
+
+#### Positional bind opt-out (`SetValues`)
+
+The default `@Name` SET clause is opaque to `lib/pq` and to `sqlx.Rebind` (issue [#71](https://github.com/catgoose/chuck/issues/71)). Call `.SetValues(...)` to opt the SET clause out of `@Name` placeholders and into positional `?` placeholders that survive `sqlx.Rebind`:
+
+```go
+query, args := dbrepo.NewUpdate("accounts", "last_digest_sent_at").
+    WithDialect(pgDialect).
+    SetValues(time.Now()).
+    Where(dbrepo.NewWhere().And("id = ?", accountID)).
+    Build()
+// query: UPDATE "accounts" SET "last_digest_sent_at" = ? WHERE id = ?
+// args:  [time.Now(), accountID]
+
+// Feed it through sqlx.Rebind for lib/pq:
+result, err := db.ExecContext(ctx, sqlx.Rebind(sqlx.DOLLAR, query), args...)
+```
+
+Contract:
+
+- SET values are supplied in column-declaration order (the order passed to `NewUpdate`); `Build` panics if the count does not match the column count.
+- Returned args slice is `<SET values...> <WHERE args...>`. WHERE conditions are caller-supplied -- use `?` placeholders inside `NewWhere().And(...)` fragments so `sqlx.Rebind` rewrites SET and WHERE together.
+- Dialect identifier quoting (`WithDialect`) still applies to column identifiers; only the placeholder shape changes.
+- The default named-placeholder path is unchanged when `SetValues` is not called.
 
 ### DeleteBuilder
 
