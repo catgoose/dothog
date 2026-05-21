@@ -859,7 +859,7 @@ func FixFieldAlignment() error {
 func LintWatch() error {
 	fmt.Println("Starting Air lint watch mode...")
 	fmt.Println("Press Ctrl+C to stop")
-	return sh.Run("air", "-c", ".air/lint.toml")
+	return sh.Run("go", "tool", "air", "-c", ".air/lint.toml")
 }
 
 // Test runs all tests

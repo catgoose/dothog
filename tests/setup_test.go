@@ -936,6 +936,8 @@ func TestSetup_PlatformWindowsRewritesAir(t *testing.T) {
 	require.Contains(t, lint, `bin = "cmd"`)
 	require.Contains(t, lint, `args_bin = ["/c", "exit"]`)
 	require.NotContains(t, lint, `/bin/echo`)
+	require.Contains(t, lint, `cmd = "go tool mage lint"`,
+		"lint cmd must invoke mage via go tool so generated apps don't need a global mage on PATH")
 
 	// README QuickStart should show the Windows From Source form.
 	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
@@ -975,6 +977,8 @@ func TestSetup_PlatformLinuxLeavesAirAsLinux(t *testing.T) {
 	lint := string(lintBytes)
 	require.Contains(t, lint, `bin = "/bin/echo"`)
 	require.NotContains(t, lint, `bin = "cmd"`)
+	require.Contains(t, lint, `cmd = "go tool mage lint"`,
+		"lint cmd must invoke mage via go tool so generated apps don't need a global mage on PATH")
 
 	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
 	require.NoError(t, err)
