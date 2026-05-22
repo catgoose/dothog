@@ -8,22 +8,22 @@ import (
 	"encoding/hex"
 )
 
-// RequestIDKey is a custom type for context keys to avoid collisions
+// RequestIDKey is the context-key type for request IDs (typed to avoid collisions).
 type RequestIDKey struct{}
 
-// RequestIDKeyValue is the exported value used as a key for storing request IDs in context.Context
+// RequestIDKeyValue is the singleton key value for RequestIDKey.
 var RequestIDKeyValue = RequestIDKey{}
 
-// ContextIDKey is a custom type for context keys to avoid collisions
+// ContextIDKey is the context-key type for context IDs (typed to avoid collisions).
 type ContextIDKey struct{}
 
-// ContextIDKeyValue is the exported value used as a key for storing context IDs in context.Context
+// ContextIDKeyValue is the singleton key value for ContextIDKey.
 var ContextIDKeyValue = ContextIDKey{}
 
-// ContextDescriptionKey is a custom type for context keys to avoid collisions
+// ContextDescriptionKey is the context-key type for context descriptions (typed to avoid collisions).
 type ContextDescriptionKey struct{}
 
-// ContextDescriptionKeyValue is the exported value used as a key for storing context descriptions in context.Context
+// ContextDescriptionKeyValue is the singleton key value for ContextDescriptionKey.
 var ContextDescriptionKeyValue = ContextDescriptionKey{}
 
 // RuntimeID is a unique identifier set once at application startup.
@@ -34,7 +34,7 @@ func init() {
 	RuntimeID = GenerateContextID()
 }
 
-// GenerateContextID generates a unique context ID for worker execution tracing
+// GenerateContextID is a hex-encoded 16-byte random ID; empty string if crypto/rand fails.
 func GenerateContextID() string {
 	bytes := make([]byte, 16)
 	if _, err := rand.Read(bytes); err != nil {
@@ -43,17 +43,20 @@ func GenerateContextID() string {
 	return hex.EncodeToString(bytes)
 }
 
-// WithContextID adds a context_id to the context
+// WithContextID stores contextID on ctx under ContextIDKeyValue so downstream
+// loggers can include it in structured fields.
 func WithContextID(ctx context.Context, contextID string) context.Context {
 	return context.WithValue(ctx, ContextIDKeyValue, contextID)
 }
 
-// WithContextDescription adds a context_description to the context
+// WithContextDescription stores a human-readable label on ctx under
+// ContextDescriptionKeyValue for diagnostic logging.
 func WithContextDescription(ctx context.Context, description string) context.Context {
 	return context.WithValue(ctx, ContextDescriptionKeyValue, description)
 }
 
-// WithContextIDAndDescription adds both context_id and context_description to the context
+// WithContextIDAndDescription is the combined-write helper; later
+// retrieval still goes through the individual key lookups.
 func WithContextIDAndDescription(ctx context.Context, contextID string, description string) context.Context {
 	ctx = WithContextID(ctx, contextID)
 	ctx = WithContextDescription(ctx, description)

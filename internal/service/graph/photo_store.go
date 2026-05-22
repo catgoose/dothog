@@ -16,8 +16,7 @@ type PhotoStore struct {
 	dir string
 }
 
-// NewPhotoStore creates a PhotoStore rooted at dir, creating the directory
-// if it does not exist.
+// NewPhotoStore is rooted at dir, MkdirAll'd on construction.
 func NewPhotoStore(dir string) (*PhotoStore, error) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, fmt.Errorf("create photo dir: %w", err)
@@ -59,12 +58,12 @@ func (ps *PhotoStore) HasPhoto(azureID string) bool {
 	return err == nil
 }
 
-// Open returns a ReadCloser for the cached photo. The caller must close it.
+// Open hands back the cached photo; the caller must Close it.
 func (ps *PhotoStore) Open(azureID string) (io.ReadCloser, error) {
 	return os.Open(ps.PhotoPath(azureID))
 }
 
-// PhotoPath returns the filesystem path for a given Azure ID's photo.
+// PhotoPath is dir/AB/azureID.jpg, where AB is the first two characters of azureID.
 func (ps *PhotoStore) PhotoPath(azureID string) string {
 	prefix := azureID
 	if len(prefix) > 2 {

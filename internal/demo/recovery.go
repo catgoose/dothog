@@ -26,32 +26,31 @@ type RecoveryLab struct {
 	mu            sync.RWMutex
 }
 
-// NewRecoveryLab returns a new RecoveryLab seeded with a starting snapshot.
+// NewRecoveryLab pre-seeds the snapshot with "initial value" and both counters at 0.
 func NewRecoveryLab() *RecoveryLab {
 	return &RecoveryLab{snapshotValue: "initial value"}
 }
 
-// NextReplayEvent returns a fresh sequence number and ID for the replay
-// region. The ID is intended to be passed to PublishWithID so the broker's
-// replay cache picks it up.
+// NextReplayEvent emits a fresh "rep-N" ID plus seq for PublishWithID, so
+// the broker's replay cache picks the event up.
 func (rl *RecoveryLab) NextReplayEvent() (id string, seq int64, ts time.Time) {
 	n := rl.replaySeq.Add(1)
 	return formatRecoveryID("rep", n), n, time.Now()
 }
 
-// NextLiveEvent returns a sequence number for the live-only region.
+// NextLiveEvent advances the live-only counter; no replay ID is emitted.
 func (rl *RecoveryLab) NextLiveEvent() (seq int64, ts time.Time) {
 	return rl.liveSeq.Add(1), time.Now()
 }
 
-// SetSnapshot updates the in-place snapshot value.
+// SetSnapshot replaces the current snapshot value broadcast to new subscribers on connect.
 func (rl *RecoveryLab) SetSnapshot(v string) {
 	rl.mu.Lock()
 	rl.snapshotValue = v
 	rl.mu.Unlock()
 }
 
-// Snapshot returns the current snapshot value.
+// Snapshot is safe for concurrent reads alongside SetSnapshot writers.
 func (rl *RecoveryLab) Snapshot() string {
 	rl.mu.RLock()
 	defer rl.mu.RUnlock()

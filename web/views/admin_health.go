@@ -18,7 +18,6 @@ func dbBadgeClass(status string) string {
 	return "badge-error"
 }
 
-// intervalOr returns the interval from the map, or fallback if missing.
 func intervalOr(m map[string]int, key string, fallback int) int {
 	if v, ok := m[key]; ok {
 		return v

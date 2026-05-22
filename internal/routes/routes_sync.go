@@ -70,11 +70,10 @@ func (ar *appRoutes) handleSync(c echo.Context) error {
 	})
 }
 
-// processSyncOperation handles a single queued operation.
-// It checks row versions against the database to detect conflicts:
+// processSyncOperation routes a single queued op through version-conflict detection:
 //   - Creates (no version) are accepted unconditionally
 //   - Unknown resource URLs are accepted without version check
-//   - Known resources are checked against the current database version
+//   - Known resources are validated against the current database version
 //   - Version match → applied; mismatch → conflict; row gone → rejected
 func (ar *appRoutes) processSyncOperation(c echo.Context, index int, op SyncOperation) SyncResult {
 	// Creates (no version) are accepted without version check

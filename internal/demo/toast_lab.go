@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// ToastSeverity is the visual severity of a toast event.
+// ToastSeverity is the visual severity tier used by templates and the severity-mix simulator.
 type ToastSeverity string
 
 // Toast severity levels.
@@ -20,7 +20,7 @@ const (
 	ToastError   ToastSeverity = "error"
 )
 
-// AllToastSeverities lists the available severities in display order.
+// AllToastSeverities is the canonical severity list in display order.
 var AllToastSeverities = []ToastSeverity{ToastSuccess, ToastInfo, ToastWarning, ToastError}
 
 // ToastSeverityMix names a preset distribution of severities.
@@ -47,17 +47,17 @@ type ToastEvent struct {
 	Sticky     bool          `json:"sticky"`
 }
 
-// ToastLabSettings holds operator-controlled simulation parameters.
+// ToastLabSettings holds tunable knobs for the toast simulator; numeric ranges are documented per field.
 type ToastLabSettings struct {
-	SeverityMix    ToastSeverityMix // severity distribution
-	RateMS         int              // ms between ticks (100–5000)
-	DismissDurMS   int              // auto-dismiss ms (1000–30000)
-	StackSize      int              // max visible toasts (3–20)
-	BurstSize      int              // toasts per burst (1–10)
-	ReplayRecent   bool             // replay recent toasts on reconnect
+	SeverityMix  ToastSeverityMix // severity distribution
+	RateMS       int              // ms between ticks (100–5000)
+	DismissDurMS int              // auto-dismiss ms (1000–30000)
+	StackSize    int              // max visible toasts (3–20)
+	BurstSize    int              // toasts per burst (1–10)
+	ReplayRecent bool             // replay recent toasts on reconnect
 }
 
-// ToastLabStats tracks aggregate counters.
+// ToastLabStats counts lifecycle outcomes for the toast simulator; values are cumulative until ResetStats.
 type ToastLabStats struct {
 	Published int64
 	Displayed int64
@@ -72,7 +72,7 @@ type ToastLabLogEntry struct {
 	Action    string
 }
 
-// ToastLab wraps the shared state for the toast lab demo.
+// ToastLab owns the simulator's settings, stats, and capped event/lifecycle logs (50 entries each).
 type ToastLab struct {
 	eventLog []ToastEvent
 	lifeLog  []ToastLabLogEntry
@@ -83,7 +83,7 @@ type ToastLab struct {
 	paused   bool
 }
 
-// NewToastLab creates a lab with default settings.
+// NewToastLab opens with the balanced severity mix, 2s ticks, and a stack cap of 8.
 func NewToastLab() *ToastLab {
 	return &ToastLab{
 		settings: ToastLabSettings{
@@ -97,7 +97,7 @@ func NewToastLab() *ToastLab {
 	}
 }
 
-// Settings returns a snapshot of current settings.
+// Settings is a value snapshot under read lock.
 func (l *ToastLab) Settings() ToastLabSettings {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -111,49 +111,49 @@ func (l *ToastLab) UpdateSettings(fn func(s *ToastLabSettings)) {
 	fn(&l.settings)
 }
 
-// Stats returns a snapshot of counters.
+// Stats is a value snapshot of cumulative counters under read lock.
 func (l *ToastLab) Stats() ToastLabStats {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return l.stats
 }
 
-// IncrDisplayed increments the displayed counter.
+// IncrDisplayed bumps the displayed-toast counter (called from the client lifecycle callback).
 func (l *ToastLab) IncrDisplayed() {
 	l.mu.Lock()
 	l.stats.Displayed++
 	l.mu.Unlock()
 }
 
-// IncrDismissed increments the dismissed counter.
+// IncrDismissed bumps the dismissed-toast counter (manual or auto-dismiss).
 func (l *ToastLab) IncrDismissed() {
 	l.mu.Lock()
 	l.stats.Dismissed++
 	l.mu.Unlock()
 }
 
-// IncrDropped increments the dropped counter.
+// IncrDropped bumps the dropped-toast counter (stack-full evictions).
 func (l *ToastLab) IncrDropped() {
 	l.mu.Lock()
 	l.stats.Dropped++
 	l.mu.Unlock()
 }
 
-// IncrReplayed increments the replayed counter.
+// IncrReplayed bumps the replayed-toast counter (toasts re-emitted on reconnect).
 func (l *ToastLab) IncrReplayed() {
 	l.mu.Lock()
 	l.stats.Replayed++
 	l.mu.Unlock()
 }
 
-// Paused returns whether the simulator is paused.
+// Paused reports whether SimTick should be skipped this round.
 func (l *ToastLab) Paused() bool {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return l.paused
 }
 
-// TogglePause flips pause state and returns the new value.
+// TogglePause flips the pause flag and returns the new value.
 func (l *ToastLab) TogglePause() bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -281,7 +281,7 @@ func (l *ToastLab) RecordLifecycle(action string) {
 	}
 }
 
-// LifecycleLog returns the recent lifecycle log.
+// LifecycleLog is a defensive copy of the rolling 50-entry lifecycle log.
 func (l *ToastLab) LifecycleLog() []ToastLabLogEntry {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -290,7 +290,7 @@ func (l *ToastLab) LifecycleLog() []ToastLabLogEntry {
 	return out
 }
 
-// EventLog returns the recent event log.
+// EventLog is a defensive copy of the rolling 50-entry simulated-toast log.
 func (l *ToastLab) EventLog() []ToastEvent {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -299,7 +299,7 @@ func (l *ToastLab) EventLog() []ToastEvent {
 	return out
 }
 
-// ResetStats zeroes all counters.
+// ResetStats zeroes every counter without clearing the event or lifecycle logs.
 func (l *ToastLab) ResetStats() {
 	l.mu.Lock()
 	defer l.mu.Unlock()

@@ -20,10 +20,11 @@ type SyncRequest struct {
 	SchemaVersion int             `json:"schema_version"`
 }
 
-// SyncResultStatus represents the outcome of a sync operation.
+// SyncResultStatus is the per-operation outcome the server returns in a
+// SyncResult; the string value is what the wire payload carries.
 type SyncResultStatus string
 
-// Sync result statuses.
+// SyncResult wire-format status values.
 const (
 	SyncApplied  SyncResultStatus = "applied"
 	SyncConflict SyncResultStatus = "conflict"

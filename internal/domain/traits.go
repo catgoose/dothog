@@ -7,50 +7,51 @@ import (
 	"time"
 )
 
-// Timestamps provides CreatedAt and UpdatedAt fields for embedding in domain models.
+// Timestamps embeds the standard CreatedAt/UpdatedAt audit timestamps.
 type Timestamps struct {
 	CreatedAt time.Time `db:"CreatedAt" json:"createdAt"`
 	UpdatedAt time.Time `db:"UpdatedAt" json:"updatedAt"`
 }
 
-// SoftDelete provides a nullable DeletedAt field for embedding in domain models.
+// SoftDelete embeds a nullable DeletedAt; non-zero means the row is hidden
+// from default queries but recoverable.
 type SoftDelete struct {
 	DeletedAt sql.NullTime `db:"DeletedAt" json:"deletedAt,omitzero"`
 }
 
-// Version provides an optimistic concurrency control field for embedding in domain models.
+// Version embeds an int incremented on every write for optimistic-concurrency checks.
 type Version struct {
 	Version int `db:"Version" json:"version"`
 }
 
-// SortOrder provides a manual ordering field for embedding in domain models.
+// SortOrder embeds a manual ordering integer; lower values render first.
 type SortOrder struct {
 	SortOrder int `db:"SortOrder" json:"sortOrder"`
 }
 
-// Status provides a status field for embedding in domain models.
+// Status embeds a short string state machine column.
 type Status struct {
 	Status string `db:"Status" json:"status"`
 }
 
-// Notes provides a nullable notes field for embedding in domain models.
+// Notes embeds a nullable free-form text field.
 type Notes struct {
 	Notes sql.NullString `db:"Notes" json:"notes,omitzero"`
 }
 
-// Archive provides a nullable ArchivedAt timestamp for embedding in domain models.
-// Semantically softer than SoftDelete — archived records are hidden from default views
-// but remain accessible and restorable.
+// Archive is semantically softer than SoftDelete — archived records are hidden
+// from default views but remain accessible and restorable.
 type Archive struct {
 	ArchivedAt sql.NullTime `db:"ArchivedAt" json:"archivedAt,omitzero"`
 }
 
-// Replacement provides a nullable reference to the entity that replaced this one.
+// Replacement embeds an optional pointer to the row that supersedes this one,
+// preserving entity lineage when a record is logically replaced.
 type Replacement struct {
 	ReplacedByID sql.NullInt64 `db:"ReplacedByID" json:"replacedById,omitzero"`
 }
 
-// ToNullString converts a string to sql.NullString. Empty strings are treated as null.
+// ToNullString treats an empty string as NULL.
 func ToNullString(s string) sql.NullString {
 	if s == "" {
 		return sql.NullString{}

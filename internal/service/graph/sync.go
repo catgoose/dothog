@@ -14,10 +14,11 @@ import (
 	"catgoose/dothog/internal/env"
 )
 
-// SyncType represents the type of sync operation being performed
+// SyncType labels a user-cache refresh for telemetry; the constant value
+// is the human-readable phrase logged alongside each sync.
 type SyncType string
 
-// Sync type constants
+// Sync trigger labels written into logs and admin telemetry.
 const (
 	SyncTypeInitial   SyncType = "initial sync"
 	SyncTypeManual    SyncType = "manual sync"
@@ -25,9 +26,8 @@ const (
 	SyncTypePeriodic  SyncType = "periodic sync"
 )
 
-// InitAndSyncUserCache initializes and (in prod) periodically syncs the Azure user cache.
-// In development mode, it only fetches users if the cache is empty.
-// In production mode, it performs an initial sync and then schedules periodic refreshes.
+// InitAndSyncUserCache primes the Azure user cache; dev fetches only when empty,
+// prod performs an initial sync then schedules a daily refresh at refreshHour.
 func InitAndSyncUserCache(
 	ctx context.Context,
 	userCache *UserCache,
@@ -39,17 +39,14 @@ func InitAndSyncUserCache(
 	log := logger.WithContext(ctx)
 	isDev := env.Dev()
 
-	// Development
 	if isDev {
-		// In development mode, only fetch if the table doesn't exist or is empty
-		// This prevents spamming Azure on every dev restart
+		// In dev, only fetch when the cache is missing or empty to avoid hammering Azure on every restart.
 		exists, err := userCache.UsersTableExists()
 		if err != nil {
 			log.Warn("Users table check failed, will fetch users from Azure", "error", err)
 		} else if !exists {
 			log.Info("Users table does not exist, fetching users from Azure")
 		} else {
-			// Check if table has data
 			userCount, err := userCache.GetUserCount()
 			if err != nil {
 				log.Warn("Failed to get user count, will fetch users from Azure", "error", err)
@@ -77,7 +74,6 @@ func InitAndSyncUserCache(
 		return nil
 	}
 
-	// Production - perform initial sync
 	log.Info("Production mode: performing initial user sync")
 	users, err := fetchUsersFunc()
 	if err != nil {
@@ -92,7 +88,6 @@ func InitAndSyncUserCache(
 		afterSync(ctx, users)
 	}
 
-	// Schedule periodic refreshes
 	doSync := func(syncType SyncType) {
 		syncCtx := shared.WithContextIDAndDescription(ctx, shared.GenerateContextID(), string(syncType))
 		syncLog := logger.WithContext(syncCtx)

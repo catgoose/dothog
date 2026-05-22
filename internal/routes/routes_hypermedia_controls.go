@@ -66,7 +66,6 @@ func (gs *controlsGalleryState) resetLocked() {
 	gs.cascadeDeleted = false
 }
 
-// initControlsGalleryRoutes registers the controls page and all its interactive endpoints.
 func (ar *appRoutes) initControlsGalleryRoutes() {
 	gs := newControlsGalleryState()
 	base := patternsBase + "/controls"

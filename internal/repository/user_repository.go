@@ -16,20 +16,19 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// ErrUserNotFound is returned when a user cannot be found.
+// ErrUserNotFound is returned when an Update/UpdateLastLogin affects zero rows.
 var ErrUserNotFound = fmt.Errorf("user not found")
 
-// userRepository implements UserRepository
 type userRepository struct {
 	repo *repository.RepoManager
 }
 
-// NewUserRepository creates a new UserRepository instance
+// NewUserRepository binds repo and hides the concrete type so callers depend on UserRepository.
 func NewUserRepository(repo *repository.RepoManager) UserRepository {
 	return &userRepository{repo: repo}
 }
 
-// CreateOrUpdate creates a new user or updates an existing one based on AzureID
+// CreateOrUpdate upserts user keyed by AzureID, stamping LastLoginAt to now.
 func (r *userRepository) CreateOrUpdate(ctx context.Context, user *domain.User, tx *sqlx.Tx) error {
 	existing, err := r.getByAzureIDInternal(ctx, user.AzureID, tx)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -80,7 +79,6 @@ func (r *userRepository) CreateOrUpdate(ctx context.Context, user *domain.User, 
 	return nil
 }
 
-// GetByID retrieves a user by its ID
 func (r *userRepository) GetByID(ctx context.Context, id int) (*domain.User, error) {
 	cols := dbrepo.Columns(schema.UsersTable.SelectColumns()...)
 	w := dbrepo.NewWhere().And("ID = @ID", sql.Named("ID", id))
@@ -97,7 +95,7 @@ func (r *userRepository) GetByID(ctx context.Context, id int) (*domain.User, err
 	return &user, nil
 }
 
-// getByAzureIDInternal retrieves a user by their Azure ID (internal method that returns sql.ErrNoRows)
+// getByAzureIDInternal surfaces sql.ErrNoRows so callers can distinguish "missing" from other errors.
 func (r *userRepository) getByAzureIDInternal(ctx context.Context, azureID string, tx *sqlx.Tx) (*domain.User, error) {
 	cols := dbrepo.Columns(schema.UsersTable.SelectColumns()...)
 	w := dbrepo.NewWhere().And("AzureId = @AzureId", sql.Named("AzureId", azureID))
@@ -111,7 +109,6 @@ func (r *userRepository) getByAzureIDInternal(ctx context.Context, azureID strin
 	return &user, nil
 }
 
-// GetByAzureID retrieves a user by their Azure ID
 func (r *userRepository) GetByAzureID(ctx context.Context, azureID string) (*domain.User, error) {
 	user, err := r.getByAzureIDInternal(ctx, azureID, nil)
 	if err != nil {
@@ -123,7 +120,7 @@ func (r *userRepository) GetByAzureID(ctx context.Context, azureID string) (*dom
 	return user, nil
 }
 
-// Update updates an existing user
+// Update yields ErrUserNotFound when no row matches user.ID.
 func (r *userRepository) Update(ctx context.Context, user *domain.User, tx *sqlx.Tx) error {
 	exec := r.repo.Exec(tx)
 
@@ -167,7 +164,7 @@ func (r *userRepository) Update(ctx context.Context, user *domain.User, tx *sqlx
 	return nil
 }
 
-// UpdateLastLogin updates only the LastLoginAt timestamp for a user
+// UpdateLastLogin yields ErrUserNotFound when no row matches id.
 func (r *userRepository) UpdateLastLogin(ctx context.Context, id int, tx *sqlx.Tx) error {
 	exec := r.repo.Exec(tx)
 

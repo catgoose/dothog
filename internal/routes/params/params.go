@@ -105,7 +105,7 @@ func ParseFilterParams(c echo.Context, defaultLimit, maxLimit int) FilterParams 
 	}
 }
 
-// ResolveYearWithDefault handles year parsing and default year selection logic
+// ResolveYearWithDefault falls back to availableYears[0] only when ?year was not supplied at all.
 func ResolveYearWithDefault(c echo.Context, year int, availableYears []int) int {
 	yearParamExists := c.Request().URL.Query().Has("year")
 	if year == 0 && !yearParamExists && len(availableYears) > 0 {
@@ -113,4 +113,3 @@ func ResolveYearWithDefault(c echo.Context, year int, availableYears []int) int 
 	}
 	return year
 }
-

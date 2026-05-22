@@ -13,12 +13,13 @@ import (
 // HotZoneMode describes how a region handles user commands.
 type HotZoneMode string
 
+// HotZoneMode values: hx-post routes via plain HTMX, tavern-command via the Tavern broker.
 const (
 	HotZoneModeHXPost HotZoneMode = "hx-post"
 	HotZoneModeTavern HotZoneMode = "tavern-command"
 )
 
-// HotZoneCell represents one cell in a region's text grid.
+// HotZoneCell is one tile in a region's grid: a glyph paired with a palette index into HotZonePalette.
 type HotZoneCell struct {
 	Glyph   string
 	Palette int // index into the color palette (0–7)
@@ -37,14 +38,16 @@ type HotZoneRegion struct {
 // HotZoneSwapScope controls the granularity of SSE replacement.
 type HotZoneSwapScope string
 
+// HotZoneSwapScope values: inner swaps the cell grid; card replaces the entire region card.
 const (
 	HotZoneSwapInner HotZoneSwapScope = "inner"
 	HotZoneSwapCard  HotZoneSwapScope = "card"
 )
 
-// HotZonePreset is a named pressure profile.
+// HotZonePreset names a stress profile applied by ApplyPreset.
 type HotZonePreset string
 
+// HotZonePreset values in ascending intensity (region count and update rate).
 const (
 	HotZonePresetNormal HotZonePreset = "normal"
 	HotZonePresetHot    HotZonePreset = "hot"
@@ -68,7 +71,7 @@ var HotZonePalette = [8][2]string{
 
 var glyphs = []string{"█", "■", "●", "+", "▓", "◆", "▲", "◉"}
 
-// HotZoneSettings holds operator-controlled simulation parameters.
+// HotZoneSettings holds the lab's tunable state; ApplyPreset rewrites timing fields, never persists across rebuilds.
 type HotZoneSettings struct {
 	Preset           HotZonePreset
 	CommandMode      HotZoneMode
@@ -91,12 +94,12 @@ type HotZoneSettings struct {
 	HeatEnabled      bool
 }
 
-// DefaultHeatSettings returns sensible heat-map defaults.
+// DefaultHeatSettings is window(ms), 3 ascending thresholds, then 3 stage colors plus base.
 func DefaultHeatSettings() (int, int, int, int, string, string, string, string) {
 	return 1000, 8, 16, 32, "#22c55e", "#ef4444", "#a855f7", "#1e293b"
 }
 
-// ApplyPreset sets fields to the named preset's values.
+// ApplyPreset rewrites the timing, region, and heat fields to match the named preset and re-enables heat.
 func (s *HotZoneSettings) ApplyPreset(p HotZonePreset) {
 	s.Preset = p
 	s.HeatWindowMS, s.HeatThreshold1, s.HeatThreshold2, s.HeatThreshold3,
@@ -147,7 +150,7 @@ type HotZoneCommandStat struct {
 	Failed     int64
 }
 
-// HotZoneLab wraps the shared state for the hot-zone stress surface.
+// HotZoneLab is the shared state for the hot-zone stress surface (regions, settings, command counters).
 type HotZoneLab struct {
 	activity         []HotZoneActivity
 	regions          []HotZoneRegion
@@ -164,13 +167,13 @@ type HotZoneLab struct {
 	paused           bool
 }
 
-// HotZoneActivity records one action in the activity log.
+// HotZoneActivity is a single entry in the lab's rolling 30-action audit log.
 type HotZoneActivity struct {
 	Timestamp time.Time
 	Action    string
 }
 
-// NewHotZoneLab creates a lab with default settings.
+// NewHotZoneLab pre-allocates 64 regions; only the first RegionCount are active.
 func NewHotZoneLab() *HotZoneLab {
 	wMS, t1, t2, t3, c1, c2, c3, base := DefaultHeatSettings()
 	lab := &HotZoneLab{
@@ -219,7 +222,7 @@ func generateCells(gridSize int) []HotZoneCell {
 	return cells
 }
 
-// Settings returns a snapshot of the current settings.
+// Settings is a snapshot under read lock; safe to inspect without further locking.
 func (l *HotZoneLab) Settings() HotZoneSettings {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -233,14 +236,14 @@ func (l *HotZoneLab) UpdateSettings(fn func(s *HotZoneSettings)) {
 	fn(&l.settings)
 }
 
-// Paused returns whether the simulator is paused.
+// Paused reports whether SimTick should be skipped this round.
 func (l *HotZoneLab) Paused() bool {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return l.paused
 }
 
-// TogglePause flips pause state and returns the new value.
+// TogglePause flips the pause flag and returns the new value.
 func (l *HotZoneLab) TogglePause() bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -248,7 +251,7 @@ func (l *HotZoneLab) TogglePause() bool {
 	return l.paused
 }
 
-// Region returns a snapshot of a single region (1-indexed).
+// Region snapshots a single region (1-indexed); out-of-range ids return the zero value.
 func (l *HotZoneLab) Region(id int) HotZoneRegion {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -258,7 +261,7 @@ func (l *HotZoneLab) Region(id int) HotZoneRegion {
 	return l.regions[id-1]
 }
 
-// Regions returns snapshots of the active regions.
+// Regions snapshots only the first RegionCount entries, in order.
 func (l *HotZoneLab) Regions() []HotZoneRegion {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -268,7 +271,7 @@ func (l *HotZoneLab) Regions() []HotZoneRegion {
 	return out
 }
 
-// ToggleLock flips the lock state of a region and returns the new state.
+// ToggleLock flips the locked flag on region id (1-indexed); locked regions are skipped by SimTick.
 func (l *HotZoneLab) ToggleLock(id int) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -279,7 +282,7 @@ func (l *HotZoneLab) ToggleLock(id int) bool {
 	return l.regions[id-1].Locked
 }
 
-// SimTick runs one simulation tick.
+// SimTick advances regions per BurstMode/FocusedRegion settings and returns the 1-indexed IDs that changed.
 func (l *HotZoneLab) SimTick() []int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -320,7 +323,7 @@ func (l *HotZoneLab) SimTick() []int {
 	return updated
 }
 
-// JitteredInterval returns the next tick duration with random jitter.
+// JitteredInterval is UpdateIntervalMS plus a uniform jitter in [JitterMinMS, JitterMaxMS].
 func (l *HotZoneLab) JitteredInterval() time.Duration {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -349,7 +352,7 @@ func (l *HotZoneLab) RecordActivity(action string) {
 	}
 }
 
-// Activity returns the recent activity log.
+// Activity is a defensive copy of the rolling 30-entry log, oldest first.
 func (l *HotZoneLab) Activity() []HotZoneActivity {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -392,7 +395,7 @@ func (l *HotZoneLab) RecordLifecycle(mode HotZoneMode, action string) {
 	}
 }
 
-// CommandStats returns delivery stats for both modes.
+// CommandStats is delivery stats for both modes; per-counter atomic reads are not consistent across fields.
 func (l *HotZoneLab) CommandStats() [2]HotZoneCommandStat {
 	return [2]HotZoneCommandStat{
 		{Mode: HotZoneModeHXPost, Dispatched: l.hxDispatched.Load(), Received: l.hxReceived.Load(), Succeeded: l.hxOK.Load(), Failed: l.hxFail.Load()},
@@ -400,7 +403,7 @@ func (l *HotZoneLab) CommandStats() [2]HotZoneCommandStat {
 	}
 }
 
-// ResetStats zeroes all command counters.
+// ResetStats zeroes every dispatched/received/succeeded/failed counter across both command modes.
 func (l *HotZoneLab) ResetStats() {
 	l.hxDispatched.Store(0)
 	l.hxReceived.Store(0)

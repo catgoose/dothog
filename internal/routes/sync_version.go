@@ -24,19 +24,18 @@ type VersionChecker interface {
 	CurrentVersion(ctx context.Context, table string, id int) (int, error)
 }
 
-// SQLVersionChecker checks row versions against a SQL database.
-// It expects tables to have an ID column and a Version column (as created by
-// chuck's WithVersion() schema trait).
+// SQLVersionChecker reads the Version column from SQL tables that include the
+// WithVersion() schema trait (ID + Version columns required).
 type SQLVersionChecker struct {
 	db *sql.DB
 }
 
-// NewSQLVersionChecker creates a version checker backed by the given database.
+// NewSQLVersionChecker binds db and enforces the knownTables allowlist for every query.
 func NewSQLVersionChecker(db *sql.DB) *SQLVersionChecker {
 	return &SQLVersionChecker{db: db}
 }
 
-// CurrentVersion returns the current version of a row, or -1 if not found.
+// CurrentVersion is -1 when the row is missing or soft-deleted (DeletedAt set).
 func (vc *SQLVersionChecker) CurrentVersion(ctx context.Context, table string, id int) (int, error) {
 	if !knownTables[table] {
 		return 0, fmt.Errorf("unknown table: %s", table)

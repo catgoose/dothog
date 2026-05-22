@@ -12,7 +12,7 @@ import (
 
 // --- Dashboard data types ---
 
-// NetworkPoint is a single data point for network traffic.
+// NetworkPoint is one tick in the inbound/outbound throughput sparkline (MB/s).
 type NetworkPoint struct {
 	InMBps  float64
 	OutMBps float64
@@ -50,7 +50,8 @@ type ServiceLatency struct {
 	History []float64
 }
 
-// MetricsSnapshot holds the current dashboard metrics state.
+// MetricsSnapshot bundles all per-section sparkline series the dashboard
+// templates read for a single render pass.
 type MetricsSnapshot struct {
 	Network      []NetworkPoint
 	DiskIO       []DiskIOPoint
@@ -148,7 +149,8 @@ func fmtSize(v float64) string {
 	return fmt.Sprintf("%.3f", v)
 }
 
-// ServiceStatus represents the health and load of a single service.
+// ServiceStatus is one row in the services panel; Status is one of
+// "healthy", "degraded", or "critical" (drives the bar color).
 type ServiceStatus struct {
 	Name   string
 	Status string
@@ -167,7 +169,8 @@ func serviceBarColor(s ServiceStatus) string {
 	}
 }
 
-// DashboardEvent represents a single entry in the live event feed.
+// DashboardEvent is one entry in the events feed; Kind selects the badge
+// class and indicator letter via eventBadgeClass / eventIcon.
 type DashboardEvent struct {
 	Time    time.Time
 	Kind    string // "deploy", "alert", "scale", "restart", "rollback"
@@ -233,7 +236,7 @@ type DashboardCardState struct {
 	Pinned    map[string]bool   // section -> pinned flag
 }
 
-// CardMs returns the current interval for a section, falling back to fallback.
+// CardMs reads Intervals[section]; missing keys yield fallback.
 func (s DashboardCardState) CardMs(section string, fallback int) int {
 	if v, ok := s.Intervals[section]; ok {
 		return v
@@ -241,7 +244,7 @@ func (s DashboardCardState) CardMs(section string, fallback int) int {
 	return fallback
 }
 
-// CardScale returns the current scale unit for a section, falling back to fallback.
+// CardScale reads Units[section]; missing keys yield fallback.
 func (s DashboardCardState) CardScale(section, fallback string) string {
 	if v, ok := s.Units[section]; ok {
 		return v
@@ -249,7 +252,7 @@ func (s DashboardCardState) CardScale(section, fallback string) string {
 	return fallback
 }
 
-// CardPinned returns whether a section is pinned.
+// CardPinned reports whether the named section is pinned; missing keys are false.
 func (s DashboardCardState) CardPinned(section string) bool {
 	return s.Pinned[section]
 }

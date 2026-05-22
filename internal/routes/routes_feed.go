@@ -14,8 +14,8 @@ import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/shared"
-	"github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/tavern"
 
 	"github.com/labstack/echo/v4"
 )
@@ -74,8 +74,8 @@ func (f *feedRoutes) handleFeedMore(c echo.Context) error {
 	return handler.RenderComponent(c, views.FeedMoreItems(filtered, lastID, hasMore))
 }
 
-// BroadcastActivity publishes an activity event to the SSE feed.
-// Always write to the replay buffer so reconnecting clients receive missed events.
+// BroadcastActivity emits e on the activity-feed SSE topic and stamps a fresh event ID
+// into the replay buffer so reconnecting clients catch up.
 func BroadcastActivity(broker *tavern.SSEBroker, e demo.ActivityEvent) {
 	buf := statsBufPool.Get().(*bytes.Buffer)
 	buf.Reset()

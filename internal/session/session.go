@@ -30,7 +30,7 @@ type Settings struct {
 	ID          int               `db:"Id"`
 }
 
-// GetExtra returns the value for key, or empty string if not set.
+// GetExtra is "" when key is missing or Extra is nil.
 func (s *Settings) GetExtra(key string) string {
 	if s.Extra == nil {
 		return ""
@@ -38,7 +38,7 @@ func (s *Settings) GetExtra(key string) string {
 	return s.Extra[key]
 }
 
-// SetExtra sets a key-value pair in Extra, initializing the map if nil.
+// SetExtra lazily allocates Extra on first call.
 func (s *Settings) SetExtra(key, value string) {
 	if s.Extra == nil {
 		s.Extra = make(map[string]string)
@@ -46,7 +46,7 @@ func (s *Settings) SetExtra(key, value string) {
 	s.Extra[key] = value
 }
 
-// MarshalExtra returns the Extra map serialized as a JSON string.
+// MarshalExtra serialises Extra to a JSON object; emits "{}" when Extra is nil.
 func (s *Settings) MarshalExtra() (string, error) {
 	if s.Extra == nil {
 		return "{}", nil
@@ -79,7 +79,7 @@ const (
 	LayoutApp     = "app"
 )
 
-// NewDefaultSettings returns a Settings with defaults for the given UUID.
+// NewDefaultSettings seeds Theme=DefaultTheme, Layout=DefaultLayout, and an empty Extra map.
 func NewDefaultSettings(uuid string) *Settings {
 	return &Settings{
 		SessionUUID: uuid,
@@ -116,11 +116,11 @@ type Provider interface {
 	Touch(ctx context.Context, uuid string) error
 }
 
-// IDFunc returns the session identifier for the current request.
+// IDFunc resolves the session identifier from r; "" triggers cookie-based ID derivation.
 type IDFunc func(r *http.Request) string
 
-// Middleware returns middleware that loads per-session settings and stores
-// them on the request context for downstream handlers.
+// Middleware loads per-session settings via repo and stashes them on the request context
+// for GetSettings; refreshes UpdatedAt via Touch once a day.
 func Middleware(repo Provider, idFunc IDFunc, cfgs ...Config) func(http.Handler) http.Handler {
 	var cfg Config
 	if len(cfgs) > 0 {
@@ -166,7 +166,7 @@ func Middleware(repo Provider, idFunc IDFunc, cfgs ...Config) func(http.Handler)
 	}
 }
 
-// GetSettings returns the session settings from the request context.
+// GetSettings reads the context value populated by Middleware; falls back to defaults with "" UUID.
 func GetSettings(r *http.Request) *Settings {
 	if s, ok := r.Context().Value(settingsCtxKey).(*Settings); ok {
 		return s
@@ -174,8 +174,7 @@ func GetSettings(r *http.Request) *Settings {
 	return NewDefaultSettings("")
 }
 
-// ContextWithSettings returns a derived context that GetSettings can read.
-// Test code uses this to seed a session without running the full middleware.
+// ContextWithSettings seeds the GetSettings key on ctx; useful in tests that bypass Middleware.
 func ContextWithSettings(ctx context.Context, s *Settings) context.Context {
 	return context.WithValue(ctx, settingsCtxKey, s)
 }

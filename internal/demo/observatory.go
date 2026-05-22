@@ -21,7 +21,7 @@ type TierChangeEvent struct {
 	Tier         int
 }
 
-// ObservatoryState manages demo-broker observation state for the observatory page.
+// ObservatoryState holds the observatory page's tier-change ring buffer, subscriber cap, and stress-test handle.
 type ObservatoryState struct {
 	stressCancel context.CancelFunc
 	tierChanges  []TierChangeEvent
@@ -30,7 +30,7 @@ type ObservatoryState struct {
 	maxPerTopic  atomic.Int32
 }
 
-// NewObservatoryState returns an initialised ObservatoryState.
+// NewObservatoryState starts empty with the per-topic subscriber cap at 10.
 func NewObservatoryState() *ObservatoryState {
 	s := &ObservatoryState{
 		tierChanges: make([]TierChangeEvent, 0, maxTierChanges),
@@ -57,7 +57,7 @@ func (s *ObservatoryState) RecordTierChange(topic, subID string, tier int) {
 	s.mu.Unlock()
 }
 
-// RecentTierChanges returns a copy of the tier change log, newest first.
+// RecentTierChanges is a copy of the ring buffer, reversed so the newest entry is index 0.
 func (s *ObservatoryState) RecentTierChanges() []TierChangeEvent {
 	s.mu.RLock()
 	out := make([]TierChangeEvent, len(s.tierChanges))
@@ -70,13 +70,12 @@ func (s *ObservatoryState) RecentTierChanges() []TierChangeEvent {
 	return out
 }
 
-// MaxPerTopic returns the current per-topic subscriber cap.
+// MaxPerTopic is the current per-topic subscriber cap (atomic read).
 func (s *ObservatoryState) MaxPerTopic() int {
 	return int(s.maxPerTopic.Load())
 }
 
-// SetMaxPerTopic updates the per-topic subscriber cap. The cap takes effect
-// for new subscriptions on the next admission check.
+// SetMaxPerTopic updates the cap; takes effect on the next admission check. Negative values clamp to 0.
 func (s *ObservatoryState) SetMaxPerTopic(n int) {
 	if n < 0 {
 		n = 0
@@ -84,12 +83,12 @@ func (s *ObservatoryState) SetMaxPerTopic(n int) {
 	s.maxPerTopic.Store(int32(n))
 }
 
-// StressActive reports whether the stress test is running.
+// StressActive reports whether a stress-test goroutine is currently running.
 func (s *ObservatoryState) StressActive() bool {
 	return s.stressActive.Load()
 }
 
-// SetStress stores stress-test lifecycle state.
+// SetStress stores the cancel function for a running stress test and toggles the active flag.
 func (s *ObservatoryState) SetStress(active bool, cancel context.CancelFunc) {
 	s.mu.Lock()
 	s.stressCancel = cancel

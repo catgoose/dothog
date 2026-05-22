@@ -9,9 +9,9 @@ import (
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
-	"github.com/catgoose/promolog"
-	"github.com/catgoose/linkwell"
 	corecomponents "catgoose/dothog/web/components/core"
+	"github.com/catgoose/linkwell"
+	"github.com/catgoose/promolog"
 
 	"github.com/labstack/echo/v4"
 )
@@ -106,10 +106,9 @@ func handleErrorWithContext(c echo.Context, ec linkwell.ErrorContext) error {
 	return corecomponents.ErrorStatusFromContext(ec).Render(c.Request().Context(), c.Response())
 }
 
-// NewHTTPErrorHandler returns an echo.HTTPErrorHandler that renders errors as
-// hypermedia responses. Assign it to e.HTTPErrorHandler in place of the default.
-// When reqLogStore is non-nil, the per-request log buffer is promoted to the
-// shared store on error so it can be retrieved for issue reports.
+// NewHTTPErrorHandler is the e.HTTPErrorHandler replacement that renders errors as
+// hypermedia responses; non-nil reqLogStore promotes the per-request log buffer
+// to the shared store so issue reports can retrieve it.
 func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Context) {
 	return func(err error, c echo.Context) {
 		// Restore the raw response writer saved before the compression

@@ -14,7 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// chatMsg is a single chat message.
 type chatMsg struct {
 	Author string
 	Text   string
@@ -22,7 +21,6 @@ type chatMsg struct {
 	ID     int
 }
 
-// timelineEvt is a single timeline event.
 type timelineEvt struct {
 	Title string
 	Desc  string

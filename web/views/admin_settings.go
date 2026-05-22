@@ -39,7 +39,7 @@ func sseCountBadge(count int) string {
 	return "badge-ghost"
 }
 
-// IntervalMs returns the current interval for a section, falling back to fallback.
+// IntervalMs reads Intervals[section]; missing keys yield fallback.
 func (d AdminPanelData) IntervalMs(section string, fallback int) int {
 	if v, ok := d.Intervals[section]; ok {
 		return v

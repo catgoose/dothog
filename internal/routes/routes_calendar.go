@@ -35,7 +35,6 @@ func (c *calendarRoutes) handlePage(ctx echo.Context) error {
 	return handler.RenderBaseLayout(ctx, views.CalendarPage(data))
 }
 
-// handleMonth returns just the month grid fragment for prev/next navigation.
 func (c *calendarRoutes) handleMonth(ctx echo.Context) error {
 	year, month := parseYearMonth(ctx.QueryParam("y"), ctx.QueryParam("m"))
 	day := parseDay(ctx.QueryParam("d"))
@@ -43,7 +42,6 @@ func (c *calendarRoutes) handleMonth(ctx echo.Context) error {
 	return handler.RenderComponent(ctx, views.CalendarMonthFragment(data))
 }
 
-// handleDay returns the day inspector panel for the selected day.
 func (c *calendarRoutes) handleDay(ctx echo.Context) error {
 	day := parseDay(ctx.QueryParam("d"))
 	if day.IsZero() {

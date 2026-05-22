@@ -11,22 +11,21 @@ import (
 	"strings"
 	"time"
 
-	dialect "github.com/catgoose/chuck"
 	"catgoose/dothog/internal/database/schema"
 	"catgoose/dothog/internal/logger"
+	dialect "github.com/catgoose/chuck"
 
 	"github.com/jmoiron/sqlx"
 )
 
-// RepoManager manages all repository access to the database.
+// RepoManager owns the DB handle, dialect, and the registered table set used by InitSchema and ValidateSchema.
 type RepoManager struct {
 	db      *sqlx.DB
 	dialect dialect.Dialect
 	tables  []*schema.TableDef
 }
 
-// NewManager creates a new RepoManager instance.
-// Tables are registered for use by InitSchema and EnsureSchema.
+// NewManager binds the DB pool, dialect, and the table set used by Init/Ensure/Validate.
 func NewManager(db *sqlx.DB, d dialect.Dialect, tables ...*schema.TableDef) *RepoManager {
 	return &RepoManager{
 		db:      db,
@@ -35,12 +34,12 @@ func NewManager(db *sqlx.DB, d dialect.Dialect, tables ...*schema.TableDef) *Rep
 	}
 }
 
-// GetDB returns the database connection
+// GetDB exposes the underlying sqlx pool for code that needs to bypass the manager's helpers.
 func (r *RepoManager) GetDB() *sqlx.DB {
 	return r.db
 }
 
-// Dialect returns the dialect for engine-specific SQL fragments.
+// Dialect exposes engine-specific SQL fragment helpers for callers building ad-hoc queries.
 func (r *RepoManager) Dialect() dialect.Dialect {
 	return r.dialect
 }
@@ -51,8 +50,7 @@ type GetExecer interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 }
 
-// Exec returns the transaction if non-nil, otherwise the manager's DB connection.
-// This eliminates the repeated pattern of choosing between db and tx in repository methods.
+// Exec picks tx when non-nil, otherwise the manager's DB pool — used by repo methods that take an optional transaction.
 func (r *RepoManager) Exec(tx *sqlx.Tx) GetExecer {
 	if tx != nil {
 		return tx
@@ -60,7 +58,7 @@ func (r *RepoManager) Exec(tx *sqlx.Tx) GetExecer {
 	return r.db
 }
 
-// WithTransaction runs fn inside a transaction. On success the transaction is committed; on error it is rolled back.
+// WithTransaction commits on fn's success, rolls back on error; the inner context has a 30s timeout.
 func (r *RepoManager) WithTransaction(ctx context.Context, fn func(ctx context.Context, tx *sqlx.Tx) error) error {
 	txCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -78,7 +76,7 @@ func (r *RepoManager) WithTransaction(ctx context.Context, fn func(ctx context.C
 	return nil
 }
 
-// Close closes the database connection
+// Close closes the underlying connection pool; safe when the manager was constructed without a DB.
 func (r *RepoManager) Close() error {
 	if r.db != nil {
 		return r.db.Close()
@@ -109,7 +107,7 @@ func (r *RepoManager) InitSchema(ctx context.Context) error {
 	return nil
 }
 
-// EnsureSchema creates registered tables if they do not already exist. Non-destructive.
+// EnsureSchema is the non-destructive counterpart to InitSchema; existing tables are left intact.
 func (r *RepoManager) EnsureSchema(ctx context.Context) error {
 	log := logger.WithContext(ctx)
 	log.Info("Ensuring database schema")
@@ -126,8 +124,7 @@ func (r *RepoManager) EnsureSchema(ctx context.Context) error {
 	return nil
 }
 
-// SeedSchema inserts seed data declared on registered tables via WithSeedRows.
-// Uses INSERT OR IGNORE to be idempotent — safe to run on every startup.
+// SeedSchema applies WithSeedRows data via INSERT OR IGNORE; idempotent and safe on every startup.
 func (r *RepoManager) SeedSchema(ctx context.Context) error {
 	log := logger.WithContext(ctx)
 
@@ -147,7 +144,7 @@ func (r *RepoManager) SeedSchema(ctx context.Context) error {
 	return nil
 }
 
-// SchemaError describes a single schema validation failure.
+// SchemaError describes a single schema mismatch; one or more are wrapped by SchemaValidationError.
 type SchemaError struct {
 	Table   string
 	Column  string
@@ -174,8 +171,8 @@ func (e *SchemaValidationError) Error() string {
 	return fmt.Sprintf("schema validation failed (%d errors): %s", len(e.Errors), strings.Join(msgs, "; "))
 }
 
-// ValidateSchema checks that every registered table exists and contains all expected columns.
-// Returns a *SchemaValidationError if the database schema does not match, nil if valid.
+// ValidateSchema confirms every registered table exists with all expected columns;
+// returns *SchemaValidationError on mismatch, nil when valid.
 func (r *RepoManager) ValidateSchema(ctx context.Context) error {
 	log := logger.WithContext(ctx)
 	log.Info("Validating database schema")

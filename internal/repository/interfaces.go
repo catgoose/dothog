@@ -10,7 +10,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// UserRepository defines operations for user data access
+// UserRepository is the persistence contract for the Users table; every
+// method accepts a *sqlx.Tx and may be nil to run on the underlying DB.
 type UserRepository interface {
 	CreateOrUpdate(ctx context.Context, user *domain.User, tx *sqlx.Tx) error
 	GetByID(ctx context.Context, id int) (*domain.User, error)

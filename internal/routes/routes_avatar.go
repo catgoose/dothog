@@ -10,7 +10,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// RegisterAvatarRoutes adds the avatar photo endpoint to the Echo instance.
+// RegisterAvatarRoutes wires GET /api/avatar/:azureID; the handler is closed
+// over store so callers don't need to re-pass it per request.
 func RegisterAvatarRoutes(e *echo.Echo, store *graph.PhotoStore) {
 	e.GET("/api/avatar/:azureID", handleAvatar(store))
 }

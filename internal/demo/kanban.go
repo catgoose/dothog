@@ -4,13 +4,13 @@ package demo
 
 import "sync"
 
-// KanbanStatuses enumerates the valid board columns.
+// KanbanStatuses enumerates board columns left-to-right.
 var KanbanStatuses = []string{"backlog", "todo", "in_progress", "review", "done"}
 
-// KanbanPriorities enumerates the valid priority levels.
+// KanbanPriorities enumerates priority levels in ascending urgency.
 var KanbanPriorities = []string{"low", "medium", "high", "critical"}
 
-// KanbanTask represents a single task on the board.
+// KanbanTask is one card on the board; Status must be one of KanbanStatuses.
 type KanbanTask struct {
 	Title       string
 	Description string
@@ -27,7 +27,7 @@ type KanbanBoard struct {
 	mu     sync.RWMutex
 }
 
-// NewKanbanBoard creates a board seeded with sample tasks.
+// NewKanbanBoard pre-seeds 9 sample cards spread across all five status columns.
 func NewKanbanBoard() *KanbanBoard {
 	b := &KanbanBoard{}
 	seed := []KanbanTask{
@@ -49,7 +49,7 @@ func NewKanbanBoard() *KanbanBoard {
 	return b
 }
 
-// AllTasks returns a copy of every task on the board.
+// AllTasks is a defensive copy; safe to mutate independently of the board.
 func (b *KanbanBoard) AllTasks() []KanbanTask {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
@@ -58,7 +58,7 @@ func (b *KanbanBoard) AllTasks() []KanbanTask {
 	return out
 }
 
-// TasksByStatus returns tasks that match the given status.
+// TasksByStatus filters by column, preserving insertion order.
 func (b *KanbanBoard) TasksByStatus(status string) []KanbanTask {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
@@ -71,7 +71,7 @@ func (b *KanbanBoard) TasksByStatus(status string) []KanbanTask {
 	return out
 }
 
-// GetTask returns a task by ID and a boolean indicating whether it was found.
+// GetTask looks up by ID; ok is false when the task is not found.
 func (b *KanbanBoard) GetTask(id int) (KanbanTask, bool) {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
@@ -83,7 +83,7 @@ func (b *KanbanBoard) GetTask(id int) (KanbanTask, bool) {
 	return KanbanTask{}, false
 }
 
-// MoveTask changes a task's status and returns the updated task.
+// MoveTask reassigns Status only; ok is false if id is unknown.
 func (b *KanbanBoard) MoveTask(id int, newStatus string) (KanbanTask, bool) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -96,7 +96,7 @@ func (b *KanbanBoard) MoveTask(id int, newStatus string) (KanbanTask, bool) {
 	return KanbanTask{}, false
 }
 
-// UpdateTask modifies a task's fields and returns the updated task.
+// UpdateTask overwrites the card's editable fields in-place; Status is preserved (use MoveTask to change it).
 func (b *KanbanBoard) UpdateTask(id int, title, description, priority, assignee string) (KanbanTask, bool) {
 	b.mu.Lock()
 	defer b.mu.Unlock()

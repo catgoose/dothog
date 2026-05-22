@@ -53,7 +53,6 @@ func (ar *appRoutes) initTavernCalendarRoutes(broker *tavern.SSEBroker) {
 	broker.RunPublisher(ar.ctx, r.startSimulator)
 }
 
-// handlePage renders the full calendar lab page.
 func (r *tavernCalendarRoutes) handlePage(c echo.Context) error {
 	data := r.buildPageData()
 	return handler.RenderBaseLayout(c, views.TavernCalendarPage(data))
@@ -173,7 +172,6 @@ func (r *tavernCalendarRoutes) handleSelectDay(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-// handleSetMonth navigates to the prev/next month.
 func (r *tavernCalendarRoutes) handleSetMonth(c echo.Context) error {
 	dir := c.QueryParam("dir")
 	year, month := r.lab.Year(), r.lab.Month()

@@ -3,7 +3,7 @@
 // Package admininfo provides types for admin dashboard pages.
 package admininfo
 
-// SystemInfo holds runtime stats for the admin system page.
+// SystemInfo aggregates runtime, GC, and process stats shown on the admin status page.
 type SystemInfo struct {
 	TotalAllocMB    string
 	SysMB           string
@@ -25,7 +25,7 @@ type SystemInfo struct {
 	GCCycles        uint32
 }
 
-// ConfigEntry is a single key/value pair for display, with optional masking.
+// ConfigEntry is a single key/value pair rendered in the admin config table.
 type ConfigEntry struct {
 	Key   string
 	Value string
@@ -44,7 +44,7 @@ type UserPreferences struct {
 	HighContrast         bool
 }
 
-// DefaultUserPreferences returns sensible defaults.
+// DefaultUserPreferences seeds PageSize=20 and DateFormat="relative"; other fields are zero.
 func DefaultUserPreferences() UserPreferences {
 	return UserPreferences{
 		PageSize:   20,

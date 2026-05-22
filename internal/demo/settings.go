@@ -4,7 +4,7 @@ package demo
 
 import "sync"
 
-// SettingField represents a single configurable field within a settings section.
+// SettingField is one editable control in a settings form; Options is used only when Kind is "select".
 type SettingField struct {
 	Key     string
 	Label   string
@@ -13,7 +13,7 @@ type SettingField struct {
 	Options []string // used when Kind is "select"
 }
 
-// SettingsSection groups related settings fields together.
+// SettingsSection groups related SettingField entries into a tab/panel rendered by the settings page.
 type SettingsSection struct {
 	ID          string
 	Title       string
@@ -27,7 +27,7 @@ type SettingsStore struct {
 	mu       sync.RWMutex
 }
 
-// NewSettingsStore creates a SettingsStore seeded with default sections.
+// NewSettingsStore pre-seeds the four standard sections: general, notifications, security, appearance.
 func NewSettingsStore() *SettingsStore {
 	return &SettingsStore{
 		sections: []SettingsSection{
@@ -75,7 +75,7 @@ func NewSettingsStore() *SettingsStore {
 	}
 }
 
-// GetSection returns the section with the given ID and true, or a zero value and false if not found.
+// GetSection looks up by ID; ok is false (and the section is zero) when not found.
 func (s *SettingsStore) GetSection(id string) (SettingsSection, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -87,7 +87,7 @@ func (s *SettingsStore) GetSection(id string) (SettingsSection, bool) {
 	return SettingsSection{}, false
 }
 
-// AllSections returns a copy of every settings section.
+// AllSections is a defensive copy; safe to mutate independently.
 func (s *SettingsStore) AllSections() []SettingsSection {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

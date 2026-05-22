@@ -18,8 +18,7 @@ type Response struct {
 	Database string `json:"database,omitempty"`
 }
 
-// StatsFunc returns app-specific metrics for the health response.
-// Derived apps implement this to add their own stats (counts, queue depths, etc.).
+// StatsFunc is the app-specific stats hook embedded in the health payload's "stats" field.
 type StatsFunc func(ctx context.Context) any
 
 // Pinger is satisfied by *sql.DB and *sqlx.DB.
@@ -36,8 +35,8 @@ type Config struct {
 	Version   string
 }
 
-// Check builds a health response by pinging the database (if configured)
-// and collecting app-specific stats.
+// Check pings cfg.DB (if any) and downgrades status to "degraded" on ping failure;
+// cfg.Stats output is folded into the response when non-nil.
 func Check(ctx context.Context, cfg Config) Response {
 	h := Response{
 		Name:    cfg.Name,
@@ -64,7 +63,7 @@ func Check(ctx context.Context, cfg Config) Response {
 	return h
 }
 
-// NewPingerFromDB wraps a *sql.DB as a Pinger.
+// NewPingerFromDB adapts a *sql.DB to the Pinger interface via its PingContext.
 func NewPingerFromDB(db *sql.DB) Pinger {
 	return db
 }

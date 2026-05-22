@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// SensorType identifies the kind of measurement a sensor produces.
+// SensorType is the kind of reading produced by a sensor; ranges and units are looked up in sensorSpecs.
 type SensorType string
 
 // Sensor type constants.
@@ -23,10 +23,10 @@ const (
 	SensorLight    SensorType = "light"
 )
 
-// AllSensorTypes lists every sensor type in grid order.
+// AllSensorTypes is the canonical sensor-type list in grid order.
 var AllSensorTypes = []SensorType{SensorTemp, SensorHumidity, SensorPressure, SensorLight}
 
-// SensorReading holds the latest value for a single sensor.
+// SensorReading is a single measurement; Topic is "sensors/floor{N}/{Type}" matching AllTopics order.
 type SensorReading struct {
 	Timestamp time.Time
 	Topic     string
@@ -62,7 +62,7 @@ type sensorState struct {
 	reading SensorReading
 }
 
-// NewSensorGrid creates a 4x4 sensor grid with initial random values.
+// NewSensorGrid pre-seeds 16 sensors (4 floors x 4 types) with random values inside each spec range.
 func NewSensorGrid() *SensorGrid {
 	g := &SensorGrid{
 		sensors: make(map[string]*sensorState, 16),
@@ -90,7 +90,7 @@ func NewSensorGrid() *SensorGrid {
 	return g
 }
 
-// AllTopics returns all 16 sensor topics in deterministic order.
+// AllTopics is the 16 sensor topics emitted in floor-then-type order (deterministic).
 func (g *SensorGrid) AllTopics() []string {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -133,13 +133,12 @@ func (g *SensorGrid) SetFloodMode(on bool) {
 	g.flooding.Store(on)
 }
 
-// IsFlooding returns whether flood mode is active.
+// IsFlooding reports whether high-frequency publish mode is currently enabled.
 func (g *SensorGrid) IsFlooding() bool {
 	return g.flooding.Load()
 }
 
-// Snapshot returns current readings for all topics matching the glob-style
-// pattern. It performs simple prefix/suffix matching with * and ** wildcards.
+// Snapshot picks topics matching a glob: * is one segment, ** is any path tail.
 func (g *SensorGrid) Snapshot(pattern string) map[string]SensorReading {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -152,7 +151,7 @@ func (g *SensorGrid) Snapshot(pattern string) map[string]SensorReading {
 	return result
 }
 
-// Reading returns the current reading for a specific topic.
+// Reading looks up topic; ok is false when it isn't one of the 16 known sensors.
 func (g *SensorGrid) Reading(topic string) (SensorReading, bool) {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -163,7 +162,7 @@ func (g *SensorGrid) Reading(topic string) (SensorReading, bool) {
 	return s.reading, true
 }
 
-// History returns the last 10 values for a topic's sparkline.
+// History is up to the last 10 values for a topic's sparkline; nil if topic is unknown.
 func (g *SensorGrid) History(topic string) []float64 {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -176,7 +175,7 @@ func (g *SensorGrid) History(topic string) []float64 {
 	return out
 }
 
-// AllReadings returns every sensor reading in grid order.
+// AllReadings emits every sensor reading in floor-then-type order.
 func (g *SensorGrid) AllReadings() []SensorReading {
 	g.mu.RLock()
 	defer g.mu.RUnlock()

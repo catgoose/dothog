@@ -117,7 +117,6 @@ func applyFilterFromCurrentURL(c echo.Context) {
 	}
 }
 
-// buildPageInfo constructs a PageInfo from common pagination parameters.
 func buildPageInfo(c echo.Context, page, perPage, total int, target string) linkwell.PageInfo {
 	pageBase := stripParams(c.Request().URL, "page")
 	return linkwell.PageInfo{

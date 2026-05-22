@@ -1,4 +1,3 @@
-// Package routes provides routing configuration and Echo server initialization.
 package routes
 
 import (
@@ -41,7 +40,9 @@ import (
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
 
-// AppRoutes defines the interface for app routes
+// AppRoutes is the lifecycle interface for the app's HTTP routes: InitRoutes
+// wires every endpoint, Close releases broker resources, and the Set* hooks
+// inject runtime dependencies for /health.
 type AppRoutes interface {
 	InitRoutes() error
 	// Close shuts down the SSE broker and releases resources. Call during graceful shutdown.
@@ -73,7 +74,6 @@ type Repos struct {
 	// setup:feature:session_settings:end
 }
 
-// appRoutes implements AppRoutes
 type appRoutes struct {
 	repos     Repos
 	startTime time.Time
@@ -100,9 +100,8 @@ func (ar *appRoutes) Close() {
 	// setup:feature:sse:end
 }
 
-// NewAppRoutes initializes routes.
-// repos.ReqLogStore may be nil if request log capture is disabled.
-// repos.IssueReporter may be nil; a default no-op reporter is used.
+// NewAppRoutes wires the route table onto e; nil ReqLogStore disables request-log capture
+// and nil IssueReporter falls back to a no-op reporter.
 func NewAppRoutes(ctx context.Context, e *echo.Echo, repos Repos) AppRoutes {
 	if repos.IssueReporter == nil {
 		repos.IssueReporter = defaultReporter{}
@@ -312,7 +311,10 @@ func (ar *appRoutes) SetHealthStats(fn health.StatsFunc) {
 	ar.healthCfg.Stats = fn
 }
 
-// InitEcho initializes Echo with global configurations
+// InitEcho assembles the project middleware chain (preload-link, correlation, recovery,
+// server-timing, security headers, raw-writer + httpcompression, and feature-gated
+// auth / session / link-relations); call once at startup, nil reqLogStore disables
+// error-trace promotion.
 func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
 	settingsRepo session.Provider,

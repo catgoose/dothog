@@ -2,7 +2,7 @@
 
 package domain
 
-// GraphUser represents a user from Microsoft Graph API
+// GraphUser mirrors the Microsoft Graph /users payload with extra db tags for local persistence.
 type GraphUser struct {
 	AzureID           string `json:"id" db:"AzureId"`
 	GivenName         string `json:"givenName" db:"GivenName"`

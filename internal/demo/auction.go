@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// AuctionItem represents a single item in the auction house.
+// AuctionItem holds a single lot's bid state; prices are stored in cents to avoid float drift.
 type AuctionItem struct {
 	EndsAt      time.Time
 	Name        string
@@ -21,18 +21,18 @@ type AuctionItem struct {
 	BidCount    int
 }
 
-// AuctionHouse manages the state of all auction items.
+// AuctionHouse is a thread-safe in-memory catalog of AuctionItems indexed by ID.
 type AuctionHouse struct {
 	items map[int]*AuctionItem
 	mu    sync.RWMutex
 }
 
-// FormatPrice returns the price in dollars with two decimal places.
+// FormatPrice renders cents as "$D.CC"; integer math avoids float drift.
 func FormatPrice(cents int) string {
 	return fmt.Sprintf("$%d.%02d", cents/100, cents%100)
 }
 
-// NewAuctionHouse creates an auction house with 8 items.
+// NewAuctionHouse pre-seeds 8 items with staggered end times across the next few hours.
 func NewAuctionHouse() *AuctionHouse {
 	now := time.Now()
 	items := []*AuctionItem{
@@ -52,7 +52,7 @@ func NewAuctionHouse() *AuctionHouse {
 	return &AuctionHouse{items: m}
 }
 
-// Items returns a snapshot of all auction items sorted by ID.
+// Items is a value-copy snapshot sorted by ID; safe to mutate independently of the house.
 func (h *AuctionHouse) Items() []AuctionItem {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -65,7 +65,7 @@ func (h *AuctionHouse) Items() []AuctionItem {
 	return out
 }
 
-// Item returns a copy of a single auction item.
+// Item returns a copy; mutations don't reach the house.
 func (h *AuctionHouse) Item(id int) (AuctionItem, bool) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -93,12 +93,12 @@ func (h *AuctionHouse) PlaceBid(id int, bidder string, amount int) (AuctionItem,
 	return *item, nil
 }
 
-// Topic returns the SSE topic for an auction item.
+// Topic is the SSE channel name for the given auction item ID ("auction/item-N").
 func (h *AuctionHouse) Topic(id int) string {
 	return fmt.Sprintf("auction/item-%d", id)
 }
 
-// AllTopics returns all auction topics.
+// AllTopics is the per-item SSE topic list in ID order, for pre-seeding subscribers.
 func (h *AuctionHouse) AllTopics() []string {
 	h.mu.RLock()
 	defer h.mu.RUnlock()

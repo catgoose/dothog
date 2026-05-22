@@ -13,7 +13,7 @@ import (
 	_ "github.com/catgoose/chuck/driver/sqlite" // register sqlite3 driver with database/sql
 )
 
-// Item represents one inventory row returned from the demo database.
+// Item is one row of the demo items table; CreatedAt is stored as an ISO date string for SQLite.
 type Item struct {
 	Name      string
 	Category  string
@@ -24,10 +24,10 @@ type Item struct {
 	Active    bool
 }
 
-// DB wraps a sqlite3 connection.
+// DB is the demo SQLite handle backing the typed CRUD helpers used across the /demo routes.
 type DB struct{ db *sql.DB }
 
-// ItemCategories is the list of available item categories for filters.
+// ItemCategories enumerates the category values allowed in the items table and the filter dropdown.
 var ItemCategories = []string{
 	"Electronics", "Clothing", "Food", "Books", "Sports",
 }
@@ -61,12 +61,12 @@ func Open(path string) (*DB, error) {
 	return d, nil
 }
 
-// RawDB returns the underlying *sql.DB connection.
+// RawDB exposes the underlying *sql.DB for code that needs ATTACH or raw migrations.
 func (d *DB) RawDB() *sql.DB {
 	return d.db
 }
 
-// Close closes the underlying database connection.
+// Close closes the underlying SQLite connection.
 func (d *DB) Close() error {
 	return d.db.Close()
 }
@@ -87,20 +87,20 @@ func (d *DB) Reset() error {
 	return d.initSchema(ctx)
 }
 
-// TableMeta describes a single table in the database.
+// TableMeta is one row of the demo's schema-info panel: table name with row and column counts.
 type TableMeta struct {
-	Name       string
-	RowCount   int
+	Name        string
+	RowCount    int
 	ColumnCount int
 }
 
-// SchemaInfo describes the current state of the database.
+// SchemaInfo is the aggregated table list plus the database-wide index count.
 type SchemaInfo struct {
 	Tables  []TableMeta
 	Indexes int
 }
 
-// GetSchemaInfo returns metadata about all tables and indexes in the database.
+// GetSchemaInfo enumerates user tables (with row and column counts) plus the database-wide index count.
 func (d *DB) GetSchemaInfo(ctx context.Context) (SchemaInfo, error) {
 	var info SchemaInfo
 
@@ -306,7 +306,7 @@ func seedBulk(db *sql.DB, query string, count int, argsFn func(i int) []any) err
 	return tx.Commit()
 }
 
-// CreateItem inserts a new item and returns it with the assigned ID.
+// CreateItem stamps created_at via SQLite's date('now') and returns the row populated with the new ID.
 func (d *DB) CreateItem(ctx context.Context, item Item) (Item, error) {
 	res, err := d.db.ExecContext(ctx,
 		`INSERT INTO items (name, category, price, stock, active, created_at) VALUES (@Name, @Category, @Price, @Stock, @Active, date('now'))`,
@@ -322,7 +322,7 @@ func (d *DB) CreateItem(ctx context.Context, item Item) (Item, error) {
 	return item, nil
 }
 
-// GetItem returns a single Item by ID.
+// GetItem looks up by primary key; sql.ErrNoRows is wrapped in a contextual error.
 func (d *DB) GetItem(ctx context.Context, id int) (Item, error) {
 	var item Item
 	var activeInt int
@@ -336,7 +336,7 @@ func (d *DB) GetItem(ctx context.Context, id int) (Item, error) {
 	return item, nil
 }
 
-// UpdateItem updates name, category, price, stock, and active for the given item.
+// UpdateItem writes name, category, price, stock, and active; created_at is left untouched.
 func (d *DB) UpdateItem(ctx context.Context, item Item) error {
 	res, err := d.db.ExecContext(ctx,
 		"UPDATE items SET name=@Name, category=@Category, price=@Price, stock=@Stock, active=@Active WHERE id=@ID",
@@ -354,7 +354,7 @@ func (d *DB) UpdateItem(ctx context.Context, item Item) error {
 	return nil
 }
 
-// DeleteItem deletes an item by ID.
+// DeleteItem removes the item by ID; returns an error if no row was affected.
 func (d *DB) DeleteItem(ctx context.Context, id int) error {
 	res, err := d.db.ExecContext(ctx, "DELETE FROM items WHERE id=@ID", sql.Named("ID", id))
 	if err != nil {

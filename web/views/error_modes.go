@@ -1,4 +1,6 @@
 // setup:feature:demo
+
+// Package views provides server-rendered page and partial views for the dothog demo UI.
 package views
 
 import (
@@ -54,7 +56,7 @@ func errorModesInlineFullRetryEC(size string) linkwell.ErrorContext {
 	}
 }
 
-// ContractDemoPresentations returns sample ErrorPresentations for the contract demo.
+// ContractDemoPresentations is a fixed trio (banner 500, inline 422, inline-full 429) for the contract demo.
 func ContractDemoPresentations() []corecomponents.ErrorPresentation {
 	return []corecomponents.ErrorPresentation{
 		corecomponents.NewBannerError(500, "Background job failed",
@@ -70,7 +72,7 @@ func ContractDemoPresentations() []corecomponents.ErrorPresentation {
 	}
 }
 
-// ContractFullPagePresentation returns a full-page ErrorPresentation for the contract demo.
+// ContractFullPagePresentation is the demo's 503 full-page ErrorPresentation with home/report controls.
 func ContractFullPagePresentation(theme string) corecomponents.ErrorPresentation {
 	return corecomponents.NewFullPageError(
 		503, "Service Unavailable",

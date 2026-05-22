@@ -7,7 +7,8 @@ import (
 	"time"
 )
 
-// SystemStats holds a point-in-time snapshot of Go runtime metrics.
+// SystemStats is the runtime snapshot reported by /health for the demo
+// dashboards; memory figures are in megabytes, Uptime is a duration string.
 type SystemStats struct {
 	Timestamp       string
 	GoVersion       string

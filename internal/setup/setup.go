@@ -53,8 +53,7 @@ const (
 	FeaturePWA             = "pwa"
 )
 
-// AllFeatures lists every selectable feature tag.
-// "database" is always included (implied by the base template) and is not user-selectable.
+// AllFeatures is every selectable feature tag; "database" is implied by the base template and not user-selectable.
 var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureOffline, FeatureSync, FeatureCSRF, FeatureLinkRelations, FeatureWebStandards, FeatureBrowserAPIs, FeaturePWA}
 
 // ImplicitFeatures are always selected and not presented to the user.
@@ -76,9 +75,7 @@ var featureDeps = map[string][]string{
 	FeatureWebStandards:  {},
 }
 
-// ExpandFeatureDeps adds any transitive dependencies implied by the
-// selected features. For example, selecting "sync" pulls in "offline"
-// and "capacitor".
+// ExpandFeatureDeps walks featureDeps to a fixed point; e.g. "sync" pulls in "offline".
 func ExpandFeatureDeps(features []string) []string {
 	have := make(map[string]bool, len(features))
 	for _, f := range features {
@@ -124,7 +121,7 @@ const (
 	PlatformWindows = "windows"
 )
 
-// SupportedPlatforms lists the host OSes setup can target.
+// SupportedPlatforms is the host-OS allowlist for setup; macOS hosts must cross-target.
 var SupportedPlatforms = []string{PlatformLinux, PlatformWindows}
 
 // Options configures the template setup run.
