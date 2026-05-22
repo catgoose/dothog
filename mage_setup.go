@@ -103,6 +103,9 @@ func Setup() error {
 
 	if hasFlags && parsed != nil {
 		fmt.Println("Running template setup...")
+		if err := maybeInstallCaddyForSetup(".", parsed); err != nil {
+			return err
+		}
 		if err := setup.Run(context.Background(), ".", *parsed); err != nil {
 			return err
 		}
@@ -174,6 +177,9 @@ func Setup() error {
 		_ = os.RemoveAll(filepath.Join(absTarget, setup.TemplateSetupDir))
 		_ = os.RemoveAll(filepath.Join(absTarget, "internal", "setup"))
 		_ = os.Remove(filepath.Join(absTarget, "mage_setup.go"))
+		if err := maybeInstallCaddyForSetup(absTarget, opts); err != nil {
+			return err
+		}
 		if err := setup.Run(context.Background(), absTarget, *opts); err != nil {
 			return err
 		}
@@ -189,6 +195,9 @@ func Setup() error {
 		return nil
 	}
 	fmt.Println("Running template setup...")
+	if err := maybeInstallCaddyForSetup(".", opts); err != nil {
+		return err
+	}
 	if err := setup.Run(context.Background(), ".", *opts); err != nil {
 		return err
 	}
@@ -630,6 +639,32 @@ func hasFeature(features []string, tag string) bool {
 		}
 	}
 	return false
+}
+
+func setupUsesCaddy(opts *setup.Options) bool {
+	if opts == nil {
+		return false
+	}
+	if opts.Features == nil {
+		return !opts.NoCaddy
+	}
+	return hasFeature(setup.ExpandFeatureDeps(opts.Features), setup.FeatureCaddy)
+}
+
+func maybeInstallCaddyForSetup(projectDir string, opts *setup.Options) error {
+	if !setupUsesCaddy(opts) {
+		return nil
+	}
+	install, err := huhConfirm("Caddy is required for local HTTPS in this scaffold. Install repo-local Caddy now?")
+	if err != nil {
+		return err
+	}
+	if !install {
+		fmt.Println("Skipping Caddy install. `mage watch` will require repo-local Caddy or a global `caddy` binary later.")
+		return nil
+	}
+	fmt.Println("Installing repo-local Caddy...")
+	return installRepoLocalCaddy(projectDir)
 }
 
 func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPrinted bool, err error) {
