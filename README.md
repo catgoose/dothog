@@ -1009,7 +1009,7 @@ All commands run with `go tool mage <target>`.
 | `lint`              | Code Quality | Run static analysis (golangci-lint, golint, fieldalignment) |
 | `fixfieldalignment` | Code Quality | Auto-fix field alignment                                    |
 | `clean`             | Utility      | Remove build and debug files                                |
-| `caddyinstall`      | HTTPS        | Install Caddy for local dev                                 |
+| `caddyinstall`      | HTTPS        | Install Caddy into `./bin` for this repo                    |
 | `caddystart`        | HTTPS        | Start Caddy with TLS termination                            |
 
 ## OFFICIAL DISCLAIMER

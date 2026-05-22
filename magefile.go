@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -198,6 +199,28 @@ func installRepoLocalCaddy(projectDir string) error {
 	)
 }
 
+func confirmInstallCaddy() (bool, error) {
+	info, err := os.Stdin.Stat()
+	if err != nil {
+		return false, err
+	}
+	if info.Mode()&os.ModeCharDevice == 0 {
+		return false, fmt.Errorf("caddy binary not found and no interactive terminal is available; run `go tool mage caddyinstall` to install ./bin/caddy")
+	}
+	fmt.Print("Caddy not found in ./bin or PATH. Install Caddy into ./bin now? [y/N]: ")
+	reader := bufio.NewReader(os.Stdin)
+	line, err := reader.ReadString('\n')
+	if err != nil && !errors.Is(err, io.EOF) {
+		return false, err
+	}
+	switch strings.ToLower(strings.TrimSpace(line)) {
+	case "y", "yes":
+		return true, nil
+	default:
+		return false, nil
+	}
+}
+
 func resolveCaddyBinary() (string, error) {
 	if _, err := os.Stat(caddyLocalBin()); err == nil {
 		return caddyLocalBin(), nil
@@ -205,7 +228,18 @@ func resolveCaddyBinary() (string, error) {
 	if path, err := exec.LookPath("caddy"); err == nil {
 		return path, nil
 	}
-	return "", fmt.Errorf("caddy binary not found; run `go tool mage caddyinstall` or rerun setup and choose Caddy install")
+	install, err := confirmInstallCaddy()
+	if err != nil {
+		return "", err
+	}
+	if !install {
+		return "", fmt.Errorf("caddy binary not found; run `go tool mage caddyinstall` to install ./bin/caddy")
+	}
+	fmt.Println("Installing Caddy into ./bin...")
+	if err := installRepoLocalCaddy("."); err != nil {
+		return "", err
+	}
+	return caddyLocalBin(), nil
 }
 
 // Tailwind compiles web/styles/input.css to the public tailwind.css bundle (minified).
@@ -972,7 +1006,7 @@ func TestWatch() error {
 
 // setup:feature:caddy:start
 
-// CaddyInstall installs the repo-local Caddy binary into ./bin.
+// CaddyInstall installs the Caddy binary into this repo's ./bin directory.
 func CaddyInstall() error {
 	fmt.Println("Installing Caddy...")
 	return installRepoLocalCaddy(".")
