@@ -11,7 +11,7 @@ import (
 // CanvasSize is the grid dimension (CanvasSize x CanvasSize).
 const CanvasSize = 64
 
-// CanvasPalette is the set of colors players can choose from.
+// CanvasPalette enumerates the ten hex colors offered by the pixel-canvas demo's color picker.
 var CanvasPalette = []string{
 	"#ef4444", // red
 	"#f97316", // orange
@@ -25,7 +25,7 @@ var CanvasPalette = []string{
 	"#ffffff", // white
 }
 
-// CanvasClient tracks a connected client.
+// CanvasClient tracks a single live participant's selected color and last-seen timestamp.
 type CanvasClient struct {
 	LastSeen time.Time `json:"-"`
 	Color    string    `json:"color"`
@@ -38,14 +38,14 @@ type PixelCanvas struct {
 	mu      sync.RWMutex
 }
 
-// NewPixelCanvas creates an empty canvas.
+// NewPixelCanvas starts with every cell empty and no clients tracked.
 func NewPixelCanvas() *PixelCanvas {
 	return &PixelCanvas{
 		clients: make(map[string]*CanvasClient),
 	}
 }
 
-// PlaceColor sets a cell's color.
+// PlaceColor writes color at (x,y); returns an error when coordinates fall outside the grid.
 func (pc *PixelCanvas) PlaceColor(x, y int, color string) error {
 	if x < 0 || x >= CanvasSize || y < 0 || y >= CanvasSize {
 		return fmt.Errorf("coordinates out of range")
@@ -56,21 +56,21 @@ func (pc *PixelCanvas) PlaceColor(x, y int, color string) error {
 	return nil
 }
 
-// Snapshot returns a copy of the grid.
+// Snapshot is a value copy; safe to mutate independently.
 func (pc *PixelCanvas) Snapshot() [CanvasSize * CanvasSize]string {
 	pc.mu.RLock()
 	defer pc.mu.RUnlock()
 	return pc.Cells
 }
 
-// Reset clears the entire canvas.
+// Reset clears every cell back to the empty string without disturbing tracked clients.
 func (pc *PixelCanvas) Reset() {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
 	pc.Cells = [CanvasSize * CanvasSize]string{}
 }
 
-// TouchClient registers or refreshes a client with their current color.
+// TouchClient stamps LastSeen now and upserts the client's color.
 func (pc *PixelCanvas) TouchClient(clientID, color string) {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
@@ -83,7 +83,7 @@ func (pc *PixelCanvas) TouchClient(clientID, color string) {
 	cl.LastSeen = time.Now()
 }
 
-// ActiveClients returns the count and colors of clients seen in the last 30 seconds.
+// ActiveClients counts clients seen in the last 30 seconds.
 func (pc *PixelCanvas) ActiveClients() []CanvasClient {
 	pc.mu.RLock()
 	defer pc.mu.RUnlock()

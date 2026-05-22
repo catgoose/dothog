@@ -23,7 +23,7 @@ type CalendarLabSettings struct {
 	HighlightWeekends bool
 }
 
-// CalendarLabPreset is a named set of simulator defaults.
+// CalendarLabPreset names a density/speed combo selectable from the lab toolbar.
 type CalendarLabPreset struct {
 	Name      string
 	Density   int
@@ -31,7 +31,7 @@ type CalendarLabPreset struct {
 	BurstSize int
 }
 
-// CalendarLabPresets lists the available simulation presets.
+// CalendarLabPresets enumerates the lab's stress presets in ascending intensity order.
 var CalendarLabPresets = []CalendarLabPreset{
 	{Name: "Calm", Density: 2, SimSpeed: 4000, BurstSize: 1},
 	{Name: "Steady", Density: 4, SimSpeed: 2000, BurstSize: 2},
@@ -40,15 +40,14 @@ var CalendarLabPresets = []CalendarLabPreset{
 	{Name: "Hell", Density: 12, SimSpeed: 50, BurstSize: 8},
 }
 
-// CalendarLabActivity records one simulator or user action for the activity log.
+// CalendarLabActivity is a single entry in the lab's rolling 50-event activity feed.
 type CalendarLabActivity struct {
 	Timestamp time.Time
 	Action    string
 }
 
-// CalendarLab wraps a CalendarStore with shared demo state: view settings,
-// simulator counters, selected day, and an activity log. All methods are
-// goroutine-safe.
+// CalendarLab is a CalendarStore plus shared demo state: view settings,
+// simulator counters, selected day, and activity log. Methods are goroutine-safe.
 type CalendarLab struct {
 	selectedDay time.Time
 	Store       *CalendarStore
@@ -60,8 +59,7 @@ type CalendarLab struct {
 	paused      bool
 }
 
-// NewCalendarLab creates a new lab backed by a fresh CalendarStore, initialised
-// to the current month with default settings.
+// NewCalendarLab opens on the current UTC month with all categories visible and density=8.
 func NewCalendarLab() *CalendarLab {
 	now := time.Now().UTC()
 	cats := make(map[CalendarEventCategory]bool, len(AllCalendarCategories))
@@ -81,14 +79,14 @@ func NewCalendarLab() *CalendarLab {
 	}
 }
 
-// Year returns the current visible year.
+// Year is the visible year under read lock.
 func (l *CalendarLab) Year() int {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return l.year
 }
 
-// Month returns the current visible month.
+// Month is the visible month under read lock.
 func (l *CalendarLab) Month() time.Month {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -108,21 +106,21 @@ func (l *CalendarLab) SetMonth(year int, month time.Month) {
 	}
 }
 
-// SelectedDay returns the currently selected day (zero if none).
+// SelectedDay is the zero time when nothing is selected.
 func (l *CalendarLab) SelectedDay() time.Time {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return l.selectedDay
 }
 
-// SelectDay sets the currently inspected day.
+// SelectDay truncates to UTC midnight; pass the zero time to clear the selection.
 func (l *CalendarLab) SelectDay(day time.Time) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.selectedDay = truncateToDay(day)
 }
 
-// Settings returns a snapshot of the current control state.
+// Settings is a deep-copied snapshot; the VisibleCategories map is safe to iterate.
 func (l *CalendarLab) Settings() CalendarLabSettings {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -143,14 +141,14 @@ func (l *CalendarLab) UpdateSettings(fn func(s *CalendarLabSettings)) {
 	fn(&l.settings)
 }
 
-// Paused returns whether the simulator is paused.
+// Paused reports whether SimTick should be skipped this round.
 func (l *CalendarLab) Paused() bool {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return l.paused
 }
 
-// TogglePause flips the paused state and returns the new value.
+// TogglePause flips the pause flag and returns the new value.
 func (l *CalendarLab) TogglePause() bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -171,7 +169,7 @@ func (l *CalendarLab) RecordActivity(action string) {
 	}
 }
 
-// Activity returns the recent activity log (newest last).
+// Activity is a defensive copy of the rolling 50-entry log, newest last.
 func (l *CalendarLab) Activity() []CalendarLabActivity {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -180,9 +178,8 @@ func (l *CalendarLab) Activity() []CalendarLabActivity {
 	return out
 }
 
-// SimTick runs one simulator tick: adds BurstSize random events to the
-// current month, prunes back to a budget, and returns descriptions of
-// what happened. The caller is responsible for publishing.
+// SimTick advances one step: adds BurstSize random events to the current month,
+// prunes back to a 60-event budget by oldest ID, and returns human-readable actions; caller publishes.
 func (l *CalendarLab) SimTick() []string {
 	l.mu.RLock()
 	year, month := l.year, l.month
@@ -225,7 +222,7 @@ func (l *CalendarLab) SimTick() []string {
 	return actions
 }
 
-// EventCount returns the total number of events in the current visible month.
+// EventCount totals every event in the visible month (no filters applied).
 func (l *CalendarLab) EventCount() int {
 	l.mu.RLock()
 	year, month := l.year, l.month
@@ -233,8 +230,7 @@ func (l *CalendarLab) EventCount() int {
 	return len(l.Store.EventsForMonth(year, month))
 }
 
-// FilteredEventCount returns the number of events in the current visible month
-// that match the active visibility and assignee filters.
+// FilteredEventCount counts visible-month events passing the active category and assignee filters.
 func (l *CalendarLab) FilteredEventCount() int {
 	l.mu.RLock()
 	year, month := l.year, l.month
@@ -248,9 +244,8 @@ func (l *CalendarLab) FilteredEventCount() int {
 	return len(FilterEvents(l.Store.EventsForMonth(year, month), settings))
 }
 
-// FilterEvents returns the subset of events that match the given settings'
-// visibility and assignee filters. It is a pure function safe to call from
-// any goroutine.
+// FilterEvents is pure: drops events failing the settings' category or assignee filters.
+// The output reuses events' backing array, so callers must not retain both.
 func FilterEvents(events []CalendarEvent, settings CalendarLabSettings) []CalendarEvent {
 	out := events[:0:0]
 	for _, e := range events {
@@ -261,8 +256,7 @@ func FilterEvents(events []CalendarEvent, settings CalendarLabSettings) []Calend
 	return out
 }
 
-// DayEventsMap builds a map of day-of-month to event slice for the current
-// visible month. The returned map is safe to read (not share with writes).
+// DayEventsMap groups visible-month events by day-of-month; the map is read-only.
 func (l *CalendarLab) DayEventsMap() map[int][]CalendarEvent {
 	l.mu.RLock()
 	year, month := l.year, l.month

@@ -13,7 +13,7 @@ import (
 	"github.com/catgoose/chuck/dbrepo"
 )
 
-// TaskStatuses is the list of valid task statuses.
+// TaskStatuses enumerates the lifecycle states stored in the Tasks.Status column.
 var TaskStatuses = []string{"draft", "active", "done"}
 
 // TasksTable defines the tasks table schema using the full repository pattern.
@@ -62,18 +62,18 @@ type Task struct {
 	Version     int            `db:"Version"`
 }
 
-// TaskStore provides CRUD operations on the Tasks table using the repository pattern.
+// TaskStore is the repository-pattern accessor for the Tasks table.
 type TaskStore struct {
 	db      *sql.DB
 	dialect dialect.Dialect
 }
 
-// NewTaskStore creates a TaskStore.
+// NewTaskStore binds db and the SQLite dialect; pass a different dialect by constructing TaskStore directly.
 func NewTaskStore(db *sql.DB) *TaskStore {
 	return &TaskStore{db: db, dialect: dialect.SQLiteDialect{}}
 }
 
-// ListTasks queries tasks with optional filters, sort, and pagination.
+// ListTasks paginates over filter/sort criteria; soft-deleted and archived rows are hidden unless explicitly requested.
 func (s *TaskStore) ListTasks(ctx context.Context, search, status, showArchived, showDeleted, sortBy, sortDir string, page, perPage int) ([]Task, int, error) {
 	w := dbrepo.NewWhere()
 
@@ -145,7 +145,7 @@ func (s *TaskStore) ListTasks(ctx context.Context, search, status, showArchived,
 	return tasks, total, rows.Err()
 }
 
-// GetTask returns a single task by ID.
+// GetTask bypasses soft-delete and archive filters; useful for admin views.
 func (s *TaskStore) GetTask(ctx context.Context, id int) (Task, error) {
 	cols := dbrepo.Columns(TasksTable.SelectColumns()...)
 	query := fmt.Sprintf("SELECT %s FROM %s WHERE ID = @ID", cols, TasksTable.Name)
@@ -163,7 +163,7 @@ func (s *TaskStore) GetTask(ctx context.Context, id int) (Task, error) {
 	return t, nil
 }
 
-// CreateTask inserts a new task using repository helpers.
+// CreateTask stamps timestamps and Version=1, defaulting Status to "draft" when empty.
 func (s *TaskStore) CreateTask(ctx context.Context, t *Task) error {
 	dbrepo.SetCreateTimestamps(&t.CreatedAt, &t.UpdatedAt)
 	dbrepo.InitVersion(&t.Version)
@@ -198,7 +198,7 @@ func (s *TaskStore) CreateTask(ctx context.Context, t *Task) error {
 	return nil
 }
 
-// UpdateTask updates a task using repository helpers.
+// UpdateTask increments Version and enforces optimistic concurrency via WHERE Version=prev.
 func (s *TaskStore) UpdateTask(ctx context.Context, t *Task) error {
 	dbrepo.SetUpdateTimestamp(&t.UpdatedAt)
 	dbrepo.IncrementVersion(&t.Version)
@@ -250,7 +250,7 @@ func (s *TaskStore) execUpdate(ctx context.Context, op string, id int, query str
 	return nil
 }
 
-// SoftDeleteTask marks a task as deleted using SetSoftDelete.
+// SoftDeleteTask stamps DeletedAt; rows are then hidden from ListTasks by default.
 func (s *TaskStore) SoftDeleteTask(ctx context.Context, id int) error {
 	now := dbrepo.GetNow()
 	return s.execUpdate(ctx, "soft delete", id,
@@ -267,7 +267,7 @@ func (s *TaskStore) RestoreTask(ctx context.Context, id int) error {
 	)
 }
 
-// ArchiveTask sets ArchivedAt using the archive helper.
+// ArchiveTask stamps ArchivedAt; archived rows are hidden from ListTasks by default.
 func (s *TaskStore) ArchiveTask(ctx context.Context, id int) error {
 	now := dbrepo.GetNow()
 	return s.execUpdate(ctx, "archive", id,

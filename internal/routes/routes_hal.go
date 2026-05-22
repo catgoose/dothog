@@ -16,7 +16,7 @@ import (
 
 // ─── HAL types ───────────────────────────────────────────────────────────────
 
-// HALLink represents a single link in a HAL _links object.
+// HALLink is one entry inside a HAL `_links` object.
 type HALLink struct {
 	Href        string `json:"href"`
 	Title       string `json:"title,omitempty"`
@@ -25,7 +25,8 @@ type HALLink struct {
 	Templated   bool   `json:"templated,omitempty"`
 }
 
-// HALResource is a generic HAL+JSON resource with _links and _embedded.
+// HALResource is a HAL+JSON resource; Props are flattened into the top
+// level alongside `_links` and `_embedded` by MarshalJSON.
 type HALResource struct {
 	Links    map[string]any `json:"_links"`
 	Embedded map[string]any `json:"_embedded,omitempty"`
@@ -271,7 +272,6 @@ func handleHALExplore(c echo.Context) error {
 	return handler.RenderComponent(c, views.HALExploreFragment(string(raw), halResourceToView(res), url))
 }
 
-// resolveHALResource maps an internal URL path to a HAL resource.
 func resolveHALResource(url string) (HALResource, error) {
 	// Strip query params for routing
 	path := url
@@ -368,7 +368,6 @@ func parsePathID(path, prefix string) (int, error) {
 	return id, err
 }
 
-// halResourceToView converts a HALResource into the template view model.
 func halResourceToView(r HALResource) views.HALResourceView {
 	v := views.HALResourceView{
 		Props: make([]views.HALPropView, 0),

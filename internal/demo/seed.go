@@ -15,13 +15,13 @@ type SeedDB struct {
 	attached bool
 }
 
-// SeedTableInfo describes a table in the seed database.
+// SeedTableInfo summarises one table in the attached seed schema or the main DB.
 type SeedTableInfo struct {
 	Name     string
 	RowCount int
 }
 
-// NewSeedDB wraps an existing in-memory database connection for seed operations.
+// NewSeedDB binds db (typically the demo in-memory pool) for ATTACH-based seed operations.
 func NewSeedDB(db *sql.DB) *SeedDB {
 	return &SeedDB{db: db}
 }
@@ -39,7 +39,7 @@ func (s *SeedDB) Attach(ctx context.Context, seedPath string) error {
 	return nil
 }
 
-// Detach detaches the seed schema.
+// Detach drops the "seed" schema attachment; no-op when not attached.
 func (s *SeedDB) Detach(ctx context.Context) error {
 	if !s.attached {
 		return nil
@@ -52,12 +52,12 @@ func (s *SeedDB) Detach(ctx context.Context) error {
 	return nil
 }
 
-// IsAttached reports whether seed.db is currently attached.
+// IsAttached reports whether seed.db is currently attached as the "seed" schema.
 func (s *SeedDB) IsAttached() bool {
 	return s.attached
 }
 
-// SeedTables returns information about all tables in the seed database.
+// SeedTables enumerates tables in the attached seed schema with row counts; errors when not attached.
 func (s *SeedDB) SeedTables(ctx context.Context) ([]SeedTableInfo, error) {
 	if !s.attached {
 		return nil, fmt.Errorf("seed.db not attached")
@@ -69,8 +69,8 @@ func (s *SeedDB) SeedTables(ctx context.Context) ([]SeedTableInfo, error) {
 	return s.countTables(ctx, "seed", names)
 }
 
-// CopyTable copies a table from the seed schema into the main database.
-// It creates the table in the main schema if it doesn't exist, then inserts all rows.
+// CopyTable copies a table from the seed schema into the main database,
+// creating the main-schema table when missing and using INSERT OR IGNORE for rows.
 func (s *SeedDB) CopyTable(ctx context.Context, tableName string) (int64, error) {
 	if !s.attached {
 		return 0, fmt.Errorf("seed.db not attached")
@@ -110,7 +110,6 @@ func (s *SeedDB) CopyTable(ctx context.Context, tableName string) (int64, error)
 	return result.RowsAffected()
 }
 
-// tableColumns returns the column names for a table in the given schema.
 func (s *SeedDB) tableColumns(ctx context.Context, schema, table string) ([]string, error) {
 	rows, err := s.db.QueryContext(ctx, fmt.Sprintf("PRAGMA %s.table_info(%s)", schema, table))
 	if err != nil {
@@ -133,7 +132,7 @@ func (s *SeedDB) tableColumns(ctx context.Context, schema, table string) ([]stri
 	return cols, rows.Err()
 }
 
-// MainTables returns information about all user tables in the main database.
+// MainTables enumerates user tables in the main schema with row counts (sqlite_* tables excluded).
 func (s *SeedDB) MainTables(ctx context.Context) ([]SeedTableInfo, error) {
 	names, err := s.listTableNames(ctx, "main")
 	if err != nil {
@@ -178,7 +177,7 @@ func (s *SeedDB) countTables(ctx context.Context, schema string, names []string)
 	return tables, nil
 }
 
-// DropMainTable drops a table from the main database.
+// DropMainTable issues DROP TABLE IF EXISTS against the main schema; never errors on missing tables.
 func (s *SeedDB) DropMainTable(ctx context.Context, tableName string) error {
 	_, err := s.db.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS main.%s", tableName))
 	if err != nil {

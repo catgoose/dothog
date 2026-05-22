@@ -2,10 +2,8 @@ package routes
 
 import "github.com/catgoose/promolog"
 
-// IssueReporter handles "Report Issue" actions from the error banner.
-// Implementations decide what to do with the report — send an email, post to
-// a Teams channel, write to a ticket system, etc.
-// The consumer defines the interface; the implementation is plugged in at startup.
+// IssueReporter is the pluggable sink for "Report Issue" actions from the error banner:
+// implementations route to email, Teams, ticketing, etc.; the impl is plugged in at startup.
 type IssueReporter interface {
 	// Report is called when a user submits the Report Issue modal.
 	// requestID identifies the failing request. description is user-provided

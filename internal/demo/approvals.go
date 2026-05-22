@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-// ApprovalStatuses lists every status an approval request can be in.
+// ApprovalStatuses enumerates the lifecycle states of an ApprovalRequest in transition order.
 var ApprovalStatuses = []string{"pending", "approved", "rejected", "escalated"}
 
-// ApprovalCategories lists the valid spend categories.
+// ApprovalCategories enumerates the spend categories shown in the submission form.
 var ApprovalCategories = []string{"Travel", "Equipment", "Software", "Training", "Contractor", "Other"}
 
-// ApprovalRequest represents a single approval workflow item.
+// ApprovalRequest is a single spend request driven through the HATEOAS state machine in AllowedActions.
 type ApprovalRequest struct {
 	SubmittedAt time.Time
 	ReviewedAt  *time.Time
@@ -34,8 +34,7 @@ type ApprovalQueue struct {
 	mu       sync.RWMutex
 }
 
-// AllowedActions returns the valid actions for a given status based on the
-// HATEOAS state machine.
+// AllowedActions lists actions per status from the HATEOAS state machine; "approved" is terminal.
 func AllowedActions(status string) []string {
 	switch status {
 	case "pending":
@@ -51,7 +50,7 @@ func AllowedActions(status string) []string {
 	}
 }
 
-// NewApprovalQueue creates an ApprovalQueue seeded with sample requests.
+// NewApprovalQueue pre-seeds nine sample requests spanning all four lifecycle statuses.
 func NewApprovalQueue() *ApprovalQueue {
 	now := time.Now()
 	reviewed := now.Add(-2 * time.Hour)
@@ -160,7 +159,7 @@ func NewApprovalQueue() *ApprovalQueue {
 	return q
 }
 
-// AllRequests returns a copy of all approval requests.
+// AllRequests is a defensive copy; safe to mutate independently of the queue.
 func (q *ApprovalQueue) AllRequests() []ApprovalRequest {
 	q.mu.RLock()
 	defer q.mu.RUnlock()
@@ -169,7 +168,7 @@ func (q *ApprovalQueue) AllRequests() []ApprovalRequest {
 	return result
 }
 
-// GetRequest returns the request with the given ID, if it exists.
+// GetRequest looks up by ID; ok is false when the request is not found.
 func (q *ApprovalQueue) GetRequest(id int) (ApprovalRequest, bool) {
 	q.mu.RLock()
 	defer q.mu.RUnlock()
@@ -181,7 +180,7 @@ func (q *ApprovalQueue) GetRequest(id int) (ApprovalRequest, bool) {
 	return ApprovalRequest{}, false
 }
 
-// SubmitRequest creates a new approval request in "pending" status.
+// SubmitRequest starts a request in "pending" status with a freshly assigned ID.
 func (q *ApprovalQueue) SubmitRequest(title, requester string, amount float64, category, notes string) ApprovalRequest {
 	q.mu.Lock()
 	defer q.mu.Unlock()

@@ -15,10 +15,8 @@ var envFlag = flag.String("env", "development", "application environment (reads 
 
 var mode string
 
-// Init loads environment variables from the .env.{mode} file. The mode is
-// determined by: the env parameter if non-empty, otherwise the -env flag
-// (default "development"). Returns an error if the env file is missing;
-// callers may choose to continue with OS environment variables.
+// Init resolves the mode from env (or the -env flag, default "development") and loads
+// .env.{mode} via godotenv; a missing file errors, but callers may proceed with the OS env.
 func Init(env string) error {
 	if env == "" {
 		env = *envFlag
@@ -31,7 +29,7 @@ func Init(env string) error {
 	return nil
 }
 
-// Get returns the value of the environment variable or an error if not set.
+// Get errors when key is unset; use GetDefault for optional values.
 func Get(key string) (string, error) {
 	v := os.Getenv(key)
 	if v == "" {
@@ -40,7 +38,7 @@ func Get(key string) (string, error) {
 	return v, nil
 }
 
-// GetDefault returns the value of the environment variable or fallback if not set.
+// GetDefault treats an unset key as fallback; never returns an error.
 func GetDefault(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -51,7 +49,7 @@ func GetDefault(key, fallback string) string {
 // Dev reports whether the current mode is "development".
 func Dev() bool { return mode == "development" }
 
-// Name returns the current environment mode.
+// Name is the canonical mode string ("development", "production", …) after normalisation.
 func Name() string { return mode }
 
 func normalize(s string) string {

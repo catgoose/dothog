@@ -14,7 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Topic constants for the collaborative document demo.
 const (
 	topicDocContent   = "doc/content"
 	topicDocStats     = "doc/stats"

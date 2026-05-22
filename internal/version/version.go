@@ -16,7 +16,7 @@ func Asset(path string) string {
 	return path + "?v=" + Version
 }
 
-// Display returns the version string with build date if available.
+// Display formats Version, appending " (BuildDate)" when BuildDate is non-empty.
 func Display() string {
 	if BuildDate != "" {
 		return Version + " (" + BuildDate + ")"

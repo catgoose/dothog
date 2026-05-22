@@ -8,9 +8,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Errors middleware package provides helper methods for returning HTTP respones
-// from echo contexts
-
 // errorOpts returns the default ErrorControlOpts for convenience error helpers.
 func errorOpts() linkwell.ErrorControlOpts {
 	return linkwell.ErrorControlOpts{HomeURL: "/", LoginURL: "/login"}
@@ -35,46 +32,38 @@ func newError(c echo.Context, statusCode int, message string) error {
 	return linkwell.NewHTTPError(ec)
 }
 
-// BadRequest returns a 400 Bad Request error
-// Use for invalid input, missing required parameters, or malformed requests
+// BadRequest is a 400 for invalid input, missing required parameters, or malformed requests.
 func BadRequest(c echo.Context, message string) error {
 	return newError(c, http.StatusBadRequest, message)
 }
 
-// Unauthorized returns a 401 Unauthorized error
-// Use when authentication is required but not provided or invalid
+// Unauthorized is a 401 when authentication is required but missing or invalid.
 func Unauthorized(c echo.Context, message string) error {
 	return newError(c, http.StatusUnauthorized, message)
 }
 
-// Forbidden returns a 403 Forbidden error
-// Use when authentication is valid but the user lacks permission for the resource
+// Forbidden is a 403 when authentication is valid but lacks permission for the resource.
 func Forbidden(c echo.Context, message string) error {
 	return newError(c, http.StatusForbidden, message)
 }
 
-// NotFound returns a 404 Not Found error
-// Use when the requested resource doesn't exist
+// NotFound is a 404 when the requested resource doesn't exist.
 func NotFound(c echo.Context, message string) error {
 	return newError(c, http.StatusNotFound, message)
 }
 
-// InternalServerError returns a 500 Internal Server Error
-// Use for unexpected server errors, database failures, or unhandled exceptions
+// InternalServerError is a 500 for unexpected server errors, database failures, or unhandled exceptions.
 func InternalServerError(c echo.Context, message string) error {
 	return newError(c, http.StatusInternalServerError, message)
 }
 
-// ServiceUnavailable returns a 503 Service Unavailable error
-// Use when the service is temporarily unavailable or overloaded
+// ServiceUnavailable is a 503 when the service is temporarily unavailable or overloaded.
 func ServiceUnavailable(c echo.Context, message string) error {
 	return newError(c, http.StatusServiceUnavailable, message)
 }
 
-// HypermediaError builds a linkwell.ErrorContext populated with request metadata
-// (route, requestID) from the echo context. Pass the result to linkwell.NewHTTPError
-// to return it from a handler, or render the error component directly alongside
-// a primary component via OOB swap.
+// HypermediaError stamps route and requestID from c into a linkwell.ErrorContext;
+// pass to linkwell.NewHTTPError for handler returns, or render alongside OOB swaps.
 func HypermediaError(c echo.Context, statusCode int, message string, err error, controls ...linkwell.Control) linkwell.ErrorContext {
 	return linkwell.ErrorContext{
 		StatusCode: statusCode,

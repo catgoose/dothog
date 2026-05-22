@@ -8,8 +8,8 @@ import (
 
 	"catgoose/dothog/internal/logger"
 
-	"github.com/jmoiron/sqlx"
 	_ "github.com/catgoose/chuck/driver/sqlite" // Register SQLite driver
+	"github.com/jmoiron/sqlx"
 )
 
 const userCacheSchema = `
@@ -35,21 +35,19 @@ const userCacheSchema = `
 	CREATE INDEX IF NOT EXISTS idx_users_updatedat ON Users(UpdatedAt);
 `
 
-// OpenSQLiteInMemory opens an in-memory SQLite database connection and initializes the schema
+// OpenSQLiteInMemory is a single-connection in-memory SQLite handle with WAL, a 30s busy timeout, and the user-cache schema applied.
 func OpenSQLiteInMemory() (*sqlx.DB, error) {
 	db, err := sqlx.Open("sqlite3", ":memory:")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open in-memory SQLite database: %w", err)
 	}
 
-	// Configure connection pool for SQLite concurrency
-	// SQLite has limited concurrency, so we use conservative settings
-	db.SetMaxOpenConns(1) // Only one connection to prevent locking issues
-	db.SetMaxIdleConns(1) // Keep one idle connection
+	// Single connection avoids SQLite write-locking contention.
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	db.SetConnMaxLifetime(10 * time.Minute)
 	db.SetConnMaxIdleTime(5 * time.Minute)
 
-	// Configure SQLite for better performance and concurrency
 	if err := configureSQLitePerformance(db); err != nil {
 		if closeErr := db.Close(); closeErr != nil {
 			logger.Get().Error("Failed to close database connection after performance configuration error", "close_error", closeErr, "config_error", err)
@@ -67,14 +65,12 @@ func OpenSQLiteInMemory() (*sqlx.DB, error) {
 	return db, nil
 }
 
-// configureSQLitePerformance sets up SQLite for optimal performance and concurrency
+// configureSQLitePerformance enables WAL journal mode and a 30s busy timeout.
 func configureSQLitePerformance(db *sqlx.DB) error {
-	// Enable WAL mode for better concurrency (multiple readers, single writer)
 	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
 		return fmt.Errorf("failed to enable WAL mode: %w", err)
 	}
 
-	// Set busy timeout to 30 seconds for better concurrency handling
 	if _, err := db.Exec("PRAGMA busy_timeout=30000"); err != nil {
 		return fmt.Errorf("failed to set busy timeout: %w", err)
 	}
@@ -82,7 +78,7 @@ func configureSQLitePerformance(db *sqlx.DB) error {
 	return nil
 }
 
-// InitSQLiteUserCacheSchema initializes the SQLite database schema for user cache
+// InitSQLiteUserCacheSchema applies the Users-table schema (idempotent via IF NOT EXISTS).
 func InitSQLiteUserCacheSchema(db *sqlx.DB) error {
 	_, err := db.Exec(userCacheSchema)
 	if err != nil {

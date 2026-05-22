@@ -20,37 +20,35 @@ import (
 
 const templateModulePath = "catgoose/dothog"
 
-// featureLabels maps feature tags to human-readable labels.
 var featureLabels = map[string]string{
 	// Core
 	setup.FeatureSessionSettings: "Session Settings (SQLite)",
 	setup.FeatureCSRF:            "CSRF Protection",
 	// Auth
-	setup.FeatureAuth:            "Auth (Crooner)",
-	setup.FeatureGraph:           "Graph API",
-	setup.FeatureAvatar:          "Avatar Photos (requires Graph)",
+	setup.FeatureAuth:   "Auth (Crooner)",
+	setup.FeatureGraph:  "Graph API",
+	setup.FeatureAvatar: "Avatar Photos (requires Graph)",
 	// Data
-	setup.FeatureDatabase:        "Database (chuck repository layer)",
-	setup.FeatureMSSQL:           "MSSQL dialect",
-	setup.FeaturePostgres:        "PostgreSQL dialect",
+	setup.FeatureDatabase: "Database (chuck repository layer)",
+	setup.FeatureMSSQL:    "MSSQL dialect",
+	setup.FeaturePostgres: "PostgreSQL dialect",
 	// Real-time
-	setup.FeatureSSE:             "SSE (requires Caddy)",
-	setup.FeatureCaddy:           "Caddy HTTPS/H3 front-proxy (adds local TLS)",
+	setup.FeatureSSE:   "SSE (requires Caddy)",
+	setup.FeatureCaddy: "Caddy HTTPS/H3 front-proxy (adds local TLS)",
 	// Navigation
-	setup.FeatureLinkRelations:   "Link Relations (context bars, breadcrumbs, site map)",
+	setup.FeatureLinkRelations: "Link Relations (context bars, breadcrumbs, site map)",
 	// Performance & Security
-	setup.FeatureWebStandards:    "Web Standards (Server-Timing, Vary, Permissions-Policy, Early Hints)",
-	setup.FeatureBrowserAPIs:     "Browser APIs (sendBeacon, BroadcastChannel)",
+	setup.FeatureWebStandards: "Web Standards (Server-Timing, Vary, Permissions-Policy, Early Hints)",
+	setup.FeatureBrowserAPIs:  "Browser APIs (sendBeacon, BroadcastChannel)",
 	// Mobile & Offline
-	setup.FeatureCapacitor:       "Capacitor (mobile wrapper)",
-	setup.FeatureOffline:         "Offline Mode (service worker, write queue)",
-	setup.FeatureSync:            "Sync (offline data synchronization)",
-	setup.FeaturePWA:             "PWA (Progressive Web App — offline + sync + mobile)",
+	setup.FeatureCapacitor: "Capacitor (mobile wrapper)",
+	setup.FeatureOffline:   "Offline Mode (service worker, write queue)",
+	setup.FeatureSync:      "Sync (offline data synchronization)",
+	setup.FeaturePWA:       "PWA (Progressive Web App — offline + sync + mobile)",
 	// Demo
-	setup.FeatureDemo:            "Demo Content",
+	setup.FeatureDemo: "Demo Content",
 }
 
-// featureLabelOrder is the display order for the feature multi-select.
 var featureLabelOrder = []string{
 	// Core
 	setup.FeatureSessionSettings,
@@ -84,7 +82,8 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-// Setup runs the template setup to initialize a new app.
+// Setup is the template repo's scaffold entrypoint for both the interactive
+// wizard and the flag-driven setup flow.
 // Example:
 //
 //	go tool mage setup
@@ -217,14 +216,13 @@ func Setup() error {
 	return nil
 }
 
-// presets maps preset names to their default feature sets.
 var presets = map[string][]string{
-	"internal": {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureDatabase, setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
+	"internal":                {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureDatabase, setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
 	"microsoft-lite-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
-	"public":   {setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs},
+	"public":                  {setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs},
 	"microsoft-full-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs, setup.FeatureOffline, setup.FeatureSync, setup.FeaturePWA},
-	"demo":     setup.AllFeatures,
-	"minimal":  {},
+	"demo":                    setup.AllFeatures,
+	"minimal":                 {},
 }
 
 func runWizard() (*setup.Options, error) {
@@ -238,20 +236,20 @@ func runWizard() (*setup.Options, error) {
 		preset     string
 		customize  bool
 		// Guided wizard answers
-		dbDialect    string // "sqlite", "mssql", "postgres", "sqlite+mssql", "sqlite+postgres"
-		wantSessions bool
-		wantAuth     bool
-		wantGraph    bool
-		wantAvatar   bool
-		wantSSE      bool
-		wantLinks    bool
+		dbDialect     string // "sqlite", "mssql", "postgres", "sqlite+mssql", "sqlite+postgres"
+		wantSessions  bool
+		wantAuth      bool
+		wantGraph     bool
+		wantAvatar    bool
+		wantSSE       bool
+		wantLinks     bool
 		wantStandards bool
-		wantAPIs     bool
+		wantAPIs      bool
 		wantCapacitor bool
-		wantOffline  bool
-		wantSync     bool
-		wantPWA      bool
-		wantDemo     bool
+		wantOffline   bool
+		wantSync      bool
+		wantPWA       bool
+		wantDemo      bool
 	)
 
 	currentModule := goModulePath()
@@ -442,21 +440,47 @@ func runWizard() (*setup.Options, error) {
 			features = append(features, setup.FeatureDatabase, setup.FeatureMSSQL)
 		case "sqlite+postgres":
 			features = append(features, setup.FeatureDatabase, setup.FeaturePostgres)
-		// "sqlite" — database is implicit, nothing extra needed
+			// "sqlite" — database is implicit, nothing extra needed
 		}
-		if wantSessions { features = append(features, setup.FeatureSessionSettings) }
-		if wantAuth { features = append(features, setup.FeatureAuth, setup.FeatureCSRF) }
-		if wantGraph { features = append(features, setup.FeatureGraph) }
-		if wantAvatar { features = append(features, setup.FeatureAvatar) }
-		if wantSSE { features = append(features, setup.FeatureSSE, setup.FeatureCaddy) }
-		if wantLinks { features = append(features, setup.FeatureLinkRelations, setup.FeatureSessionSettings) }
-		if wantStandards { features = append(features, setup.FeatureWebStandards) }
-		if wantAPIs { features = append(features, setup.FeatureBrowserAPIs, setup.FeatureSSE, setup.FeatureCaddy) }
-		if wantCapacitor { features = append(features, setup.FeatureCapacitor) }
-		if wantOffline { features = append(features, setup.FeatureOffline, setup.FeatureCapacitor) }
-		if wantSync { features = append(features, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor) }
-		if wantPWA { features = append(features, setup.FeaturePWA, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor) }
-		if wantDemo { features = append(features, setup.FeatureDemo) }
+		if wantSessions {
+			features = append(features, setup.FeatureSessionSettings)
+		}
+		if wantAuth {
+			features = append(features, setup.FeatureAuth, setup.FeatureCSRF)
+		}
+		if wantGraph {
+			features = append(features, setup.FeatureGraph)
+		}
+		if wantAvatar {
+			features = append(features, setup.FeatureAvatar)
+		}
+		if wantSSE {
+			features = append(features, setup.FeatureSSE, setup.FeatureCaddy)
+		}
+		if wantLinks {
+			features = append(features, setup.FeatureLinkRelations, setup.FeatureSessionSettings)
+		}
+		if wantStandards {
+			features = append(features, setup.FeatureWebStandards)
+		}
+		if wantAPIs {
+			features = append(features, setup.FeatureBrowserAPIs, setup.FeatureSSE, setup.FeatureCaddy)
+		}
+		if wantCapacitor {
+			features = append(features, setup.FeatureCapacitor)
+		}
+		if wantOffline {
+			features = append(features, setup.FeatureOffline, setup.FeatureCapacitor)
+		}
+		if wantSync {
+			features = append(features, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor)
+		}
+		if wantPWA {
+			features = append(features, setup.FeaturePWA, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor)
+		}
+		if wantDemo {
+			features = append(features, setup.FeatureDemo)
+		}
 
 	} else {
 		// ── Preset selected: offer to customize ────────────────────
@@ -591,7 +615,6 @@ func runWizard() (*setup.Options, error) {
 	}, nil
 }
 
-// resolveModulePath determines the final module path from user input and defaults.
 func resolveModulePath(appName, modulePathInput, _ string) string {
 	modulePathInput = strings.TrimSpace(modulePathInput)
 	if modulePathInput != "" {
@@ -604,7 +627,6 @@ func resolveModulePath(appName, modulePathInput, _ string) string {
 	return fmt.Sprintf("github.com/you/%s", binaryNameFromApp(name))
 }
 
-// describeFeatures returns a human-readable summary of selected features.
 func describeFeatures(features []string) string {
 	if len(features) == 0 {
 		return "none (bare HTMX app)"
@@ -776,13 +798,12 @@ func setupScriptArgsFromCLI() []string {
 	return args[idx+1:]
 }
 
-// huhConfirm prompts the user with a yes/no confirmation using huh.
+// huhConfirm is huhConfirmDefault with a default of false.
 func huhConfirm(message string) (bool, error) {
 	return huhConfirmDefault(message, false)
 }
 
-// huhConfirmDefault prompts the user with a yes/no confirmation using huh,
-// with a configurable default value.
+// huhConfirmDefault returns false (and a nil error) on user abort, matching how callers handle cancellation.
 func huhConfirmDefault(message string, def bool) (bool, error) {
 	confirmed := def
 	err := huh.NewConfirm().
@@ -800,7 +821,7 @@ func huhConfirmDefault(message string, def bool) (bool, error) {
 	return confirmed, nil
 }
 
-// huhInput prompts the user for text input using huh.
+// huhInput returns "" (and a nil error) on user abort.
 func huhInput(title, placeholder, value string) (string, error) {
 	result := value
 	field := huh.NewInput().

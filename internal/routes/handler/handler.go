@@ -1,4 +1,3 @@
-// Package handler provides HTTP request handlers and utility functions for rendering components.
 package handler
 
 import (
@@ -25,15 +24,13 @@ import (
 
 const pageLabel = "pageLabel"
 
-// SetPageLabel sets a human-readable label for the current page, used as the
-// terminal breadcrumb. Call before RenderBaseLayout.
+// SetPageLabel overrides the terminal breadcrumb for this request; call before RenderBaseLayout.
 func SetPageLabel(c echo.Context, label string) {
 	c.Set(pageLabel, label)
 }
 
-// LayoutFunc renders a page component into a full HTML page.
-// The default layout uses the dothog Index template with nav, breadcrumbs, and theme.
-// Derived apps can override this via SetLayout to use their own page wrapper.
+// LayoutFunc wraps a page component in the full HTML chrome (nav, breadcrumbs, theme);
+// derived apps swap their own implementation via SetLayout.
 type LayoutFunc func(c echo.Context, cmp templ.Component) error
 
 var customLayout LayoutFunc
@@ -44,8 +41,8 @@ func SetLayout(fn LayoutFunc) {
 	customLayout = fn
 }
 
-// RenderBaseLayout wraps the component in a page layout and renders it.
-// If a custom layout was set via SetLayout, it is used instead of the default.
+// RenderBaseLayout delegates to the custom LayoutFunc set via SetLayout,
+// falling back to the dothog AppNavLayout.
 func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 	if customLayout != nil {
 		return customLayout(c, cmp)
@@ -53,7 +50,6 @@ func RenderBaseLayout(c echo.Context, cmp templ.Component) error {
 	return renderDefaultLayout(c, cmp)
 }
 
-// layoutCtx holds common layout state extracted from the request context.
 type layoutCtx struct {
 	csrfToken string
 	theme     string
@@ -63,7 +59,6 @@ type layoutCtx struct {
 	hubs      []linkwell.HubEntry
 }
 
-// getLayoutCtx extracts CSRF token, theme, and breadcrumbs from the request.
 func getLayoutCtx(c echo.Context) layoutCtx {
 	var csrfToken string
 	// setup:feature:csrf:start
@@ -160,8 +155,8 @@ func renderDefaultLayout(c echo.Context, cmp templ.Component) error {
 	))
 }
 
-// AppNavLayoutFunc returns a LayoutFunc that uses the responsive app-nav layout.
-// The NavConfig defines navigation structure and optional custom slots.
+// AppNavLayoutFunc binds a NavConfig (with optional custom slots) and emits a LayoutFunc
+// targeting the responsive app-nav shell.
 func AppNavLayoutFunc(cfg linkwell.NavConfig) LayoutFunc {
 	return func(c echo.Context, cmp templ.Component) error {
 		path := c.Request().URL.Path
@@ -187,9 +182,8 @@ var (
 	appName   string
 )
 
-// InitRouteSet builds the set of GET-routable paths from the Echo router and
-// stores the app name for use in page titles. Call once after all routes are
-// registered, before the server starts.
+// InitRouteSet caches every GET path from e and the app name for page titles;
+// call once after route registration, before serving.
 func InitRouteSet(e *echo.Echo, name string) {
 	appName = name
 	getRoutes = make(map[string]bool)
@@ -241,7 +235,8 @@ func buildPathCrumbs(path, from string, routes map[string]bool) []linkwell.Bread
 	return crumbs
 }
 
-// RenderComponent renders a templ component to the response
+// RenderComponent writes cmp directly to the response and converts any
+// templ render error into a 500 hypermedia response via HandleError.
 func RenderComponent(c echo.Context, cmp templ.Component) error {
 	if err := cmp.Render(c.Request().Context(), c.Response()); err != nil {
 		return HandleError(c, http.StatusInternalServerError, "Failed to render component", err)
@@ -287,15 +282,9 @@ func HandleHypermediaError(c echo.Context, statusCode int, message string, err e
 	return linkwell.NewHTTPError(ec)
 }
 
-// HandleNotFound renders a full-page 404 within the base layout for direct
-// navigation. HTMX requests return a hypermedia error with back/home/report
-// controls, rendered as an OOB banner by ErrorHandlerMiddleware.
-// Register with e.RouteNotFound.
-//
-// Both branches return a 404 error so Echo's HTTPErrorHandler runs and the
-// per-request log buffer is promoted into the error-trace store. The non-HTMX
-// branch renders the response first and relies on the handler's committed-
-// response short-circuit to avoid double-rendering.
+// HandleNotFound is the e.RouteNotFound target: full-page 404 for direct nav,
+// hypermedia error with back/home/report controls for HTMX. Both branches return a 404
+// so Echo's HTTPErrorHandler runs and the log buffer reaches the error-trace store.
 func HandleNotFound(c echo.Context) error {
 	if c.Request().Header.Get("HX-Request") == "true" {
 		return HandleHypermediaError(c, http.StatusNotFound, "Not Found", nil)
@@ -307,7 +296,8 @@ func HandleNotFound(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusNotFound, "Not Found")
 }
 
-// HandleComponent is a handler that renders a templ component
+// HandleComponent adapts a templ.Component into an echo.HandlerFunc that
+// renders the component inside the active base layout.
 func HandleComponent(cmp templ.Component) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return RenderBaseLayout(c, cmp)

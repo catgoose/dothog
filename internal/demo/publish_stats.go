@@ -21,7 +21,7 @@ func (s *PublishStats) Add(bytes int) {
 	s.bytes.Add(int64(bytes))
 }
 
-// Snapshot returns the current count and total byte total.
+// Snapshot is the count/byte pair; the two atomic reads are not consistent across fields.
 func (s *PublishStats) Snapshot() (count, bytes int64) {
 	return s.count.Load(), s.bytes.Load()
 }

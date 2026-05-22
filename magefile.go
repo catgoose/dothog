@@ -23,7 +23,6 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-// Default Environment Variables
 var (
 	env        = envOr("ENV", "development")
 	envFile    = fmt.Sprintf(".env.%s", env)
@@ -35,33 +34,32 @@ var (
 	// - APP_HTTP_PORT: Echo origin port (SERVER_LISTEN_PORT) — plain HTTP in dev
 	// - TEMPL_HTTP_PORT: templ's local HTTP proxy port
 	// - CADDY_TLS_PORT: Caddy TLS termination port (only when caddy feature is selected)
-	proxyURL               = fmt.Sprintf("http://%s:{{APP_HTTP_PORT}}", proxyHost)
-	proxyPort              = "{{TEMPL_HTTP_PORT}}"
+	proxyURL  = fmt.Sprintf("http://%s:{{APP_HTTP_PORT}}", proxyHost)
+	proxyPort = "{{TEMPL_HTTP_PORT}}"
 	// setup:feature:caddy:start
-	caddyTLSPort           = "{{CADDY_TLS_PORT}}"
+	caddyTLSPort = "{{CADDY_TLS_PORT}}"
 	// setup:feature:caddy:end
 	htmxURL                = "https://unpkg.com/htmx.org"
 	htmxResponseTargetsURL = "https://unpkg.com/htmx-ext-response-targets"
 	// setup:feature:sse:start
-	htmxSSEURL             = "https://unpkg.com/htmx-ext-sse"
+	htmxSSEURL = "https://unpkg.com/htmx-ext-sse"
 	// setup:feature:sse:end
 	// setup:feature:demo:start
-	tavernJSURL            = "https://cdn.jsdelivr.net/gh/catgoose/tavern-js@latest/dist/tavern.min.js"
+	tavernJSURL = "https://cdn.jsdelivr.net/gh/catgoose/tavern-js@latest/dist/tavern.min.js"
 	// setup:feature:demo:end
-	hyperscriptURL         = "https://unpkg.com/hyperscript.org"
-	alpineURL              = "https://unpkg.com/@alpinejs/csp@3/dist/cdn.min.js"
-	alpineMorphURL         = "https://unpkg.com/@alpinejs/morph@3/dist/cdn.min.js"
-	htmxAlpineMorphURL     = "https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js"
-	publicSourceDir        = "web/assets/public"
-	publicOutputDir        = filepath.Join(buildPath, publicSourceDir)
-	publicJSDir            = filepath.Join(publicSourceDir, "js")
-	publicCSSDir           = filepath.Join(publicSourceDir, "css")
+	hyperscriptURL     = "https://unpkg.com/hyperscript.org"
+	alpineURL          = "https://unpkg.com/@alpinejs/csp@3/dist/cdn.min.js"
+	alpineMorphURL     = "https://unpkg.com/@alpinejs/morph@3/dist/cdn.min.js"
+	htmxAlpineMorphURL = "https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js"
+	publicSourceDir    = "web/assets/public"
+	publicOutputDir    = filepath.Join(buildPath, publicSourceDir)
+	publicJSDir        = filepath.Join(publicSourceDir, "js")
+	publicCSSDir       = filepath.Join(publicSourceDir, "css")
 )
 
 const templWatchIgnorePattern = `(^|[\\/])mage_output_file\.go$`
 const caddyModuleVersion = "v2.11.3"
 
-// DaisyUIComponents is the list of DaisyUI CSS component URLs.
 var daisyUIComponents = []string{
 	"npm/daisyui@5/base/rootscrollgutter.css",
 	"npm/daisyui@5/base/reset.css",
@@ -109,7 +107,6 @@ var daisyUIComponents = []string{
 	"npm/daisyui@5/theme/silk.css",
 }
 
-// Helper function to get environment variable with default
 func envOr(env, def string) string {
 	if v := os.Getenv(env); v != "" {
 		return v
@@ -211,7 +208,7 @@ func resolveCaddyBinary() (string, error) {
 	return "", fmt.Errorf("caddy binary not found; run `go tool mage caddyinstall` or rerun setup and choose Caddy install")
 }
 
-// Tailwind runs the Tailwind CSS compilation
+// Tailwind compiles web/styles/input.css to the public tailwind.css bundle (minified).
 func Tailwind() error {
 	return sh.Run(tailwindLocalBin(),
 		"-i", "web/styles/input.css",
@@ -219,7 +216,7 @@ func Tailwind() error {
 		"-m")
 }
 
-// TailwindWatch runs Tailwind in watch mode
+// TailwindWatch runs the Tailwind compiler in watch mode, installing the CLI first if missing.
 func TailwindWatch() error {
 	if _, err := os.Stat(tailwindLocalBin()); os.IsNotExist(err) {
 		fmt.Println("Tailwind binary not found. Running update...")
@@ -315,7 +312,7 @@ func tailwindAssetName() string {
 	}
 }
 
-// DaisyUpdate updates DaisyUI CSS
+// DaisyUpdate downloads the combined DaisyUI CSS bundle into public/css.
 func DaisyUpdate() error {
 	mg.Deps(PrepareDirs)
 	daisyURL := fmt.Sprintf("https://cdn.jsdelivr.net/combine/%s",
@@ -323,7 +320,7 @@ func DaisyUpdate() error {
 	return downloadFile(daisyURL, filepath.Join(publicCSSDir, "daisyui.css"))
 }
 
-// HtmxUpdate updates HTMX and all HTMX extension files
+// HtmxUpdate downloads HTMX core and the response-targets/SSE extensions into public/js.
 func HtmxUpdate() error {
 	mg.Deps(PrepareDirs)
 	if err := downloadFile(htmxURL, filepath.Join(publicJSDir, "htmx.min.js")); err != nil {
@@ -340,7 +337,7 @@ func HtmxUpdate() error {
 	return nil
 }
 
-// HyperscriptUpdate updates Hyperscript file
+// HyperscriptUpdate downloads the _hyperscript runtime into public/js.
 func HyperscriptUpdate() error {
 	return downloadFile(hyperscriptURL, filepath.Join(publicJSDir, "_hyperscript.min.js"))
 }
@@ -366,7 +363,7 @@ func AlpineUpdate() error {
 	return downloadFile(htmxAlpineMorphURL, filepath.Join(publicJSDir, "htmx.alpine-morph.js"))
 }
 
-// UpdateAssets updates all assets
+// UpdateAssets downloads every vendored client asset (HTMX, Alpine, Hyperscript, DaisyUI, Tailwind, tavern-js).
 func UpdateAssets() error {
 	if err := HyperscriptUpdate(); err != nil {
 		return fmt.Errorf("hyperscript update failed: %v", err)
@@ -391,7 +388,7 @@ func UpdateAssets() error {
 	return nil
 }
 
-// Air runs the Air live reload tool.
+// Air watches Go sources via .air/server.toml and rebuilds tmp/main on change.
 func Air() error {
 	fmt.Println("running air")
 	return sh.Run("go", "tool", "air", "-c", ".air/server.toml")
@@ -408,23 +405,23 @@ func AirBuild() error {
 	return sh.RunV(cmd[0], cmd[1:]...)
 }
 
-// Templ runs Templ in watch mode
+// Templ is an alias for TemplWatch.
 func Templ() error {
 	return TemplWatch()
 }
 
-// TemplWatch runs Templ in watch mode
+// TemplWatch runs `templ generate -watch` behind a proxy on TEMPL_HTTP_PORT.
 func TemplWatch() error {
 	cmd := getTemplCmd()
 	return sh.RunV(cmd[0], cmd[1:]...)
 }
 
-// TemplGenerate generates Templ files
+// TemplGenerate produces *_templ.go in one shot; use TemplWatch for live regen.
 func TemplGenerate() error {
 	return sh.Run("go", "tool", "templ", "generate")
 }
 
-// Clean removes build and debug files
+// Clean removes the build/ output tree and any Delve __debug_bin* binaries.
 func Clean() error {
 	if err := CleanBuild(); err != nil {
 		return fmt.Errorf("clean build failed: %v", err)
@@ -435,12 +432,12 @@ func Clean() error {
 	return nil
 }
 
-// CleanBuild removes the build directory
+// CleanBuild deletes build/ recursively (the deployable-output tree).
 func CleanBuild() error {
 	return os.RemoveAll(buildPath)
 }
 
-// CleanDebug removes debug binaries
+// CleanDebug removes Delve __debug_bin* binaries left in the working tree.
 func CleanDebug() error {
 	matches, err := filepath.Glob("__debug_bin*")
 	if err != nil {
@@ -454,7 +451,8 @@ func CleanDebug() error {
 	return nil
 }
 
-// PrepareDirs creates necessary directories
+// PrepareDirs ensures build/, build/public/js, and build/public/css exist
+// before Tailwind/Templ/CopyFiles write into them.
 func PrepareDirs() error {
 	dirs := []string{
 		publicOutputDir,
@@ -469,7 +467,7 @@ func PrepareDirs() error {
 	return nil
 }
 
-// CopyFiles copies necessary files to build directory
+// CopyFiles copies the env file, web/views, and public assets into build/.
 func CopyFiles() error {
 	if err := EnvCheck(); err != nil {
 		return fmt.Errorf("environment check failed: %v", err)
@@ -479,7 +477,6 @@ func CopyFiles() error {
 		return fmt.Errorf("prepare directories failed: %v", err)
 	}
 
-	// Copy env file
 	if err := sh.Copy(filepath.Join(buildPath, filepath.Base(envFile)), envFile); err != nil {
 		return fmt.Errorf("failed to copy env file: %v", err)
 	}
@@ -506,7 +503,7 @@ func CopyFiles() error {
 	return nil
 }
 
-// Compile builds the Go project
+// Compile builds main.go into build/<binaryName> with BuildDate baked in via ldflags.
 func Compile() error {
 	ldflags := "-w -X catgoose/dothog/internal/version.BuildDate=" + time.Now().UTC().Format("2006-01-02")
 	return sh.Run("go", "build",
@@ -515,13 +512,13 @@ func Compile() error {
 		"main.go")
 }
 
-// Run executes the compiled binary
+// Run executes the release-like artifact under build/, rebuilding it first via Build.
 func Run() error {
 	mg.Deps(Build)
 	return sh.Run(filepath.Join(buildPath, binaryName+hostBinaryExt()))
 }
 
-// EnvCheck verifies the environment file exists
+// EnvCheck fails fast when the selected .env.<ENV> file is missing.
 func EnvCheck() error {
 	if _, err := os.Stat(envFile); os.IsNotExist(err) {
 		return fmt.Errorf("error: %s file not found", envFile)
@@ -529,7 +526,7 @@ func EnvCheck() error {
 	return nil
 }
 
-// Watch runs Tailwind, Templ, Air, and Caddy in watch mode
+// Watch runs Tailwind, Templ, Air, and (when enabled) Caddy concurrently for local dev; opens the browser unless OPEN_BROWSER=false.
 func Watch() error {
 	if err := nodeModulesCheck(); err != nil {
 		return err
@@ -572,7 +569,6 @@ func Watch() error {
 		}()
 	}
 
-	// Wait for all tasks to complete or error
 	for range len(tasks) {
 		if err := <-errc; err != nil {
 			return err
@@ -581,7 +577,6 @@ func Watch() error {
 	return nil
 }
 
-// openBrowserURL opens the given URL in the default browser.
 func openBrowserURL(url string) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
@@ -605,7 +600,7 @@ func nodeModulesCheck() error {
 	return nil
 }
 
-// Build cleans, updates assets, and builds the project
+// Build runs npm ci (if needed), Clean, Tailwind, Compile, then CopyFiles to produce a deployable build/ tree.
 func Build() error {
 	fmt.Println("Starting build process...")
 
@@ -637,7 +632,6 @@ func Build() error {
 	return nil
 }
 
-// Helper function to join URLs for DaisyUI
 func copyDir(src, dst string) error {
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -681,7 +675,6 @@ func joinURLs(urls []string) string {
 	return result
 }
 
-// Helper function to get Templ command
 func getTemplCmd() []string {
 	return []string{
 		"go", "tool", "templ", "generate",
@@ -694,7 +687,6 @@ func getTemplCmd() []string {
 	}
 }
 
-// Helper function to get Templ notify proxy args
 func getTemplNotifyProxyArgs() []string {
 	return []string{
 		"go", "tool", "templ", "generate",
@@ -705,7 +697,6 @@ func getTemplNotifyProxyArgs() []string {
 	}
 }
 
-// Helper function to download a file
 func downloadFile(url, filepath string) error {
 	return sh.Run("curl", "-Lso", filepath, url)
 }
@@ -825,7 +816,7 @@ func runQuiet(name string, args ...string) error {
 	return cmd.Run()
 }
 
-// Lint runs static analysis and style checks on the codebase.
+// Lint runs golangci-lint, golint, fieldalignment, and (when installed) oxlint.
 func Lint() error {
 	if _, err := exec.LookPath("golangci-lint"); err != nil {
 		return errors.New("golangci-lint not found. Please install it: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest")
@@ -884,7 +875,7 @@ func runFilteredFieldAlignment() error {
 	return errors.New("fieldalignment issues found")
 }
 
-// FixFieldAlignment runs fieldalignment with the -fix flag to automatically fix field alignment issues
+// FixFieldAlignment runs `fieldalignment -fix` to rewrite struct field order in place.
 func FixFieldAlignment() error {
 	if _, err := exec.LookPath("fieldalignment"); err != nil {
 		return errors.New("fieldalignment not found. Please install it: go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest")
@@ -893,32 +884,32 @@ func FixFieldAlignment() error {
 	return runQuiet("fieldalignment", "-fix", "./...")
 }
 
-// LintWatch runs Air with lint configuration for automatic linting on file changes
+// LintWatch runs Air with .air/lint.toml to re-lint on file changes.
 func LintWatch() error {
 	fmt.Println("Starting Air lint watch mode...")
 	fmt.Println("Press Ctrl+C to stop")
 	return sh.Run("go", "tool", "air", "-c", ".air/lint.toml")
 }
 
-// Test runs all tests
+// Test is the broadest Go test target; it executes the full package tree.
 func Test() error {
 	fmt.Println("Running tests...")
 	return sh.RunV("go", "test", "./...")
 }
 
-// TestVerbose runs all tests with verbose output
+// TestVerbose adds per-test logging to the full package-tree test run.
 func TestVerbose() error {
 	fmt.Println("Running tests with verbose output...")
 	return sh.RunV("go", "test", "-v", "./...")
 }
 
-// TestCoverage runs tests with coverage report
+// TestCoverage reports statement coverage across the full package tree.
 func TestCoverage() error {
 	fmt.Println("Running tests with coverage...")
 	return sh.RunV("go", "test", "-cover", "./...")
 }
 
-// TestCoverageHTML runs tests and generates HTML coverage report
+// TestCoverageHTML produces coverage.out and renders it to coverage.html.
 func TestCoverageHTML() error {
 	fmt.Println("Running tests with HTML coverage report...")
 	if err := sh.RunV("go", "test", "-coverprofile=coverage.out", "./..."); err != nil {
@@ -927,19 +918,19 @@ func TestCoverageHTML() error {
 	return sh.RunV("go", "tool", "cover", "-html=coverage.out", "-o=coverage.html")
 }
 
-// TestBenchmark runs benchmark tests
+// TestBenchmark enables Go benchmarks across the package tree.
 func TestBenchmark() error {
 	fmt.Println("Running benchmark tests...")
 	return sh.RunV("go", "test", "-bench=.", "./...")
 }
 
-// TestRace runs tests with race detection
+// TestRace enables the race detector across the full package tree.
 func TestRace() error {
 	fmt.Println("Running tests with race detection...")
 	return sh.RunV("go", "test", "-race", "./...")
 }
 
-// TestE2E runs Playwright end-to-end tests
+// TestE2E runs Playwright e2e tests headlessly using e2e/playwright.config.ts.
 func TestE2E() error {
 	if err := nodeModulesCheck(); err != nil {
 		return err
@@ -948,7 +939,7 @@ func TestE2E() error {
 	return sh.RunV("npx", "playwright", "test", "--config", "e2e/playwright.config.ts")
 }
 
-// TestE2EHeaded runs Playwright tests in headed browser mode
+// TestE2EHeaded runs the Playwright e2e suite with a visible browser.
 func TestE2EHeaded() error {
 	if err := nodeModulesCheck(); err != nil {
 		return err
@@ -957,7 +948,7 @@ func TestE2EHeaded() error {
 	return sh.RunV("npx", "playwright", "test", "--config", "e2e/playwright.config.ts", "--headed")
 }
 
-// TestE2EUI opens the Playwright interactive UI
+// TestE2EUI launches the Playwright interactive UI runner.
 func TestE2EUI() error {
 	if err := nodeModulesCheck(); err != nil {
 		return err
@@ -966,24 +957,22 @@ func TestE2EUI() error {
 	return sh.RunV("npx", "playwright", "test", "--config", "e2e/playwright.config.ts", "--ui")
 }
 
-// TestWatch runs tests in watch mode using the Go-based watcher
+// TestWatch builds and runs the Go test watcher (cmd/testwatcher) which re-runs tests on .go file changes.
 func TestWatch() error {
 	fmt.Println("Building and starting Go test watcher...")
 	fmt.Println("Tests will run automatically on .go file changes")
 	fmt.Println("Press Ctrl+C to stop")
 
-	// Build the test watcher
 	if err := sh.Run("go", "build", "-o", filepath.Join(binPath, "testwatcher"), "./cmd/testwatcher"); err != nil {
 		return fmt.Errorf("failed to build test watcher: %w", err)
 	}
 
-	// Run the test watcher
 	return sh.Run(filepath.Join(binPath, "testwatcher"))
 }
 
 // setup:feature:caddy:start
 
-// CaddyInstall installs Caddy for local development
+// CaddyInstall installs the repo-local Caddy binary into ./bin.
 func CaddyInstall() error {
 	fmt.Println("Installing Caddy...")
 	return installRepoLocalCaddy(".")

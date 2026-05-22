@@ -7,7 +7,8 @@ import (
 	"time"
 )
 
-// User represents a user in the system, storing Azure user information
+// User is the persisted row for an Azure-cached user; nullable Graph
+// attributes use sql.Null* so JSON omitzero suppresses unset values.
 type User struct {
 	UpdatedAt         time.Time      `db:"UpdatedAt" json:"updatedAt"`
 	CreatedAt         time.Time      `db:"CreatedAt" json:"createdAt"`
@@ -26,7 +27,7 @@ type User struct {
 	ID                int            `db:"ID" json:"id"`
 }
 
-// FromGraphUser creates a User from a GraphUser
+// FromGraphUser copies fields from graphUser into u, wrapping strings as NullString.
 func (u *User) FromGraphUser(graphUser *GraphUser) {
 	u.AzureID = graphUser.AzureID
 	u.UserPrincipalName = graphUser.UserPrincipalName

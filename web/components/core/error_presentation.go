@@ -5,6 +5,7 @@ import "github.com/catgoose/linkwell"
 // ErrorSurface identifies which rendering surface an error should use.
 type ErrorSurface string
 
+// ErrorSurface values: where in the page the error renders, which controls Normalize's defaults.
 const (
 	SurfaceBanner     ErrorSurface = "banner"
 	SurfaceInline     ErrorSurface = "inline"
@@ -100,7 +101,7 @@ func (p *ErrorPresentation) toErrorContext() linkwell.ErrorContext {
 
 // --- Ergonomic constructors ---
 
-// NewBannerError creates a banner-surface error presentation.
+// NewBannerError builds an ErrorPresentation on SurfaceBanner; Normalize stamps defaults.
 func NewBannerError(status int, title string, controls ...linkwell.Control) ErrorPresentation {
 	p := ErrorPresentation{
 		Surface:  SurfaceBanner,
@@ -112,7 +113,7 @@ func NewBannerError(status int, title string, controls ...linkwell.Control) Erro
 	return p
 }
 
-// NewInlineError creates an inline-surface error presentation.
+// NewInlineError builds an ErrorPresentation on SurfaceInline (no Normalize pass).
 func NewInlineError(status int, title string, controls ...linkwell.Control) ErrorPresentation {
 	return ErrorPresentation{
 		Surface:  SurfaceInline,
@@ -122,7 +123,7 @@ func NewInlineError(status int, title string, controls ...linkwell.Control) Erro
 	}
 }
 
-// NewInlineFullError creates an inline-full error presentation with explicit size.
+// NewInlineFullError builds an ErrorPresentation on SurfaceInlineFull; empty size defaults to SizeMD.
 func NewInlineFullError(status int, title string, size ErrorSize, controls ...linkwell.Control) ErrorPresentation {
 	p := ErrorPresentation{
 		Surface:  SurfaceInlineFull,
@@ -137,7 +138,7 @@ func NewInlineFullError(status int, title string, size ErrorSize, controls ...li
 	return p
 }
 
-// NewFullPageError creates a full-page error presentation.
+// NewFullPageError builds an ErrorPresentation on SurfaceFullPage; Normalize stamps defaults.
 func NewFullPageError(status int, title, detail, route, requestID, theme string, controls ...linkwell.Control) ErrorPresentation {
 	p := ErrorPresentation{
 		Surface:   SurfaceFullPage,

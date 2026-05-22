@@ -15,21 +15,21 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// UserCache represents the in-memory SQLite database for caching Graph users
+// UserCache is the SQLite-backed cache of Graph users (Users table).
 type UserCache struct {
 	DB *sqlx.DB
 }
 
-// NewUserCache initializes the UserCache with an existing SQLite database connection
+// NewUserCache binds db without verifying the Users table exists; call EnsureSchema or
+// UsersTableExists when that guarantee is needed.
 func NewUserCache(db *sqlx.DB) *UserCache {
 	return &UserCache{DB: db}
 }
 
-// InsertOrUpdateUsers inserts or updates users in the SQLite database using PascalCase column names
+// InsertOrUpdateUsers upserts each user in a single transaction, rolling back on the first row that fails.
 func (c *UserCache) InsertOrUpdateUsers(ctx context.Context, users []domain.GraphUser) error {
 	log := logger.WithContext(ctx)
 
-	// Ensure the Users table exists
 	if err := c.EnsureSchema(ctx); err != nil {
 		return fmt.Errorf("failed to ensure schema: %w", err)
 	}
@@ -89,7 +89,7 @@ const (
 	userSelect = "SELECT AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName"
 )
 
-// SearchUsers finds users who match any of the given search terms
+// SearchUsers ANDs LIKE clauses across GivenName/Surname/DisplayName/AccountName for each term and returns up to limit rows ordered by DisplayName.
 func (c *UserCache) SearchUsers(terms []string, limit int) ([]domain.GraphUser, error) {
 	if len(terms) == 0 {
 		return nil, fmt.Errorf("no search terms provided")
@@ -122,7 +122,8 @@ func (c *UserCache) SearchUsers(terms []string, limit int) ([]domain.GraphUser, 
 	return users, nil
 }
 
-// GetAllUsers retrieves all users from the database
+// GetAllUsers dumps the entire Users table (DisplayName-sorted). Intended
+// for one-off admin views; large directories should prefer SearchUsers.
 func (c *UserCache) GetAllUsers() ([]domain.GraphUser, error) {
 	query := `
 		SELECT AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName
@@ -137,7 +138,7 @@ func (c *UserCache) GetAllUsers() ([]domain.GraphUser, error) {
 	return users, nil
 }
 
-// GetUserByAzureID retrieves a user by their Azure ID
+// GetUserByAzureID wraps sql.ErrNoRows in a contextual error when the row is missing.
 func (c *UserCache) GetUserByAzureID(azureID string) (*domain.GraphUser, error) {
 	query := `
 		SELECT AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName
@@ -152,7 +153,8 @@ func (c *UserCache) GetUserByAzureID(azureID string) (*domain.GraphUser, error) 
 	return &user, nil
 }
 
-// UsersTableExists checks if the Users table exists in the database
+// UsersTableExists probes sqlite_master directly so callers can decide whether
+// to call EnsureSchema before queries.
 func (c *UserCache) UsersTableExists() (bool, error) {
 	var count int
 	err := c.DB.Get(&count, "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Users'")
@@ -162,7 +164,7 @@ func (c *UserCache) UsersTableExists() (bool, error) {
 	return count > 0, nil
 }
 
-// EnsureSchema ensures that the Users table exists in the database
+// EnsureSchema is idempotent: creates the Users table only when sqlite_master reports it missing.
 func (c *UserCache) EnsureSchema(ctx context.Context) error {
 	exists, err := c.UsersTableExists()
 	if err != nil {
@@ -200,7 +202,7 @@ func (c *UserCache) EnsureSchema(ctx context.Context) error {
 	return nil
 }
 
-// GetUserCount returns the number of users in the cache
+// GetUserCount is the row count of Users (cached and persisted).
 func (c *UserCache) GetUserCount() (int, error) {
 	var count int
 	err := c.DB.Get(&count, "SELECT COUNT(*) FROM Users")

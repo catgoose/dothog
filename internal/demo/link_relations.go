@@ -31,7 +31,7 @@ func (d *DB) initLinkRelations() error {
 	return err
 }
 
-// ListStoredLinks returns all admin-created link relations.
+// ListStoredLinks enumerates every relation, ordered by (source, rel, target) for stable display.
 func (d *DB) ListStoredLinks() ([]StoredLinkRelation, error) {
 	rows, err := d.db.Query(
 		"SELECT id, source, rel, target, title, group_name, created_at FROM link_relations ORDER BY source, rel, target")
@@ -51,7 +51,7 @@ func (d *DB) ListStoredLinks() ([]StoredLinkRelation, error) {
 	return links, rows.Err()
 }
 
-// InsertLink creates a new admin link relation.
+// InsertLink persists a new relation; the (source, rel, target) unique constraint prevents duplicates.
 func (d *DB) InsertLink(source, rel, target, title, groupName string) error {
 	_, err := d.db.Exec(
 		"INSERT INTO link_relations (source, rel, target, title, group_name) VALUES (?, ?, ?, ?, ?)",
@@ -62,7 +62,7 @@ func (d *DB) InsertLink(source, rel, target, title, groupName string) error {
 	return nil
 }
 
-// DeleteLink removes an admin-created link relation by ID.
+// DeleteLink removes a relation by ID; errors when no row was affected.
 func (d *DB) DeleteLink(id int) error {
 	res, err := d.db.Exec("DELETE FROM link_relations WHERE id = ?", id)
 	if err != nil {
@@ -78,8 +78,7 @@ func (d *DB) DeleteLink(id int) error {
 	return nil
 }
 
-// StoredLinkIDs returns the set of (source, rel, target) tuples that are admin-created,
-// keyed for quick lookup.
+// StoredLinkIDs is a set of existing relation IDs for membership checks in templates.
 func (d *DB) StoredLinkIDs() (map[int]bool, error) {
 	rows, err := d.db.Query("SELECT id FROM link_relations")
 	if err != nil {

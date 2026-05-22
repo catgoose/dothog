@@ -25,7 +25,8 @@ func LinkRelationsMiddleware() echo.MiddlewareFunc {
 	}
 }
 
-// GetLinkRelations retrieves link relations from the echo context.
+// GetLinkRelations reads the per-request rel list set by LinkRelationsMiddleware;
+// returns nil when the middleware is absent.
 func GetLinkRelations(c echo.Context) []linkwell.LinkRelation {
 	if v := c.Get("link_relations"); v != nil {
 		if links, ok := v.([]linkwell.LinkRelation); ok {

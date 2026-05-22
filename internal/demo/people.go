@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// Person represents a person in the directory.
+// Person is one row of the demo people directory; CreatedAt is stored as a date-formatted string.
 type Person struct {
 	FirstName  string
 	LastName   string
@@ -24,10 +24,10 @@ type Person struct {
 	ID         int
 }
 
-// FullName returns "First Last".
+// FullName joins FirstName and LastName with a single space.
 func (p Person) FullName() string { return p.FirstName + " " + p.LastName }
 
-// Departments is the list of available departments for filters.
+// Departments enumerates the seed department values used by the people filter dropdown.
 var Departments = []string{
 	"Engineering", "Sales", "Marketing", "Finance", "Human Resources",
 	"Operations", "Legal", "Customer Support", "Product", "Design",
@@ -40,7 +40,7 @@ var allowedPeopleSort = map[string]string{
 	"title":      "job_title",
 }
 
-// ListPeople returns a paginated list of people matching optional search and department filters.
+// ListPeople paginates over optional search/department filters and reports the unpaginated total.
 func (d *DB) ListPeople(ctx context.Context, search, department, sortBy, sortDir string, page, perPage int) ([]Person, int, error) {
 	col, ok := allowedPeopleSort[sortBy]
 	if !ok {
@@ -99,7 +99,7 @@ func (d *DB) ListPeople(ctx context.Context, search, department, sortBy, sortDir
 	return people, total, rows.Err()
 }
 
-// GetPerson returns a single person by ID.
+// GetPerson looks up by ID; sql.ErrNoRows is wrapped in a contextual error.
 func (d *DB) GetPerson(ctx context.Context, id int) (Person, error) {
 	var p Person
 	err := d.db.QueryRowContext(ctx,
@@ -111,7 +111,7 @@ func (d *DB) GetPerson(ctx context.Context, id int) (Person, error) {
 	return p, nil
 }
 
-// UpdatePerson updates a person row.
+// UpdatePerson writes p's mutable fields; CreatedAt is not modified and missing IDs return an error.
 func (d *DB) UpdatePerson(ctx context.Context, p Person) error {
 	res, err := d.db.ExecContext(ctx,
 		"UPDATE people SET first_name=@FirstName, last_name=@LastName, email=@Email, phone=@Phone, city=@City, state=@State, department=@Department, job_title=@JobTitle, bio=@Bio WHERE id=@ID",

@@ -17,12 +17,12 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 )
 
-// Client wraps the Microsoft Graph SDK client for app-only access.
+// Client is the Microsoft Graph SDK handle scoped for app-only (client-credentials) access.
 type Client struct {
 	client *msgraphsdk.GraphServiceClient
 }
 
-// NewGraphClient creates a Graph client using client credentials (tenant ID, client ID, client secret).
+// NewGraphClient authenticates via azidentity client-secret credentials scoped to https://graph.microsoft.com/.default.
 func NewGraphClient(tenantID, clientID, clientSecret string) (*Client, error) {
 	cred, err := azidentity.NewClientSecretCredential(tenantID, clientID, clientSecret, nil)
 	if err != nil {
@@ -45,7 +45,7 @@ func consistencyLevelHeaders() *abstractions.RequestHeaders {
 	return h
 }
 
-// FetchAllEnabledUsers fetches all enabled users from Microsoft Graph with filter and select equivalent to the previous implementation.
+// FetchAllEnabledUsers pages through every accountEnabled=true user (top=999, eventual consistency) and returns a flattened slice.
 func (c *Client) FetchAllEnabledUsers() ([]domain.GraphUser, error) {
 	ctx := context.Background()
 	filter := "accountEnabled eq true"

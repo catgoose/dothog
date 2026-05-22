@@ -18,7 +18,7 @@ type SharedDocument struct {
 	mu        sync.RWMutex
 }
 
-// DocRevision records a single edit event.
+// DocRevision is a single entry in the rolling revision log; WordDelta is signed against the prior word count.
 type DocRevision struct {
 	Timestamp time.Time
 	Summary   string
@@ -26,7 +26,7 @@ type DocRevision struct {
 	WordDelta int
 }
 
-// NewSharedDocument returns a document pre-populated with starter content.
+// NewSharedDocument pre-populates with a sample paragraph and an initial revision entry.
 func NewSharedDocument() *SharedDocument {
 	initial := "The quick brown fox jumps over the lazy dog. " +
 		"This shared document demonstrates how a single mutation signal " +
@@ -58,14 +58,14 @@ func (d *SharedDocument) Update(content string) {
 	d.nextID++
 }
 
-// Content returns the current document text.
+// Content is safe for concurrent reads.
 func (d *SharedDocument) Content() string {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 	return d.content
 }
 
-// Revisions returns up to the last 20 revision entries (newest first).
+// Revisions returns up to 20 entries, newest first.
 func (d *SharedDocument) Revisions() []DocRevision {
 	d.mu.RLock()
 	defer d.mu.RUnlock()

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// ErrorReportStatus represents the lifecycle state of an error report.
+// ErrorReportStatus is the lifecycle state of a captured error report.
 type ErrorReportStatus string
 
 // Error report status constants.
@@ -20,7 +20,7 @@ const (
 	ErrorReportStatusDismissed ErrorReportStatus = "dismissed"
 )
 
-// ErrorReport represents a user-submitted error report stored in the demo DB.
+// ErrorReport is one captured runtime error row; CreatedAt is stored as RFC3339 on disk.
 type ErrorReport struct {
 	CreatedAt   time.Time
 	ResolvedAt  sql.NullTime
@@ -34,12 +34,12 @@ type ErrorReport struct {
 	StatusCode  int
 }
 
-// CreatedAtFormatted returns the created_at timestamp in a human-readable format.
+// CreatedAtFormatted is CreatedAt rendered as "YYYY-MM-DD HH:MM:SS".
 func (r ErrorReport) CreatedAtFormatted() string {
 	return r.CreatedAt.Format("2006-01-02 15:04:05")
 }
 
-// ResolvedAtFormatted returns the resolved_at timestamp formatted, or "" if null.
+// ResolvedAtFormatted is the timestamp rendered as "YYYY-MM-DD HH:MM:SS", or "" when null.
 func (r ErrorReport) ResolvedAtFormatted() string {
 	if !r.ResolvedAt.Valid {
 		return ""
@@ -47,7 +47,7 @@ func (r ErrorReport) ResolvedAtFormatted() string {
 	return r.ResolvedAt.Time.Format("2006-01-02 15:04:05")
 }
 
-// DescriptionPreview returns a truncated description for table display.
+// DescriptionPreview caps Description at 80 chars; longer values get a trailing ellipsis.
 func (r ErrorReport) DescriptionPreview() string {
 	if len(r.Description) <= 80 {
 		return r.Description
@@ -55,7 +55,7 @@ func (r ErrorReport) DescriptionPreview() string {
 	return r.Description[:77] + "..."
 }
 
-// UserAgentSnippet returns a truncated user agent string for table display.
+// UserAgentSnippet caps UserAgent at 40 chars; longer values get a trailing ellipsis.
 func (r ErrorReport) UserAgentSnippet() string {
 	if len(r.UserAgent) <= 40 {
 		return r.UserAgent
@@ -63,7 +63,7 @@ func (r ErrorReport) UserAgentSnippet() string {
 	return r.UserAgent[:37] + "..."
 }
 
-// ErrorReportStatuses is the list of valid statuses for filters.
+// ErrorReportStatuses is the string form of every ErrorReportStatus, ordered for filter dropdowns.
 var ErrorReportStatuses = []string{
 	string(ErrorReportStatusPending),
 	string(ErrorReportStatusResolved),
@@ -78,7 +78,7 @@ var allowedErrorReportSort = map[string]string{
 	"route":       "route",
 }
 
-// InsertErrorReport stores a new error report and returns it with the assigned ID.
+// InsertErrorReport persists r as a pending report; CreatedAt is overwritten with the current UTC time.
 func (d *DB) InsertErrorReport(ctx context.Context, r ErrorReport) (ErrorReport, error) {
 	res, err := d.db.ExecContext(ctx,
 		`INSERT INTO error_reports (request_id, description, route, status_code, user_agent, log_entries, status, created_at)
@@ -104,7 +104,7 @@ func (d *DB) InsertErrorReport(ctx context.Context, r ErrorReport) (ErrorReport,
 	return r, nil
 }
 
-// GetErrorReport returns a single error report by ID.
+// GetErrorReport parses RFC3339 timestamps back into time.Time; unparseable values fall back to time.Now.
 func (d *DB) GetErrorReport(ctx context.Context, id int) (ErrorReport, error) {
 	var r ErrorReport
 	var status string
@@ -134,7 +134,7 @@ func (d *DB) GetErrorReport(ctx context.Context, id int) (ErrorReport, error) {
 	return r, nil
 }
 
-// ListErrorReports queries error reports with optional filters, sort, and pagination.
+// ListErrorReports paginates over filter/sort criteria and also reports the unpaginated total.
 func (d *DB) ListErrorReports(ctx context.Context, search, status, sortBy, sortDir string, page, perPage int) ([]ErrorReport, int, error) {
 	col, ok := allowedErrorReportSort[sortBy]
 	if !ok {
@@ -210,7 +210,7 @@ func (d *DB) ListErrorReports(ctx context.Context, search, status, sortBy, sortD
 	return reports, total, rows.Err()
 }
 
-// UpdateErrorReportStatus changes the status of an error report.
+// UpdateErrorReportStatus transitions a report's status; resolved and dismissed also stamp resolved_at.
 func (d *DB) UpdateErrorReportStatus(ctx context.Context, id int, status ErrorReportStatus) error {
 	var resolvedAt any
 	if status == ErrorReportStatusResolved || status == ErrorReportStatusDismissed {
@@ -235,7 +235,6 @@ func (d *DB) UpdateErrorReportStatus(ctx context.Context, id int, status ErrorRe
 	return nil
 }
 
-// initErrorReports creates the error_reports table if it does not exist.
 func (d *DB) initErrorReports() error {
 	_, err := d.db.Exec(`CREATE TABLE IF NOT EXISTS error_reports (
 		id          INTEGER PRIMARY KEY AUTOINCREMENT,

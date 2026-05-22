@@ -21,13 +21,12 @@ import (
 
 const subsGroupCookie = "tavern_subs_group"
 
-// subsTopics contains all the topics used by the subscription lab.
 var subsTopics = struct {
-	scoped    string
-	data      []string
-	multi     []string
-	vip       []string
-	standard  []string
+	scoped   string
+	data     []string
+	multi    []string
+	vip      []string
+	standard []string
 }{
 	scoped: "tavern/subs/scoped",
 	data: []string{

@@ -150,13 +150,12 @@ func getEnvVar(key string, description string) (string, error) {
 
 var getConfig = sync.OnceValues(buildConfig)
 
-// GetConfig returns the singleton configuration instance.
+// GetConfig is the sync.OnceValues-cached AppConfig; first call builds, later calls reuse.
 func GetConfig() (*AppConfig, error) {
 	return getConfig()
 }
 
-// MustGetConfig returns the singleton configuration instance.
-// Panics if configuration cannot be loaded.
+// MustGetConfig is the singleton AppConfig; panics on load failure (use only at startup).
 func MustGetConfig() *AppConfig {
 	config, err := GetConfig()
 	if err != nil {
@@ -165,7 +164,7 @@ func MustGetConfig() *AppConfig {
 	return config
 }
 
-// ResetForTesting resets the singleton for testing purposes.
+// ResetForTesting clears the cached config singleton so the next GetConfig rebuilds it; tests only.
 func ResetForTesting() {
 	getConfig = sync.OnceValues(buildConfig)
 }

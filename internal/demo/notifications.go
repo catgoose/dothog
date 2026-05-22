@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-// NotificationIdentity represents a user identity for the notifications demo.
+// NotificationIdentity is one entry in the visitor identity pool; Color drives avatar tint.
 type NotificationIdentity struct {
 	ID    string
 	Name  string
@@ -33,7 +33,7 @@ var notificationIdentityPool = []NotificationIdentity{
 	{ID: "u12", Name: "Syntax Error", Color: "#64748b"},
 }
 
-// NotificationCategory defines the notification types.
+// NotificationCategory groups outbound notifications for per-category filtering.
 type NotificationCategory string
 
 // Notification category constants.
@@ -44,7 +44,7 @@ const (
 	CatSystem  NotificationCategory = "system"
 )
 
-// AllNotificationCategories lists every category.
+// AllNotificationCategories is the canonical category list in toolbar display order.
 var AllNotificationCategories = []NotificationCategory{
 	CatOrder, CatMention, CatAlert, CatSystem,
 }
@@ -87,14 +87,14 @@ type NotificationFilters struct {
 	mu      sync.RWMutex
 }
 
-// NewNotificationFilters creates a new filter store.
+// NewNotificationFilters starts empty; per-user defaults materialise on the first SetFilter call.
 func NewNotificationFilters() *NotificationFilters {
 	return &NotificationFilters{
 		filters: make(map[string]map[NotificationCategory]bool),
 	}
 }
 
-// SetFilter enables or disables a category for a user.
+// SetFilter persists a category preference for the user, seeding all categories enabled on first touch.
 func (nf *NotificationFilters) SetFilter(userID string, cat NotificationCategory, enabled bool) {
 	nf.mu.Lock()
 	defer nf.mu.Unlock()
@@ -107,7 +107,7 @@ func (nf *NotificationFilters) SetFilter(userID string, cat NotificationCategory
 	nf.filters[userID][cat] = enabled
 }
 
-// IsEnabled checks if a category is enabled for a user. Defaults to true.
+// IsEnabled defaults to true when the user has no recorded preference for the category.
 func (nf *NotificationFilters) IsEnabled(userID string, cat NotificationCategory) bool {
 	nf.mu.RLock()
 	defer nf.mu.RUnlock()
@@ -119,7 +119,7 @@ func (nf *NotificationFilters) IsEnabled(userID string, cat NotificationCategory
 	return true
 }
 
-// EnabledCategories returns all enabled categories for a user.
+// EnabledCategories materialises every category, defaulting unset entries to true.
 func (nf *NotificationFilters) EnabledCategories(userID string) map[NotificationCategory]bool {
 	nf.mu.RLock()
 	defer nf.mu.RUnlock()
@@ -135,19 +135,19 @@ func (nf *NotificationFilters) EnabledCategories(userID string) map[Notification
 	return result
 }
 
-// AssignIdentity returns an identity for a given index (wraps around the pool).
+// AssignIdentity wraps index modulo the identity pool, so any int is valid.
 func AssignIdentity(index int) NotificationIdentity {
 	return notificationIdentityPool[index%len(notificationIdentityPool)]
 }
 
-// AllNotificationIdentities returns the full identity pool.
+// AllNotificationIdentities is a defensive copy of the fixed pool; safe to mutate independently.
 func AllNotificationIdentities() []NotificationIdentity {
 	out := make([]NotificationIdentity, len(notificationIdentityPool))
 	copy(out, notificationIdentityPool)
 	return out
 }
 
-// IdentityIndexByID returns the pool index for a given identity ID, or -1.
+// IdentityIndexByID is the pool index for id, or -1 when not found.
 func IdentityIndexByID(id string) int {
 	for i, ident := range notificationIdentityPool {
 		if ident.ID == id {
@@ -157,20 +157,20 @@ func IdentityIndexByID(id string) int {
 	return -1
 }
 
-// RandomIdentityIndex returns a random index into the identity pool.
+// RandomIdentityIndex is a crypto/rand index into the identity pool.
 func RandomIdentityIndex() int {
 	n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(notificationIdentityPool))))
 	return int(n.Int64())
 }
 
-// GenerateNotifID returns a short random ID for a notification.
+// GenerateNotifID is a hex-encoded 4-byte random ID (8 chars).
 func GenerateNotifID() string {
 	b := make([]byte, 4)
 	_, _ = rand.Read(b)
 	return hex.EncodeToString(b)
 }
 
-// FormatNotification renders a random message for the given category.
+// FormatNotification picks a random template from NotificationMessages[cat] and fills in a random 1000-9999 token.
 func FormatNotification(cat NotificationCategory) string {
 	msgs := NotificationMessages[cat]
 	n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(msgs))))

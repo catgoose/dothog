@@ -16,7 +16,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// carouselSlide holds data for a single carousel slide.
 type carouselSlide struct {
 	Title string
 	Desc  string

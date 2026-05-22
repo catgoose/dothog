@@ -22,12 +22,12 @@ const (
 	CalCatDeadline    CalendarEventCategory = "deadline"
 )
 
-// AllCalendarCategories lists every category in display order.
+// AllCalendarCategories is the canonical category list in display order.
 var AllCalendarCategories = []CalendarEventCategory{
 	CalCatMaintenance, CalCatAppointment, CalCatReminder, CalCatDeadline,
 }
 
-// CalendarEvent is a single scheduled item.
+// CalendarEvent is a single calendar entry; Date is truncated to midnight UTC for stable day grouping.
 type CalendarEvent struct {
 	Date     time.Time
 	Title    string
@@ -36,22 +36,21 @@ type CalendarEvent struct {
 	ID       int64
 }
 
-// CalendarStore is an in-memory store of demo calendar events.
+// CalendarStore is the thread-safe in-memory event store backing the calendar lab.
 type CalendarStore struct {
 	events  []CalendarEvent
 	counter atomic.Int64
 	mu      sync.RWMutex
 }
 
-// NewCalendarStore creates a new store seeded with sample events for the
-// current month so the demo always has something to show.
+// NewCalendarStore pre-seeds eight sample events in the current UTC month so the demo isn't empty.
 func NewCalendarStore() *CalendarStore {
 	s := &CalendarStore{}
 	s.seedCurrentMonth()
 	return s
 }
 
-// AddEvent adds an event and returns the assigned ID.
+// AddEvent stamps date at UTC midnight and assigns a fresh monotonic ID.
 func (s *CalendarStore) AddEvent(date time.Time, title, assignee string, cat CalendarEventCategory) int64 {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -79,8 +78,7 @@ func (s *CalendarStore) RemoveEvent(id int64) bool {
 	return false
 }
 
-// EventsForMonth returns all events whose Date falls in the given year/month,
-// sorted by date then by ID for stable display order.
+// EventsForMonth filters by year/month and sorts by Date then ID for stable display.
 func (s *CalendarStore) EventsForMonth(year int, month time.Month) []CalendarEvent {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -99,7 +97,7 @@ func (s *CalendarStore) EventsForMonth(year int, month time.Month) []CalendarEve
 	return out
 }
 
-// EventsForDay returns all events on the given day.
+// EventsForDay matches on UTC midnight and orders by insertion ID.
 func (s *CalendarStore) EventsForDay(day time.Time) []CalendarEvent {
 	target := truncateToDay(day)
 	s.mu.RLock()
@@ -118,7 +116,7 @@ func (s *CalendarStore) EventsForDay(day time.Time) []CalendarEvent {
 // month-grid renderer to draw indicator dots.
 type DayCounts map[CalendarEventCategory]int
 
-// DayCountsForMonth returns a map keyed by day-of-month with category counts.
+// DayCountsForMonth groups by day-of-month for the indicator-dot renderer.
 func (s *CalendarStore) DayCountsForMonth(year int, month time.Month) map[int]DayCounts {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

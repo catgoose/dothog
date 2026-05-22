@@ -9,31 +9,31 @@ import (
 	"time"
 )
 
-// ReplayLab tracks numbered events for the replay demo.
+// ReplayLab owns the monotonic event sequence and tunable replay window for the replay demo.
 type ReplayLab struct {
 	counter      atomic.Int64
 	replayWindow atomic.Int64
 }
 
-// NewReplayLab creates a new replay lab with the given initial window.
+// NewReplayLab starts with the counter at 0 and the given replay window.
 func NewReplayLab(window int) *ReplayLab {
 	rl := &ReplayLab{}
 	rl.replayWindow.Store(int64(window))
 	return rl
 }
 
-// NextEvent returns the next event ID and sequence number.
+// NextEvent advances the counter and returns "replay-N" plus the new sequence number.
 func (rl *ReplayLab) NextEvent() (id string, seq int64) {
 	n := rl.counter.Add(1)
 	return fmt.Sprintf("replay-%d", n), n
 }
 
-// ReplayWindow returns the current replay window size.
+// ReplayWindow is the current size honoured by Last-Event-ID reconnects (atomic read).
 func (rl *ReplayLab) ReplayWindow() int {
 	return int(rl.replayWindow.Load())
 }
 
-// SetReplayWindow updates the replay window size.
+// SetReplayWindow stores n atomically; takes effect on the next reconnect.
 func (rl *ReplayLab) SetReplayWindow(n int) {
 	rl.replayWindow.Store(int64(n))
 }
@@ -43,7 +43,7 @@ func (rl *ReplayLab) Reset() {
 	rl.counter.Store(0)
 }
 
-// BackpressureLab tracks stress presets and tier changes.
+// BackpressureLab tracks live subscriber tiers per (topic, subID) and a rolling 30-event tier-change log.
 type BackpressureLab struct {
 	currentTiers map[string]liveTier
 	activePreset string
@@ -65,7 +65,7 @@ type TierChange struct {
 	NewTier   int
 }
 
-// NewBackpressureLab creates a new backpressure lab in calm state.
+// NewBackpressureLab starts in the "calm" preset (2s publish interval).
 func NewBackpressureLab() *BackpressureLab {
 	return &BackpressureLab{
 		activePreset: "calm",
@@ -81,14 +81,14 @@ var BackpressurePresets = map[string]time.Duration{
 	"overwhelming": 5 * time.Millisecond,
 }
 
-// ActivePreset returns the current stress preset name.
+// ActivePreset is the current stress-preset name under read lock.
 func (bl *BackpressureLab) ActivePreset() string {
 	bl.mu.RLock()
 	defer bl.mu.RUnlock()
 	return bl.activePreset
 }
 
-// SetPreset changes the active stress preset.
+// SetPreset switches the publish interval; unknown names are silently ignored.
 func (bl *BackpressureLab) SetPreset(name string) {
 	bl.mu.Lock()
 	defer bl.mu.Unlock()
@@ -120,9 +120,8 @@ func (bl *BackpressureLab) RecordTierChange(topic, subID string, oldTier, newTie
 	}
 }
 
-// HighestTier returns the highest tier among live subscribers, or 0 (normal)
-// if no subscribers are in an elevated tier. Entries older than 10s are
-// treated as stale (subscriber left without a tier-change callback).
+// HighestTier is the max tier across live subscribers (0 = normal); entries
+// older than 10s are pruned as stale.
 func (bl *BackpressureLab) HighestTier() int {
 	bl.mu.Lock()
 	defer bl.mu.Unlock()
@@ -140,7 +139,7 @@ func (bl *BackpressureLab) HighestTier() int {
 	return highest
 }
 
-// TierChanges returns a copy of recent tier change events.
+// TierChanges is a defensive copy of the rolling 30-entry tier-change log.
 func (bl *BackpressureLab) TierChanges() []TierChange {
 	bl.mu.RLock()
 	defer bl.mu.RUnlock()
@@ -157,12 +156,12 @@ type PublishLab struct {
 	IfChangedCount atomic.Int64
 }
 
-// NewPublishLab creates a new publish lab.
+// NewPublishLab starts with all four counters at zero.
 func NewPublishLab() *PublishLab {
 	return &PublishLab{}
 }
 
-// Reset zeroes all counters.
+// Reset zeroes every raw/debounced/throttled/if-changed counter.
 func (pl *PublishLab) Reset() {
 	pl.RawCount.Store(0)
 	pl.DebouncedCount.Store(0)
@@ -170,7 +169,7 @@ func (pl *PublishLab) Reset() {
 	pl.IfChangedCount.Store(0)
 }
 
-// HooksLab tracks mutation source and hook events.
+// HooksLab holds the editable source, a rolling 20-entry hook log, and publish-stats counters.
 type HooksLab struct {
 	source   string
 	hookLog  []HookEvent
@@ -178,33 +177,33 @@ type HooksLab struct {
 	mu       sync.RWMutex
 }
 
-// HookEvent records a hook firing.
+// HookEvent records one hook firing; HookType is one of "before", "after", "on-mutate".
 type HookEvent struct {
 	Timestamp time.Time
 	HookType  string // "before", "after", "on-mutate"
 	Detail    string
 }
 
-// NewHooksLab creates a new hooks lab.
+// NewHooksLab pre-populates Source with a starter greeting.
 func NewHooksLab() *HooksLab {
 	return &HooksLab{source: "Hello from the Hooks Lab!"}
 }
 
-// Source returns the current source text.
+// Source is safe for concurrent reads.
 func (hl *HooksLab) Source() string {
 	hl.mu.RLock()
 	defer hl.mu.RUnlock()
 	return hl.source
 }
 
-// Update sets the source text.
+// Update replaces the editable source; the new value is broadcast to hooks on next publish.
 func (hl *HooksLab) Update(text string) {
 	hl.mu.Lock()
 	defer hl.mu.Unlock()
 	hl.source = text
 }
 
-// RecordHook logs a hook event.
+// RecordHook appends a hook event, evicting the oldest once the 20-entry cap is exceeded.
 func (hl *HooksLab) RecordHook(hookType, detail string) {
 	hl.mu.Lock()
 	defer hl.mu.Unlock()
@@ -218,7 +217,7 @@ func (hl *HooksLab) RecordHook(hookType, detail string) {
 	}
 }
 
-// HookLog returns a copy of recent hook events.
+// HookLog is a defensive copy of the rolling 20-entry hook log.
 func (hl *HooksLab) HookLog() []HookEvent {
 	hl.mu.RLock()
 	defer hl.mu.RUnlock()
@@ -232,7 +231,7 @@ func (hl *HooksLab) AddPublishStats(bytes int) {
 	hl.pubStats.Add(bytes)
 }
 
-// PublishStats returns total publish count and bytes.
+// PublishStats is the running count and byte total; the two atomic reads are not consistent.
 func (hl *HooksLab) PublishStats() (count, bytes int64) {
 	return hl.pubStats.Snapshot()
 }
