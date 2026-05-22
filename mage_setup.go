@@ -677,12 +677,8 @@ func maybeInstallCaddyForSetup(projectDir string, opts *setup.Options) error {
 	if !setupUsesCaddy(opts) {
 		return nil
 	}
-	install, err := huhConfirm("Caddy is required for local HTTPS in this scaffold. Install Caddy into ./bin for this app now?")
-	if err != nil {
-		return err
-	}
-	if !install {
-		fmt.Println("Skipping Caddy install. `mage watch` will require ./bin/caddy (or caddy.exe) or a global `caddy` binary later.")
+	if _, err := os.Stat(caddyLocalBinIn(projectDir)); err == nil {
+		fmt.Println("Using existing ./bin/caddy for this app.")
 		return nil
 	}
 	fmt.Println("Installing Caddy into ./bin...")

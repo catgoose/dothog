@@ -182,7 +182,11 @@ func hostBinaryExt() string {
 }
 
 func caddyLocalBin() string {
-	return filepath.Join(binPath, "caddy"+hostBinaryExt())
+	return caddyLocalBinIn(".")
+}
+
+func caddyLocalBinIn(projectDir string) string {
+	return filepath.Join(projectDir, binPath, "caddy"+hostBinaryExt())
 }
 
 func installRepoLocalCaddy(projectDir string) error {
