@@ -60,12 +60,14 @@ func TestConfigEnvOverride(t *testing.T) {
 	t.Setenv("SERVER_LISTEN_PORT", "5555")
 	t.Setenv("DATABASE_URL", "postgres://localhost/test")
 	t.Setenv("APP_NAME", "testapp")
+	t.Setenv("SESSION_SETTINGS_COOKIE_NAME", "custom_session_cookie")
 
 	config, err := GetConfig()
 	require.NoError(t, err)
 	assert.Equal(t, "5555", config.ServerPort)
 	assert.Equal(t, "postgres://localhost/test", config.DatabaseURL)
 	assert.Equal(t, "testapp", config.AppName)
+	assert.Equal(t, "custom_session_cookie", config.SessionSettingsCookieName)
 }
 
 func TestConfigSingleton(t *testing.T) {
@@ -84,4 +86,26 @@ func TestConfigSingleton(t *testing.T) {
 
 	assert.Equal(t, config1, config2)
 	assert.Equal(t, config1, config3)
+}
+
+func TestConfigDefaultSessionSettingsCookieName(t *testing.T) {
+	ResetForTesting()
+
+	t.Setenv("APP_NAME", "Test App")
+	t.Setenv("SESSION_SETTINGS_COOKIE_NAME", "")
+
+	config, err := GetConfig()
+	require.NoError(t, err)
+	assert.Equal(t, "test_app_session_id", config.SessionSettingsCookieName)
+}
+
+func TestConfigRejectsInvalidSessionSettingsCookieName(t *testing.T) {
+	ResetForTesting()
+
+	t.Setenv("APP_NAME", "Test App")
+	t.Setenv("SESSION_SETTINGS_COOKIE_NAME", "Test App Session")
+
+	_, err := GetConfig()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "SESSION_SETTINGS_COOKIE_NAME")
 }

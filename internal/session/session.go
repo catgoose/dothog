@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	appenv "catgoose/dothog/internal/env"
 	"time"
@@ -96,10 +97,54 @@ type Config struct {
 }
 
 func (cfg Config) cookieName() string {
-	if cfg.CookieName != "" {
-		return cfg.CookieName
+	name := cfg.CookieName
+	if name == "" {
+		name = "session_id"
 	}
-	return "session_id"
+	return sanitizeCookieName(name)
+}
+
+// DefaultCookieName derives a stable snake_case session cookie name from appName.
+func DefaultCookieName(appName string) string {
+	appName = strings.TrimSpace(strings.ToLower(appName))
+	if appName == "" {
+		return "session_id"
+	}
+
+	var b strings.Builder
+	lastWasUnderscore := false
+	for _, r := range appName {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+			lastWasUnderscore = false
+		default:
+			if b.Len() == 0 || lastWasUnderscore {
+				continue
+			}
+			b.WriteByte('_')
+			lastWasUnderscore = true
+		}
+	}
+
+	base := strings.Trim(b.String(), "_")
+	if base == "" {
+		return "session_id"
+	}
+	return base + "_session_id"
+}
+
+// IsValidCookieName reports whether name contains only RFC 6265 token characters.
+func IsValidCookieName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for _, r := range name {
+		if !isCookieTokenRune(r) {
+			return false
+		}
+	}
+	return true
 }
 
 func (cfg Config) logger() *slog.Logger {
@@ -197,6 +242,47 @@ func getOrCreateSessionCookie(w http.ResponseWriter, r *http.Request, cookieName
 		SameSite: http.SameSiteLaxMode,
 	})
 	return id, nil
+}
+
+func sanitizeCookieName(name string) string {
+	name = strings.ToLower(strings.TrimSpace(name))
+	if name == "" {
+		return "session_id"
+	}
+
+	var b strings.Builder
+	pendingSeparator := false
+	for _, r := range name {
+		if isCookieTokenRune(r) {
+			if pendingSeparator && b.Len() > 0 {
+				b.WriteByte('_')
+			}
+			b.WriteRune(r)
+			pendingSeparator = false
+			continue
+		}
+		if b.Len() > 0 {
+			pendingSeparator = true
+		}
+	}
+
+	sanitized := b.String()
+	if sanitized == "" {
+		return "session_id"
+	}
+	return sanitized
+}
+
+func isCookieTokenRune(r rune) bool {
+	switch {
+	case r >= 'a' && r <= 'z':
+		return true
+	case r >= 'A' && r <= 'Z':
+		return true
+	case r >= '0' && r <= '9':
+		return true
+	}
+	return strings.ContainsRune("!#$%&'*+-.^_`|~", r)
 }
 
 func randomUUID() (string, error) {

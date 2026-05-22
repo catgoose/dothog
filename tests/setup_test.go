@@ -62,7 +62,8 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 	airPath := filepath.Join(dest, ".air", "server.toml")
 	airBytes, err := os.ReadFile(airPath)
 	require.NoError(t, err)
-	require.Contains(t, string(airBytes), "12346")
+	require.Contains(t, string(airBytes), `cmd = "go tool mage airBuild"`)
+	require.Contains(t, string(airBytes), `bin = "./tmp/main"`)
 	require.NotContains(t, string(airBytes), "{{TEMPL_HTTP_PORT}}")
 
 	readmePath := filepath.Join(dest, "README.md")
@@ -83,8 +84,12 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 	require.Contains(t, string(envBytes), "SERVER_LISTEN_PORT=12345")
 	require.Contains(t, string(envBytes), "APP_NAME=Test App",
 		".env.development should have APP_NAME substituted with the real app name")
+	require.Contains(t, string(envBytes), "SESSION_SETTINGS_COOKIE_NAME=test_app_session_id",
+		".env.development should have a safe session settings cookie name derived from APP_NAME")
 	require.NotContains(t, string(envBytes), "{{APP_NAME}}",
 		".env.development must not contain unreplaced {{APP_NAME}} placeholder")
+	require.NotContains(t, string(envBytes), "{{SESSION_SETTINGS_COOKIE_NAME}}",
+		".env.development must not contain unreplaced {{SESSION_SETTINGS_COOKIE_NAME}} placeholder")
 	require.NotContains(t, string(envBytes), "{{APP_HTTP_PORT}}")
 	require.NotContains(t, string(envBytes), "# setup:env")
 
@@ -559,6 +564,8 @@ func TestSetup_FeaturesNone(t *testing.T) {
 		".env.development must have APP_NAME substituted even when demo is stripped")
 	require.NotContains(t, string(envBytes), "{{APP_NAME}}",
 		".env.development must not contain unreplaced {{APP_NAME}} placeholder")
+	require.NotContains(t, string(envBytes), "SESSION_SETTINGS_COOKIE_NAME=",
+		".env.development should omit session-settings cookie config when session_settings is stripped")
 
 	// Non-demo apps must still register GET / so breadcrumbs and not-found
 	// recovery links to Home point at a real route (#regression).
@@ -815,6 +822,11 @@ func TestSetup_SessionSettingsWithoutSSE(t *testing.T) {
 		"routes_theme.go must not import tavern when sse is stripped")
 	require.NotContains(t, themeContent, "ar.broker",
 		"routes_theme.go must not reference ar.broker when sse is stripped")
+
+	envBytes, err := os.ReadFile(filepath.Join(dest, ".env.development"))
+	require.NoError(t, err)
+	require.Contains(t, string(envBytes), "SESSION_SETTINGS_COOKIE_NAME=session_settings_no_sse_app_session_id",
+		".env.development must include a safe session-settings cookie name when session_settings is enabled")
 }
 
 // TestSetup_PWAWithoutCapacitor verifies that selecting PWA does not pull in
