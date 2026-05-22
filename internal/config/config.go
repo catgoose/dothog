@@ -13,6 +13,9 @@ import (
 	"sync"
 
 	"catgoose/dothog/internal/logger"
+	// setup:feature:session_settings:start
+	"catgoose/dothog/internal/session"
+	// setup:feature:session_settings:end
 
 	// setup:feature:auth:start
 	"github.com/catgoose/crooner"
@@ -28,10 +31,13 @@ type AppConfig struct {
 	SessionMgr    crooner.SessionManager
 	CroonerConfig *crooner.AuthConfigParams
 	// setup:feature:auth:end
-	ServerPort                string
-	DatabaseURL               string
-	SessionSecret             string
-	AppName                   string
+	ServerPort    string
+	DatabaseURL   string
+	SessionSecret string
+	AppName       string
+	// setup:feature:session_settings:start
+	SessionSettingsCookieName string
+	// setup:feature:session_settings:end
 	CSRFPerRequestPaths       []string
 	CSRFExemptPaths           []string
 	GraphUserCacheRefreshHour int
@@ -59,6 +65,15 @@ func buildConfig() (*AppConfig, error) {
 	if cfg.AppName == "" {
 		return nil, fmt.Errorf("APP_NAME is required")
 	}
+
+	// setup:feature:session_settings:start
+	cfg.SessionSettingsCookieName = envStr("SESSION_SETTINGS_COOKIE_NAME", "")
+	if cfg.SessionSettingsCookieName == "" {
+		cfg.SessionSettingsCookieName = session.DefaultCookieName(cfg.AppName)
+	} else if !session.IsValidCookieName(cfg.SessionSettingsCookieName) {
+		return nil, fmt.Errorf("SESSION_SETTINGS_COOKIE_NAME contains invalid cookie-name characters")
+	}
+	// setup:feature:session_settings:end
 
 	// setup:feature:auth:start
 	cfg.CroonerDisabled = true

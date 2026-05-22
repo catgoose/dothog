@@ -13,6 +13,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"catgoose/dothog/internal/session"
 )
 
 // Template identity used by setup to detect and replace module paths.
@@ -377,8 +379,10 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	// the corresponding feature is not selected.
 	envDevPath := filepath.Join(dir, ".env.development")
 	if data, err := os.ReadFile(envDevPath); err == nil {
+		sessionSettingsCookieName := session.DefaultCookieName(opts.AppName)
 		content := composeSetupEnv(string(data))
 		content = strings.ReplaceAll(content, "{{APP_NAME}}", opts.AppName)
+		content = strings.ReplaceAll(content, "{{SESSION_SETTINGS_COOKIE_NAME}}", sessionSettingsCookieName)
 		content = strings.ReplaceAll(content, "{{APP_HTTP_PORT}}", appHTTPPort)
 		content = strings.ReplaceAll(content, "{{TEMPL_HTTP_PORT}}", templHTTPPort)
 		content = strings.ReplaceAll(content, "{{CADDY_TLS_PORT}}", caddyTLSPort)
@@ -1439,6 +1443,10 @@ func buildEnvTable(features []string, appName, appHTTPPort string) string {
 	sb.WriteString("| `APP_NAME` | Application name | " + appName + " |\n")
 	sb.WriteString("| `LOG_LEVEL` | DEBUG, INFO, WARN, ERROR | INFO |\n")
 	sb.WriteString("| `DATABASE_URL` | Database connection string (database enabled when set) | -- |\n")
+
+	if keep[FeatureSessionSettings] {
+		sb.WriteString("| `SESSION_SETTINGS_COOKIE_NAME` | Cookie name for session-backed theme/layout settings | " + session.DefaultCookieName(appName) + " |\n")
+	}
 
 	// Auth
 	if keep[FeatureAuth] {

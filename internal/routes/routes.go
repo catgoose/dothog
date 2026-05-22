@@ -431,8 +431,8 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
 	if settingsRepo != nil {
 		var sessCfg session.Config
-		if cfg != nil && cfg.AppName != "" {
-			sessCfg.CookieName = cfg.AppName + "_session_id"
+		if cfg != nil && cfg.SessionSettingsCookieName != "" {
+			sessCfg.CookieName = cfg.SessionSettingsCookieName
 		}
 		e.Use(echo.WrapMiddleware(session.Middleware(settingsRepo, nil, sessCfg)))
 	}
