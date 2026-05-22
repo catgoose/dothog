@@ -117,75 +117,36 @@ func Setup() error {
 		return nil
 	}
 
-	copyFirst, err := huhConfirmDefault("Copy template to a new directory before setting up?", true)
+	target, err := huhInput("Target directory", "e.g. ../my-app or /path/to/project", "")
 	if err != nil {
 		return err
 	}
-	if copyFirst {
-		target, err := huhInput("Target directory", "e.g. ../my-app or /path/to/project", "")
-		if err != nil {
-			return err
-		}
-		target = strings.TrimSpace(target)
-		if target == "" {
-			return errors.New("target directory is required")
-		}
-		if strings.HasPrefix(target, "~") {
-			home, _ := os.UserHomeDir()
-			target = home + target[1:]
-		}
-		absTarget, err := filepath.Abs(target)
-		if err != nil {
-			return err
-		}
-		wd, _ := os.Getwd()
-		if filepath.Clean(absTarget) == filepath.Clean(wd) {
-			return errors.New("target directory cannot be the current directory")
-		}
-		if info, err := os.Stat(absTarget); err == nil && info.IsDir() {
-			entries, _ := os.ReadDir(absTarget)
-			if len(entries) > 0 {
-				ok, _ := huhConfirm("Target directory exists and is not empty. Overwrite?")
-				if !ok {
-					fmt.Println("Setup cancelled.")
-					return nil
-				}
+	target = strings.TrimSpace(target)
+	if target == "" {
+		return errors.New("target directory is required")
+	}
+	if strings.HasPrefix(target, "~") {
+		home, _ := os.UserHomeDir()
+		target = home + target[1:]
+	}
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return err
+	}
+	wd, _ := os.Getwd()
+	if filepath.Clean(absTarget) == filepath.Clean(wd) {
+		return errors.New("target directory cannot be the current directory")
+	}
+	if info, err := os.Stat(absTarget); err == nil && info.IsDir() {
+		entries, _ := os.ReadDir(absTarget)
+		if len(entries) > 0 {
+			ok, _ := huhConfirm("Target directory exists and is not empty. Overwrite?")
+			if !ok {
+				fmt.Println("Setup cancelled.")
+				return nil
 			}
 		}
-		opts, err := runWizard()
-		if err != nil {
-			return err
-		}
-		if opts == nil {
-			return nil
-		}
-		if err := os.MkdirAll(filepath.Dir(absTarget), 0755); err != nil {
-			return err
-		}
-		if err := setup.CopyRepoTo(".", absTarget, []string{".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp", "localhost.crt", "localhost.key"}); err != nil {
-			return fmt.Errorf("copying template: %w", err)
-		}
-		gitInit, _ := huhConfirm("Run git init in the new directory?")
-		if gitInit {
-			cmd := exec.Command("git", "init")
-			cmd.Dir = absTarget
-			_ = cmd.Run()
-		}
-		// Remove setup-only files before running setup so that go mod tidy
-		// does not see the rewritten mage_setup.go import.
-		_ = os.RemoveAll(filepath.Join(absTarget, setup.TemplateSetupDir))
-		_ = os.RemoveAll(filepath.Join(absTarget, "internal", "setup"))
-		_ = os.Remove(filepath.Join(absTarget, "mage_setup.go"))
-		if err := maybeInstallCaddyForSetup(absTarget, opts); err != nil {
-			return err
-		}
-		if err := setup.Run(context.Background(), absTarget, *opts); err != nil {
-			return err
-		}
-		fmt.Println("Setup complete in", absTarget)
-		return nil
 	}
-
 	opts, err := runWizard()
 	if err != nil {
 		return err
@@ -193,26 +154,30 @@ func Setup() error {
 	if opts == nil {
 		return nil
 	}
-	fmt.Println("Running template setup...")
-	if err := maybeInstallCaddyForSetup(".", opts); err != nil {
+	if err := os.MkdirAll(filepath.Dir(absTarget), 0755); err != nil {
 		return err
 	}
-	if err := setup.Run(context.Background(), ".", *opts); err != nil {
+	if err := setup.CopyRepoTo(".", absTarget, []string{".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp", "localhost.crt", "localhost.key"}); err != nil {
+		return fmt.Errorf("copying template: %w", err)
+	}
+	gitInit, _ := huhConfirm("Run git init in the new directory?")
+	if gitInit {
+		cmd := exec.Command("git", "init")
+		cmd.Dir = absTarget
+		_ = cmd.Run()
+	}
+	// Remove setup-only files before running setup so that go mod tidy
+	// does not see the rewritten mage_setup.go import.
+	_ = os.RemoveAll(filepath.Join(absTarget, setup.TemplateSetupDir))
+	_ = os.RemoveAll(filepath.Join(absTarget, "internal", "setup"))
+	_ = os.Remove(filepath.Join(absTarget, "mage_setup.go"))
+	if err := maybeInstallCaddyForSetup(absTarget, opts); err != nil {
 		return err
 	}
-	if goModulePath() == templateModulePath {
-		return nil
-	}
-	cleanup, err := huhConfirm("Cleanup template files and setup helpers from this repo?")
-	if err != nil {
+	if err := setup.Run(context.Background(), absTarget, *opts); err != nil {
 		return err
 	}
-	if cleanup {
-		if err := cleanupTemplateFiles(); err != nil {
-			return err
-		}
-		fmt.Println("Template setup files removed. You can delete mage_setup.go if you no longer need the setup target.")
-	}
+	fmt.Println("Setup complete in", absTarget)
 	return nil
 }
 
