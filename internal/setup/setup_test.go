@@ -1,9 +1,7 @@
 package setup
 
 import (
-	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -1032,62 +1030,6 @@ func TestCopyRepoToExcludesLocalhostCerts(t *testing.T) {
 	gotKeep, err := os.ReadFile(filepath.Join(dest, "keep", "keep.txt"))
 	require.NoError(t, err)
 	require.Equal(t, "keep me\n", string(gotKeep))
-}
-
-// ---------------------------------------------------------------------------
-// ensureCerts — caddy gating
-// ---------------------------------------------------------------------------
-
-func TestEnsureCertsNoCaddyCreatesNothing(t *testing.T) {
-	dir := t.TempDir()
-	opts := Options{Features: []string{FeatureDatabase, FeatureCSRF, FeatureLinkRelations}}
-
-	require.NoError(t, ensureCerts(context.Background(), dir, opts))
-
-	_, err := os.Stat(filepath.Join(dir, "localhost.crt"))
-	require.True(t, os.IsNotExist(err), "no caddy → no localhost.crt: %v", err)
-	_, err = os.Stat(filepath.Join(dir, "localhost.key"))
-	require.True(t, os.IsNotExist(err), "no caddy → no localhost.key: %v", err)
-}
-
-func TestEnsureCertsCaddyGenerates(t *testing.T) {
-	if _, err := exec.LookPath("openssl"); err != nil {
-		t.Skip("openssl not available")
-	}
-	dir := t.TempDir()
-	opts := Options{Features: []string{FeatureCaddy}}
-
-	require.NoError(t, ensureCerts(context.Background(), dir, opts))
-
-	info, err := os.Stat(filepath.Join(dir, "localhost.crt"))
-	require.NoError(t, err)
-	require.Greater(t, info.Size(), int64(0), "localhost.crt should be non-empty")
-	info, err = os.Stat(filepath.Join(dir, "localhost.key"))
-	require.NoError(t, err)
-	require.Greater(t, info.Size(), int64(0), "localhost.key should be non-empty")
-}
-
-// ---------------------------------------------------------------------------
-// hasCaddyFeature
-// ---------------------------------------------------------------------------
-
-func TestHasCaddyFeature(t *testing.T) {
-	tests := []struct {
-		name string
-		opts Options
-		want bool
-	}{
-		{name: "nil features defaults to caddy", opts: Options{}, want: true},
-		{name: "nil features with NoCaddy", opts: Options{NoCaddy: true}, want: false},
-		{name: "features without caddy", opts: Options{Features: []string{FeatureAuth, FeatureDatabase}}, want: false},
-		{name: "features with caddy", opts: Options{Features: []string{FeatureAuth, FeatureCaddy}}, want: true},
-		{name: "empty features explicit", opts: Options{Features: []string{}}, want: false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, hasCaddyFeature(tt.opts))
-		})
-	}
 }
 
 // ---------------------------------------------------------------------------

@@ -90,30 +90,11 @@ both modes — TLS lives in Caddy, not in the app.
 
 ### HTTPS Development Setup (Caddy feature only)
 
-When the `caddy` feature is selected, setup generates `localhost.crt` /
-`localhost.key` (or reuses pre-existing files) for Caddy to terminate TLS.
-Without the `caddy` feature there is no local HTTPS and no certificates are
-generated.
-
-Trust the certificate on your system:
-
-**Linux (Ubuntu/Debian):**
-
-```bash
-sudo cp localhost.crt /usr/local/share/ca-certificates/
-sudo update-ca-certificates
-```
-
-**macOS:**
-
-1. Open Keychain Access
-2. Drag `localhost.crt` to System keychain
-3. Set Trust to Always Trust
-
-**Windows:**
-
-1. Right-click `localhost.crt` > Install Certificate
-2. Choose Local Machine > Trusted Root Certification Authorities
+When the `caddy` feature is selected, local HTTPS uses Caddy's `tls internal`
+issuer. Setup does not generate `localhost.crt` / `localhost.key` files or
+require `openssl`. On first run, Caddy attempts to install its local CA root
+into your trust store automatically. If the browser still warns, rerun Caddy
+from an elevated shell or use `caddy trust`.
 
 ## Testing
 

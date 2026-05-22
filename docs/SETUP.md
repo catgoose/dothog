@@ -45,7 +45,7 @@ file works on either host.
 3. **Sets app name** — updates binary name in `magefile.go`, Dockerfile, logger, package.json
 4. **Strips features** — removes code blocks and files for features you didn't select
 5. **Generates README** — from `_template_setup/README.template.md` with your app name and ports
-6. **Ensures certificates** — generates self-signed TLS certs if Caddy is selected
+6. **Uses Caddy's internal CA** — local HTTPS comes from `tls internal` when Caddy is selected; no `openssl` prerequisite or scaffolded cert files
 7. **Runs `go mod tidy`** — cleans up unused dependencies after stripping
 
 ## Feature Flags

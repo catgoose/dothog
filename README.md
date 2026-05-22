@@ -963,22 +963,11 @@ sits in front of templ and provides HTTPS/H3. Without `caddy`, the dev URL is
 
 ### HTTPS Development Setup (Caddy feature only)
 
-Only the `caddy` feature provides local HTTPS — and the cert is consumed by
-Caddy, not by Echo. Setup generates `localhost.crt` / `localhost.key` for you
-when `caddy` is selected; without `caddy`, no certificates are needed. If you
-want to regenerate them by hand:
-
-```bash
-openssl req -x509 -newkey rsa:2048 -keyout localhost.key -out localhost.crt \
-	-days 365 -nodes -subj "/CN=localhost" \
-	-addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
-```
-
-Trust the certificate on your system:
-
-- **Linux**: `sudo cp localhost.crt /usr/local/share/ca-certificates/ && sudo update-ca-certificates`
-- **macOS**: Open Keychain Access, drag cert to System, set Trust to Always Trust
-- **Windows**: Right-click cert, Install Certificate, Local Machine, Trusted Root CAs
+Only the `caddy` feature provides local HTTPS. Caddy fronts the templ proxy and
+uses `tls internal`, so setup does not generate `localhost.crt` /
+`localhost.key` files or require `openssl`. On first run, Caddy attempts to
+install its local CA root into your trust store automatically. If the browser
+still warns, rerun Caddy from an elevated shell or use `caddy trust`.
 
 ## Testing
 

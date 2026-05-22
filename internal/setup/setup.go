@@ -502,10 +502,6 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		return fmt.Errorf("removing optional content: %w", err)
 	}
 
-	if err := ensureCerts(ctx, absDir, opts); err != nil {
-		return fmt.Errorf("ensuring certificates: %w", err)
-	}
-
 	if err := cleanOrphanedImports(dir, modulePath); err != nil {
 		return fmt.Errorf("cleaning orphaned imports: %w", err)
 	}
@@ -1157,92 +1153,6 @@ func applyPlatformAdjustments(dir, platform string) error {
 }
 
 // ---------------------------------------------------------------------------
-// Certificate generation
-// ---------------------------------------------------------------------------
-
-// ensureCerts checks whether localhost certificates already exist in dir.
-// If found, they are kept as-is.  If missing and the caddy feature is
-// selected, the user is prompted (via opts.ConfirmFunc) to generate new
-// self-signed certificates.  When ConfirmFunc is nil (programmatic / test
-// usage) generation happens silently.
-func ensureCerts(ctx context.Context, dir string, opts Options) error {
-	certPath := filepath.Join(dir, "localhost.crt")
-	keyPath := filepath.Join(dir, "localhost.key")
-
-	// If both files already exist locally, use them.
-	if _, err := os.Stat(certPath); err == nil {
-		if _, err := os.Stat(keyPath); err == nil {
-			fmt.Println("Using existing localhost certificates.")
-			return nil
-		}
-	}
-
-	// Only generate certificates when caddy is selected.
-	if !hasCaddyFeature(opts) {
-		return nil
-	}
-
-	// Prompt the user when an interactive confirm is available.
-	if opts.ConfirmFunc != nil {
-		generate, err := opts.ConfirmFunc("No localhost certificates found. Generate self-signed certificates?")
-		if err != nil {
-			return err
-		}
-		if !generate {
-			fmt.Println("Skipping certificate generation.")
-			fmt.Println("You will need to provide localhost.crt and localhost.key for HTTPS to work.")
-			return nil
-		}
-	}
-
-	fmt.Println("Generating self-signed localhost certificates...")
-	if err := generateCerts(ctx, dir); err != nil {
-		return err
-	}
-	fmt.Println("NOTE: You will need to install these certificates in your system trust store.")
-	fmt.Println("See the HTTPS Development Setup section in README.md for instructions.")
-	return nil
-}
-
-// hasCaddyFeature reports whether the caddy feature is selected.
-func hasCaddyFeature(opts Options) bool {
-	if opts.Features == nil {
-		return !opts.NoCaddy // legacy mode: caddy unless --no-caddy
-	}
-	for _, f := range opts.Features {
-		if f == FeatureCaddy {
-			return true
-		}
-	}
-	return false
-}
-
-// generateCerts creates a self-signed localhost TLS certificate and key in dir
-// using openssl. The generated files are localhost.crt and localhost.key.
-func generateCerts(ctx context.Context, dir string) error {
-	certPath := filepath.Join(dir, "localhost.crt")
-	keyPath := filepath.Join(dir, "localhost.key")
-
-	cmd := exec.CommandContext(ctx, "openssl", "req",
-		"-x509",
-		"-newkey", "rsa:2048",
-		"-keyout", keyPath,
-		"-out", certPath,
-		"-days", "365",
-		"-nodes",
-		"-subj", "/CN=localhost",
-		"-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1",
-	)
-	cmd.Dir = dir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("openssl: %w", err)
-	}
-	fmt.Printf("Generated development certificates:\n  %s\n  %s\n", certPath, keyPath)
-	return nil
-}
-
 // versionSuffixRe matches Go major-version path segments like "v2", "v3", etc.
 var versionSuffixRe = regexp.MustCompile(`^v\d+$`)
 
@@ -1390,7 +1300,7 @@ Real-time event broker with topic-based publish/subscribe. HTMX SSE extension is
 	if keep[FeatureCaddy] {
 		sb.WriteString(`### Caddy (HTTPS/H3 front-proxy)
 
-Caddy sits in front of the templ watcher and provides HTTPS/H3 for local development. The Echo origin remains plain HTTP. Without the ` + "`caddy`" + ` feature, ` + "`mage watch`" + ` exposes the templ HTTP proxy directly with no TLS in the chain. Certificates are generated during setup (only when ` + "`caddy`" + ` is selected) or can be provided manually. See the HTTPS Development Setup section for trust store installation.
+Caddy sits in front of the templ watcher and provides HTTPS/H3 for local development. The Echo origin remains plain HTTP. Without the ` + "`caddy`" + ` feature, ` + "`mage watch`" + ` exposes the templ HTTP proxy directly with no TLS in the chain. Local HTTPS uses Caddy's internal CA via ` + "`tls internal`" + `, so setup does not generate ` + "`localhost.crt`" + ` / ` + "`localhost.key`" + ` files or require ` + "`openssl`" + `. On first run Caddy attempts to trust its local CA automatically; if your browser still warns, rerun Caddy from an elevated shell or use ` + "`caddy trust`" + `.
 
 `)
 	}
