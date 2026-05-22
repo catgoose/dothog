@@ -373,32 +373,42 @@ NewTable("Tasks").
 	WithVersion().       // Version INTEGER NOT NULL DEFAULT 1
 	WithArchive().       // ArchivedAt TIMESTAMP (nullable)
 	WithReplacement().   // ReplacedByID INTEGER (nullable, entity lineage)
-	WithTimestamps().    // CreatedAt, UpdatedAt TIMESTAMP NOT NULL
-	WithSoftDelete().                                  // DeletedAt TIMESTAMP (nullable)
-	WithAuditTrail(schema.DefaultStringAuditTrail()) // CreatedBy, UpdatedBy, DeletedBy VARCHAR(255)
+	WithTimestamps().                                       // CreatedAt, UpdatedAt TIMESTAMP NOT NULL
+	WithAuditActors(schema.DefaultStringAuditActors()).     // CreatedBy, UpdatedBy VARCHAR(255)
+	WithSoftDelete().                                       // DeletedAt TIMESTAMP (nullable)
+	WithDeleteActor(schema.DefaultStringDeleteActor())      // DeletedBy VARCHAR(255)
 ```
 
-`WithAuditTrail` takes an `AuditTrailSpec` so each project can choose the
-column type that matches its identity model: `schema.DefaultStringAuditTrail()`
-returns the historical `VARCHAR(255)` shape (`CreatedBy` immutable), while a
-hand-built `AuditTrailSpec` lets you use integer FKs to a `Users` table, UUIDs,
-or any other type. The matching `dbrepo.SetCreateAudit[T]` / `SetUpdateAudit[T]`
-/ `SetDeleteAudit[T]` helpers are generic over the actor type.
+Chuck splits the audit trail into three orthogonal axes — create/update
+timestamps, create/update actors, and a delete actor — so tables only pay
+for what they use. A table that never soft-deletes never grows a
+`DeletedBy` column. `WithAuditTrail(spec)` is still available as a
+convenience bundle equivalent to `WithTimestamps().WithAuditActors(spec)`;
+it deliberately does **not** touch delete semantics, so soft-delete
+attribution must be opted in via `WithSoftDelete().WithDeleteActor(...)`.
+`schema.DefaultStringAuditActors()` and `schema.DefaultStringDeleteActor()`
+return the historical `VARCHAR(255)` shapes (`CreatedBy` immutable); a
+hand-built `AuditActorsSpec` or custom `ColumnDef` lets you use integer
+FKs to a `Users` table, UUIDs, or any other type. The matching
+`dbrepo.SetCreateActor[T]` / `SetUpdateActor[T]` / `SetDeleteActor[T]`
+helpers are generic over the actor type.
 
-| Method                            | Column(s)                       | DDL                                        | Mutable                   |
-| --------------------------------- | ------------------------------- | ------------------------------------------ | ------------------------- |
-| `WithVersion()`                   | Version                         | `INTEGER NOT NULL DEFAULT 1`               | Yes                       |
-| `WithSortOrder()`                 | SortOrder                       | `INTEGER NOT NULL DEFAULT 0`               | Yes                       |
-| `WithStatus(default)`             | Status                          | `VARCHAR(50) NOT NULL DEFAULT '{default}'` | Yes                       |
-| `WithNotes()`                     | Notes                           | `TEXT` (nullable)                          | Yes                       |
-| `WithUUID()`                      | UUID                            | `VARCHAR(36) NOT NULL UNIQUE`              | No                        |
-| `WithParent()`                    | ParentID                        | `INTEGER` (nullable)                       | Yes                       |
-| `WithExpiry()`                    | ExpiresAt                       | `TIMESTAMP` (nullable)                     | Yes                       |
-| `WithArchive()`                   | ArchivedAt                      | `TIMESTAMP` (nullable)                     | Yes                       |
-| `WithReplacement()`               | ReplacedByID                    | `INTEGER` (nullable)                       | Yes                       |
-| `WithTimestamps()`                | CreatedAt, UpdatedAt            | `TIMESTAMP NOT NULL DEFAULT NOW()`         | UpdatedAt only            |
-| `WithSoftDelete()`                | DeletedAt                       | `TIMESTAMP` (nullable)                     | Yes                       |
-| `WithAuditTrail(AuditTrailSpec)`  | CreatedBy, UpdatedBy, DeletedBy | per spec (`DefaultStringAuditTrail()` = `VARCHAR(255)`) | per spec (`DefaultStringAuditTrail()` makes `CreatedBy` immutable) |
+| Method                                | Column(s)                       | DDL                                        | Mutable                   |
+| ------------------------------------- | ------------------------------- | ------------------------------------------ | ------------------------- |
+| `WithVersion()`                       | Version                         | `INTEGER NOT NULL DEFAULT 1`               | Yes                       |
+| `WithSortOrder()`                     | SortOrder                       | `INTEGER NOT NULL DEFAULT 0`               | Yes                       |
+| `WithStatus(default)`                 | Status                          | `VARCHAR(50) NOT NULL DEFAULT '{default}'` | Yes                       |
+| `WithNotes()`                         | Notes                           | `TEXT` (nullable)                          | Yes                       |
+| `WithUUID()`                          | UUID                            | `VARCHAR(36) NOT NULL UNIQUE`              | No                        |
+| `WithParent()`                        | ParentID                        | `INTEGER` (nullable)                       | Yes                       |
+| `WithExpiry()`                        | ExpiresAt                       | `TIMESTAMP` (nullable)                     | Yes                       |
+| `WithArchive()`                       | ArchivedAt                      | `TIMESTAMP` (nullable)                     | Yes                       |
+| `WithReplacement()`                   | ReplacedByID                    | `INTEGER` (nullable)                       | Yes                       |
+| `WithTimestamps()`                    | CreatedAt, UpdatedAt            | `TIMESTAMP NOT NULL DEFAULT NOW()`         | UpdatedAt only            |
+| `WithAuditActors(AuditActorsSpec)`    | CreatedBy, UpdatedBy            | per spec (`DefaultStringAuditActors()` = `VARCHAR(255)`) | per spec (`DefaultStringAuditActors()` makes `CreatedBy` immutable) |
+| `WithSoftDelete()`                    | DeletedAt                       | `TIMESTAMP` (nullable)                     | Yes                       |
+| `WithDeleteActor(ColumnDef)`          | DeletedBy                       | per spec (`DefaultStringDeleteActor()` = `VARCHAR(255)`) | per spec                |
+| `WithAuditTrail(AuditActorsSpec)`     | CreatedAt, UpdatedAt, CreatedBy, UpdatedBy | convenience bundle of `WithTimestamps()` + `WithAuditActors(spec)` (no delete columns) | per spec     |
 
 ### Table Types
 
@@ -486,7 +496,7 @@ repository.SetUpdateTimestamp(&m.UpdatedAt)
 
 // Soft delete
 repository.SetSoftDelete(&deletedAt)
-repository.SetDeleteAudit(&deletedAt, &deletedBy, "admin")
+repository.SetDeleteActor(&deletedAt, &deletedBy, "admin")
 
 // Versioning (optimistic concurrency)
 repository.InitVersion(&m.Version)      // sets to 1
@@ -510,9 +520,9 @@ repository.ClearArchive(&m.ArchivedAt) // unarchives
 repository.SetReplacement(&m.ReplacedByID, newID) // marks as replaced
 repository.ClearReplacement(&m.ReplacedByID)      // clears replacement
 
-// Audit trail
-repository.SetCreateAudit(&m.CreatedBy, &m.UpdatedBy, "user1")
-repository.SetUpdateAudit(&m.UpdatedBy, "user2")
+// Audit actors
+repository.SetCreateActor(&m.CreatedBy, &m.UpdatedBy, "user1")
+repository.SetUpdateActor(&m.UpdatedBy, "user2")
 ```
 
 ### Where Builder
