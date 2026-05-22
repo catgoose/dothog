@@ -1,3 +1,0 @@
-site/* linguist-documentation
-vendor/* linguist-vendored
-*.go text eol=lf

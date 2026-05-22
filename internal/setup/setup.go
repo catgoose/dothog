@@ -518,18 +518,6 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		return fmt.Errorf("go mod tidy: %w", err)
 	}
 
-	// Re-vendor if the project uses a vendor directory so modules.txt
-	// stays consistent with the rewritten go.mod.
-	if _, err := os.Stat(filepath.Join(dir, "vendor")); err == nil {
-		vendorCmd := exec.CommandContext(ctx, "go", "mod", "vendor")
-		vendorCmd.Dir = absDir
-		vendorCmd.Stdout = os.Stdout
-		vendorCmd.Stderr = os.Stderr
-		if err := vendorCmd.Run(); err != nil {
-			return fmt.Errorf("go mod vendor: %w", err)
-		}
-	}
-
 	// Failsafe: install npm dependencies if node_modules is missing
 	if _, err := os.Stat(filepath.Join(dir, "node_modules")); os.IsNotExist(err) {
 		if _, err := os.Stat(filepath.Join(dir, "package-lock.json")); err == nil {
