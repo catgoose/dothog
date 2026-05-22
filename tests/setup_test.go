@@ -205,6 +205,8 @@ func copyDirExcluding(src, dst string, excludeDirs ...string) error {
 	for _, d := range excludeDirs {
 		excludeSet[d] = true
 	}
+	excludeSet["localhost.crt"] = true
+	excludeSet["localhost.key"] = true
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -216,8 +218,11 @@ func copyDirExcluding(src, dst string, excludeDirs ...string) error {
 		if rel == "." {
 			return nil
 		}
-		if info.IsDir() && excludeSet[filepath.Base(path)] {
-			return filepath.SkipDir
+		if excludeSet[filepath.Base(path)] {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
 		}
 		// Skip symlinks — they may point to directories or external paths.
 		linfo, lErr := os.Lstat(path)
@@ -693,6 +698,10 @@ func TestSetup_FeaturesSSECaddy(t *testing.T) {
 
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
 	require.NoError(t, err, "Caddyfile should exist when caddy is selected")
+	_, err = os.Stat(filepath.Join(dest, "localhost.crt"))
+	require.True(t, os.IsNotExist(err), "Caddy internal CA should not emit localhost.crt during setup: %v", err)
+	_, err = os.Stat(filepath.Join(dest, "localhost.key"))
+	require.True(t, os.IsNotExist(err), "Caddy internal CA should not emit localhost.key during setup: %v", err)
 
 	assertDirExists(t, filepath.Join(dest, "internal", "database")) // database is implicit
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))

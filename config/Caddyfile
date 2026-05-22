@@ -2,8 +2,8 @@
 	auto_https disable_redirects
 }
 
-:{{CADDY_TLS_PORT}} {
-	tls localhost.crt localhost.key
+localhost:{{CADDY_TLS_PORT}} {
+	tls internal
 	@sse path /sse/*
 	reverse_proxy @sse localhost:{{TEMPL_HTTP_PORT}} {
 		header_up Host {host}

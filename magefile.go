@@ -59,6 +59,7 @@ var (
 )
 
 const templWatchIgnorePattern = `(^|[\\/])mage_output_file\.go$`
+const caddyModuleVersion = "v2.11.3"
 
 // DaisyUIComponents is the list of DaisyUI CSS component URLs.
 var daisyUIComponents = []string{
@@ -180,6 +181,34 @@ func hostBinaryExt() string {
 		return ".exe"
 	}
 	return ""
+}
+
+func caddyLocalBin() string {
+	return filepath.Join(binPath, "caddy"+hostBinaryExt())
+}
+
+func installRepoLocalCaddy(projectDir string) error {
+	absBinDir, err := filepath.Abs(filepath.Join(projectDir, binPath))
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(absBinDir, 0755); err != nil {
+		return err
+	}
+	return sh.RunWithV(
+		map[string]string{"GOBIN": absBinDir},
+		"go", "install", "github.com/caddyserver/caddy/v2/cmd/caddy@"+caddyModuleVersion,
+	)
+}
+
+func resolveCaddyBinary() (string, error) {
+	if _, err := os.Stat(caddyLocalBin()); err == nil {
+		return caddyLocalBin(), nil
+	}
+	if path, err := exec.LookPath("caddy"); err == nil {
+		return path, nil
+	}
+	return "", fmt.Errorf("caddy binary not found; run `go tool mage caddyinstall` or rerun setup and choose Caddy install")
 }
 
 // Tailwind runs the Tailwind CSS compilation
@@ -957,7 +986,7 @@ func TestWatch() error {
 // CaddyInstall installs Caddy for local development
 func CaddyInstall() error {
 	fmt.Println("Installing Caddy...")
-	return sh.Run("go", "install", "github.com/caddyserver/caddy/v2/cmd/caddy@latest")
+	return installRepoLocalCaddy(".")
 }
 
 // CaddyStart starts Caddy with the local Caddyfile.
@@ -970,6 +999,10 @@ func CaddyStart() error {
 	if _, err := os.Stat(caddyfile); os.IsNotExist(err) {
 		fmt.Println("Caddyfile not found, skipping Caddy.")
 		return nil
+	}
+	caddyBin, err := resolveCaddyBinary()
+	if err != nil {
+		return err
 	}
 	resolvedCaddyPort := resolvePort(caddyTLSPort, 2)
 	resolvedTemplPort := resolvePort(proxyPort, 1)
@@ -993,7 +1026,7 @@ func CaddyStart() error {
 		return fmt.Errorf("write tmp Caddyfile: %w", err)
 	}
 
-	return sh.Run("caddy", "run", "--config", tmpCaddyfile)
+	return sh.Run(caddyBin, "run", "--config", tmpCaddyfile)
 }
 
 // setup:feature:caddy:end

@@ -769,21 +769,11 @@ Access the application at:
 
 ### HTTPS Development Setup
 
-The setup script checks for existing `localhost.crt` and `localhost.key`. If missing, it offers to generate self-signed certificates.
-
-To generate manually:
-
-```bash
-openssl req -x509 -newkey rsa:2048 -keyout localhost.key -out localhost.crt \
-    -days 365 -nodes -subj "/CN=localhost" \
-    -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
-```
-
-Install the certificate in your system trust store for browser acceptance:
-
-- **Linux**: `sudo cp localhost.crt /usr/local/share/ca-certificates/ && sudo update-ca-certificates`
-- **macOS**: Open Keychain Access, drag cert to System, set Trust to Always Trust
-- **Windows**: Right-click cert, Install Certificate, Local Machine, Trusted Root CAs
+With the `caddy` feature enabled, local HTTPS uses Caddy's `tls internal`
+issuer. Setup does not generate `localhost.crt` / `localhost.key` files or
+require `openssl`. On first run, Caddy attempts to install its local CA root
+into your trust store automatically. If the browser still warns, rerun Caddy
+from an elevated shell or use `caddy trust`.
 
 ## Testing
 

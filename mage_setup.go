@@ -103,6 +103,9 @@ func Setup() error {
 
 	if hasFlags && parsed != nil {
 		fmt.Println("Running template setup...")
+		if err := maybeInstallCaddyForSetup(".", parsed); err != nil {
+			return err
+		}
 		if err := setup.Run(context.Background(), ".", *parsed); err != nil {
 			return err
 		}
@@ -174,6 +177,9 @@ func Setup() error {
 		_ = os.RemoveAll(filepath.Join(absTarget, setup.TemplateSetupDir))
 		_ = os.RemoveAll(filepath.Join(absTarget, "internal", "setup"))
 		_ = os.Remove(filepath.Join(absTarget, "mage_setup.go"))
+		if err := maybeInstallCaddyForSetup(absTarget, opts); err != nil {
+			return err
+		}
 		if err := setup.Run(context.Background(), absTarget, *opts); err != nil {
 			return err
 		}
@@ -189,6 +195,9 @@ func Setup() error {
 		return nil
 	}
 	fmt.Println("Running template setup...")
+	if err := maybeInstallCaddyForSetup(".", opts); err != nil {
+		return err
+	}
 	if err := setup.Run(context.Background(), ".", *opts); err != nil {
 		return err
 	}
@@ -211,7 +220,7 @@ func Setup() error {
 // presets maps preset names to their default feature sets.
 var presets = map[string][]string{
 	"internal": {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureDatabase, setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
-	"microsoft-lite-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureLinkRelations, setup.FeatureWebStandards},
+	"microsoft-lite-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
 	"public":   {setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs},
 	"microsoft-full-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs, setup.FeatureOffline, setup.FeatureSync, setup.FeaturePWA},
 	"demo":     setup.AllFeatures,
@@ -296,7 +305,7 @@ func runWizard() (*setup.Options, error) {
 				Title("What are you building?").
 				Options(
 					huh.NewOption("Internal tool — auth, database, sessions, SSE, link relations, web standards", "internal"),
-					huh.NewOption("Microsoft Lite Internal — auth, Graph, avatar, MSSQL, link relations, web standards", "microsoft-lite-internal"),
+					huh.NewOption("Microsoft Lite Internal — auth, Graph, avatar, MSSQL, SSE + Caddy, link relations, web standards", "microsoft-lite-internal"),
 					huh.NewOption("Microsoft Full Internal — auth, Graph, MSSQL, SSE, offline + sync + PWA", "microsoft-full-internal"),
 					huh.NewOption("Public site — sessions, link relations, web standards, browser APIs", "public"),
 					huh.NewOption("Demo/playground — everything enabled", "demo"),
@@ -630,6 +639,32 @@ func hasFeature(features []string, tag string) bool {
 		}
 	}
 	return false
+}
+
+func setupUsesCaddy(opts *setup.Options) bool {
+	if opts == nil {
+		return false
+	}
+	if opts.Features == nil {
+		return !opts.NoCaddy
+	}
+	return hasFeature(setup.ExpandFeatureDeps(opts.Features), setup.FeatureCaddy)
+}
+
+func maybeInstallCaddyForSetup(projectDir string, opts *setup.Options) error {
+	if !setupUsesCaddy(opts) {
+		return nil
+	}
+	install, err := huhConfirm("Caddy is required for local HTTPS in this scaffold. Install repo-local Caddy now?")
+	if err != nil {
+		return err
+	}
+	if !install {
+		fmt.Println("Skipping Caddy install. `mage watch` will require repo-local Caddy or a global `caddy` binary later.")
+		return nil
+	}
+	fmt.Println("Installing repo-local Caddy...")
+	return installRepoLocalCaddy(projectDir)
 }
 
 func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPrinted bool, err error) {
