@@ -374,24 +374,31 @@ NewTable("Tasks").
 	WithArchive().       // ArchivedAt TIMESTAMP (nullable)
 	WithReplacement().   // ReplacedByID INTEGER (nullable, entity lineage)
 	WithTimestamps().    // CreatedAt, UpdatedAt TIMESTAMP NOT NULL
-	WithSoftDelete().    // DeletedAt TIMESTAMP (nullable)
-	WithAuditTrail()     // CreatedBy, UpdatedBy, DeletedBy VARCHAR(255)
+	WithSoftDelete().                                  // DeletedAt TIMESTAMP (nullable)
+	WithAuditTrail(schema.DefaultStringAuditTrail()) // CreatedBy, UpdatedBy, DeletedBy VARCHAR(255)
 ```
 
-| Method                | Column(s)                       | DDL                                        | Mutable                   |
-| --------------------- | ------------------------------- | ------------------------------------------ | ------------------------- |
-| `WithVersion()`       | Version                         | `INTEGER NOT NULL DEFAULT 1`               | Yes                       |
-| `WithSortOrder()`     | SortOrder                       | `INTEGER NOT NULL DEFAULT 0`               | Yes                       |
-| `WithStatus(default)` | Status                          | `VARCHAR(50) NOT NULL DEFAULT '{default}'` | Yes                       |
-| `WithNotes()`         | Notes                           | `TEXT` (nullable)                          | Yes                       |
-| `WithUUID()`          | UUID                            | `VARCHAR(36) NOT NULL UNIQUE`              | No                        |
-| `WithParent()`        | ParentID                        | `INTEGER` (nullable)                       | Yes                       |
-| `WithExpiry()`        | ExpiresAt                       | `TIMESTAMP` (nullable)                     | Yes                       |
-| `WithArchive()`       | ArchivedAt                      | `TIMESTAMP` (nullable)                     | Yes                       |
-| `WithReplacement()`   | ReplacedByID                    | `INTEGER` (nullable)                       | Yes                       |
-| `WithTimestamps()`    | CreatedAt, UpdatedAt            | `TIMESTAMP NOT NULL DEFAULT NOW()`         | UpdatedAt only            |
-| `WithSoftDelete()`    | DeletedAt                       | `TIMESTAMP` (nullable)                     | Yes                       |
-| `WithAuditTrail()`    | CreatedBy, UpdatedBy, DeletedBy | `VARCHAR(255)`                             | UpdatedBy, DeletedBy only |
+`WithAuditTrail` takes an `AuditTrailSpec` so each project can choose the
+column type that matches its identity model: `schema.DefaultStringAuditTrail()`
+returns the historical `VARCHAR(255)` shape (`CreatedBy` immutable), while a
+hand-built `AuditTrailSpec` lets you use integer FKs to a `Users` table, UUIDs,
+or any other type. The matching `dbrepo.SetCreateAudit[T]` / `SetUpdateAudit[T]`
+/ `SetDeleteAudit[T]` helpers are generic over the actor type.
+
+| Method                            | Column(s)                       | DDL                                        | Mutable                   |
+| --------------------------------- | ------------------------------- | ------------------------------------------ | ------------------------- |
+| `WithVersion()`                   | Version                         | `INTEGER NOT NULL DEFAULT 1`               | Yes                       |
+| `WithSortOrder()`                 | SortOrder                       | `INTEGER NOT NULL DEFAULT 0`               | Yes                       |
+| `WithStatus(default)`             | Status                          | `VARCHAR(50) NOT NULL DEFAULT '{default}'` | Yes                       |
+| `WithNotes()`                     | Notes                           | `TEXT` (nullable)                          | Yes                       |
+| `WithUUID()`                      | UUID                            | `VARCHAR(36) NOT NULL UNIQUE`              | No                        |
+| `WithParent()`                    | ParentID                        | `INTEGER` (nullable)                       | Yes                       |
+| `WithExpiry()`                    | ExpiresAt                       | `TIMESTAMP` (nullable)                     | Yes                       |
+| `WithArchive()`                   | ArchivedAt                      | `TIMESTAMP` (nullable)                     | Yes                       |
+| `WithReplacement()`               | ReplacedByID                    | `INTEGER` (nullable)                       | Yes                       |
+| `WithTimestamps()`                | CreatedAt, UpdatedAt            | `TIMESTAMP NOT NULL DEFAULT NOW()`         | UpdatedAt only            |
+| `WithSoftDelete()`                | DeletedAt                       | `TIMESTAMP` (nullable)                     | Yes                       |
+| `WithAuditTrail(AuditTrailSpec)`  | CreatedBy, UpdatedBy, DeletedBy | per spec (`DefaultStringAuditTrail()` = `VARCHAR(255)`) | per spec (`DefaultStringAuditTrail()` makes `CreatedBy` immutable) |
 
 ### Table Types
 
