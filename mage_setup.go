@@ -117,35 +117,54 @@ func Setup() error {
 		return nil
 	}
 
-	target, err := huhInput("Target directory", "e.g. ../my-app or /path/to/project", "")
-	if err != nil {
-		return err
-	}
-	target = strings.TrimSpace(target)
-	if target == "" {
-		return errors.New("target directory is required")
-	}
-	if strings.HasPrefix(target, "~") {
-		home, _ := os.UserHomeDir()
-		target = home + target[1:]
-	}
-	absTarget, err := filepath.Abs(target)
-	if err != nil {
-		return err
-	}
-	wd, _ := os.Getwd()
-	if filepath.Clean(absTarget) == filepath.Clean(wd) {
-		return errors.New("target directory cannot be the current directory")
-	}
-	if info, err := os.Stat(absTarget); err == nil && info.IsDir() {
-		entries, _ := os.ReadDir(absTarget)
-		if len(entries) > 0 {
-			ok, _ := huhConfirm("Target directory exists and is not empty. Overwrite?")
-			if !ok {
-				fmt.Println("Setup cancelled.")
-				return nil
-			}
+	var absTarget string
+	for {
+		target, err := huhInput("Target directory", "e.g. ../my-app or /path/to/project", "")
+		if err != nil {
+			return err
 		}
+		target = strings.TrimSpace(target)
+		if target == "" {
+			return errors.New("target directory is required")
+		}
+		if strings.HasPrefix(target, "~") {
+			home, _ := os.UserHomeDir()
+			target = home + target[1:]
+		}
+		absTarget, err = filepath.Abs(target)
+		if err != nil {
+			return err
+		}
+		wd, _ := os.Getwd()
+		if filepath.Clean(absTarget) == filepath.Clean(wd) {
+			return errors.New("target directory cannot be the current directory")
+		}
+		info, err := os.Stat(absTarget)
+		switch {
+		case err == nil && !info.IsDir():
+			return errors.New("target path exists and is not a directory")
+		case err == nil:
+			entries, err := os.ReadDir(absTarget)
+			if err != nil {
+				return err
+			}
+			if len(entries) > 0 {
+				ok, err := huhConfirm("Target directory exists and is not empty. Remove directory and replace it?")
+				if err != nil {
+					return err
+				}
+				if !ok {
+					continue
+				}
+				if err := os.RemoveAll(absTarget); err != nil {
+					return fmt.Errorf("removing target directory: %w", err)
+				}
+			}
+		case errors.Is(err, os.ErrNotExist):
+		default:
+			return err
+		}
+		break
 	}
 	opts, err := runWizard()
 	if err != nil {
