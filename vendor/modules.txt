@@ -140,7 +140,7 @@ github.com/bep/godartsass/v2/internal/godartsasstesting
 # github.com/bep/golibsass v1.2.0
 ## explicit; go 1.13
 github.com/bep/golibsass/libsass/libsasserrors
-# github.com/catgoose/chuck v0.1.36
+# github.com/catgoose/chuck v0.1.38
 ## explicit; go 1.26.3
 github.com/catgoose/chuck
 github.com/catgoose/chuck/dbrepo
@@ -608,7 +608,7 @@ golang.org/x/oauth2/internal
 # golang.org/x/sync v0.20.0
 ## explicit; go 1.25.0
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.44.0
+# golang.org/x/sys v0.45.0
 ## explicit; go 1.25.0
 golang.org/x/sys/unix
 golang.org/x/sys/windows
