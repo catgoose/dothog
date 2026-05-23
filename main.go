@@ -199,15 +199,21 @@ func main() {
 		logger.Fatal("Failed to setup routes", "error", err)
 	}
 
-	// setup:feature:avatar:start
-	photoStore, err := graph.NewPhotoStore("web/assets/public/images")
+	// setup:feature:graph:start
+	// Graph-owned persistent directory cache: one on-disk SQLite file holds
+	// the user directory snapshot and the avatar blobs together, so derived
+	// apps can serve the last snapshot immediately on restart while the next
+	// sync runs.
+	directory, err := graph.OpenDirectory(appCtx, "db/graph_cache.db")
 	if err != nil {
-		logger.Fatal("Failed to create photo store", "error", err)
+		logger.Fatal("Failed to open Graph directory", "error", err)
 	}
-	routes.RegisterAvatarRoutes(e, photoStore)
+	defer func() { _ = directory.Close() }()
+	// setup:feature:avatar:start
+	photoCache := directory.Photos()
+	routes.RegisterAvatarRoutes(e, photoCache)
 	// setup:feature:avatar:end
 
-	// setup:feature:graph:start
 	tenantID, _ := appenv.Get("AZURE_TENANT_ID")
 	clientID, _ := appenv.Get("AZURE_CLIENT_ID")
 	clientSecret, _ := appenv.Get("AZURE_CLIENT_SECRET")
@@ -216,14 +222,6 @@ func main() {
 		if err != nil {
 			logger.Fatal("Failed to create Graph client", "error", err)
 		}
-		sqliteDB, err := graph.OpenUserCacheDB()
-		if err != nil {
-			logger.Fatal("Failed to open in-memory SQLite for user cache", "error", err)
-		}
-		if sqliteDB != nil {
-			defer func() { _ = sqliteDB.Close() }()
-		}
-		userCache := graph.NewUserCache(sqliteDB)
 		// afterSync is nil when avatar is stripped; the gated assignment below
 		// hooks photo sync in only when the avatar feature is kept. The split
 		// declaration is intentional — setup:feature:avatar strips the
@@ -232,13 +230,13 @@ func main() {
 		var afterSync func(ctx context.Context, users []graph.GraphUser) //nolint:staticcheck // S1021: split intentional, see comment above.
 		// setup:feature:avatar:start
 		afterSync = func(ctx context.Context, users []graph.GraphUser) {
-			if err := graph.SyncPhotos(ctx, graphClient, photoStore, users, false); err != nil {
+			if err := graph.SyncPhotos(ctx, graphClient, photoCache, users, false); err != nil {
 				logger.Error("Photo sync failed", "error", err)
 			}
 		}
 		// setup:feature:avatar:end
-		if err := graph.InitAndSyncUserCache(appCtx, userCache, cfg.GraphUserCacheRefreshHour, graphClient.FetchAllEnabledUsers, afterSync); err != nil {
-			logger.Fatal("Failed to initialize user cache", "error", err)
+		if err := graph.InitAndSyncDirectory(appCtx, directory, cfg.GraphUserCacheRefreshHour, graphClient.FetchAllEnabledUsers, afterSync); err != nil {
+			logger.Fatal("Failed to initialize Graph directory", "error", err)
 		}
 	}
 	// setup:feature:graph:end

@@ -3,7 +3,7 @@
 package graph
 
 // GraphUser mirrors the Microsoft Graph /users payload with extra db tags for
-// local persistence in the in-memory user cache.
+// local persistence in the Graph directory cache.
 type GraphUser struct {
 	AzureID           string `json:"id" db:"AzureId"`
 	GivenName         string `json:"givenName" db:"GivenName"`

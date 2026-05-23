@@ -44,8 +44,7 @@ func consistencyLevelHeaders() *abstractions.RequestHeaders {
 }
 
 // FetchAllEnabledUsers pages through every accountEnabled=true user (top=999, eventual consistency) and returns a flattened slice.
-func (c *Client) FetchAllEnabledUsers() ([]GraphUser, error) {
-	ctx := context.Background()
+func (c *Client) FetchAllEnabledUsers(ctx context.Context) ([]GraphUser, error) {
 	filter := "accountEnabled eq true"
 	selectCols := []string{"id", "displayName", "userPrincipalName", "mail", "officeLocation", "department", "givenName", "surname", "companyName", "jobTitle"}
 	requestConfig := &users.UsersRequestBuilderGetRequestConfiguration{

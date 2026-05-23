@@ -934,21 +934,23 @@ func TestSetup_GraphWithoutAvatar(t *testing.T) {
 	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
 	require.NoError(t, err)
 	mainContent := string(mainBytes)
-	require.Contains(t, mainContent, "graph.InitAndSyncUserCache",
-		"graph-only scaffolds must keep Graph cache/bootstrap wiring in main.go")
+	require.Contains(t, mainContent, "graph.InitAndSyncDirectory",
+		"graph-only scaffolds must keep Graph directory bootstrap wiring in main.go")
 	require.Contains(t, mainContent, "graph.NewGraphClient",
 		"graph-only scaffolds must keep Graph client initialization in main.go")
 	require.NotContains(t, mainContent, "routes.RegisterAvatarRoutes",
 		"graph-only scaffolds must strip avatar-only route registration")
-	require.NotContains(t, mainContent, "graph.NewPhotoStore",
-		"graph-only scaffolds must strip avatar-only photo store setup")
+	require.NotContains(t, mainContent, "directory.Photos()",
+		"graph-only scaffolds must strip avatar-only photo cache setup")
 	require.NotContains(t, mainContent, "graph.SyncPhotos",
 		"graph-only scaffolds must strip avatar-only photo sync wiring")
+	require.Contains(t, mainContent, "graph.OpenDirectory",
+		"graph-only scaffolds still open the persistent Graph directory for the user cache")
 
 	_, err = os.Stat(filepath.Join(dest, "internal", "routes", "routes_avatar.go"))
 	require.True(t, os.IsNotExist(err), "routes_avatar.go should be removed when avatar is not selected")
-	_, err = os.Stat(filepath.Join(dest, "internal", "service", "graph", "photo_store.go"))
-	require.True(t, os.IsNotExist(err), "photo_store.go should be removed when avatar is not selected")
+	_, err = os.Stat(filepath.Join(dest, "internal", "service", "graph", "photo_cache.go"))
+	require.True(t, os.IsNotExist(err), "photo_cache.go should be removed when avatar is not selected")
 }
 
 // TestSetup_NoDothogReferences runs setup with all features enabled and verifies

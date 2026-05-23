@@ -4,11 +4,9 @@ package graph
 
 import "catgoose/dothog/internal/database/schema"
 
-// UsersTable is the chuck-backed schema for the Graph user cache and the
-// app-data Users repository. Both consumers — the in-memory cache opened by
-// OpenUserCache and any chuck-backed repository that mirrors Graph users —
-// derive their schema from this single definition so column shape and
-// indexes stay in lockstep.
+// UsersTable is the chuck-backed schema for the Graph directory cache. Lives
+// in the same Graph-owned SQLite cache file as PhotosTable; both tables are
+// materialized at open time by OpenDirectory.
 var UsersTable = schema.NewTable("Users").
 	Columns(
 		schema.AutoIncrCol("ID"),
@@ -23,7 +21,6 @@ var UsersTable = schema.NewTable("Users").
 		schema.Col("Department", schema.TypeString(255)),
 		schema.Col("CompanyName", schema.TypeString(255)),
 		schema.Col("AccountName", schema.TypeString(255)),
-		schema.Col("LastLoginAt", schema.TypeTimestamp()),
 	).
 	WithTimestamps().
 	Indexes(
@@ -31,5 +28,30 @@ var UsersTable = schema.NewTable("Users").
 		schema.Index("idx_users_userprincipalname", "UserPrincipalName"),
 		schema.Index("idx_users_displayname", "DisplayName"),
 		schema.Index("idx_users_mail", "Mail"),
-		schema.Index("idx_users_lastloginat", "LastLoginAt"),
 	)
+
+// PhotosTable holds cached avatar blobs alongside UsersTable. Rows include
+// both fetched photos (non-null Bytes) and "checked and Graph has no photo"
+// markers (null Bytes); LastCheckedAt drives the photo-sync freshness window
+// so repeated startups don't re-query Graph for every user.
+var PhotosTable = schema.NewTable("Photos").
+	Columns(
+		schema.Col("AzureId", schema.TypeVarchar(255)).NotNull().Unique(),
+		schema.Col("ContentType", schema.TypeString(64)).NotNull().Default("'image/jpeg'"),
+		schema.Col("Bytes", schema.TypeLiteral("BLOB")),
+		schema.Col("FetchedAt", schema.TypeTimestamp()),
+		schema.Col("LastCheckedAt", schema.TypeTimestamp()),
+	).
+	WithTimestamps().
+	Indexes(
+		schema.Index("idx_photos_azureid", "AzureId"),
+	)
+
+// MetaTable carries Graph-directory sync state: per-Kind timestamps for the
+// last successful refresh. Kept minimal — one row per sync kind.
+var MetaTable = schema.NewTable("DirectoryMeta").
+	Columns(
+		schema.Col("Kind", schema.TypeVarchar(64)).NotNull().Unique(),
+		schema.Col("LastSuccessAt", schema.TypeTimestamp()),
+	).
+	WithTimestamps()

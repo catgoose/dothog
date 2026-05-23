@@ -163,10 +163,17 @@ func (ar *AppRoutes) InitRoutes() error {
 	if err != nil {
 		return fmt.Errorf("handler init: %w", err)
 	}
-	ar.e.GET("/", handler.HandleComponent(views.HomePage(cfg.AppName)))
+	// Single root handler — derived apps register GET / exactly once. The
+	// scaffold default serves the HomePage; the demo feature overrides the
+	// handler via the gated assignment below so there is no Echo route
+	// override at registration time. The default assignment looks ineffectual
+	// in the template (with demo present) but becomes the only assignment
+	// once demo is stripped.
+	homeHandler := handler.HandleComponent(views.HomePage(cfg.AppName)) //nolint:ineffassign,staticcheck // default-then-demo-override is intentional under feature stripping.
 	// setup:feature:demo:start
-	ar.e.GET("/", handler.HandleComponent(views.ArchitecturePage()))
+	homeHandler = handler.HandleComponent(views.ArchitecturePage())
 	// setup:feature:demo:end
+	ar.e.GET("/", homeHandler)
 	// setup:feature:demo:start
 	ar.initUserSettingsRoutes()
 	// setup:feature:demo:end

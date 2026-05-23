@@ -9,13 +9,22 @@ import (
 	"catgoose/dothog/internal/logger"
 )
 
-// SyncPhotos downloads profile photos for the given users into store.
-// It skips users who already have a cached photo unless force is true.
-// Requests are throttled to avoid hitting Graph rate limits.
-func SyncPhotos(ctx context.Context, client *Client, store *PhotoStore, users []GraphUser, force bool) error {
+// photoCheckFreshness bounds how often photo_sync re-queries Graph for a
+// given user. Users with recent LastCheckedAt are skipped regardless of
+// whether the cached row has bytes or is a checked-and-missing marker — so
+// repeated startups don't hammer Graph for users with no photo.
+const photoCheckFreshness = 24 * time.Hour
+
+// SyncPhotos downloads profile photos for the given users into cache. Skips
+// users whose LastCheckedAt is within photoCheckFreshness unless force is
+// true. Graph "no photo" responses persist a missing-marker row via
+// MarkMissing so the next sync within the window can skip the user without
+// re-querying. Requests are throttled to avoid hitting Graph rate limits.
+func SyncPhotos(ctx context.Context, client *Client, cache *PhotoCache, users []GraphUser, force bool) error {
 	log := logger.WithContext(ctx)
 	var downloaded, skipped, noPhoto, errCount int
 
+	now := time.Now()
 	for _, u := range users {
 		select {
 		case <-ctx.Done():
@@ -28,9 +37,11 @@ func SyncPhotos(ctx context.Context, client *Client, store *PhotoStore, users []
 			continue
 		}
 
-		if !force && store.HasPhoto(u.AzureID) {
-			skipped++
-			continue
+		if !force {
+			if last, found, err := cache.LastChecked(ctx, u.AzureID); err == nil && found && now.Sub(last) < photoCheckFreshness {
+				skipped++
+				continue
+			}
 		}
 
 		data, err := client.FetchUserPhoto(ctx, u.AzureID)
@@ -39,17 +50,20 @@ func SyncPhotos(ctx context.Context, client *Client, store *PhotoStore, users []
 			errCount++
 			continue
 		}
-		if data == nil {
+		if len(data) == 0 {
+			if err := cache.MarkMissing(ctx, u.AzureID); err != nil {
+				log.Error("Failed to record missing photo", "azureID", u.AzureID, "error", err)
+				errCount++
+				continue
+			}
 			noPhoto++
-			continue
-		}
-
-		if err := store.Save(u.AzureID, data); err != nil {
+		} else if err := cache.Save(ctx, u.AzureID, "image/jpeg", data); err != nil {
 			log.Error("Failed to save photo", "azureID", u.AzureID, "error", err)
 			errCount++
 			continue
+		} else {
+			downloaded++
 		}
-		downloaded++
 
 		// Throttle between requests
 		select {

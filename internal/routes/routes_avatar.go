@@ -3,6 +3,8 @@
 package routes
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 
 	"catgoose/dothog/internal/service/graph"
@@ -11,20 +13,25 @@ import (
 )
 
 // RegisterAvatarRoutes wires GET /api/avatar/:azureID; the handler is closed
-// over store so callers don't need to re-pass it per request.
-func RegisterAvatarRoutes(e *echo.Echo, store *graph.PhotoStore) {
-	e.GET("/api/avatar/:azureID", handleAvatar(store))
+// over cache so callers don't need to re-pass it per request. The cache is
+// the Graph-owned SQLite PhotoCache — blobs are served directly from the DB.
+func RegisterAvatarRoutes(e *echo.Echo, cache *graph.PhotoCache) {
+	e.GET("/api/avatar/:azureID", handleAvatar(cache))
 }
 
-func handleAvatar(store *graph.PhotoStore) echo.HandlerFunc {
+func handleAvatar(cache *graph.PhotoCache) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		azureID := c.Param("azureID")
 		if azureID == "" {
 			return c.NoContent(http.StatusBadRequest)
 		}
-		if !store.HasPhoto(azureID) {
-			return c.NoContent(http.StatusNotFound)
+		data, contentType, err := cache.Get(c.Request().Context(), azureID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return c.NoContent(http.StatusInternalServerError)
 		}
-		return c.File(store.PhotoPath(azureID))
+		return c.Blob(http.StatusOK, contentType, data)
 	}
 }
