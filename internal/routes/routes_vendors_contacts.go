@@ -5,13 +5,12 @@ package routes
 import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/params"
-	"github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/linkwell"
+	"github.com/catgoose/tavern"
 
 	"github.com/labstack/echo/v4"
-
 )
 
 type vendorContactRoutes struct {
@@ -20,7 +19,7 @@ type vendorContactRoutes struct {
 	broker *tavern.SSEBroker
 }
 
-func (ar *appRoutes) initVendorContactRoutes(db *demo.DB, actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initVendorContactRoutes(db *demo.DB, actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
 	v := &vendorContactRoutes{db: db, actLog: actLog, broker: broker}
 	ar.e.GET("/apps/vendors", v.handleVendorsPage)
 	ar.e.GET("/apps/vendors/list", v.handleVendorsList)

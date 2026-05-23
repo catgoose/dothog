@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	dialect "github.com/catgoose/chuck"
 	dbrepo "catgoose/dothog/internal/database/repository"
 	"catgoose/dothog/internal/domain"
+	dialect "github.com/catgoose/chuck"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"

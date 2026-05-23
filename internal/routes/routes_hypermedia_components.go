@@ -70,7 +70,7 @@ func newComponentsState() *componentsState {
 
 const componentsBase = "/components/widgets"
 
-func (ar *appRoutes) initComponentsRoutes() {
+func (ar *AppRoutes) initComponentsRoutes() {
 	s := newComponentsState()
 
 	ar.e.GET(componentsBase, s.handleComponentsPage)

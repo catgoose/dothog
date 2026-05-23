@@ -21,7 +21,7 @@ type tavernHooksRoutes struct {
 	lab    *demo.HooksLab
 }
 
-func (ar *appRoutes) initTavernHooksRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initTavernHooksRoutes(broker *tavern.SSEBroker) {
 	lab := demo.NewHooksLab()
 	h := &tavernHooksRoutes{broker: broker, lab: lab}
 

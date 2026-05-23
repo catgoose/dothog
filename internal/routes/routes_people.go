@@ -11,11 +11,11 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/internal/shared"
-	"github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/linkwell"
+	"github.com/catgoose/tavern"
 
 	"github.com/labstack/echo/v4"
 )
@@ -29,7 +29,7 @@ type peopleRoutes struct {
 	counter atomic.Int64
 }
 
-func (ar *appRoutes) initPeopleRoutes(db *demo.DB, broker *tavern.SSEBroker, actLog *demo.ActivityLog) {
+func (ar *AppRoutes) initPeopleRoutes(db *demo.DB, broker *tavern.SSEBroker, actLog *demo.ActivityLog) {
 	p := &peopleRoutes{db: db, broker: broker, actLog: actLog}
 	ar.e.GET(peopleBase, p.handlePeoplePage)
 	ar.e.GET(peopleBase+"/list", p.handlePeopleList)

@@ -10,8 +10,8 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/linkwell"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
@@ -23,7 +23,7 @@ type repositoryRoutes struct {
 	store *demo.TaskStore
 }
 
-func (ar *appRoutes) initRepositoryRoutes(db *demo.DB) {
+func (ar *AppRoutes) initRepositoryRoutes(db *demo.DB) {
 	store := demo.NewTaskStore(db.RawDB())
 	r := &repositoryRoutes{store: store}
 	ar.e.GET(repoBase, r.handlePage)

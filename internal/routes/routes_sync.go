@@ -15,11 +15,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (ar *appRoutes) initSyncRoutes() {
+func (ar *AppRoutes) initSyncRoutes() {
 	ar.e.POST("/sync", ar.handleSync)
 }
 
-func (ar *appRoutes) handleSync(c echo.Context) error {
+func (ar *AppRoutes) handleSync(c echo.Context) error {
 	var req SyncRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
@@ -75,7 +75,7 @@ func (ar *appRoutes) handleSync(c echo.Context) error {
 //   - Unknown resource URLs are accepted without version check
 //   - Known resources are validated against the current database version
 //   - Version match → applied; mismatch → conflict; row gone → rejected
-func (ar *appRoutes) processSyncOperation(c echo.Context, index int, op SyncOperation) SyncResult {
+func (ar *AppRoutes) processSyncOperation(c echo.Context, index int, op SyncOperation) SyncResult {
 	// Creates (no version) are accepted without version check
 	if op.Version == nil {
 		if err := ar.replayOperation(c, op); err != nil {
@@ -156,7 +156,7 @@ func (ar *appRoutes) processSyncOperation(c echo.Context, index int, op SyncOper
 }
 
 // replayOperation executes a queued sync operation against the Echo router.
-func (ar *appRoutes) replayOperation(c echo.Context, op SyncOperation) error {
+func (ar *AppRoutes) replayOperation(c echo.Context, op SyncOperation) error {
 	body := strings.NewReader(op.Body)
 	req, err := http.NewRequestWithContext(c.Request().Context(), op.Method, op.URL, body)
 	if err != nil {

@@ -47,7 +47,7 @@ type tavernSubsRoutes struct {
 	broker *tavern.SSEBroker
 }
 
-func (ar *appRoutes) initTavernSubsRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initTavernSubsRoutes(broker *tavern.SSEBroker) {
 	s := &tavernSubsRoutes{broker: broker}
 
 	broker.DynamicGroup("tavern-subs-dynamic", dynamicGroupFromCookie(

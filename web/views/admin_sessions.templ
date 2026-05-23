@@ -44,6 +44,7 @@ templ AdminSessionsTable(sessions []session.Settings) {
 							<th>Session UUID</th>
 							<th>Theme</th>
 							<th>Last Active</th>
+							<th class="text-right">Actions</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -55,11 +56,22 @@ templ AdminSessionsTable(sessions []session.Settings) {
 									<span class="badge badge-sm badge-outline">{ s.Theme }</span>
 								</td>
 								<td class="text-xs">{ formatAge(s.UpdatedAt) }</td>
+								<td class="text-right">
+									<button
+										type="button"
+										class="btn btn-xs btn-ghost text-error"
+										hx-delete={ "/admin/sessions/" + s.SessionUUID }
+										hx-target="#admin-sessions-table"
+										hx-swap="innerHTML"
+										hx-confirm="Delete this session row? The browser cookie will be re-issued on next request.">
+										Delete
+									</button>
+								</td>
 							</tr>
 						}
 						if len(sessions) == 0 {
 							<tr>
-								<td colspan="4" class="text-center text-base-content/60 py-4">No sessions found</td>
+								<td colspan="5" class="text-center text-base-content/60 py-4">No sessions found</td>
 							</tr>
 						}
 					</tbody>

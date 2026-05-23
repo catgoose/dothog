@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	appenv "catgoose/dothog/internal/env"
 	"catgoose/dothog/internal/demo"
+	appenv "catgoose/dothog/internal/env"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 
@@ -35,7 +35,7 @@ type auctionRoutes struct {
 	house  *demo.AuctionHouse
 }
 
-func (ar *appRoutes) initAuctionRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initAuctionRoutes(broker *tavern.SSEBroker) {
 	house := demo.NewAuctionHouse()
 	a := &auctionRoutes{broker: broker, house: house}
 

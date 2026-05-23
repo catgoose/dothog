@@ -13,7 +13,7 @@ import (
 
 func TestHandleSync_EmptyBatch(t *testing.T) {
 	e := echo.New()
-	ar := &appRoutes{e: e}
+	ar := &AppRoutes{e: e}
 
 	body := `{"operations":[],"schema_version":1}`
 	req := httptest.NewRequest(http.MethodPost, "/sync", strings.NewReader(body))
@@ -32,7 +32,7 @@ func TestHandleSync_SingleOperation(t *testing.T) {
 	e.Any("/*", func(c echo.Context) error {
 		return c.String(http.StatusOK, "ok")
 	})
-	ar := &appRoutes{e: e}
+	ar := &AppRoutes{e: e}
 
 	body := `{
 		"operations": [{
@@ -62,7 +62,7 @@ func TestHandleSync_MultipleOperations(t *testing.T) {
 	e.Any("/*", func(c echo.Context) error {
 		return c.String(http.StatusOK, "ok")
 	})
-	ar := &appRoutes{e: e}
+	ar := &AppRoutes{e: e}
 
 	body := `{
 		"operations": [
@@ -88,7 +88,7 @@ func TestHandleSync_MultipleOperations(t *testing.T) {
 
 func TestHandleSync_InvalidJSON(t *testing.T) {
 	e := echo.New()
-	ar := &appRoutes{e: e}
+	ar := &AppRoutes{e: e}
 
 	req := httptest.NewRequest(http.MethodPost, "/sync", strings.NewReader("not json"))
 	req.Header.Set("Content-Type", "application/json")

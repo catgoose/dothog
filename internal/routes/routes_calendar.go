@@ -18,7 +18,7 @@ type calendarRoutes struct {
 	store *demo.CalendarStore
 }
 
-func (ar *appRoutes) initCalendarRoutes() {
+func (ar *AppRoutes) initCalendarRoutes() {
 	c := &calendarRoutes{store: demo.NewCalendarStore()}
 
 	ar.e.GET("/realtime/calendar", c.handlePage)

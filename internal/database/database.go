@@ -1,8 +1,9 @@
-// setup:feature:database
-
 // Package database provides framework-internal database helpers.
 // App databases should use chuck.OpenURL() directly.
-// OpenSQLite is for framework-internal stores (error traces, session settings).
+// OpenSQLite is for framework-internal stores (error traces, session settings)
+// that are always SQLite regardless of the app's primary database; this file
+// is intentionally not gated by setup:feature:database so always-on stores
+// like the error-trace SQLite remain wired in derived apps.
 package database
 
 import (

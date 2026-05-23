@@ -30,7 +30,7 @@ type recoveryRoutes struct {
 	lab    *demo.RecoveryLab
 }
 
-func (ar *appRoutes) initRecoveryRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initRecoveryRoutes(broker *tavern.SSEBroker) {
 	r := &recoveryRoutes{
 		broker: broker,
 		lab:    demo.NewRecoveryLab(),

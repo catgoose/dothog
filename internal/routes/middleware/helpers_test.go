@@ -138,4 +138,3 @@ func TestHypermediaError_MultipleControls(t *testing.T) {
 	require.Equal(t, linkwell.ControlKindBack, ec.Controls[0].Kind)
 	require.Equal(t, linkwell.ControlKindHome, ec.Controls[1].Kind)
 }
-

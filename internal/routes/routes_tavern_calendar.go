@@ -30,7 +30,7 @@ type tavernCalendarRoutes struct {
 	lab    *demo.CalendarLab
 }
 
-func (ar *appRoutes) initTavernCalendarRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initTavernCalendarRoutes(broker *tavern.SSEBroker) {
 	r := &tavernCalendarRoutes{
 		broker: broker,
 		lab:    demo.NewCalendarLab(),

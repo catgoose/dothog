@@ -44,14 +44,16 @@ func (r *RepoManager) Dialect() dialect.Dialect {
 	return r.dialect
 }
 
-// GetExecer is satisfied by *sqlx.DB and *sqlx.Tx for use in repo methods that accept an optional transaction.
-type GetExecer interface {
+// getExecer narrows *sqlx.DB and *sqlx.Tx to the context-aware Get/Exec
+// surface repo methods need. Unexported because external callers reach it
+// only via RepoManager.Exec and use it through method calls.
+type getExecer interface {
 	GetContext(ctx context.Context, dest any, query string, args ...any) error
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 }
 
 // Exec picks tx when non-nil, otherwise the manager's DB pool — used by repo methods that take an optional transaction.
-func (r *RepoManager) Exec(tx *sqlx.Tx) GetExecer {
+func (r *RepoManager) Exec(tx *sqlx.Tx) getExecer {
 	if tx != nil {
 		return tx
 	}

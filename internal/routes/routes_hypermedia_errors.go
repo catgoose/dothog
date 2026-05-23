@@ -11,15 +11,15 @@ import (
 
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/middleware"
 	corecomponents "catgoose/dothog/web/components/core"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/linkwell"
 
 	"github.com/labstack/echo/v4"
 )
 
-func (ar *appRoutes) initErrorsRoutes() {
+func (ar *AppRoutes) initErrorsRoutes() {
 	base := patternsBase + "/errors"
 	var flakyCount int64
 

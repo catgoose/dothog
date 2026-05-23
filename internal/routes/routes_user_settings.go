@@ -37,17 +37,17 @@ func evictStalePrefs() {
 	}
 }
 
-func (ar *appRoutes) initUserSettingsRoutes() {
+func (ar *AppRoutes) initUserSettingsRoutes() {
 	ar.e.GET("/user/settings", ar.handleUserSettings)
 	ar.e.PUT("/user/settings", ar.handleUserSettingsSave)
 }
 
-func (ar *appRoutes) handleUserSettings(c echo.Context) error {
+func (ar *AppRoutes) handleUserSettings(c echo.Context) error {
 	prefs := getUserPrefs(c)
 	return handler.RenderBaseLayout(c, views.UserSettingsPage(prefs))
 }
 
-func (ar *appRoutes) handleUserSettingsSave(c echo.Context) error {
+func (ar *AppRoutes) handleUserSettingsSave(c echo.Context) error {
 	pageSize, _ := strconv.Atoi(c.FormValue("page_size"))
 	if pageSize == 0 {
 		pageSize = 20

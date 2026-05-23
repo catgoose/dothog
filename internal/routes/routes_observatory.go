@@ -29,7 +29,7 @@ type observatoryRoutes struct {
 	state      *demo.ObservatoryState
 }
 
-func (ar *appRoutes) initObservatoryRoutes(mainBroker *tavern.SSEBroker) {
+func (ar *AppRoutes) initObservatoryRoutes(mainBroker *tavern.SSEBroker) {
 	obs := demo.NewObservatoryState()
 
 	demoBroker := tavern.NewSSEBroker(
@@ -237,4 +237,3 @@ func (o *observatoryRoutes) controlsData() views.ObservatoryData {
 		MaxPerTopic:  o.state.MaxPerTopic(),
 	}
 }
-

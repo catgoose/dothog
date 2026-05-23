@@ -55,11 +55,16 @@ const (
 	FeaturePWA             = "pwa"
 )
 
-// AllFeatures is every selectable feature tag; "database" is implied by the base template and not user-selectable.
+// AllFeatures is the canonical feature tag list used for marker bookkeeping
+// (stripping, README/env tables, dep expansion). "database" stays in this
+// list because it tracks the always-on chuck-backed repository layer, but it
+// is hidden from the wizard surface in mage_setup.go (no label / no order
+// entry); users choose MSSQL/PostgreSQL instead, which imply it.
 var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureOffline, FeatureSync, FeatureCSRF, FeatureLinkRelations, FeatureWebStandards, FeatureBrowserAPIs, FeaturePWA}
 
 // ImplicitFeatures are always selected and not presented to the user.
-// "database" is implicit because SQLite is the base database engine.
+// "database" is implicit because the chuck-backed repository layer is the base
+// app-data path; MSSQL/PostgreSQL ride on top.
 // "alpine" is implicit because Alpine.js is kept available for coordinated view state
 // and browser-API bridges (theme picker, offline indicator). _hyperscript handles the
 // common local-DOM case and ships with HTMX.
@@ -67,10 +72,14 @@ var ImplicitFeatures = []string{FeatureDatabase, FeatureAlpine}
 
 // featureDeps maps a feature to the features it implies.
 // pwa -> sync -> offline.  capacitor is a separate opt-in for native wrapping.
+// MSSQL/PostgreSQL imply the implicit "database" feature, making the relationship
+// explicit even though database is always kept.
 var featureDeps = map[string][]string{
 	FeatureSync:          {FeatureOffline},
 	FeaturePWA:           {FeatureOffline, FeatureSync},
 	FeatureDemo:          {FeatureSessionSettings},
+	FeatureMSSQL:         {FeatureDatabase},
+	FeaturePostgres:      {FeatureDatabase},
 	FeatureCSRF:          {},
 	FeatureLinkRelations: {},
 	FeatureBrowserAPIs:   {FeatureSSE},
@@ -1188,9 +1197,9 @@ var featureDescriptions = map[string]struct{ label, desc string }{
 	FeatureAuth:            {"Auth (Crooner)", "Azure AD / OIDC authentication via crooner"},
 	FeatureGraph:           {"Graph API", "Microsoft Graph API integration for user data"},
 	FeatureAvatar:          {"Avatar Photos", "User profile photo download and caching from Graph"},
-	FeatureDatabase:        {"Database (chuck)", "Repository layer with schema DSL (SQLite base)"},
-	FeatureMSSQL:           {"MSSQL", "Microsoft SQL Server dialect support"},
-	FeaturePostgres:        {"PostgreSQL", "PostgreSQL dialect support"},
+	FeatureDatabase:        {"App data (chuck)", "Repository layer with schema DSL (SQLite base) — implicit, included with MSSQL/PostgreSQL"},
+	FeatureMSSQL:           {"MSSQL", "Microsoft SQL Server support (chuck-backed app data)"},
+	FeaturePostgres:        {"PostgreSQL", "PostgreSQL support (chuck-backed app data)"},
 	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration"},
 	FeatureCaddy:           {"Caddy HTTPS/H3 front-proxy", "Optional HTTPS/H3 front-proxy that sits in front of the templ watcher for local dev. Without it, dev runs plain HTTP."},
 	FeatureDemo:            {"Demo Content", "Demo pages, seed data, and example routes"},

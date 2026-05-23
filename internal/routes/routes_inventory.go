@@ -8,10 +8,10 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	htmx "github.com/angelofallars/htmx-go"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/web/views"
+	htmx "github.com/angelofallars/htmx-go"
+	"github.com/catgoose/linkwell"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
@@ -21,7 +21,7 @@ const inventoryBase = "/apps/inventory"
 
 type inventoryRoutes struct{ db *demo.DB }
 
-func (ar *appRoutes) initInventoryRoutes(db *demo.DB) {
+func (ar *AppRoutes) initInventoryRoutes(db *demo.DB) {
 	d := &inventoryRoutes{db: db}
 	ar.e.GET(inventoryBase, d.handleInventoryPage)
 	ar.e.GET(inventoryBase+"/items", d.handleInventoryItems)
@@ -32,9 +32,9 @@ func (ar *appRoutes) initInventoryRoutes(db *demo.DB) {
 	ar.e.GET(inventoryBase+"/items/:id", d.handleItemRow)
 	ar.e.GET(inventoryBase+"/items/:id/edit", d.handleEditItemForm)
 	ar.e.PUT(inventoryBase+"/items/:id", d.handleUpdateItem)
-	ar.e.POST(inventoryBase+"/items/:id", d.handleUpdateItem)           // POST fallback for PUT
+	ar.e.POST(inventoryBase+"/items/:id", d.handleUpdateItem) // POST fallback for PUT
 	ar.e.DELETE(inventoryBase+"/items/:id", d.handleDeleteItem)
-	ar.e.POST(inventoryBase+"/items/:id/delete", d.handleDeleteItem)    // POST fallback for DELETE
+	ar.e.POST(inventoryBase+"/items/:id/delete", d.handleDeleteItem) // POST fallback for DELETE
 }
 
 func (d *inventoryRoutes) handleInventoryPage(c echo.Context) error {

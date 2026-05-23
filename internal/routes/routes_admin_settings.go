@@ -45,7 +45,7 @@ func initAdminIntervals() {
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 
-func (ar *appRoutes) initAdminSettingsRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initAdminSettingsRoutes(broker *tavern.SSEBroker) {
 	initAdminIntervals()
 	ar.e.GET("/admin/settings", ar.handleAdminSettings(broker))
 	ar.e.POST("/admin/settings/interval", handleAdminInterval)
@@ -55,7 +55,7 @@ func (ar *appRoutes) initAdminSettingsRoutes(broker *tavern.SSEBroker) {
 	broker.RunPublisher(ar.ctx, adminPub.Start)
 }
 
-func (ar *appRoutes) handleAdminSettings(broker *tavern.SSEBroker) echo.HandlerFunc {
+func (ar *AppRoutes) handleAdminSettings(broker *tavern.SSEBroker) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		data := ar.buildAdminPanelData(broker, c)
 		return handler.RenderBaseLayout(c, views.AdminSettingsPage(data))
@@ -100,7 +100,7 @@ func init() {
 
 // ── Publisher ────────────────────────────────────────────────────────────────
 
-func (ar *appRoutes) newAdminPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
+func (ar *AppRoutes) newAdminPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
 	pub := broker.NewScheduledPublisher(TopicAdminPanel, tavern.WithBaseTick(500*time.Millisecond))
 
 	pub.Register("system-metrics", time.Duration(adminDefaultIntervals["system-metrics"])*time.Millisecond,
@@ -127,7 +127,7 @@ func (ar *appRoutes) newAdminPublisher(broker *tavern.SSEBroker) *tavern.Schedul
 
 // ── Data builders ───────────────────────────────────────────────────────────
 
-func (ar *appRoutes) buildAdminPanelData(broker *tavern.SSEBroker, c echo.Context) views.AdminPanelData {
+func (ar *AppRoutes) buildAdminPanelData(broker *tavern.SSEBroker, c echo.Context) views.AdminPanelData {
 	stats := health.CollectRuntimeStats(ar.startTime)
 	counts := broker.TopicCounts()
 

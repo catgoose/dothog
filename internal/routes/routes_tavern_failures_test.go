@@ -19,14 +19,14 @@ func TestLooksLikeFailuresEventID(t *testing.T) {
 		{"evt-42", true},
 		{"evt-99999", true},
 		{"evt-0", true},
-		{"evt-", false},     // no digits
-		{"evt", false},      // too short
-		{"", false},         // empty
-		{"EVT-1", false},    // wrong case
-		{"evt-abc", false},  // non-numeric suffix
-		{"evt-1x", false},   // trailing non-digit
+		{"evt-", false},    // no digits
+		{"evt", false},     // too short
+		{"", false},        // empty
+		{"EVT-1", false},   // wrong case
+		{"evt-abc", false}, // non-numeric suffix
+		{"evt-1x", false},  // trailing non-digit
 		{"this-is-not-a-valid-id", false},
-		{"foo-123", false},  // wrong prefix
+		{"foo-123", false}, // wrong prefix
 	}
 	for _, tt := range tests {
 		t.Run(tt.id, func(t *testing.T) {

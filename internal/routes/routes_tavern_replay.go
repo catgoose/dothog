@@ -26,7 +26,7 @@ type tavernReplayRoutes struct {
 	publishRate    atomic.Int64 // nanoseconds
 }
 
-func (ar *appRoutes) initTavernReplayRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initTavernReplayRoutes(broker *tavern.SSEBroker) {
 	lab := demo.NewReplayLab(50)
 	r := &tavernReplayRoutes{broker: broker, lab: lab}
 	r.lifetime.Store(int64(10 * time.Second))

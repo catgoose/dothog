@@ -20,7 +20,7 @@ import (
 
 const loggingBase = "/platform/logging"
 
-func (ar *appRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 	// setup:feature:sse:start
 	// Wire up SSE broadcasting on error trace promotion.
 	if ar.repos.ReqLogStore != nil {

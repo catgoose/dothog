@@ -32,7 +32,7 @@ type tavernHotZoneRoutes struct {
 	lab    *demo.HotZoneLab
 }
 
-func (ar *appRoutes) initTavernHotZoneRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initTavernHotZoneRoutes(broker *tavern.SSEBroker) {
 	r := &tavernHotZoneRoutes{
 		broker: broker,
 		lab:    demo.NewHotZoneLab(),

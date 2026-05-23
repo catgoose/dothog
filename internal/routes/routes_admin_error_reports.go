@@ -7,9 +7,9 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/linkwell"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
@@ -19,7 +19,7 @@ const errorReportsBase = "/admin/error-reports"
 
 type errorReportRoutes struct{ db *demo.DB }
 
-func (ar *appRoutes) initAdminErrorReportsRoutes(db *demo.DB) {
+func (ar *AppRoutes) initAdminErrorReportsRoutes(db *demo.DB) {
 	d := &errorReportRoutes{db: db}
 	ar.e.GET(errorReportsBase, d.handleErrorReportsPage)
 	ar.e.GET(errorReportsBase+"/table", d.handleErrorReportsTable)

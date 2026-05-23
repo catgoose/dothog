@@ -12,8 +12,8 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/linkwell"
 
 	"github.com/labstack/echo/v4"
 )
@@ -49,7 +49,7 @@ func newHypermediaState() *hypermediaState {
 	return s
 }
 
-func (ar *appRoutes) initHypermediaRoutes() {
+func (ar *AppRoutes) initHypermediaRoutes() {
 	// Links demo page
 	ar.e.GET("/api/links", ar.handleLinksPage)
 	ar.e.POST("/api/links", ar.handleLinksCreate)
@@ -384,7 +384,7 @@ func crudItemsToView(items []crudItem) []views.CRUDViewItem {
 
 // ─── Links editor handlers ───────────────────────────────────────────────────
 
-func (ar *appRoutes) buildLinksPageData(c echo.Context) views.LinksPageData {
+func (ar *AppRoutes) buildLinksPageData(c echo.Context) views.LinksPageData {
 	data := views.LinksPageData{
 		Links:  linkwell.AllLinks(),
 		Routes: getRoutesList(c),
@@ -396,11 +396,11 @@ func (ar *appRoutes) buildLinksPageData(c echo.Context) views.LinksPageData {
 	return data
 }
 
-func (ar *appRoutes) handleLinksPage(c echo.Context) error {
+func (ar *AppRoutes) handleLinksPage(c echo.Context) error {
 	return handler.RenderBaseLayout(c, views.HypermediaLinksPage(ar.buildLinksPageData(c)))
 }
 
-func (ar *appRoutes) handleLinksCreate(c echo.Context) error {
+func (ar *AppRoutes) handleLinksCreate(c echo.Context) error {
 	if ar.demoDB == nil {
 		return handler.HandleHypermediaError(c, http.StatusServiceUnavailable, "Demo DB not available", nil)
 	}
@@ -431,7 +431,7 @@ func (ar *appRoutes) handleLinksCreate(c echo.Context) error {
 	return handler.RenderComponent(c, views.LinksRegistryTable(ar.buildLinksPageData(c)))
 }
 
-func (ar *appRoutes) handleLinksDelete(c echo.Context) error {
+func (ar *AppRoutes) handleLinksDelete(c echo.Context) error {
 	if ar.demoDB == nil {
 		return handler.HandleHypermediaError(c, http.StatusServiceUnavailable, "Demo DB not available", nil)
 	}

@@ -17,15 +17,39 @@ import (
 )
 
 // fakeSettingsStore captures the last upsert so tests can assert persistence
-// without standing up a database. It satisfies SessionSettingsStore.
+// without standing up a database. It satisfies both session.SettingsProvider
+// and session.SettingsAdmin so a single fake can stand in for both Repos
+// fields.
 type fakeSettingsStore struct {
 	last    *session.Settings
+	deleted []string
 	mu      sync.Mutex
 	upserts int
 }
 
+func (s *fakeSettingsStore) GetByUUID(_ context.Context, _ string) (*session.Settings, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.last == nil {
+		return nil, nil
+	}
+	clone := *s.last
+	return &clone, nil
+}
+
+func (s *fakeSettingsStore) Touch(_ context.Context, _ string) error {
+	return nil
+}
+
 func (s *fakeSettingsStore) ListAll(_ context.Context) ([]session.Settings, error) {
 	return nil, nil
+}
+
+func (s *fakeSettingsStore) DeleteByUUID(_ context.Context, uuid string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.deleted = append(s.deleted, uuid)
+	return nil
 }
 
 func (s *fakeSettingsStore) Upsert(_ context.Context, settings *session.Settings) error {
@@ -59,9 +83,9 @@ func withSession(req *http.Request, s *session.Settings) *http.Request {
 // POST /settings/theme so theme changes survive a reload.
 func TestInitThemeRoutes_WithoutBroker_PersistsTheme(t *testing.T) {
 	store := &fakeSettingsStore{}
-	ar := &appRoutes{
+	ar := &AppRoutes{
 		e:     echo.New(),
-		repos: Repos{Settings: store},
+		repos: Repos{SessionStore: store, SessionSettings: store},
 	}
 	ar.initThemeRoutes()
 
@@ -86,9 +110,9 @@ func TestInitThemeRoutes_WithoutBroker_PersistsTheme(t *testing.T) {
 // (and that persistence happens at the fallback value).
 func TestInitThemeRoutes_WithoutBroker_RejectsInvalidTheme(t *testing.T) {
 	store := &fakeSettingsStore{}
-	ar := &appRoutes{
+	ar := &AppRoutes{
 		e:     echo.New(),
-		repos: Repos{Settings: store},
+		repos: Repos{SessionStore: store, SessionSettings: store},
 	}
 	ar.initThemeRoutes()
 
@@ -111,9 +135,9 @@ func TestInitThemeRoutes_WithoutBroker_RejectsInvalidTheme(t *testing.T) {
 // which lives on the same code path and was also previously broker-coupled.
 func TestInitThemeRoutes_WithoutBroker_PersistsLayout(t *testing.T) {
 	store := &fakeSettingsStore{}
-	ar := &appRoutes{
+	ar := &AppRoutes{
 		e:     echo.New(),
-		repos: Repos{Settings: store},
+		repos: Repos{SessionStore: store, SessionSettings: store},
 	}
 	ar.initThemeRoutes()
 

@@ -17,7 +17,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (ar *appRoutes) initReportIssueRoutes() {
+func (ar *AppRoutes) initReportIssueRoutes() {
 	// POST /report-issue[/:requestID] — accepts a report, passes log entries
 	// to the configured IssueReporter, and triggers a browser alert.
 	reportHandler := func(c echo.Context) error {

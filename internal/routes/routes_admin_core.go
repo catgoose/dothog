@@ -19,7 +19,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (ar *appRoutes) initAdminCoreRoutes() {
+func (ar *AppRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin", handler.HandleComponent(views.AdminIndexPage()))
 	ar.e.GET("/admin/health", ar.handleAdminHealth)
 	ar.e.GET("/admin/health/check", ar.handleAdminHealthCheck)
@@ -32,13 +32,13 @@ func (ar *appRoutes) initAdminCoreRoutes() {
 	// setup:feature:session_settings:start
 	ar.e.GET("/admin/sessions", ar.handleSessionsPage)
 	ar.e.GET("/admin/sessions/table", ar.handleSessionsTable)
+	ar.e.DELETE("/admin/sessions/:uuid", ar.handleSessionsDelete)
 	// setup:feature:session_settings:end
 }
 
-
 // setup:feature:demo:start
 
-func (ar *appRoutes) handleSystemInfo(c echo.Context) error {
+func (ar *AppRoutes) handleSystemInfo(c echo.Context) error {
 	var ms runtime.MemStats
 	runtime.ReadMemStats(&ms)
 
@@ -73,7 +73,7 @@ func (ar *appRoutes) handleSystemInfo(c echo.Context) error {
 	return handler.RenderBaseLayout(c, views.AdminSystemPage(info))
 }
 
-func (ar *appRoutes) handleCheckUpdate(c echo.Context) error {
+func (ar *AppRoutes) handleCheckUpdate(c echo.Context) error {
 	info, err := version.CheckLatest(c.Request().Context())
 	if err != nil {
 		return handler.RenderComponent(c, views.UpdateCheckResult(version.UpdateInfo{
@@ -83,7 +83,7 @@ func (ar *appRoutes) handleCheckUpdate(c echo.Context) error {
 	return handler.RenderComponent(c, views.UpdateCheckResult(info, nil))
 }
 
-func (ar *appRoutes) handleConfigInfo(c echo.Context) error {
+func (ar *AppRoutes) handleConfigInfo(c echo.Context) error {
 	cfg, err := config.GetConfig()
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load config", err)
@@ -119,24 +119,45 @@ func (ar *appRoutes) handleConfigInfo(c echo.Context) error {
 
 // setup:feature:session_settings:start
 
-func (ar *appRoutes) handleSessionsPage(c echo.Context) error {
-	if ar.repos.Settings == nil {
+func (ar *AppRoutes) handleSessionsPage(c echo.Context) error {
+	if ar.repos.SessionSettings == nil {
 		return handler.HandleHypermediaError(c, 500, "Session settings not configured", nil)
 	}
-	sessions, err := ar.repos.Settings.ListAll(c.Request().Context())
+	sessions, err := ar.repos.SessionSettings.ListAll(c.Request().Context())
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load sessions", err)
 	}
 	return handler.RenderBaseLayout(c, views.AdminSessionsPage(sessions))
 }
 
-func (ar *appRoutes) handleSessionsTable(c echo.Context) error {
-	if ar.repos.Settings == nil {
+func (ar *AppRoutes) handleSessionsTable(c echo.Context) error {
+	if ar.repos.SessionSettings == nil {
 		return handler.HandleHypermediaError(c, 500, "Session settings not configured", nil)
 	}
-	sessions, err := ar.repos.Settings.ListAll(c.Request().Context())
+	sessions, err := ar.repos.SessionSettings.ListAll(c.Request().Context())
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load sessions", err)
+	}
+	return handler.RenderComponent(c, views.AdminSessionsTable(sessions))
+}
+
+// handleSessionsDelete drops a session_settings row and returns the refreshed
+// table so HTMX can swap it in place. The DELETE-By-UUID path is idempotent,
+// so duplicate clicks and stale fragments don't 4xx.
+func (ar *AppRoutes) handleSessionsDelete(c echo.Context) error {
+	if ar.repos.SessionSettings == nil {
+		return handler.HandleHypermediaError(c, 500, "Session settings not configured", nil)
+	}
+	uuid := c.Param("uuid")
+	if uuid == "" {
+		return handler.HandleHypermediaError(c, 400, "Missing session uuid", nil)
+	}
+	if err := ar.repos.SessionSettings.DeleteByUUID(c.Request().Context(), uuid); err != nil {
+		return handler.HandleHypermediaError(c, 500, "Failed to delete session", err)
+	}
+	sessions, err := ar.repos.SessionSettings.ListAll(c.Request().Context())
+	if err != nil {
+		return handler.HandleHypermediaError(c, 500, "Failed to reload sessions", err)
 	}
 	return handler.RenderComponent(c, views.AdminSessionsTable(sessions))
 }
@@ -183,12 +204,12 @@ func defaultStr(s, fallback string) string {
 // feature-gated routes_admin_settings.go when the demo feature is present.
 var healthIntervalsFn = func() map[string]int { return nil }
 
-func (ar *appRoutes) handleAdminHealth(c echo.Context) error {
+func (ar *AppRoutes) handleAdminHealth(c echo.Context) error {
 	h := health.Check(c.Request().Context(), ar.healthCfg)
 	return handler.RenderBaseLayout(c, views.AdminHealthPage(h, healthIntervalsFn()))
 }
 
-func (ar *appRoutes) handleAdminHealthCheck(c echo.Context) error {
+func (ar *AppRoutes) handleAdminHealthCheck(c echo.Context) error {
 	h := health.Check(c.Request().Context(), ar.healthCfg)
 	return handler.RenderComponent(c, views.AdminHealthFragment(h))
 }

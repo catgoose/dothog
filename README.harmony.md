@@ -737,7 +737,7 @@ go tool mage setup -n "My App" --features all
 | `-n APP_NAME` | App name (required) |
 | `-m MODULE` | Go module path |
 | `-p PORT` | 5-digit base port (< 60000) |
-| `--features` | Comma-separated: `auth,graph,avatar,database,sse,caddy,demo`, `all`, or `none` |
+| `--features` | Comma-separated: `auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor,offline,sync,pwa`, `all`, or `none`. Chuck-backed app data is implicit and always wired in. |
 | `--force` | Re-run setup on an already customized project |
 
 After setup, review `.env.development` and start the dev server with `go tool mage watch`.

@@ -6,8 +6,8 @@ import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/params"
-	"github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/tavern"
 
 	"github.com/labstack/echo/v4"
 )
@@ -18,7 +18,7 @@ type kanbanRoutes struct {
 	broker *tavern.SSEBroker
 }
 
-func (ar *appRoutes) initKanbanRoutes(board *demo.KanbanBoard, actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initKanbanRoutes(board *demo.KanbanBoard, actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
 	k := &kanbanRoutes{board: board, actLog: actLog, broker: broker}
 	ar.e.GET("/apps/kanban", k.handleKanbanPage)
 	ar.e.PATCH("/apps/kanban/tasks/:id", k.handleMoveTask)

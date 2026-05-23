@@ -28,7 +28,7 @@ type tavernToastRoutes struct {
 	lab    *demo.ToastLab
 }
 
-func (ar *appRoutes) initTavernToastRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initTavernToastRoutes(broker *tavern.SSEBroker) {
 	r := &tavernToastRoutes{
 		broker: broker,
 		lab:    demo.NewToastLab(),

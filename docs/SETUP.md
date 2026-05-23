@@ -10,7 +10,8 @@ go tool mage setup
 
 # CLI flags
 go tool mage setup -n "My App" -m "github.com/you/my-app" -p 12345
-go tool mage setup -n "My App" --features auth,database,sse,caddy
+go tool mage setup -n "My App" --features auth,sse,caddy
+go tool mage setup -n "My App" --features auth,mssql,sse,caddy   # MSSQL app data
 go tool mage setup -n "My App" --features none  # bare HTMX app
 
 # Cross-host generation (autodetects from runtime.GOOS when omitted)
@@ -81,9 +82,8 @@ If `sse` is not selected, everything between `:start` and `:end` (inclusive) is 
 | `auth` | Auth (Crooner) | — | OAuth/OIDC authentication via crooner |
 | `graph` | Graph API | — | Microsoft Graph API integration |
 | `avatar` | Avatar Photos | — | User avatar fetching (requires graph selected separately) |
-| `database` | Database | — | Implicit; SQLite is always included |
-| `mssql` | MSSQL dialect | — | Microsoft SQL Server production dialect |
-| `postgres` | PostgreSQL dialect | — | PostgreSQL production dialect |
+| `mssql` | MSSQL (Microsoft SQL Server) | database (implicit) | Chuck-backed app data with MSSQL support |
+| `postgres` | PostgreSQL | database (implicit) | Chuck-backed app data with PostgreSQL support |
 | `sse` | SSE | — | Server-Sent Events (requires caddy selected separately) |
 | `caddy` | Caddy HTTPS/H3 front-proxy | — | Optional HTTPS/H3 front-proxy in front of templ. Without it dev runs plain HTTP. |
 | `link_relations` | Link Relations | — | Context bars, breadcrumbs, site map |
@@ -97,7 +97,7 @@ If `sse` is not selected, everything between `:start` and `:end` (inclusive) is 
 
 ### Implicit Features
 
-`database` and `alpine` are always included and not presented in the wizard. SQLite is the base database engine. `_hyperscript` is the default tool for client-side DOM behavior (loaded with HTMX); Alpine.js (CSP build) is kept available for coordinated view state and browser-API bridges — currently the theme picker and offline indicator. The CSP build eliminates `unsafe-eval` from Content Security Policy requirements; any remaining Alpine component is registered via `Alpine.data()` in `alpine-components.js`.
+`database` and `alpine` are always included and not presented in the wizard. The chuck-backed repository layer is the base app-data path; MSSQL and PostgreSQL ride on top of it. `_hyperscript` is the default tool for client-side DOM behavior (loaded with HTMX); Alpine.js (CSP build) is kept available for coordinated view state and browser-API bridges — currently the theme picker and offline indicator. The CSP build eliminates `unsafe-eval` from Content Security Policy requirements; any remaining Alpine component is registered via `Alpine.data()` in `alpine-components.js`.
 
 ### Feature Dependencies
 
@@ -106,6 +106,7 @@ Dependencies are auto-resolved:
 - Selecting `sync` auto-includes `offline`
 - Selecting `pwa` auto-includes `offline` and `sync`
 - Selecting `demo` auto-includes `session_settings`
+- Selecting `mssql` or `postgres` auto-includes the implicit `database` layer (chuck-backed app data)
 
 ## Interactive Wizard
 
@@ -129,8 +130,9 @@ The wizard asks whether to copy the template to a new directory before setup. Th
 -n APP_NAME        Human-readable app name (required)
 -m MODULE_PATH     Go module path (default: github.com/you/<app-name>)
 -p BASE_PORT       5-digit base port < 60000
---features LIST    Comma-separated: auth,graph,avatar,database,sse,caddy,demo
+--features LIST    Comma-separated: auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor,offline,sync,pwa
                    "all" = keep everything, "none" = bare HTMX app
+                   Chuck-backed app data ("database") is implicit and always wired in.
 --no-caddy         Deprecated alias for omitting caddy from --features
 --force            Re-run setup on an already-customized module
 ```
@@ -146,7 +148,7 @@ These files are only needed for running setup. Derived apps don't need them.
 
 ## Derived App Layout
 
-After `mage setup` with `--features auth,database,caddy`:
+After `mage setup` with `--features auth,caddy`:
 
 - All `// setup:feature:demo` files are deleted
 - All `// setup:feature:demo:start` ... `// setup:feature:demo:end` blocks are removed

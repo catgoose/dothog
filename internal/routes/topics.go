@@ -3,18 +3,18 @@ package routes
 // SSE topic constants for the broker. These are app-specific channel names
 // used by the real-time features (dashboard, canvas, feed, etc.).
 const (
-	TopicSystemStats  = "system-stats"
-	TopicDashMetrics = "dashboard-metrics"
-	TopicPeopleUpdate = "people-update"
-	TopicActivityFeed = "activity-feed"
-	TopicErrorTraces  = "error-traces"
-	TopicThemeChange  = "theme-change"
+	TopicSystemStats   = "system-stats"
+	TopicDashMetrics   = "dashboard-metrics"
+	TopicPeopleUpdate  = "people-update"
+	TopicActivityFeed  = "activity-feed"
+	TopicErrorTraces   = "error-traces"
+	TopicThemeChange   = "theme-change"
 	TopicCanvasUpdate  = "canvas-update"
 	TopicAdminPanel    = "admin-panel"
-	TopicNumericalDash    = "numerical-dash"
-	TopicNotifications    = "notifications"
-	TopicObservatory      = "observatory"
-	TopicAppLifeline      = "app-lifeline"
+	TopicNumericalDash = "numerical-dash"
+	TopicNotifications = "notifications"
+	TopicObservatory   = "observatory"
+	TopicAppLifeline   = "app-lifeline"
 
 	// Tavern gallery lab topics.
 	TopicTavernReplay      = "tavern/replay"

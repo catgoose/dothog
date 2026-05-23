@@ -26,7 +26,7 @@ type failuresRoutes struct {
 	counter  atomic.Int64
 }
 
-func (ar *appRoutes) initFailuresRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initFailuresRoutes(broker *tavern.SSEBroker) {
 	r := &failuresRoutes{broker: broker}
 
 	// Tiny replay window so the malformed-Last-Event-ID and expired-window

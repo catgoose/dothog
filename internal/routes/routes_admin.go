@@ -7,8 +7,8 @@ import (
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/tavern"
 
 	"github.com/labstack/echo/v4"
 )
@@ -19,7 +19,7 @@ type adminRoutes struct {
 	broker *tavern.SSEBroker
 }
 
-func (ar *appRoutes) initAdminRoutes(db *demo.DB, actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initAdminRoutes(db *demo.DB, actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
 	a := &adminRoutes{db: db, actLog: actLog, broker: broker}
 	ar.e.GET("/admin/sqlite", a.handleAdminPage)
 	ar.e.POST("/admin/db/reinit", a.handleReinit)

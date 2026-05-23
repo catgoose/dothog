@@ -75,7 +75,7 @@ func newComponents2State() *components2State {
 
 const components2Base = "/components/cards"
 
-func (ar *appRoutes) initComponents2Routes() {
+func (ar *AppRoutes) initComponents2Routes() {
 	s := newComponents2State()
 
 	ar.e.GET(components2Base, s.handleComponents2Page)

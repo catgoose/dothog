@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (ar *appRoutes) initErrorModesRoutes() {
+func (ar *AppRoutes) initErrorModesRoutes() {
 	base := patternsBase + "/errors/modes"
 
 	ar.e.GET(base, handler.HandleComponent(views.ErrorModesPage()))

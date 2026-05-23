@@ -16,14 +16,16 @@ import (
 )
 
 // SessionSettingsRepository persists session.Settings rows; it satisfies
-// both session.SettingsProvider and routes.SessionSettingsStore via
-// implicit interface satisfaction.
+// both session.SettingsProvider (middleware hydration) and session.SettingsAdmin
+// (admin/management routes) via implicit interface satisfaction.
 type SessionSettingsRepository struct {
 	repo *dbrepoManager.RepoManager
 }
 
-// NewSessionSettingsRepository binds repo; the result satisfies session.SettingsProvider
-// and routes.SessionSettingsStore via implicit interface satisfaction.
+// NewSessionSettingsRepository binds repo; the result satisfies both
+// session.SettingsProvider and session.SettingsAdmin via implicit interface
+// satisfaction, so it can be wired into session.Middleware and into the
+// route-side Repos struct without further plumbing.
 func NewSessionSettingsRepository(repo *dbrepoManager.RepoManager) *SessionSettingsRepository {
 	return &SessionSettingsRepository{repo: repo}
 }
@@ -118,4 +120,18 @@ func (r *SessionSettingsRepository) ListAll(ctx context.Context) ([]session.Sett
 		return nil, fmt.Errorf("list session settings: %w", err)
 	}
 	return rows, nil
+}
+
+// DeleteByUUID removes the row matching uuid; missing rows are not an error
+// so admin handlers can stay idempotent across duplicate clicks and stale
+// fragment refreshes.
+func (r *SessionSettingsRepository) DeleteByUUID(ctx context.Context, uuid string) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE SessionUUID = @SessionUUID", tableName)
+	_, err := r.repo.GetDB().ExecContext(ctx, query,
+		sql.Named("SessionUUID", uuid),
+	)
+	if err != nil {
+		return fmt.Errorf("delete session settings: %w", err)
+	}
+	return nil
 }

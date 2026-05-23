@@ -241,9 +241,9 @@ func BenchmarkServerStartup(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		cfg, _ := config.GetConfig()
 		_, _ = routes.InitEcho(context.Background(), staticFS, cfg,
-		// setup:feature:session_settings:start
-		nil,
-		// setup:feature:session_settings:end
-		nil)
+			// setup:feature:session_settings:start
+			nil,
+			// setup:feature:session_settings:end
+			nil)
 	}
 }

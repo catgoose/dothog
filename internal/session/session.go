@@ -154,11 +154,23 @@ func (cfg Config) logger() *slog.Logger {
 	return slog.Default()
 }
 
-// Provider is the interface for session-settings persistence.
-type Provider interface {
+// SettingsProvider is the middleware-facing contract: load a row by UUID,
+// upsert one back, and bump UpdatedAt without rewriting the rest. It is the
+// minimum surface session.Middleware needs to hydrate the request context.
+type SettingsProvider interface {
 	GetByUUID(ctx context.Context, uuid string) (*Settings, error)
 	Upsert(ctx context.Context, s *Settings) error
 	Touch(ctx context.Context, uuid string) error
+}
+
+// SettingsAdmin is the route-facing contract for /admin/sessions-style
+// management surfaces: enumerate rows, fetch one, drop one. Implementations
+// usually also satisfy SettingsProvider, but admin routes depend on this
+// narrower interface so the extension seam stays obvious.
+type SettingsAdmin interface {
+	ListAll(ctx context.Context) ([]Settings, error)
+	GetByUUID(ctx context.Context, uuid string) (*Settings, error)
+	DeleteByUUID(ctx context.Context, uuid string) error
 }
 
 // IDFunc resolves the session identifier from r; "" triggers cookie-based ID derivation.
@@ -166,7 +178,7 @@ type IDFunc func(r *http.Request) string
 
 // Middleware loads per-session settings via repo and stashes them on the request context
 // for GetSettings; refreshes UpdatedAt via Touch once a day.
-func Middleware(repo Provider, idFunc IDFunc, cfgs ...Config) func(http.Handler) http.Handler {
+func Middleware(repo SettingsProvider, idFunc IDFunc, cfgs ...Config) func(http.Handler) http.Handler {
 	var cfg Config
 	if len(cfgs) > 0 {
 		cfg = cfgs[0]

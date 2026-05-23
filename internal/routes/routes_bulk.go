@@ -10,8 +10,8 @@ import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/linkwell"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
@@ -21,7 +21,7 @@ const bulkBase = "/apps/bulk"
 
 type bulkRoutes struct{ db *demo.DB }
 
-func (ar *appRoutes) initBulkRoutes(db *demo.DB) {
+func (ar *AppRoutes) initBulkRoutes(db *demo.DB) {
 	b := &bulkRoutes{db: db}
 	ar.e.GET(bulkBase, b.handleBulkPage)
 	ar.e.GET(bulkBase+"/items", b.handleBulkItems)

@@ -20,7 +20,7 @@ type tavernPublishRoutes struct {
 	lab    *demo.PublishLab
 }
 
-func (ar *appRoutes) initTavernPublishRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initTavernPublishRoutes(broker *tavern.SSEBroker) {
 	lab := demo.NewPublishLab()
 	p := &tavernPublishRoutes{broker: broker, lab: lab}
 

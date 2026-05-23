@@ -7,9 +7,9 @@ import (
 	crand "crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"sort"
 	"math/rand/v2"
 	"net/http"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -33,7 +33,7 @@ type notificationRoutes struct {
 	maxDelay atomic.Int64 // nanoseconds
 }
 
-func (ar *appRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initNotificationsRoutes(broker *tavern.SSEBroker) {
 	filters := demo.NewNotificationFilters()
 
 	n := &notificationRoutes{

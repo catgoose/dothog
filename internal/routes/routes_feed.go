@@ -27,7 +27,7 @@ type feedRoutes struct {
 	broker *tavern.SSEBroker
 }
 
-func (ar *appRoutes) initFeedRoutes(actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initFeedRoutes(actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
 	f := &feedRoutes{actLog: actLog, broker: broker}
 	ar.e.GET("/realtime/feed", f.handleFeedPage)
 	ar.e.GET("/realtime/feed/more", f.handleFeedMore)
@@ -119,7 +119,7 @@ func seedFeedEvents(actLog *demo.ActivityLog) {
 	}
 }
 
-func (ar *appRoutes) publishActivityEvents(actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
+func (ar *AppRoutes) publishActivityEvents(actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
 	for {
 		delay := time.Duration(2000+rand.IntN(4000)) * time.Millisecond
 		timer := time.NewTimer(delay)

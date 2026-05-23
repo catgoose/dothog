@@ -23,7 +23,7 @@ import (
 
 const errorTracesBase = "/admin/error-traces"
 
-func (ar *appRoutes) initErrorTracesRoutes() {
+func (ar *AppRoutes) initErrorTracesRoutes() {
 	if ar.repos.ReqLogStore == nil {
 		return
 	}
@@ -33,7 +33,7 @@ func (ar *appRoutes) initErrorTracesRoutes() {
 	ar.e.DELETE(errorTracesBase+"/:requestID", ar.handleErrorTraceDelete)
 }
 
-func (ar *appRoutes) handleErrorTracesPage(c echo.Context) error {
+func (ar *AppRoutes) handleErrorTracesPage(c echo.Context) error {
 	group, container, err := ar.buildErrorTracesContent(c)
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load error traces", err)
@@ -41,7 +41,7 @@ func (ar *appRoutes) handleErrorTracesPage(c echo.Context) error {
 	return handler.RenderBaseLayout(c, views.ErrorTracesPage(group.Bar, container))
 }
 
-func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
+func (ar *AppRoutes) handleErrorTracesList(c echo.Context) error {
 	group, container, err := ar.buildErrorTracesContent(c)
 	if err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to load error traces", err)
@@ -61,7 +61,7 @@ func (ar *appRoutes) handleErrorTracesList(c echo.Context) error {
 	return corecomponents.FilterGroupOOB(group).Render(ctx, w)
 }
 
-func (ar *appRoutes) handleErrorTraceDetail(c echo.Context) error {
+func (ar *AppRoutes) handleErrorTraceDetail(c echo.Context) error {
 	requestID := c.Param("requestID")
 	trace, err := ar.repos.ReqLogStore.Get(c.Request().Context(), requestID)
 	if err != nil {
@@ -74,7 +74,7 @@ func (ar *appRoutes) handleErrorTraceDetail(c echo.Context) error {
 	return handler.RenderComponent(c, views.ErrorTraceDetailContent(trace))
 }
 
-func (ar *appRoutes) handleErrorTraceDelete(c echo.Context) error {
+func (ar *AppRoutes) handleErrorTraceDelete(c echo.Context) error {
 	requestID := c.Param("requestID")
 	if err := ar.repos.ReqLogStore.DeleteTrace(c.Request().Context(), requestID); err != nil {
 		return handler.HandleHypermediaError(c, 500, "Failed to delete trace", err)
@@ -97,7 +97,7 @@ func (ar *appRoutes) handleErrorTraceDelete(c echo.Context) error {
 	return corecomponents.FilterGroupOOB(group).Render(ctx, w)
 }
 
-func (ar *appRoutes) buildErrorTracesContent(c echo.Context) (linkwell.FilterGroup, templ.Component, error) {
+func (ar *AppRoutes) buildErrorTracesContent(c echo.Context) (linkwell.FilterGroup, templ.Component, error) {
 	const perPage = 20
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	if page < 1 {

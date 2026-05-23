@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (ar *appRoutes) initLifelineRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initLifelineRoutes(broker *tavern.SSEBroker) {
 	ar.e.GET("/sse/app", handleLifelineSSE(broker))
 }
 

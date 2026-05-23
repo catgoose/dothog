@@ -28,7 +28,7 @@ var themeCounter atomic.Int64
 // initThemeRoutes registers POST /settings/theme and POST /settings/layout.
 // Both persist into the session_settings row. Cross-browser broadcast is wired
 // separately by initThemeSSE when the sse feature is enabled.
-func (ar *appRoutes) initThemeRoutes() {
+func (ar *AppRoutes) initThemeRoutes() {
 	ar.e.POST("/settings/theme", ar.handleTheme())
 	ar.e.POST("/settings/layout", ar.handleLayout())
 }
@@ -37,7 +37,7 @@ func (ar *appRoutes) initThemeRoutes() {
 
 // initThemeSSE adds the cross-browser theme-change feed and replay policy.
 // Only called when the sse feature is enabled and a broker has been built.
-func (ar *appRoutes) initThemeSSE(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initThemeSSE(broker *tavern.SSEBroker) {
 	broker.SetReplayPolicy(TopicThemeChange, 1)
 	broker.SetReplayGapPolicy(TopicThemeChange, tavern.GapFallbackToSnapshot, nil)
 	ar.e.GET("/sse/theme", echo.WrapHandler(broker.SSEHandler(TopicThemeChange)))
@@ -47,7 +47,7 @@ func (ar *appRoutes) initThemeSSE(broker *tavern.SSEBroker) {
 
 // handleTheme persists the requested theme on the session_settings row.
 // In sse builds the change is also broadcast so other tabs/devices receive it.
-func (ar *appRoutes) handleTheme() echo.HandlerFunc {
+func (ar *AppRoutes) handleTheme() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		theme := c.FormValue("theme")
 		valid := false
@@ -62,8 +62,8 @@ func (ar *appRoutes) handleTheme() echo.HandlerFunc {
 		}
 		settings := session.GetSettings(c.Request())
 		settings.Theme = theme
-		if ar.repos.Settings != nil {
-			if err := ar.repos.Settings.Upsert(c.Request().Context(), settings); err != nil {
+		if ar.repos.SessionStore != nil {
+			if err := ar.repos.SessionStore.Upsert(c.Request().Context(), settings); err != nil {
 				logger.WithContext(c.Request().Context()).Error("Failed to save theme setting", "error", err)
 			}
 		}
@@ -86,7 +86,7 @@ func (ar *appRoutes) handleTheme() echo.HandlerFunc {
 // HX-Refresh (not HX-Redirect) so the current URL reloads under the new layout.
 // 200 (not 204) because HTMX 2.0 sets swap:false for 204, which can drop
 // the response headers and skip the refresh.
-func (ar *appRoutes) handleLayout() echo.HandlerFunc {
+func (ar *AppRoutes) handleLayout() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		layout := c.FormValue("layout")
 		if layout != session.LayoutApp {
@@ -94,8 +94,8 @@ func (ar *appRoutes) handleLayout() echo.HandlerFunc {
 		}
 		settings := session.GetSettings(c.Request())
 		settings.Layout = layout
-		if ar.repos.Settings != nil {
-			if err := ar.repos.Settings.Upsert(c.Request().Context(), settings); err != nil {
+		if ar.repos.SessionStore != nil {
+			if err := ar.repos.SessionStore.Upsert(c.Request().Context(), settings); err != nil {
 				logger.WithContext(c.Request().Context()).Error("Failed to save layout setting", "error", err)
 			}
 		}

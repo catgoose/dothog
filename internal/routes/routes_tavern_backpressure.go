@@ -28,7 +28,7 @@ type tavernBackpressRoutes struct {
 	batchWindow atomic.Int64 // nanoseconds; 0 = raw (flush per message)
 }
 
-func (ar *appRoutes) initTavernBackpressRoutes(mainBroker *tavern.SSEBroker) {
+func (ar *AppRoutes) initTavernBackpressRoutes(mainBroker *tavern.SSEBroker) {
 	lab := demo.NewBackpressureLab()
 
 	demoBroker := tavern.NewSSEBroker(

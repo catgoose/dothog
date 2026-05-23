@@ -20,7 +20,7 @@ type sensorRoutes struct {
 	grid   *demo.SensorGrid
 }
 
-func (ar *appRoutes) initSensorRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initSensorRoutes(broker *tavern.SSEBroker) {
 	grid := demo.NewSensorGrid()
 	s := &sensorRoutes{broker: broker, grid: grid}
 

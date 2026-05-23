@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (ar *appRoutes) initReportDemoRoutes() {
+func (ar *AppRoutes) initReportDemoRoutes() {
 	// Override the report-issue POST to show a simulated email modal instead of
 	// the default browser alert. The modal displays what an IssueReporter
 	// implementation would send to a support team.

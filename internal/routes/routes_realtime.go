@@ -68,7 +68,7 @@ func initRTIntervals() {
 	}
 }
 
-func (ar *appRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initRealtimeRoutes(broker *tavern.SSEBroker) {
 	rtBroker = broker
 	numBroker = broker
 	initRTIntervals()
@@ -268,7 +268,7 @@ func broadcastPinButton(section string, pinned bool) {
 	rtBroker.Publish(TopicDashMetrics, html)
 }
 
-func (ar *appRoutes) handleRealtimePage() echo.HandlerFunc {
+func (ar *AppRoutes) handleRealtimePage() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		stats := health.CollectRuntimeStats(time.Now())
 		snap := initialMetrics()
@@ -313,7 +313,6 @@ func snapshotDashboardCardState() views.DashboardCardState {
 		Pinned:    pinned,
 	}
 }
-
 
 // broadcastCardSlider renders a card's IntervalSlider with OOB=true and publishes
 // it so all connected dashboard clients see the updated slider state.
@@ -377,7 +376,7 @@ var statsBufPool = sync.Pool{
 	New: func() any { return new(bytes.Buffer) },
 }
 
-func (ar *appRoutes) newSystemStatsPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
+func (ar *AppRoutes) newSystemStatsPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
 	pub := broker.NewScheduledPublisher(TopicSystemStats, tavern.WithBaseTick(2*time.Second))
 	start := time.Now()
 	pub.Register("system-stats", 2*time.Second, func(ctx context.Context, buf *bytes.Buffer) error {
@@ -400,10 +399,10 @@ func initialMetrics() views.MetricsSnapshot {
 			InMBps:  12.5,
 			OutMBps: 8.3,
 		}},
-		MaxNetwork: 120,
-		ConnActive: 15,
-		ConnIdle:   12,
-		ConnWait:   8,
+		MaxNetwork:   120,
+		ConnActive:   15,
+		ConnIdle:     12,
+		ConnWait:     8,
 		LatencyHist:  []views.LatencyBucket{{P50: 15, P90: 35, P99: 42}},
 		ErrorHistory: []views.ErrorRatePoint{{Value: 0.3}},
 		DiskIO:       []views.DiskIOPoint{{ReadMBps: 50, WriteMBps: 30}},
@@ -696,7 +695,7 @@ func getInterval(section string) int {
 	return iv
 }
 
-func (ar *appRoutes) newDashboardPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
+func (ar *AppRoutes) newDashboardPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
 	pub := broker.NewScheduledPublisher(TopicDashMetrics, tavern.WithBaseTick(500*time.Millisecond))
 
 	sim := newDashSim()

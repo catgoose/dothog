@@ -44,6 +44,9 @@ type AppConfig struct {
 	// setup:feature:auth:start
 	CroonerDisabled bool
 	// setup:feature:auth:end
+	// InitRepo gates destructive app-data schema reset (drops + recreates every
+	// registered table). Sourced from INIT_REPO env; default false. Flip on
+	// only when intentionally wiping app data.
 	InitRepo             bool
 	CSRFRotatePerRequest bool
 }
@@ -111,6 +114,9 @@ func buildConfig() (*AppConfig, error) {
 	// setup:feature:graph:start
 	cfg.GraphUserCacheRefreshHour = envInt("GRAPH_USERCACHE_REFRESH_HOUR", 5)
 	// setup:feature:graph:end
+
+	// Destructive: drops + recreates registered app-data tables on startup.
+	cfg.InitRepo = envBool("INIT_REPO", false)
 
 	return cfg, nil
 }

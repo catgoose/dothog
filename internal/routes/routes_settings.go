@@ -14,7 +14,7 @@ type settingsRoutes struct {
 	store *demo.SettingsStore
 }
 
-func (ar *appRoutes) initSettingsRoutes(store *demo.SettingsStore) {
+func (ar *AppRoutes) initSettingsRoutes(store *demo.SettingsStore) {
 	s := &settingsRoutes{store: store}
 	ar.e.GET("/platform/settings", s.handleSettingsPage)
 	ar.e.GET("/platform/settings/:id", s.handleSettingsSection)

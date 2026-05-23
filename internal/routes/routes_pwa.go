@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (ar *appRoutes) initPwaRoutes() {
+func (ar *AppRoutes) initPwaRoutes() {
 	ar.e.GET("/platform/pwa", handler.HandleComponent(views.PwaIndexPage()))
 	ar.e.GET("/platform/pwa/inspection", handler.HandleComponent(views.PwaSiteInspectionForm()))
 	ar.e.GET("/platform/pwa/report", handler.HandleComponent(views.PwaFieldReportForm()))

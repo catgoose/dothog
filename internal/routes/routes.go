@@ -40,41 +40,26 @@ import (
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
 
-// AppRoutes is the lifecycle interface for the app's HTTP routes: InitRoutes
-// wires every endpoint, Close releases broker resources, and the Set* hooks
-// inject runtime dependencies for /health.
-type AppRoutes interface {
-	InitRoutes() error
-	// Close shuts down the SSE broker and releases resources. Call during graceful shutdown.
-	Close()
-	// SetHealthDB sets the database connection for the /health endpoint to ping.
-	SetHealthDB(db health.Pinger)
-	// SetHealthStats sets a function that returns app-specific stats for /health.
-	SetHealthStats(fn health.StatsFunc)
-}
-
-// setup:feature:session_settings:start
-
-// SessionSettingsStore is the subset of session-settings operations that route
-// handlers need: listing all rows and upserting a single row.
-type SessionSettingsStore interface {
-	ListAll(ctx context.Context) ([]session.Settings, error)
-	Upsert(ctx context.Context, s *session.Settings) error
-}
-
-// setup:feature:session_settings:end
-
 // Repos groups repository and store dependencies for the application routes.
 // Generated apps add fields here as features are added.
 type Repos struct {
 	ReqLogStore   promolog.Storer
 	IssueReporter IssueReporter
 	// setup:feature:session_settings:start
-	Settings SessionSettingsStore
+	// SessionSettings is the management/admin seam for session_settings rows
+	// (the /admin/sessions surface). See session.SettingsAdmin.
+	SessionSettings session.SettingsAdmin
+	// SessionStore is the read/write seam theme/layout handlers use to
+	// persist updates onto the row hydrated by session.Middleware. Usually
+	// the same concrete repo satisfies both this and SessionSettings.
+	SessionStore session.SettingsProvider
 	// setup:feature:session_settings:end
 }
 
-type appRoutes struct {
+// AppRoutes owns the wired Echo server, runtime dependencies, and the SSE
+// broker. Construct via NewAppRoutes, populate runtime deps via SetHealth*,
+// and call Close at shutdown.
+type AppRoutes struct {
 	repos     Repos
 	startTime time.Time
 	ctx       context.Context
@@ -92,7 +77,7 @@ type appRoutes struct {
 }
 
 // Close shuts down the SSE broker and releases resources.
-func (ar *appRoutes) Close() {
+func (ar *AppRoutes) Close() {
 	// setup:feature:sse:start
 	if ar.broker != nil {
 		ar.broker.Close()
@@ -100,14 +85,63 @@ func (ar *appRoutes) Close() {
 	// setup:feature:sse:end
 }
 
-// NewAppRoutes wires the route table onto e; nil ReqLogStore disables request-log capture
-// and nil IssueReporter falls back to a no-op reporter.
-func NewAppRoutes(ctx context.Context, e *echo.Echo, repos Repos) AppRoutes {
+// setup:feature:sse:start
+
+// initSSEBroker constructs ar.broker with the default keepalive/eviction
+// policy and a slow-subscriber logger. Always-on when sse is selected, with
+// or without demo content.
+func (ar *AppRoutes) initSSEBroker() {
+	ar.broker = tavern.NewSSEBroker(
+		tavern.WithBufferSize(128),
+		tavern.WithKeepalive(30*time.Second),
+		tavern.WithSlowSubscriberEviction(100),
+		tavern.WithSlowSubscriberCallback(func(topic string) {
+			logger.Warn("Slow subscriber evicted", "topic", topic)
+		}),
+	)
+	ar.broker.OnPublishDrop(func(topic string, count int) {
+		logger.Debug("Message dropped", "topic", topic, "subscribers", count)
+	})
+}
+
+// setup:feature:sse:end
+
+// setup:feature:demo:start
+// setup:feature:sse:start
+
+// applyDemoSSEEnvelopes wraps demo dashboard topics so ScheduledPublisher
+// raw HTML payloads ship with SSE event:/data: framing. Demo+SSE only —
+// the wrapped topics are all demo dashboards/admin panels, so the wrap is
+// pointless without demo content.
+func (ar *AppRoutes) applyDemoSSEEnvelopes() {
+	for _, topic := range []string{
+		TopicDashMetrics,
+		TopicNumericalDash,
+		TopicAdminPanel,
+		TopicSystemStats,
+	} {
+		topic := topic
+		ar.broker.UseTopics(topic, func(next tavern.PublishFunc) tavern.PublishFunc {
+			return func(t, msg string) {
+				next(t, tavern.NewSSEMessage(topic, msg).String())
+			}
+		})
+	}
+}
+
+// setup:feature:sse:end
+// setup:feature:demo:end
+
+// NewAppRoutes constructs the AppRoutes owner around an existing Echo
+// instance. It stores route dependencies and defaults, but does not register
+// endpoints yet; call InitRoutes to install the route table onto Echo. Nil
+// IssueReporter falls back to a no-op reporter.
+func NewAppRoutes(ctx context.Context, e *echo.Echo, repos Repos) *AppRoutes {
 	if repos.IssueReporter == nil {
 		repos.IssueReporter = defaultReporter{}
 	}
 	startTime := time.Now()
-	return &appRoutes{
+	return &AppRoutes{
 		e:         e,
 		ctx:       ctx,
 		repos:     repos,
@@ -119,7 +153,11 @@ func NewAppRoutes(ctx context.Context, e *echo.Echo, repos Repos) AppRoutes {
 	}
 }
 
-func (ar *appRoutes) InitRoutes() error {
+// InitRoutes installs the application's route table onto the wrapped Echo and
+// performs route-adjacent runtime setup such as broker creation and
+// feature-gated route wiring. Returns an error only if config load fails;
+// downstream demo features no-op when their data source is unavailable.
+func (ar *AppRoutes) InitRoutes() error {
 	// Register known origins for ?from= breadcrumb resolution.
 	// Home (bit 0) is pre-registered. Additional pages register here.
 	// setup:feature:demo:start
@@ -180,36 +218,13 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initComponents3Routes()
 	// setup:feature:demo:end
 
+	// ── Core SSE infrastructure ─────────────────────────────────
+	// Broker construction plus the scaffold-facing SSE routes derived apps
+	// rely on: app-lifeline (consumed by the AppNav layout) and theme SSE
+	// (cross-tab theme sync, paired with theme persistence). Anything else
+	// SSE-flavored is demo content and lives below.
 	// setup:feature:sse:start
-	ar.broker = tavern.NewSSEBroker(
-		tavern.WithBufferSize(128),
-		tavern.WithKeepalive(30*time.Second),
-		tavern.WithSlowSubscriberEviction(100),
-		tavern.WithSlowSubscriberCallback(func(topic string) {
-			logger.Warn("Slow subscriber evicted", "topic", topic)
-		}),
-	)
-	ar.broker.OnPublishDrop(func(topic string, count int) {
-		logger.Debug("Message dropped", "topic", topic, "subscribers", count)
-	})
-	// Wrap raw HTML publishes in SSE message format for topics that use
-	// ScheduledPublisher.  All publishers on these topics send raw HTML;
-	// the middleware adds the event:/data: envelope before delivery.
-	for _, topic := range []string{
-		TopicDashMetrics,
-		TopicNumericalDash,
-		TopicAdminPanel,
-		TopicSystemStats,
-	} {
-		topic := topic // capture
-		ar.broker.UseTopics(topic, func(next tavern.PublishFunc) tavern.PublishFunc {
-			return func(t, msg string) {
-				next(t, tavern.NewSSEMessage(topic, msg).String())
-			}
-		})
-	}
-	// setup:feature:sse:end
-	// setup:feature:sse:start
+	ar.initSSEBroker()
 	ar.initLifelineRoutes(ar.broker)
 	// setup:feature:sse:end
 	// setup:feature:session_settings:start
@@ -219,18 +234,14 @@ func (ar *appRoutes) InitRoutes() error {
 	// setup:feature:sse:end
 	// setup:feature:session_settings:end
 
+	// ── Demo-only SSE showcase ──────────────────────────────────
+	// Real-time playground, tavern gallery, and demo dashboards. Every
+	// route here is jointly gated on demo+sse; the topic envelope wrappers
+	// also live here because the wrapped topics are demo dashboards only.
 	// setup:feature:demo:start
 	// setup:feature:sse:start
+	ar.applyDemoSSEEnvelopes()
 	ar.initLoggingRoutes(ar.broker)
-	// setup:feature:sse:end
-	// setup:feature:demo:end
-
-	// setup:feature:demo:start
-	ar.initHypermediaRoutes()
-	ar.initHALRoutes()
-	ar.initErrorsRoutes()
-	ar.initErrorModesRoutes()
-	// setup:feature:sse:start
 	ar.initRealtimeRoutes(ar.broker)
 	ar.initNotificationsRoutes(ar.broker)
 	ar.initDocRoutes(ar.broker)
@@ -249,6 +260,13 @@ func (ar *appRoutes) InitRoutes() error {
 	ar.initTavernHotZoneRoutes(ar.broker)
 	ar.initTavernToastRoutes(ar.broker)
 	// setup:feature:sse:end
+	// setup:feature:demo:end
+
+	// setup:feature:demo:start
+	ar.initHypermediaRoutes()
+	ar.initHALRoutes()
+	ar.initErrorsRoutes()
+	ar.initErrorModesRoutes()
 
 	db, err := demo.Open("db/demo.db")
 	if err != nil {
@@ -303,11 +321,13 @@ func (ar *appRoutes) InitRoutes() error {
 	return nil
 }
 
-func (ar *appRoutes) SetHealthDB(db health.Pinger) {
+// SetHealthDB injects the DB ping target used by GET /health; nil disables the DB row.
+func (ar *AppRoutes) SetHealthDB(db health.Pinger) {
 	ar.healthCfg.DB = db
 }
 
-func (ar *appRoutes) SetHealthStats(fn health.StatsFunc) {
+// SetHealthStats injects the app-specific stats function rendered under GET /health.
+func (ar *AppRoutes) SetHealthStats(fn health.StatsFunc) {
 	ar.healthCfg.Stats = fn
 }
 
@@ -317,7 +337,7 @@ func (ar *appRoutes) SetHealthStats(fn health.StatsFunc) {
 // error-trace promotion.
 func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
-	settingsRepo session.Provider,
+	settingsRepo session.SettingsProvider,
 	// setup:feature:session_settings:end
 	reqLogStore promolog.Storer,
 ) (*echo.Echo, error) {

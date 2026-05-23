@@ -5,10 +5,10 @@ package routes
 import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
-	htmx "github.com/angelofallars/htmx-go"
-	"github.com/catgoose/linkwell"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/web/views"
+	htmx "github.com/angelofallars/htmx-go"
+	"github.com/catgoose/linkwell"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
@@ -18,7 +18,7 @@ const catalogBase = "/apps/catalog"
 
 type catalogRoutes struct{ db *demo.DB }
 
-func (ar *appRoutes) initCatalogRoutes(db *demo.DB) {
+func (ar *AppRoutes) initCatalogRoutes(db *demo.DB) {
 	cat := &catalogRoutes{db: db}
 	ar.e.GET(catalogBase, cat.handleCatalogPage)
 	ar.e.GET(catalogBase+"/items", cat.handleCatalogItems)

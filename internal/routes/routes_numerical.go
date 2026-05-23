@@ -432,7 +432,7 @@ func broadcastTileSlider(tileID string, ms int, unit string) {
 
 // ── Publisher ────────────────────────────────────────────────────────────────
 
-func (ar *appRoutes) newNumericalPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
+func (ar *AppRoutes) newNumericalPublisher(broker *tavern.SSEBroker) *tavern.ScheduledPublisher {
 	pub := broker.NewScheduledPublisher(TopicNumericalDash, tavern.WithBaseTick(100*time.Millisecond))
 
 	sim := newNumSim()

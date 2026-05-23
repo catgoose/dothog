@@ -8,8 +8,8 @@ import (
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/params"
-	"github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/tavern"
 
 	"github.com/labstack/echo/v4"
 )
@@ -20,7 +20,7 @@ type approvalRoutes struct {
 	broker *tavern.SSEBroker
 }
 
-func (ar *appRoutes) initApprovalRoutes(queue *demo.ApprovalQueue, actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initApprovalRoutes(queue *demo.ApprovalQueue, actLog *demo.ActivityLog, broker *tavern.SSEBroker) {
 	a := &approvalRoutes{queue: queue, actLog: actLog, broker: broker}
 	ar.e.GET("/apps/approvals", a.handleApprovalsPage)
 	ar.e.PATCH("/apps/approvals/:id", a.handleApprovalAction)

@@ -11,13 +11,13 @@ import (
 )
 
 type dashboardRoutes struct {
-	db      *demo.DB
-	board   *demo.KanbanBoard
-	queue   *demo.ApprovalQueue
-	actLog  *demo.ActivityLog
+	db     *demo.DB
+	board  *demo.KanbanBoard
+	queue  *demo.ApprovalQueue
+	actLog *demo.ActivityLog
 }
 
-func (ar *appRoutes) initDashboardRoutes(db *demo.DB, board *demo.KanbanBoard, queue *demo.ApprovalQueue, actLog *demo.ActivityLog) {
+func (ar *AppRoutes) initDashboardRoutes(db *demo.DB, board *demo.KanbanBoard, queue *demo.ApprovalQueue, actLog *demo.ActivityLog) {
 	d := &dashboardRoutes{db: db, board: board, queue: queue, actLog: actLog}
 	ar.e.GET("/dashboard", d.handleDashboard)
 }

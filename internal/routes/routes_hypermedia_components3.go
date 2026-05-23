@@ -81,7 +81,7 @@ func newComponents3State() *components3State {
 
 const components3Base = "/components/advanced"
 
-func (ar *appRoutes) initComponents3Routes() {
+func (ar *AppRoutes) initComponents3Routes() {
 	s := newComponents3State()
 
 	ar.e.GET(components3Base, s.handleComponents3Page)

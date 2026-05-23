@@ -27,7 +27,7 @@ type docRoutes struct {
 	pubStats *demo.PublishStats
 }
 
-func (ar *appRoutes) initDocRoutes(broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initDocRoutes(broker *tavern.SSEBroker) {
 	doc := demo.NewSharedDocument()
 
 	d := &docRoutes{

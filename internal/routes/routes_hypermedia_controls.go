@@ -66,7 +66,7 @@ func (gs *controlsGalleryState) resetLocked() {
 	gs.cascadeDeleted = false
 }
 
-func (ar *appRoutes) initControlsGalleryRoutes() {
+func (ar *AppRoutes) initControlsGalleryRoutes() {
 	gs := newControlsGalleryState()
 	base := patternsBase + "/controls"
 

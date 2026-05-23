@@ -28,10 +28,10 @@ var featureLabels = map[string]string{
 	setup.FeatureAuth:   "Auth (Crooner)",
 	setup.FeatureGraph:  "Graph API",
 	setup.FeatureAvatar: "Avatar Photos (requires Graph)",
-	// Data
-	setup.FeatureDatabase: "Database (chuck repository layer)",
-	setup.FeatureMSSQL:    "MSSQL dialect",
-	setup.FeaturePostgres: "PostgreSQL dialect",
+	// App data — chuck-backed repository layer is implicit; selecting a
+	// production engine here implies it.
+	setup.FeatureMSSQL:    "MSSQL (Microsoft SQL Server)",
+	setup.FeaturePostgres: "PostgreSQL",
 	// Real-time
 	setup.FeatureSSE:   "SSE (requires Caddy)",
 	setup.FeatureCaddy: "Caddy HTTPS/H3 front-proxy (adds local TLS)",
@@ -57,8 +57,7 @@ var featureLabelOrder = []string{
 	setup.FeatureAuth,
 	setup.FeatureGraph,
 	setup.FeatureAvatar,
-	// Data
-	setup.FeatureDatabase,
+	// App data
 	setup.FeatureMSSQL,
 	setup.FeaturePostgres,
 	// Real-time
@@ -200,11 +199,14 @@ func Setup() error {
 	return nil
 }
 
+// presets describe user-facing preset bundles. "database" is implicit and
+// covered by MSSQL/PostgreSQL when a production engine is wanted; it is never
+// listed here directly.
 var presets = map[string][]string{
-	"internal":                {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureDatabase, setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
-	"microsoft-lite-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
+	"internal":                {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
+	"microsoft-lite-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
 	"public":                  {setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs},
-	"microsoft-full-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs, setup.FeatureOffline, setup.FeatureSync, setup.FeaturePWA},
+	"microsoft-full-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs, setup.FeatureOffline, setup.FeatureSync, setup.FeaturePWA},
 	"demo":                    setup.AllFeatures,
 	"minimal":                 {},
 }
@@ -220,7 +222,7 @@ func runWizard() (*setup.Options, error) {
 		preset     string
 		customize  bool
 		// Guided wizard answers
-		dbDialect     string // "sqlite", "mssql", "postgres", "sqlite+mssql", "sqlite+postgres"
+		dbEngine      string // "sqlite", "mssql", "postgres", "sqlite+mssql", "sqlite+postgres"
 		wantSessions  bool
 		wantAuth      bool
 		wantGraph     bool
@@ -287,8 +289,8 @@ func runWizard() (*setup.Options, error) {
 				Title("What are you building?").
 				Options(
 					huh.NewOption("Internal tool — auth, database, sessions, SSE, link relations, web standards", "internal"),
-					huh.NewOption("Microsoft Lite Internal — auth, Graph, avatar, MSSQL, SSE + Caddy, link relations, web standards", "microsoft-lite-internal"),
-					huh.NewOption("Microsoft Full Internal — auth, Graph, MSSQL, SSE, offline + sync + PWA", "microsoft-full-internal"),
+					huh.NewOption("Microsoft Lite Internal — auth, Graph, avatar, MSSQL app data, SSE + Caddy, link relations, web standards", "microsoft-lite-internal"),
+					huh.NewOption("Microsoft Full Internal — auth, Graph, MSSQL app data, SSE, offline + sync + PWA", "microsoft-full-internal"),
 					huh.NewOption("Public site — sessions, link relations, web standards, browser APIs", "public"),
 					huh.NewOption("Demo/playground — everything enabled", "demo"),
 					huh.NewOption("Minimal — bare HTMX app", "minimal"),
@@ -344,11 +346,13 @@ func runWizard() (*setup.Options, error) {
 		// ── Guided wizard: ask about dependencies first ────────────
 
 		guidedForm := huh.NewForm(
-			// Database
+			// App data (chuck-backed repository layer is implicit; pick a
+			// production engine if you need one — SQLite is always wired in
+			// for dev/demo).
 			huh.NewGroup(
 				huh.NewSelect[string]().
-					Title("Database dialect").
-					Description("SQLite is always included for dev/demo. Pick a production dialect if needed.").
+					Title("Production database engine").
+					Description("SQLite is always wired in for dev/demo. Pick a production engine if you deploy to one.").
 					Options(
 						huh.NewOption("SQLite only (dev/demo)", "sqlite"),
 						huh.NewOption("SQLite + MSSQL (dev locally, deploy to SQL Server)", "sqlite+mssql"),
@@ -356,8 +360,8 @@ func runWizard() (*setup.Options, error) {
 						huh.NewOption("MSSQL only", "mssql"),
 						huh.NewOption("PostgreSQL only", "postgres"),
 					).
-					Value(&dbDialect),
-			).Title("Database"),
+					Value(&dbEngine),
+			).Title("App Data"),
 
 			// Navigation — ask first, auto-includes sessions
 			huh.NewGroup(
@@ -414,16 +418,14 @@ func runWizard() (*setup.Options, error) {
 			return nil, err
 		}
 
-		// Build features from guided answers
-		switch dbDialect {
-		case "mssql":
-			features = append(features, setup.FeatureDatabase, setup.FeatureMSSQL)
-		case "postgres":
-			features = append(features, setup.FeatureDatabase, setup.FeaturePostgres)
-		case "sqlite+mssql":
-			features = append(features, setup.FeatureDatabase, setup.FeatureMSSQL)
-		case "sqlite+postgres":
-			features = append(features, setup.FeatureDatabase, setup.FeaturePostgres)
+		// Build features from guided answers. "database" is implicit, so
+		// only the production-engine tag needs to be appended; ExpandFeatureDeps
+		// will pull database in automatically.
+		switch dbEngine {
+		case "mssql", "sqlite+mssql":
+			features = append(features, setup.FeatureMSSQL)
+		case "postgres", "sqlite+postgres":
+			features = append(features, setup.FeaturePostgres)
 			// "sqlite" — database is implicit, nothing extra needed
 		}
 		if wantSessions {
@@ -756,8 +758,8 @@ func printSetupUsage() {
   -n APP_NAME        Human-readable app name (e.g. "My App"). Required.
   -m MODULE_PATH     Go module path (e.g. "github.com/you/my-app").
   -p BASE_PORT       5-digit base port < 60000; APP_HTTP_PORT=BASE_PORT, TEMPL_HTTP_PORT=BASE_PORT+1, CADDY_TLS_PORT=BASE_PORT+2.
-  --features LIST    Comma-separated feature tags to keep: auth,graph,avatar,database,sse,caddy,demo,alpine.
-                     "all" = keep everything (default), "none" = bare HTMX app.
+  --features LIST    Comma-separated user-selectable tags to keep: auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor,offline,sync,pwa.
+                     "all" = keep everything (default), "none" = bare HTMX app. The chuck-backed app-data layer is implicit and always wired in.
   --no-caddy         Deprecated. Equivalent to omitting caddy from --features.
   --platform OS      Target host OS for the derived app's dev tooling: linux or windows. Defaults to the current host's GOOS.
   --force            Allow re-running setup even if module is already customized.`)

@@ -554,8 +554,10 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	readmeContent := string(readmeBytes)
 	require.Contains(t, readmeContent, "No Features App")
 	require.Contains(t, readmeContent, "## Setup Configuration")
-	// Minimal config should still have implicit features (database, alpine)
-	require.Contains(t, readmeContent, "Database (chuck)")
+	// Minimal config should still have implicit features (database, alpine).
+	// "App data (chuck)" is the user-facing label for the implicit chuck-backed
+	// repository layer; MSSQL/PostgreSQL ride on top of it.
+	require.Contains(t, readmeContent, "App data (chuck)")
 
 	// env substitution must survive feature stripping (#regression)
 	envBytes, err := os.ReadFile(filepath.Join(dest, ".env.development"))
@@ -679,6 +681,48 @@ func TestSetup_FeaturesMSSQL(t *testing.T) {
 	assertBuildSucceeds(t, dest)
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 
+	// Selecting MSSQL must register the chuck MSSQL driver in main.go and
+	// strip the postgres driver registration.
+	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
+	require.NoError(t, err)
+	require.Contains(t, string(mainBytes), `github.com/catgoose/chuck/driver/mssql`,
+		"main.go must register the chuck MSSQL driver when mssql is selected")
+	require.NotContains(t, string(mainBytes), `github.com/catgoose/chuck/driver/postgres`,
+		"main.go must not register the postgres driver when only mssql is selected")
+}
+
+// TestSetup_FeaturesPostgres pins down the postgres-side of the user-facing
+// chuck-backed app-data feature model: selecting postgres must register the
+// chuck postgres driver and leave mssql out.
+func TestSetup_FeaturesPostgres(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Postgres App",
+		ModulePath: "github.com/test/postgres-app",
+		BasePort:   "20460",
+		NoCaddy:    false,
+		Force:      true,
+		Features:   []string{"postgres"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+	assertDirExists(t, filepath.Join(dest, "internal", "database"))
+
+	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
+	require.NoError(t, err)
+	require.Contains(t, string(mainBytes), `github.com/catgoose/chuck/driver/postgres`,
+		"main.go must register the chuck postgres driver when postgres is selected")
+	require.NotContains(t, string(mainBytes), `github.com/catgoose/chuck/driver/mssql`,
+		"main.go must not register the mssql driver when only postgres is selected")
 }
 
 func TestSetup_FeaturesSSECaddy(t *testing.T) {
@@ -827,6 +871,52 @@ func TestSetup_SessionSettingsWithoutSSE(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(envBytes), "SESSION_SETTINGS_COOKIE_NAME=session_settings_no_sse_app_session_id",
 		".env.development must include a safe session-settings cookie name when session_settings is enabled")
+}
+
+// TestSetup_GraphWithoutAvatar pins down the regression where Graph runtime
+// initialization lived under avatar markers in main.go. A graph-only scaffold
+// must still bootstrap the Graph client/user cache while stripping avatar-only
+// photo routes and storage.
+func TestSetup_GraphWithoutAvatar(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Graph Only App",
+		ModulePath: "github.com/test/graph-only-app",
+		BasePort:   "20670",
+		NoCaddy:    true,
+		Force:      true,
+		Features:   []string{"graph"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
+	require.NoError(t, err)
+	mainContent := string(mainBytes)
+	require.Contains(t, mainContent, "graph.InitAndSyncUserCache",
+		"graph-only scaffolds must keep Graph cache/bootstrap wiring in main.go")
+	require.Contains(t, mainContent, "graph.NewGraphClient",
+		"graph-only scaffolds must keep Graph client initialization in main.go")
+	require.NotContains(t, mainContent, "routes.RegisterAvatarRoutes",
+		"graph-only scaffolds must strip avatar-only route registration")
+	require.NotContains(t, mainContent, "graph.NewPhotoStore",
+		"graph-only scaffolds must strip avatar-only photo store setup")
+	require.NotContains(t, mainContent, "graph.SyncPhotos",
+		"graph-only scaffolds must strip avatar-only photo sync wiring")
+
+	_, err = os.Stat(filepath.Join(dest, "internal", "routes", "routes_avatar.go"))
+	require.True(t, os.IsNotExist(err), "routes_avatar.go should be removed when avatar is not selected")
+	_, err = os.Stat(filepath.Join(dest, "internal", "service", "graph", "photo_store.go"))
+	require.True(t, os.IsNotExist(err), "photo_store.go should be removed when avatar is not selected")
 }
 
 // TestSetup_PWAWithoutCapacitor verifies that selecting PWA does not pull in

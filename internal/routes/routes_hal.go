@@ -196,7 +196,7 @@ func buildHALAuthor(id int) (HALResource, bool) {
 
 // ─── routes ──────────────────────────────────────────────────────────────────
 
-func (ar *appRoutes) initHALRoutes() {
+func (ar *AppRoutes) initHALRoutes() {
 	// Page
 	ar.e.GET(halBase, ar.handleHALPage)
 
@@ -212,7 +212,7 @@ func (ar *appRoutes) initHALRoutes() {
 
 // ─── page handler ────────────────────────────────────────────────────────────
 
-func (ar *appRoutes) handleHALPage(c echo.Context) error {
+func (ar *AppRoutes) handleHALPage(c echo.Context) error {
 	catalog := buildHALCatalog()
 	raw, _ := json.MarshalIndent(catalog, "", "  ")
 	return handler.RenderBaseLayout(c, views.HALPage(string(raw), halResourceToView(catalog)))

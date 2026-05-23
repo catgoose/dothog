@@ -13,11 +13,11 @@ import (
 	"strconv"
 	"time"
 
-	appenv "catgoose/dothog/internal/env"
 	"catgoose/dothog/internal/demo"
+	appenv "catgoose/dothog/internal/env"
 	"catgoose/dothog/internal/routes/handler"
-	"github.com/catgoose/tavern"
 	"catgoose/dothog/web/views"
+	"github.com/catgoose/tavern"
 
 	"github.com/labstack/echo/v4"
 )
@@ -30,7 +30,7 @@ type canvasRoutes struct {
 	ctx    context.Context
 }
 
-func (ar *appRoutes) initCanvasRoutes(canvas *demo.PixelCanvas, broker *tavern.SSEBroker) {
+func (ar *AppRoutes) initCanvasRoutes(canvas *demo.PixelCanvas, broker *tavern.SSEBroker) {
 	cr := &canvasRoutes{canvas: canvas, broker: broker, ctx: ar.ctx}
 	ar.e.GET("/realtime/canvas", cr.handleCanvasPage)
 	ar.e.GET("/realtime/canvas/state", cr.handleCanvasState)

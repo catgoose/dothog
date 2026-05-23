@@ -7,7 +7,7 @@ import "github.com/catgoose/linkwell"
 // initLinkRelations registers all link relation declarations for the app.
 // Hubs define parent→child discovery pages. Rings define peer groups.
 // This is the single source of truth for the app's navigation topology.
-func (ar *appRoutes) initLinkRelations() {
+func (ar *AppRoutes) initLinkRelations() {
 	// ── Hubs (discovery / index pages) ──────────────────────────────
 
 	linkwell.Hub("/apps", "Applications",
