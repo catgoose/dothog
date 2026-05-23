@@ -841,9 +841,9 @@ func TestRemoveOrphanedImportLines(t *testing.T) {
 // ImplicitFeatures
 // ---------------------------------------------------------------------------
 
-func TestImplicitFeaturesAlwaysKept(t *testing.T) {
-	// When Features is set but does not include "database",
-	// database should still be kept because it's implicit.
+func TestDatabaseBlocksStrippedWhenNoMSSQLOrPostgres(t *testing.T) {
+	// "database" is no longer implicit: scaffolds without MSSQL or PostgreSQL
+	// strip the app-data marker blocks entirely.
 	content := strings.Join([]string{
 		"before",
 		"// setup:feature:database:start",
@@ -851,10 +851,8 @@ func TestImplicitFeaturesAlwaysKept(t *testing.T) {
 		"// setup:feature:database:end",
 		"after",
 	}, "\n")
-	// Simulate removeOptionalContent logic: build removeTags with implicit features kept
 	removeTags := make(map[string]bool)
 	keep := make(map[string]bool)
-	// User selected no features
 	for _, f := range ImplicitFeatures {
 		keep[f] = true
 	}
@@ -864,7 +862,37 @@ func TestImplicitFeaturesAlwaysKept(t *testing.T) {
 		}
 	}
 	got := stripBlocks(content, removeTags)
-	require.Contains(t, got, "database code", "database blocks should be kept (implicit feature)")
+	require.NotContains(t, got, "database code", "database blocks should be stripped when no mssql/postgres selected")
+	require.Contains(t, got, "before")
+	require.Contains(t, got, "after")
+}
+
+func TestDatabaseBlocksKeptWhenMSSQLSelected(t *testing.T) {
+	// MSSQL implies the internal "database" feature via featureDeps, so
+	// selecting MSSQL must keep the app-data marker blocks intact.
+	content := strings.Join([]string{
+		"before",
+		"// setup:feature:database:start",
+		"database code",
+		"// setup:feature:database:end",
+		"after",
+	}, "\n")
+	expanded := ExpandFeatureDeps([]string{FeatureMSSQL})
+	keep := make(map[string]bool)
+	for _, f := range expanded {
+		keep[f] = true
+	}
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
+	removeTags := make(map[string]bool)
+	for _, f := range AllFeatures {
+		if !keep[f] {
+			removeTags[f] = true
+		}
+	}
+	got := stripBlocks(content, removeTags)
+	require.Contains(t, got, "database code", "database blocks should be kept when mssql is selected")
 	require.Contains(t, got, "before")
 	require.Contains(t, got, "after")
 }

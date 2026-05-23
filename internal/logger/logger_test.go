@@ -1,52 +1,93 @@
 package logger
 
 import (
+	"bytes"
 	"context"
-	"os"
+	"encoding/json"
+	"log/slog"
 	"sync"
 	"testing"
 
-	"github.com/catgoose/promolog"
 	"catgoose/dothog/internal/shared"
 
+	"github.com/catgoose/promolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-// resetLogger resets the logger instance for testing
+// resetLogger clears the package singletons so the next Init/Get fully rebuilds.
 func resetLogger() {
+	mu.Lock()
 	logger = nil
 	once = sync.Once{}
+	handlerWrapper = nil
+	mu.Unlock()
 }
 
-func TestInit(t *testing.T) {
-	resetLogger()
+// captureLogger installs a JSON-backed test logger that writes into buf, then
+// restores the previous package-level logger when the test ends. Use this to
+// assert on log output without depending on the file/stdout sinks Init wires.
+func captureLogger(t *testing.T, buf *bytes.Buffer) {
+	t.Helper()
+	handler := slog.NewJSONHandler(buf, &slog.HandlerOptions{Level: slog.LevelDebug})
 
-	// Test that Init doesn't panic
-	assert.NotPanics(t, func() {
-		Init()
+	mu.Lock()
+	prev := logger
+	logger = slog.New(handler)
+	mu.Unlock()
+
+	t.Cleanup(func() {
+		mu.Lock()
+		logger = prev
+		mu.Unlock()
 	})
-
-	// Test that logger is created
-	log := Get()
-	assert.NotNil(t, log)
 }
 
-func TestGet(t *testing.T) {
+func parseRecord(t *testing.T, buf *bytes.Buffer) map[string]any {
+	t.Helper()
+	var rec map[string]any
+	require.NoError(t, json.Unmarshal(buf.Bytes(), &rec))
+	return rec
+}
+
+func TestInit_IsIdempotent(t *testing.T) {
 	resetLogger()
 	Init()
-
-	log := Get()
-	assert.NotNil(t, log)
-
-	log2 := Get()
-	assert.Equal(t, log, log2)
+	first := Get()
+	Init()
+	second := Get()
+	assert.Same(t, first, second, "Init guarded by sync.Once must produce a single logger across repeated calls")
 }
 
-func TestLogLevels(t *testing.T) {
+func TestGet_ReturnsSameInstance(t *testing.T) {
 	resetLogger()
-	Init() // Ensure logger is initialized
+	Init()
+	a := Get()
+	b := Get()
+	assert.Same(t, a, b, "Get must return the same logger every call")
+}
 
-	// Test that log functions don't panic
+func TestSetHandlerWrapper_AppliedDuringInit(t *testing.T) {
+	resetLogger()
+
+	called := false
+	SetHandlerWrapper(func(h slog.Handler) slog.Handler {
+		called = true
+		return h
+	})
+	t.Cleanup(func() {
+		mu.Lock()
+		handlerWrapper = nil
+		mu.Unlock()
+	})
+
+	Init()
+	assert.True(t, called, "SetHandlerWrapper-supplied wrapper must be invoked during Init")
+}
+
+func TestLogLevels_DoNotPanic(t *testing.T) {
+	resetLogger()
+	Init()
 	assert.NotPanics(t, func() {
 		Debug("debug message")
 		Info("info message")
@@ -55,159 +96,116 @@ func TestLogLevels(t *testing.T) {
 	})
 }
 
-func TestFatal(t *testing.T) {
+func TestWithContext_NilContextSafe(t *testing.T) {
 	resetLogger()
-	Init() // Ensure logger is initialized
-
-	// Test that Fatal logs and exits
-	// We'll test this by checking it doesn't panic in a subprocess
-	// In a real test, you might want to use os.Exit(0) to prevent actual exit
-	assert.NotPanics(t, func() {
-		// This would normally exit, but we're just testing it doesn't panic
-		// In a real scenario, you'd test this differently
-	})
+	Init()
+	// WithContext explicitly tolerates a nil context (see logger.go); the test
+	// pins that contract.
+	//nolint:staticcheck // SA1012: intentional nil-context test for documented fallback.
+	assert.NotNil(t, WithContext(nil), "nil context should fall back to the base logger without panicking")
 }
 
-func TestWithContext(t *testing.T) {
-	resetLogger()
-	Init() // Ensure logger is initialized
+func TestWithContext_EmptyContextReturnsBaseLogger(t *testing.T) {
+	buf := &bytes.Buffer{}
+	captureLogger(t, buf)
 
-	// Test with nil context (using context.TODO() instead)
-	log := WithContext(context.TODO())
-	assert.NotNil(t, log)
+	WithContext(context.Background()).Info("hello")
 
-	// Test with empty context
+	rec := parseRecord(t, buf)
+	assert.Equal(t, "hello", rec["msg"])
+	_, hasRequestID := rec["request_id"]
+	_, hasContextID := rec["context_id"]
+	_, hasContextDescription := rec["context_description"]
+	assert.False(t, hasRequestID, "empty context must not produce request_id")
+	assert.False(t, hasContextID, "empty context must not produce context_id")
+	assert.False(t, hasContextDescription, "empty context must not produce context_description")
+}
+
+func TestWithContext_AttachesRequestID(t *testing.T) {
+	buf := &bytes.Buffer{}
+	captureLogger(t, buf)
+
+	ctx := context.WithValue(context.Background(), promolog.RequestIDKey, "req-42")
+	WithContext(ctx).Info("hello")
+
+	rec := parseRecord(t, buf)
+	assert.Equal(t, "req-42", rec["request_id"])
+}
+
+func TestWithContext_AttachesContextID(t *testing.T) {
+	buf := &bytes.Buffer{}
+	captureLogger(t, buf)
+
+	ctx := context.WithValue(context.Background(), shared.ContextIDKeyValue, "ctx-99")
+	WithContext(ctx).Info("hello")
+
+	rec := parseRecord(t, buf)
+	assert.Equal(t, "ctx-99", rec["context_id"])
+}
+
+func TestWithContext_AttachesContextDescription(t *testing.T) {
+	buf := &bytes.Buffer{}
+	captureLogger(t, buf)
+
+	ctx := context.WithValue(context.Background(), shared.ContextDescriptionKeyValue, "user cache sync")
+	WithContext(ctx).Info("hello")
+
+	rec := parseRecord(t, buf)
+	assert.Equal(t, "user cache sync", rec["context_description"])
+}
+
+func TestWithContext_AttachesAllFields(t *testing.T) {
+	buf := &bytes.Buffer{}
+	captureLogger(t, buf)
+
 	ctx := context.Background()
-	log = WithContext(ctx)
-	assert.NotNil(t, log)
+	ctx = context.WithValue(ctx, promolog.RequestIDKey, "req-1")
+	ctx = context.WithValue(ctx, shared.ContextIDKeyValue, "ctx-1")
+	ctx = context.WithValue(ctx, shared.ContextDescriptionKeyValue, "boot")
+	WithContext(ctx).Info("hello")
 
-	// Test with context containing request ID
-	ctx = context.WithValue(context.Background(), promolog.RequestIDKey, "test-request-123")
-	log = WithContext(ctx)
-	assert.NotNil(t, log)
-
-	// Test with context containing context ID
-	ctx = context.WithValue(context.Background(), shared.ContextIDKeyValue, "test-context-456")
-	log = WithContext(ctx)
-	assert.NotNil(t, log)
-
-	// Test with context containing context description
-	ctx = context.WithValue(context.Background(), shared.ContextDescriptionKeyValue, "test-description")
-	log = WithContext(ctx)
-	assert.NotNil(t, log)
-
-	// Test with all context values
-	ctx = context.WithValue(context.Background(), promolog.RequestIDKey, "test-request-123")
-	ctx = context.WithValue(ctx, shared.ContextIDKeyValue, "test-context-456")
-	ctx = context.WithValue(ctx, shared.ContextDescriptionKeyValue, "test-description")
-	log = WithContext(ctx)
-	assert.NotNil(t, log)
+	rec := parseRecord(t, buf)
+	assert.Equal(t, "req-1", rec["request_id"])
+	assert.Equal(t, "ctx-1", rec["context_id"])
+	assert.Equal(t, "boot", rec["context_description"])
 }
 
-func TestWith(t *testing.T) {
+func TestWith_AddsAttribute(t *testing.T) {
+	buf := &bytes.Buffer{}
+	captureLogger(t, buf)
+
+	With("key", "value").Info("hello")
+
+	rec := parseRecord(t, buf)
+	assert.Equal(t, "value", rec["key"])
+}
+
+func TestWithGroup_NestsAttributes(t *testing.T) {
+	buf := &bytes.Buffer{}
+	captureLogger(t, buf)
+
+	WithGroup("section").Info("hello", "field", "value")
+
+	rec := parseRecord(t, buf)
+	section, ok := rec["section"].(map[string]any)
+	require.True(t, ok, "WithGroup must nest subsequent attributes under the named group: %v", rec)
+	assert.Equal(t, "value", section["field"])
+}
+
+func TestThreadSafety_ConcurrentGet(t *testing.T) {
 	resetLogger()
-	Init() // Ensure logger is initialized
+	Init()
 
-	log := With("key", "value")
-	assert.NotNil(t, log)
-}
-
-func TestWithGroup(t *testing.T) {
-	resetLogger()
-	Init() // Ensure logger is initialized
-
-	log := WithGroup("test-group")
-	assert.NotNil(t, log)
-}
-
-func TestLogAndReturnError(t *testing.T) {
-	resetLogger()
-	Init() // Ensure logger is initialized
-
-	err := assert.AnError
-	result := LogAndReturnError("test error", err)
-
-	assert.Error(t, result)
-	assert.Contains(t, result.Error(), "test error")
-	assert.Contains(t, result.Error(), assert.AnError.Error())
-}
-
-func TestLogAndReturnErrorf(t *testing.T) {
-	resetLogger()
-	Init() // Ensure logger is initialized
-
-	err := assert.AnError
-	result := LogAndReturnErrorf("test error %s", err, "formatted")
-
-	assert.Error(t, result)
-	assert.Contains(t, result.Error(), "test error formatted")
-	assert.Contains(t, result.Error(), assert.AnError.Error())
-}
-
-func TestLogError(t *testing.T) {
-	resetLogger()
-	Init() // Ensure logger is initialized
-
-	// Test that LogError doesn't panic
-	assert.NotPanics(t, func() {
-		LogError("test error", assert.AnError)
-	})
-}
-
-func TestLogErrorf(t *testing.T) {
-	resetLogger()
-	Init() // Ensure logger is initialized
-
-	// Test that LogErrorf doesn't panic
-	assert.NotPanics(t, func() {
-		LogErrorf("test error %s", assert.AnError, "formatted")
-	})
-}
-
-func TestLogErrorWithFields(t *testing.T) {
-	resetLogger()
-	Init() // Ensure logger is initialized
-
-	// Test that LogErrorWithFields doesn't panic
-	fields := map[string]any{
-		"key1": "value1",
-		"key2": "value2",
-	}
-
-	assert.NotPanics(t, func() {
-		LogErrorWithFields("test error", assert.AnError, fields)
-	})
-}
-
-func TestGetLogLevel(t *testing.T) {
-	// Test default levels
-	_ = os.Unsetenv("LOG_LEVEL")
-
-	// This would require mocking env.Dev() to test properly
-	// For now, we'll just test that the function exists and doesn't panic
-	assert.NotPanics(t, func() {
-		// We can't easily test this without mocking, but we can ensure it doesn't panic
-	})
-}
-
-func TestThreadSafety(t *testing.T) {
-	resetLogger()
-	Init() // Ensure logger is initialized
-
-	// Test that logger can be accessed concurrently
-	done := make(chan bool, 10)
-
-	for i := 0; i < 10; i++ {
+	const workers = 10
+	done := make(chan struct{}, workers)
+	for range workers {
 		go func() {
-			log := Get()
-			assert.NotNil(t, log)
+			defer func() { done <- struct{}{} }()
+			assert.NotNil(t, Get())
 			Info("concurrent log message")
-			done <- true
 		}()
 	}
-
-	// Wait for all goroutines to complete
-	for i := 0; i < 10; i++ {
+	for range workers {
 		<-done
 	}
 }

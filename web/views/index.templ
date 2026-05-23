@@ -50,9 +50,6 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 			// setup:feature:demo:start
 			<div id="report-email-container"></div>
 			// setup:feature:demo:end
-			// setup:feature:offline:start
-			@components.OfflineIndicator()
-			// setup:feature:offline:end
 		</body>
 	</html>
 }
@@ -76,9 +73,6 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		<script defer src={ version.Asset("/public/js/_hyperscript.min.js") }></script>
 		<script defer src={ version.Asset("/public/js/htmx.alpine-morph.js") }></script>
 		<script defer src={ version.Asset("/public/js/alpine.morph.min.js") }></script>
-		// setup:feature:offline:start
-		<script defer src={ version.Asset("/public/js/offline-indicator.js") }></script>
-		// setup:feature:offline:end
 		// setup:feature:demo:start
 		<script defer src={ version.Asset("/public/js/broadcast.js") }></script>
 		// setup:feature:demo:end
@@ -110,7 +104,6 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 					"and": [
 						{"href_matches": "/*"},
 						{"not": {"href_matches": "/log/*"}},
-						{"not": {"href_matches": "/sync"}},
 						{"not": {"href_matches": "/health"}},
 						{"not": {"selector_matches": "[hx-get],[hx-post],[hx-put],[hx-delete],[hx-patch]"}}
 					]
@@ -131,9 +124,6 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		<script defer src={ version.Asset("/public/js/theme-sse.js") }></script>
 		// setup:feature:session_settings:end
 		// setup:feature:sse:end
-		// setup:feature:offline:start
-		<script src={ version.Asset("/public/js/sw-cleanup.js") }></script>
-		// setup:feature:offline:end
 	</head>
 }
 

@@ -28,8 +28,8 @@ needed.
 
 Not everything fits inline. External JS files are correct for:
 
-- **Browser API bridges** — Service workers, IndexedDB, BroadcastChannel,
-  EventSource. These are long-lived or need shared state across the page.
+- **Browser API bridges** — BroadcastChannel, EventSource, or similar
+  long-lived browser APIs that need shared state across the page.
 - **Library interop** — HTMX extensions, Alpine.js component registrations,
   morph strategies. These must run before the library initializes.
 - **\_hyperscript call targets** — Functions exposed on `window` so \_hyperscript
@@ -101,10 +101,6 @@ Example from `interval-control.js`:
 | `dev-logging.js` | Development logging for HTMX and \_hyperscript |
 | `htmx.alpine-morph.js` | HTMX extension using Alpine.morph for DOM updates |
 | `interval-control.js` | Interval slider helpers called from \_hyperscript |
-| `offline-indicator.js` | Alpine component for offline detection and sync (offline feature) |
-| `sw.js` | Service worker for offline caching and mutation queue (offline feature) |
-| `sw-cleanup.js` | Unregisters old service workers and clears caches (offline feature) |
-| `sync.js` | IndexedDB-based offline write queue (offline feature) |
 | `theme-sync.js` | Syncs server theme to `<html>` after hx-boost swaps |
 | `theme-sse.js` | SSE listener for server-sent theme changes (SSE + demo feature) |
 | `trusted-types.js` | Trusted Types policy for CSP compliance |

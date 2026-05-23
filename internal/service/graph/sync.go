@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/shared"
 
@@ -32,8 +31,8 @@ func InitAndSyncUserCache(
 	ctx context.Context,
 	userCache *UserCache,
 	refreshHour int,
-	fetchUsersFunc func() ([]domain.GraphUser, error),
-	afterSync func(ctx context.Context, users []domain.GraphUser),
+	fetchUsersFunc func() ([]GraphUser, error),
+	afterSync func(ctx context.Context, users []GraphUser),
 ) error {
 	ctx = shared.WithContextIDAndDescription(ctx, shared.GenerateContextID(), "user cache init")
 	log := logger.WithContext(ctx)

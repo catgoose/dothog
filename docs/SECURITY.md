@@ -91,13 +91,6 @@ These are available in the scaffold but only included when the feature is enable
 - Cryptographically random UUID session IDs (crypto/rand)
 - Touch-based refresh (re-validates after 24 hours)
 
-### Offline / PWA (`setup:feature:offline`)
-
-- Service worker with network-first strategy for HTML
-- Cache-first for immutable static assets
-- Mutation queue (POST/PUT/DELETE stored in IndexedDB when offline)
-- Versioned cache naming for clean updates
-
 ## Not provided
 
 These are deliberate gaps -- things the scaffold does not implement. Depending on your deployment, you may need to add them.

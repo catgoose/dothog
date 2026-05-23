@@ -82,9 +82,12 @@ func Init() {
 }
 
 // getLogLevel reads LOG_LEVEL; falls back to Debug in dev and Info otherwise.
+// Missing and explicitly-empty values both take the fallback path; the env
+// helper now distinguishes the two, but for log level the resolution is the
+// same either way.
 func getLogLevel() slog.Level {
 	levelStr, err := env.Get("LOG_LEVEL")
-	if err != nil {
+	if err != nil || levelStr == "" {
 		if env.Dev() {
 			return slog.LevelDebug
 		}
@@ -185,37 +188,4 @@ func With(args ...any) *slog.Logger {
 // WithGroup nests all subsequent attributes under a group of the given name.
 func WithGroup(name string) *slog.Logger {
 	return Get().WithGroup(name)
-}
-
-// LogAndReturnError logs at Error and returns fmt.Errorf("%s: %w", message, err).
-func LogAndReturnError(message string, err error) error {
-	Get().Error(message, "error", err)
-	return fmt.Errorf("%s: %w", message, err)
-}
-
-// LogAndReturnErrorf is LogAndReturnError with Printf-style formatting of message.
-func LogAndReturnErrorf(message string, err error, args ...any) error {
-	Get().Error(fmt.Sprintf(message, args...), "error", err)
-	return fmt.Errorf("%s: %w", fmt.Sprintf(message, args...), err)
-}
-
-// LogError records err at Error level with message; use when the caller does
-// not want to wrap and rethrow.
-func LogError(message string, err error) {
-	Get().Error(message, "error", err)
-}
-
-// LogErrorf is LogError with Printf-style formatting of message.
-func LogErrorf(message string, err error, args ...any) {
-	Get().Error(fmt.Sprintf(message, args...), "error", err)
-}
-
-// LogErrorWithFields logs at Error and flattens fields into key/value attribute pairs.
-func LogErrorWithFields(message string, err error, fields map[string]any) {
-	args := make([]any, 0, len(fields)*2+2)
-	args = append(args, "error", err)
-	for k, v := range fields {
-		args = append(args, k, v)
-	}
-	Get().Error(message, args...)
 }

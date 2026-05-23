@@ -1,16 +1,12 @@
 // setup:feature:graph
 
-package repository
+package graph
 
 import (
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
-
-	"catgoose/dothog/internal/database/repository"
-	"catgoose/dothog/internal/database/schema"
-	"catgoose/dothog/internal/domain"
 
 	"github.com/catgoose/chuck/dbrepo"
 	"github.com/jmoiron/sqlx"
@@ -19,20 +15,36 @@ import (
 // ErrUserNotFound is returned when an Update/UpdateLastLogin affects zero rows.
 var ErrUserNotFound = fmt.Errorf("user not found")
 
-// UserRepository persists rows in the Users table; tx-accepting methods
-// run on the underlying DB when tx is nil. Construct via NewUserRepository.
+// UserRepository persists rows in the Users table — the chuck-backed mirror
+// of the Graph user directory. tx-accepting methods run on the underlying
+// DB when tx is nil. Lives in the graph package because both the model
+// (User, GraphUser) and the schema (UsersTable) are graph-owned.
 type UserRepository struct {
-	repo *repository.RepoManager
+	db *sqlx.DB
 }
 
-// NewUserRepository binds repo; callers depend on *UserRepository directly
+// NewUserRepository binds db; callers depend on *UserRepository directly
 // because the package has only one Users-table persistence implementation.
-func NewUserRepository(repo *repository.RepoManager) *UserRepository {
-	return &UserRepository{repo: repo}
+func NewUserRepository(db *sqlx.DB) *UserRepository {
+	return &UserRepository{db: db}
+}
+
+func (r *UserRepository) getContext(ctx context.Context, tx *sqlx.Tx, dest any, query string, args ...any) error {
+	if tx != nil {
+		return tx.GetContext(ctx, dest, query, args...)
+	}
+	return r.db.GetContext(ctx, dest, query, args...)
+}
+
+func (r *UserRepository) execContext(ctx context.Context, tx *sqlx.Tx, query string, args ...any) (sql.Result, error) {
+	if tx != nil {
+		return tx.ExecContext(ctx, query, args...)
+	}
+	return r.db.ExecContext(ctx, query, args...)
 }
 
 // CreateOrUpdate upserts user keyed by AzureID, stamping LastLoginAt to now.
-func (r *UserRepository) CreateOrUpdate(ctx context.Context, user *domain.User, tx *sqlx.Tx) error {
+func (r *UserRepository) CreateOrUpdate(ctx context.Context, user *User, tx *sqlx.Tx) error {
 	existing, err := r.getByAzureIDInternal(ctx, user.AzureID, tx)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("failed to check for existing user: %w", err)
@@ -51,13 +63,11 @@ func (r *UserRepository) CreateOrUpdate(ctx context.Context, user *domain.User, 
 	dbrepo.SetCreateTimestamps(&user.CreatedAt, &user.UpdatedAt)
 	user.LastLoginAt = sql.NullTime{Time: now, Valid: true}
 
-	exec := r.repo.Exec(tx)
-
-	insertCols := schema.UsersTable.InsertColumns()
-	query := dbrepo.InsertInto(schema.UsersTable.Name, insertCols...) + ";\n\t\tSELECT SCOPE_IDENTITY() AS ID;"
+	insertCols := UsersTable.InsertColumns()
+	query := dbrepo.InsertInto(UsersTable.Name, insertCols...) + ";\n\t\tSELECT SCOPE_IDENTITY() AS ID;"
 
 	var id int64
-	err = exec.GetContext(ctx, &id, query,
+	err = r.getContext(ctx, tx, &id, query,
 		sql.Named("AzureId", user.AzureID),
 		sql.Named("GivenName", user.GivenName),
 		sql.Named("Surname", user.Surname),
@@ -83,13 +93,13 @@ func (r *UserRepository) CreateOrUpdate(ctx context.Context, user *domain.User, 
 }
 
 // GetByID returns the row matching id; sql.ErrNoRows becomes a wrapped "user not found".
-func (r *UserRepository) GetByID(ctx context.Context, id int) (*domain.User, error) {
-	cols := dbrepo.Columns(schema.UsersTable.SelectColumns()...)
+func (r *UserRepository) GetByID(ctx context.Context, id int) (*User, error) {
+	cols := dbrepo.Columns(UsersTable.SelectColumns()...)
 	w := dbrepo.NewWhere().And("ID = @ID", sql.Named("ID", id))
-	query, args := dbrepo.NewSelect(schema.UsersTable.Name, cols).Where(w).Build()
+	query, args := dbrepo.NewSelect(UsersTable.Name, cols).Where(w).Build()
 
-	var user domain.User
-	err := r.repo.GetDB().GetContext(ctx, &user, query, args...)
+	var user User
+	err := r.db.GetContext(ctx, &user, query, args...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("user not found: %w", err)
@@ -100,13 +110,13 @@ func (r *UserRepository) GetByID(ctx context.Context, id int) (*domain.User, err
 }
 
 // getByAzureIDInternal surfaces sql.ErrNoRows so callers can distinguish "missing" from other errors.
-func (r *UserRepository) getByAzureIDInternal(ctx context.Context, azureID string, tx *sqlx.Tx) (*domain.User, error) {
-	cols := dbrepo.Columns(schema.UsersTable.SelectColumns()...)
+func (r *UserRepository) getByAzureIDInternal(ctx context.Context, azureID string, tx *sqlx.Tx) (*User, error) {
+	cols := dbrepo.Columns(UsersTable.SelectColumns()...)
 	w := dbrepo.NewWhere().And("AzureId = @AzureId", sql.Named("AzureId", azureID))
-	query, args := dbrepo.NewSelect(schema.UsersTable.Name, cols).Where(w).Build()
+	query, args := dbrepo.NewSelect(UsersTable.Name, cols).Where(w).Build()
 
-	var user domain.User
-	err := r.repo.Exec(tx).GetContext(ctx, &user, query, args...)
+	var user User
+	err := r.getContext(ctx, tx, &user, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +124,7 @@ func (r *UserRepository) getByAzureIDInternal(ctx context.Context, azureID strin
 }
 
 // GetByAzureID returns the row matching azureID; sql.ErrNoRows becomes a wrapped "user not found".
-func (r *UserRepository) GetByAzureID(ctx context.Context, azureID string) (*domain.User, error) {
+func (r *UserRepository) GetByAzureID(ctx context.Context, azureID string) (*User, error) {
 	user, err := r.getByAzureIDInternal(ctx, azureID, nil)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -126,17 +136,15 @@ func (r *UserRepository) GetByAzureID(ctx context.Context, azureID string) (*dom
 }
 
 // Update yields ErrUserNotFound when no row matches user.ID.
-func (r *UserRepository) Update(ctx context.Context, user *domain.User, tx *sqlx.Tx) error {
-	exec := r.repo.Exec(tx)
-
+func (r *UserRepository) Update(ctx context.Context, user *User, tx *sqlx.Tx) error {
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE ID = @ID",
-		schema.UsersTable.Name,
-		dbrepo.SetClause(schema.UsersTable.UpdateColumns()...),
+		UsersTable.Name,
+		dbrepo.SetClause(UsersTable.UpdateColumns()...),
 	)
 
 	dbrepo.SetUpdateTimestamp(&user.UpdatedAt)
 
-	result, err := exec.ExecContext(ctx, query,
+	result, err := r.execContext(ctx, tx, query,
 		sql.Named("ID", user.ID),
 		sql.Named("AzureId", user.AzureID),
 		sql.Named("GivenName", user.GivenName),
@@ -171,15 +179,13 @@ func (r *UserRepository) Update(ctx context.Context, user *domain.User, tx *sqlx
 
 // UpdateLastLogin yields ErrUserNotFound when no row matches id.
 func (r *UserRepository) UpdateLastLogin(ctx context.Context, id int, tx *sqlx.Tx) error {
-	exec := r.repo.Exec(tx)
-
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE ID = @ID",
-		schema.UsersTable.Name,
+		UsersTable.Name,
 		dbrepo.SetClause("LastLoginAt", "UpdatedAt"),
 	)
 
 	now := dbrepo.GetNow()
-	result, err := exec.ExecContext(ctx, query,
+	result, err := r.execContext(ctx, tx, query,
 		sql.Named("ID", id),
 		sql.Named("LastLoginAt", now),
 		sql.Named("UpdatedAt", now),

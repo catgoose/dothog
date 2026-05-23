@@ -24,7 +24,6 @@ func (ar *AppRoutes) initLinkRelations() {
 		linkwell.Rel("/platform/logging", "Logging"),
 		linkwell.Rel("/platform/repository", "Repository"),
 		linkwell.Rel("/platform/settings", "Settings"),
-		linkwell.Rel("/platform/pwa", "PWA Offline"),
 	)
 
 	linkwell.Hub("/patterns", "Patterns",

@@ -1,5 +1,6 @@
 // Package env loads environment variables from .env.{mode} files and exposes
-// the current mode via predicates.
+// the current mode via predicates. Mode resolution follows: the explicit -env
+// flag, then the ENV env var, then "development".
 package env
 
 import (
@@ -11,17 +12,19 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var envFlag = flag.String("env", "development", "application environment (reads .env.{mode})")
+// envFlag overrides ENV and the default when set. Empty string means "not
+// provided" — godot helpers can't disambiguate "user passed -env=" from
+// "user did not pass -env", so the sentinel is the empty string and the
+// fallback chain handles the rest.
+var envFlag = flag.String("env", "", "application environment (reads .env.{mode}); falls back to ENV, then \"development\"")
 
 var mode string
 
-// Init resolves the mode from env (or the -env flag, default "development") and loads
-// .env.{mode} via godotenv; a missing file errors, but callers may proceed with the OS env.
-func Init(env string) error {
-	if env == "" {
-		env = *envFlag
-	}
-	mode = normalize(env)
+// Init resolves the runtime mode using the precedence: -env flag, then ENV
+// env var, then "development". It then loads .env.{mode} via godotenv; a
+// missing file errors, but callers may proceed with the OS env.
+func Init() error {
+	mode = resolveMode()
 	file := fmt.Sprintf(".env.%s", mode)
 	if err := godotenv.Load(file); err != nil {
 		return fmt.Errorf("env file not found: %s: %w", file, err)
@@ -29,18 +32,39 @@ func Init(env string) error {
 	return nil
 }
 
-// Get errors when key is unset; use GetDefault for optional values.
+func resolveMode() string {
+	if envFlag != nil && *envFlag != "" {
+		return normalize(*envFlag)
+	}
+	if v := os.Getenv("ENV"); v != "" {
+		return normalize(v)
+	}
+	return "development"
+}
+
+// Lookup returns the raw OS environment value and a presence flag. Empty
+// string is preserved (an explicitly empty env var is distinct from a
+// missing one).
+func Lookup(key string) (string, bool) {
+	return os.LookupEnv(key)
+}
+
+// Get returns the value of key. The error reports only "not set"; an
+// explicitly empty value returns ("", nil) so callers can distinguish it
+// from a missing key.
 func Get(key string) (string, error) {
-	v := os.Getenv(key)
-	if v == "" {
+	v, ok := os.LookupEnv(key)
+	if !ok {
 		return "", fmt.Errorf("env %s not set", key)
 	}
 	return v, nil
 }
 
-// GetDefault treats an unset key as fallback; never returns an error.
+// GetDefault returns key's value when set (even if empty), or fallback when
+// the key is not set. An explicitly empty env var returns "" — fallback
+// applies only to truly missing keys.
 func GetDefault(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
+	if v, ok := os.LookupEnv(key); ok {
 		return v
 	}
 	return fallback

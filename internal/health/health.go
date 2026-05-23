@@ -3,7 +3,6 @@ package health
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 )
@@ -21,7 +20,10 @@ type Response struct {
 // StatsFunc is the app-specific stats hook embedded in the health payload's "stats" field.
 type StatsFunc func(ctx context.Context) any
 
-// Pinger is satisfied by *sql.DB and *sqlx.DB.
+// Pinger is the consumer-owned narrow seam over the PingContext method that
+// both *sql.DB and *sqlx.DB carry. Health checks only need that one verb;
+// keeping it as an interface lets callers pass either pool type without
+// dragging the rest of database/sql in.
 type Pinger interface {
 	PingContext(ctx context.Context) error
 }
@@ -35,8 +37,9 @@ type Config struct {
 	Version   string
 }
 
-// Check pings cfg.DB (if any) and downgrades status to "degraded" on ping failure;
-// cfg.Stats output is folded into the response when non-nil.
+// Check pings cfg.DB (if any) and downgrades status to "degraded" on ping
+// failure. cfg.Stats is always invoked when configured, including on the
+// degraded path — runtime samples are still informative when the DB is down.
 func Check(ctx context.Context, cfg Config) Response {
 	h := Response{
 		Name:    cfg.Name,
@@ -48,10 +51,10 @@ func Check(ctx context.Context, cfg Config) Response {
 		if err := cfg.DB.PingContext(ctx); err != nil {
 			h.Status = "degraded"
 			h.Database = "disconnected"
-			return h
+		} else {
+			h.Status = "healthy"
+			h.Database = "connected"
 		}
-		h.Status = "healthy"
-		h.Database = "connected"
 	} else {
 		h.Status = "healthy"
 	}
@@ -61,11 +64,6 @@ func Check(ctx context.Context, cfg Config) Response {
 	}
 
 	return h
-}
-
-// NewPingerFromDB adapts a *sql.DB to the Pinger interface via its PingContext.
-func NewPingerFromDB(db *sql.DB) Pinger {
-	return db
 }
 
 func formatUptime(d time.Duration) string {

@@ -9,7 +9,6 @@ import (
 
 	"database/sql"
 
-	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/logger"
 
 	"github.com/jmoiron/sqlx"
@@ -27,7 +26,7 @@ func NewUserCache(db *sqlx.DB) *UserCache {
 }
 
 // InsertOrUpdateUsers upserts each user in a single transaction, rolling back on the first row that fails.
-func (c *UserCache) InsertOrUpdateUsers(ctx context.Context, users []domain.GraphUser) error {
+func (c *UserCache) InsertOrUpdateUsers(ctx context.Context, users []GraphUser) error {
 	log := logger.WithContext(ctx)
 
 	if err := c.EnsureSchema(ctx); err != nil {
@@ -90,7 +89,7 @@ const (
 )
 
 // SearchUsers ANDs LIKE clauses across GivenName/Surname/DisplayName/AccountName for each term and returns up to limit rows ordered by DisplayName.
-func (c *UserCache) SearchUsers(terms []string, limit int) ([]domain.GraphUser, error) {
+func (c *UserCache) SearchUsers(terms []string, limit int) ([]GraphUser, error) {
 	if len(terms) == 0 {
 		return nil, fmt.Errorf("no search terms provided")
 	}
@@ -114,7 +113,7 @@ func (c *UserCache) SearchUsers(terms []string, limit int) ([]domain.GraphUser, 
 
 	args = append(args, sql.Named("Limit", limit))
 
-	var users []domain.GraphUser
+	var users []GraphUser
 	err := c.DB.Select(&users, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search users: %w", err)
@@ -124,13 +123,13 @@ func (c *UserCache) SearchUsers(terms []string, limit int) ([]domain.GraphUser, 
 
 // GetAllUsers dumps the entire Users table (DisplayName-sorted). Intended
 // for one-off admin views; large directories should prefer SearchUsers.
-func (c *UserCache) GetAllUsers() ([]domain.GraphUser, error) {
+func (c *UserCache) GetAllUsers() ([]GraphUser, error) {
 	query := `
 		SELECT AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName
 		FROM Users
 		ORDER BY DisplayName
 	`
-	var users []domain.GraphUser
+	var users []GraphUser
 	err := c.DB.Select(&users, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve all users: %w", err)
@@ -139,13 +138,13 @@ func (c *UserCache) GetAllUsers() ([]domain.GraphUser, error) {
 }
 
 // GetUserByAzureID wraps sql.ErrNoRows in a contextual error when the row is missing.
-func (c *UserCache) GetUserByAzureID(azureID string) (*domain.GraphUser, error) {
+func (c *UserCache) GetUserByAzureID(azureID string) (*GraphUser, error) {
 	query := `
 		SELECT AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName
 		FROM Users
 		WHERE AzureId = @AzureId
 	`
-	var user domain.GraphUser
+	var user GraphUser
 	err := c.DB.Get(&user, query, sql.Named("AzureId", azureID))
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve user by Azure ID: %w", err)
@@ -164,42 +163,11 @@ func (c *UserCache) UsersTableExists() (bool, error) {
 	return count > 0, nil
 }
 
-// EnsureSchema is idempotent: creates the Users table only when sqlite_master reports it missing.
+// EnsureSchema is idempotent: re-runs the UsersTable materializer against the
+// bound DB. OpenUserCacheDB already does this at open time; callers that
+// reuse a UserCache across long-lived DBs can invoke it defensively.
 func (c *UserCache) EnsureSchema(ctx context.Context) error {
-	exists, err := c.UsersTableExists()
-	if err != nil {
-		return fmt.Errorf("failed to check if Users table exists: %w", err)
-	}
-
-	if !exists {
-		log := logger.WithContext(ctx)
-		log.Info("Users table does not exist, creating it")
-
-		usersTableSchema := `
-		CREATE TABLE IF NOT EXISTS Users (
-			AzureId TEXT PRIMARY KEY,
-			GivenName TEXT,
-			Surname TEXT,
-			DisplayName TEXT,
-			UserPrincipalName TEXT,
-			Mail TEXT,
-			JobTitle TEXT,
-			OfficeLocation TEXT,
-			Department TEXT,
-			CompanyName TEXT,
-			AccountName TEXT,
-			UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		);`
-
-		_, err = c.DB.Exec(usersTableSchema)
-		if err != nil {
-			return fmt.Errorf("failed to create Users table: %w", err)
-		}
-
-		log.Info("Users table created successfully")
-	}
-
-	return nil
+	return materializeUsersTable(ctx, c.DB)
 }
 
 // GetUserCount is the row count of Users (cached and persisted).

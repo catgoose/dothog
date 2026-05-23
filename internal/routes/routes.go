@@ -25,12 +25,10 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/catgoose/dorman"
-	"io"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 	// setup:feature:auth:start
 	"github.com/catgoose/crooner"
@@ -63,10 +61,7 @@ type AppRoutes struct {
 	repos     Repos
 	startTime time.Time
 	ctx       context.Context
-	// setup:feature:sync:start
-	versionChecker VersionChecker
-	// setup:feature:sync:end
-	e *echo.Echo
+	e         *echo.Echo
 	// setup:feature:demo:start
 	demoDB *demo.DB
 	// setup:feature:demo:end
@@ -193,7 +188,6 @@ func (ar *AppRoutes) InitRoutes() error {
 	// setup:feature:demo:end
 
 	// Health check endpoint — returns structured ops metadata.
-	// HEAD is used by the offline indicator to poll connectivity.
 	healthHandler := func(c echo.Context) error {
 		return c.JSON(http.StatusOK, health.Check(c.Request().Context(), ar.healthCfg))
 	}
@@ -202,15 +196,14 @@ func (ar *AppRoutes) InitRoutes() error {
 
 	ar.initReportIssueRoutes()
 
-	// setup:feature:sync:start
-	ar.initSyncRoutes()
-	// setup:feature:sync:end
-
 	ar.initAdminCoreRoutes()
+	// setup:feature:session_settings:start
+	ar.initAdminSessionsRoutes()
+	// setup:feature:session_settings:end
 	ar.initErrorTracesRoutes()
 
 	// setup:feature:demo:start
-	ar.initPwaRoutes()
+	ar.initAdminDemoRoutes()
 	ar.initReportDemoRoutes()
 	ar.initControlsGalleryRoutes()
 	ar.initComponentsRoutes()
@@ -273,9 +266,6 @@ func (ar *AppRoutes) InitRoutes() error {
 		logger.WithContext(ar.ctx).Warn("Demo DB unavailable; app routes disabled", "error", err)
 		return nil
 	}
-	// setup:feature:sync:start
-	ar.versionChecker = NewSQLVersionChecker(db.RawDB())
-	// setup:feature:sync:end
 	ar.demoDB = db
 	if stored, err := db.ListStoredLinks(); err == nil {
 		for _, s := range stored {
@@ -401,7 +391,23 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	}
 
 	// setup:feature:auth:start
-	if cfg != nil && !cfg.CroonerDisabled && cfg.CroonerConfig != nil {
+	if cfg != nil && cfg.AuthConfigured() {
+		// Build crooner runtime locally from cfg's env-backed OIDC values.
+		// AppConfig stays immutable; the SessionManager + AuthConfig live in
+		// this function's scope.
+		croonerParams := &crooner.AuthConfigParams{
+			IssuerURL:         cfg.OIDCIssuerURL,
+			ClientID:          cfg.OIDCClientID,
+			ClientSecret:      cfg.OIDCClientSecret,
+			RedirectURL:       cfg.OIDCRedirectURL,
+			LoginURLRedirect:  cfg.OIDCLoginRedirectURL,
+			LogoutURLRedirect: cfg.OIDCLogoutRedirectURL,
+			AuthRoutes: &crooner.AuthRoutes{
+				Login:    "/login",
+				Logout:   "/logout",
+				Callback: "/callback",
+			},
+		}
 		sessionMgr, scsMgr, err := crooner.NewSCSManager(
 			crooner.WithPersistentCookieName(cfg.SessionSecret, cfg.AppName),
 			crooner.WithLifetime(24*time.Hour),
@@ -410,16 +416,15 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 			return nil, fmt.Errorf("crooner session manager: %w", err)
 		}
 		e.Use(echo.WrapMiddleware(scsMgr.LoadAndSave))
-		cfg.SessionMgr = sessionMgr
-		cfg.CroonerConfig.SessionMgr = sessionMgr
-		authCfg, err := crooner.NewAuthConfig(ctx, cfg.CroonerConfig)
+		croonerParams.SessionMgr = sessionMgr
+		authCfg, err := crooner.NewAuthConfig(ctx, croonerParams)
 		if err != nil {
 			return nil, fmt.Errorf("crooner auth config: %w", err)
 		}
 		e.Use(echo.WrapMiddleware(authCfg.Middleware()))
-		e.GET(cfg.CroonerConfig.AuthRoutes.Login, echo.WrapHandler(authCfg.LoginHandler()))
-		e.GET(cfg.CroonerConfig.AuthRoutes.Logout, echo.WrapHandler(authCfg.LogoutHandler()))
-		e.GET(cfg.CroonerConfig.AuthRoutes.Callback, echo.WrapHandler(authCfg.CallbackHandler()))
+		e.GET(croonerParams.AuthRoutes.Login, echo.WrapHandler(authCfg.LoginHandler()))
+		e.GET(croonerParams.AuthRoutes.Logout, echo.WrapHandler(authCfg.LogoutHandler()))
+		e.GET(croonerParams.AuthRoutes.Callback, echo.WrapHandler(authCfg.CallbackHandler()))
 		// setup:feature:csrf:start
 		if cfg.SessionSecret != "" {
 			hash := sha256.Sum256([]byte(cfg.SessionSecret))
@@ -480,25 +485,6 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		}
 	})
 	static.StaticFS("/", staticFS)
-
-	// setup:feature:offline:start
-	// Serve the service worker from the root so it can control all pages.
-	e.GET("/sw.js", func(c echo.Context) error {
-		f, err := staticFS.Open("js/sw.js")
-		if err != nil {
-			return echo.NewHTTPError(http.StatusNotFound)
-		}
-		defer func() { _ = f.Close() }()
-		raw, err := io.ReadAll(f)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError)
-		}
-		content := strings.ReplaceAll(string(raw), "{{APP_VERSION}}", version.Version)
-		c.Response().Header().Set("Service-Worker-Allowed", "/")
-		c.Response().Header().Set("Cache-Control", "no-cache")
-		return c.String(http.StatusOK, content)
-	})
-	// setup:feature:offline:end
 
 	return e, nil
 }

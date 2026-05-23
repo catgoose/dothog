@@ -15,8 +15,12 @@ import (
 
 	"catgoose/dothog/internal/config"
 	"catgoose/dothog/internal/database"
+	// setup:feature:database:start
+	"catgoose/dothog/internal/dbschema"
 
 	dialect "github.com/catgoose/chuck"
+	// setup:feature:database:end
+
 	// Framework SQLite stores (error traces, session settings, graph user cache)
 	// always need the sqlite driver registered.
 	_ "github.com/catgoose/chuck/driver/sqlite"
@@ -27,27 +31,26 @@ import (
 	_ "github.com/catgoose/chuck/driver/postgres"
 	// setup:feature:postgres:end
 
-	// dbrepo backs both the chuck-backed app-data store (database feature,
-	// implicit) and the framework-owned session-settings SQLite store. schema
-	// is only consumed by session_settings here — derived apps that add their
-	// own app-data tables import their own schema package.
-	dbrepo "catgoose/dothog/internal/database/repository"
-	// setup:feature:session_settings:start
+	// schema owns the chuck-backed schema materializer (schema.NewMaterializer runs
+	// Init/Ensure/Validate). Repositories hold *sqlx.DB directly and reach
+	// transactions via database.WithTransaction, so neither side leans on a
+	// catch-all "manager as runtime access point" object.
 	"catgoose/dothog/internal/database/schema"
-	// setup:feature:session_settings:end
 
-	"github.com/jmoiron/sqlx"
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes"
+	// setup:feature:database:start
+	"github.com/jmoiron/sqlx"
+	// setup:feature:database:end
 
 	"github.com/catgoose/promolog"
 	promologsqlite "github.com/catgoose/promolog/sqlite"
 
 	// setup:feature:session_settings:start
 	"catgoose/dothog/internal/repository"
+	"catgoose/dothog/internal/session"
 	// setup:feature:session_settings:end
 	// setup:feature:graph:start
-	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/service/graph"
 
 	// setup:feature:graph:end
@@ -73,7 +76,7 @@ func main() {
 	})
 	logger.Init()
 	flag.Parse()
-	envErr := appenv.Init(os.Getenv("ENV"))
+	envErr := appenv.Init()
 	// setup:feature:demo:start
 	if envErr != nil {
 		_ = os.Setenv("SERVER_LISTEN_PORT", appenv.GetDefault("SERVER_LISTEN_PORT", "3000"))
@@ -102,14 +105,15 @@ func main() {
 		}
 	}()
 	reqLogStore := promologsqlite.NewStore(traceDB.DB)
-	if err := reqLogStore.InitSchema(); err != nil {
-		logger.Fatal("Failed to init error traces schema", "error", err)
+	if err := reqLogStore.EnsureSchema(); err != nil {
+		logger.Fatal("Failed to ensure error traces schema", "error", err)
 	}
 	reqLogStore.StartCleanup(appCtx, 90*24*time.Hour, 1*time.Hour)
 	// setup:feature:demo:start
 	routes.SeedErrorTraces(reqLogStore)
 	// setup:feature:demo:end
 
+	// setup:feature:database:start
 	// App-data store: chuck-backed repository over cfg.DatabaseURL when set.
 	// Framework-owned SQLite stores (session settings, error traces, graph user
 	// cache) have their own openers below and are not registered here — keeping
@@ -126,27 +130,25 @@ func main() {
 		}()
 
 		dbx := sqlx.NewDb(db, string(d.Engine()))
-		// Derived apps register their schema.TableDefs as positional args to
-		// NewManager. The template ships zero app-data tables on purpose.
-		repoManager := dbrepo.NewManager(dbx, d)
+		// App-data schema lifecycle: tables live in internal/dbschema and flow
+		// in via dbschema.Tables(). Concrete repositories take *sqlx.DB (dbx)
+		// directly and use database.WithTransaction for multi-statement work.
+		// Framework-owned tables (session settings, graph user cache, error
+		// traces) are wired separately below and are not registered here.
+		appSchema := schema.NewMaterializer(dbx, d, dbschema.Tables()...)
 
-		// INIT_REPO drives a destructive schema reset: every registered table is
-		// dropped and recreated, wiping app data. Default off; flip on only to
-		// rebuild from scratch.
-		if cfg.InitRepo {
-			if err := repoManager.InitSchema(appCtx); err != nil {
-				logger.Fatal("Failed to initialize app database schema", "error", err)
-			}
-		}
-
-		if err := repoManager.EnsureSchema(appCtx); err != nil {
+		// Derived apps that need a destructive schema reset call
+		// appSchema.InitSchema(ctx) here behind their own gating; the template
+		// never wires that path through config.
+		if err := appSchema.EnsureSchema(appCtx); err != nil {
 			logger.Fatal("Failed to ensure app database schema", "error", err)
 		}
 
-		if err := repoManager.ValidateSchema(appCtx); err != nil {
+		if err := appSchema.ValidateSchema(appCtx); err != nil {
 			logger.Fatal("App database schema validation failed", "error", err)
 		}
 	}
+	// setup:feature:database:end
 
 	// setup:feature:session_settings:start
 	settingsDB, err := database.OpenSQLite(appCtx, "db/session_settings.db")
@@ -158,15 +160,15 @@ func main() {
 			logger.Info("Error closing session settings database", "error", closeErr)
 		}
 	}()
-	settingsDialect, err := dialect.New(dialect.SQLite)
+	settingsDialect, err := database.SQLiteDialect()
 	if err != nil {
 		logger.Fatal("Failed to create session settings dialect", "error", err)
 	}
-	settingsManager := dbrepo.NewManager(settingsDB, settingsDialect, schema.SessionSettingsTable)
-	if err := settingsManager.EnsureSchema(appCtx); err != nil {
+	settingsSchema := schema.NewMaterializer(settingsDB, settingsDialect, session.SettingsTable)
+	if err := settingsSchema.EnsureSchema(appCtx); err != nil {
 		logger.Fatal("Failed to ensure session settings schema", "error", err)
 	}
-	settingsRepo := repository.NewSessionSettingsRepository(settingsManager)
+	settingsRepo := repository.NewSessionSettingsRepository(settingsDB)
 	// setup:feature:session_settings:end
 
 	// InitEcho builds the shared Echo instance: static file serving, global
@@ -214,7 +216,7 @@ func main() {
 		if err != nil {
 			logger.Fatal("Failed to create Graph client", "error", err)
 		}
-		sqliteDB, err := database.OpenSQLiteInMemory()
+		sqliteDB, err := graph.OpenUserCacheDB()
 		if err != nil {
 			logger.Fatal("Failed to open in-memory SQLite for user cache", "error", err)
 		}
@@ -227,9 +229,9 @@ func main() {
 		// declaration is intentional — setup:feature:avatar strips the
 		// assignment but leaves the declaration so graph-without-avatar
 		// scaffolds still compile.
-		var afterSync func(ctx context.Context, users []domain.GraphUser) //nolint:staticcheck // S1021: split intentional, see comment above.
+		var afterSync func(ctx context.Context, users []graph.GraphUser) //nolint:staticcheck // S1021: split intentional, see comment above.
 		// setup:feature:avatar:start
-		afterSync = func(ctx context.Context, users []domain.GraphUser) {
+		afterSync = func(ctx context.Context, users []graph.GraphUser) {
 			if err := graph.SyncPhotos(ctx, graphClient, photoStore, users, false); err != nil {
 				logger.Error("Photo sync failed", "error", err)
 			}

@@ -111,9 +111,4 @@ document.addEventListener('alpine:init', function () {
     };
   });
 
-  // -- Existing global functions that need CSP registration -------------
-  if (typeof offlineIndicator === 'function') {
-    Alpine.data('offlineIndicator', offlineIndicator);
-  }
-
 });

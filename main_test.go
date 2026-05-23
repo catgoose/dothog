@@ -23,7 +23,7 @@ func setupAppEcho(t *testing.T) *echo.Echo {
 	t.Setenv("SERVER_LISTEN_PORT", "0")
 	t.Setenv("LOG_LEVEL", "ERROR")
 
-	require.NoError(t, appenv.Init(""))
+	require.NoError(t, appenv.Init())
 	logger.Init()
 	cfg, err := config.GetConfig()
 	require.NoError(t, err)
@@ -51,7 +51,7 @@ func TestApplicationStartup(t *testing.T) {
 	// This tests the startup sequence without actually starting the server
 
 	// Test environment initialization
-	err := appenv.Init("")
+	err := appenv.Init()
 	require.NoError(t, err)
 
 	cfg, err := config.GetConfig()

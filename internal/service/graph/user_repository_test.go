@@ -1,15 +1,11 @@
 // setup:feature:graph
-package repository
+package graph
 
 import (
 	"context"
 	"database/sql"
 	"testing"
 	"time"
-
-	dbrepo "catgoose/dothog/internal/database/repository"
-	"catgoose/dothog/internal/domain"
-	dialect "github.com/catgoose/chuck"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
@@ -27,8 +23,7 @@ func setupMockDB(t *testing.T) (*sqlx.DB, sqlmock.Sqlmock) {
 
 func TestUserRepository_GetByID_Success(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
-	ur := NewUserRepository(repo)
+	ur := NewUserRepository(sqlxDB)
 	ctx := context.Background()
 
 	rows := sqlmock.NewRows([]string{"ID", "AzureId", "UserPrincipalName", "GivenName", "Surname", "DisplayName", "Mail", "JobTitle", "OfficeLocation", "Department", "CompanyName", "AccountName", "LastLoginAt", "CreatedAt", "UpdatedAt"}).
@@ -48,8 +43,7 @@ func TestUserRepository_GetByID_Success(t *testing.T) {
 
 func TestUserRepository_GetByID_NotFound(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
-	ur := NewUserRepository(repo)
+	ur := NewUserRepository(sqlxDB)
 	ctx := context.Background()
 
 	mock.ExpectQuery("SELECT .* FROM Users WHERE ID").
@@ -65,8 +59,7 @@ func TestUserRepository_GetByID_NotFound(t *testing.T) {
 
 func TestUserRepository_GetByAzureID_Success(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
-	ur := NewUserRepository(repo)
+	ur := NewUserRepository(sqlxDB)
 	ctx := context.Background()
 
 	rows := sqlmock.NewRows([]string{"ID", "AzureId", "UserPrincipalName", "GivenName", "Surname", "DisplayName", "Mail", "JobTitle", "OfficeLocation", "Department", "CompanyName", "AccountName", "LastLoginAt", "CreatedAt", "UpdatedAt"}).
@@ -85,8 +78,7 @@ func TestUserRepository_GetByAzureID_Success(t *testing.T) {
 
 func TestUserRepository_GetByAzureID_NotFound(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
-	ur := NewUserRepository(repo)
+	ur := NewUserRepository(sqlxDB)
 	ctx := context.Background()
 
 	mock.ExpectQuery("SELECT .* FROM Users WHERE AzureId").
@@ -102,8 +94,7 @@ func TestUserRepository_GetByAzureID_NotFound(t *testing.T) {
 
 func TestUserRepository_UpdateLastLogin_Success(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
-	ur := NewUserRepository(repo)
+	ur := NewUserRepository(sqlxDB)
 	ctx := context.Background()
 
 	mock.ExpectExec("UPDATE Users").
@@ -117,8 +108,7 @@ func TestUserRepository_UpdateLastLogin_Success(t *testing.T) {
 
 func TestUserRepository_UpdateLastLogin_NotFound(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
-	ur := NewUserRepository(repo)
+	ur := NewUserRepository(sqlxDB)
 	ctx := context.Background()
 
 	mock.ExpectExec("UPDATE Users").
@@ -133,11 +123,10 @@ func TestUserRepository_UpdateLastLogin_NotFound(t *testing.T) {
 
 func TestUserRepository_Update_Success(t *testing.T) {
 	sqlxDB, mock := setupMockDB(t)
-	repo := dbrepo.NewManager(sqlxDB, dialect.SQLiteDialect{})
-	ur := NewUserRepository(repo)
+	ur := NewUserRepository(sqlxDB)
 	ctx := context.Background()
 
-	user := &domain.User{
+	user := &User{
 		ID:                1,
 		AzureID:           "azure-1",
 		UserPrincipalName: "user@example.com",

@@ -1,14 +1,16 @@
 // setup:feature:graph
 
-package domain
+package graph
 
 import (
 	"database/sql"
 	"time"
 )
 
-// User is the persisted row for an Azure-cached user; nullable Graph
-// attributes use sql.Null* so JSON omitzero suppresses unset values.
+// User is the chuck-backed persisted row for an Azure-cached Graph user.
+// Nullable Graph attributes use sql.Null* so JSON omitzero suppresses unset
+// values. Graph-owned: the shape mirrors UsersTable and is populated from
+// GraphUser via FromGraphUser.
 type User struct {
 	UpdatedAt         time.Time      `db:"UpdatedAt" json:"updatedAt"`
 	CreatedAt         time.Time      `db:"CreatedAt" json:"createdAt"`
@@ -31,13 +33,21 @@ type User struct {
 func (u *User) FromGraphUser(graphUser *GraphUser) {
 	u.AzureID = graphUser.AzureID
 	u.UserPrincipalName = graphUser.UserPrincipalName
-	u.GivenName = ToNullString(graphUser.GivenName)
-	u.Surname = ToNullString(graphUser.Surname)
-	u.DisplayName = ToNullString(graphUser.DisplayName)
-	u.Mail = ToNullString(graphUser.Mail)
-	u.JobTitle = ToNullString(graphUser.JobTitle)
-	u.OfficeLocation = ToNullString(graphUser.OfficeLocation)
-	u.Department = ToNullString(graphUser.Department)
-	u.CompanyName = ToNullString(graphUser.CompanyName)
-	u.AccountName = ToNullString(graphUser.AccountName)
+	u.GivenName = toNullString(graphUser.GivenName)
+	u.Surname = toNullString(graphUser.Surname)
+	u.DisplayName = toNullString(graphUser.DisplayName)
+	u.Mail = toNullString(graphUser.Mail)
+	u.JobTitle = toNullString(graphUser.JobTitle)
+	u.OfficeLocation = toNullString(graphUser.OfficeLocation)
+	u.Department = toNullString(graphUser.Department)
+	u.CompanyName = toNullString(graphUser.CompanyName)
+	u.AccountName = toNullString(graphUser.AccountName)
+}
+
+// toNullString treats an empty string as NULL.
+func toNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{}
+	}
+	return sql.NullString{String: s, Valid: true}
 }

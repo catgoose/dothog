@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"catgoose/dothog/internal/domain"
-
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/microsoft/kiota-abstractions-go"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
@@ -46,7 +44,7 @@ func consistencyLevelHeaders() *abstractions.RequestHeaders {
 }
 
 // FetchAllEnabledUsers pages through every accountEnabled=true user (top=999, eventual consistency) and returns a flattened slice.
-func (c *Client) FetchAllEnabledUsers() ([]domain.GraphUser, error) {
+func (c *Client) FetchAllEnabledUsers() ([]GraphUser, error) {
 	ctx := context.Background()
 	filter := "accountEnabled eq true"
 	selectCols := []string{"id", "displayName", "userPrincipalName", "mail", "officeLocation", "department", "givenName", "surname", "companyName", "jobTitle"}
@@ -70,7 +68,7 @@ func (c *Client) FetchAllEnabledUsers() ([]domain.GraphUser, error) {
 	if err != nil {
 		return nil, fmt.Errorf("page iterator: %w", err)
 	}
-	var all []domain.GraphUser
+	var all []GraphUser
 	err = pageIterator.Iterate(ctx, func(user models.Userable) bool {
 		all = append(all, userableToGraphUser(user))
 		return true
@@ -81,8 +79,8 @@ func (c *Client) FetchAllEnabledUsers() ([]domain.GraphUser, error) {
 	return all, nil
 }
 
-func userableToGraphUser(u models.Userable) domain.GraphUser {
-	g := domain.GraphUser{}
+func userableToGraphUser(u models.Userable) GraphUser {
+	g := GraphUser{}
 	if u == nil {
 		return g
 	}

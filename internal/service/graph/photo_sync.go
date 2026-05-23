@@ -6,14 +6,13 @@ import (
 	"context"
 	"time"
 
-	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/logger"
 )
 
 // SyncPhotos downloads profile photos for the given users into store.
 // It skips users who already have a cached photo unless force is true.
 // Requests are throttled to avoid hitting Graph rate limits.
-func SyncPhotos(ctx context.Context, client *Client, store *PhotoStore, users []domain.GraphUser, force bool) error {
+func SyncPhotos(ctx context.Context, client *Client, store *PhotoStore, users []GraphUser, force bool) error {
 	log := logger.WithContext(ctx)
 	var downloaded, skipped, noPhoto, errCount int
 

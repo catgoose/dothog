@@ -46,13 +46,10 @@ const (
 	FeatureSessionSettings = "session_settings"
 	FeatureAlpine          = "alpine"
 	FeatureCapacitor       = "capacitor"
-	FeatureOffline         = "offline"
-	FeatureSync            = "sync"
 	FeatureCSRF            = "csrf"
 	FeatureLinkRelations   = "link_relations"
 	FeatureWebStandards    = "web_standards"
 	FeatureBrowserAPIs     = "browser_apis"
-	FeaturePWA             = "pwa"
 )
 
 // AllFeatures is the canonical feature tag list used for marker bookkeeping
@@ -60,23 +57,22 @@ const (
 // list because it tracks the always-on chuck-backed repository layer, but it
 // is hidden from the wizard surface in mage_setup.go (no label / no order
 // entry); users choose MSSQL/PostgreSQL instead, which imply it.
-var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureOffline, FeatureSync, FeatureCSRF, FeatureLinkRelations, FeatureWebStandards, FeatureBrowserAPIs, FeaturePWA}
+var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureCSRF, FeatureLinkRelations, FeatureWebStandards, FeatureBrowserAPIs}
 
 // ImplicitFeatures are always selected and not presented to the user.
-// "database" is implicit because the chuck-backed repository layer is the base
-// app-data path; MSSQL/PostgreSQL ride on top.
 // "alpine" is implicit because Alpine.js is kept available for coordinated view state
-// and browser-API bridges (theme picker, offline indicator). _hyperscript handles the
+// and browser-API bridges (theme picker). _hyperscript handles the
 // common local-DOM case and ships with HTMX.
-var ImplicitFeatures = []string{FeatureDatabase, FeatureAlpine}
+// "database" is intentionally NOT implicit: the chuck-backed app-data seam
+// (internal/dbschema) only ships when the user picks MSSQL or PostgreSQL,
+// which imply "database" via featureDeps.
+var ImplicitFeatures = []string{FeatureAlpine}
 
 // featureDeps maps a feature to the features it implies.
-// pwa -> sync -> offline.  capacitor is a separate opt-in for native wrapping.
+// capacitor is an opt-in native wrapper.
 // MSSQL/PostgreSQL imply the implicit "database" feature, making the relationship
 // explicit even though database is always kept.
 var featureDeps = map[string][]string{
-	FeatureSync:          {FeatureOffline},
-	FeaturePWA:           {FeatureOffline, FeatureSync},
 	FeatureDemo:          {FeatureSessionSettings},
 	FeatureMSSQL:         {FeatureDatabase},
 	FeaturePostgres:      {FeatureDatabase},
@@ -86,7 +82,7 @@ var featureDeps = map[string][]string{
 	FeatureWebStandards:  {},
 }
 
-// ExpandFeatureDeps walks featureDeps to a fixed point; e.g. "sync" pulls in "offline".
+// ExpandFeatureDeps walks featureDeps to a fixed point.
 func ExpandFeatureDeps(features []string) []string {
 	have := make(map[string]bool, len(features))
 	for _, f := range features {
@@ -457,11 +453,8 @@ func Run(ctx context.Context, dir string, opts Options) error {
 	}
 
 	// Replace {{BINARY_NAME}} placeholder in JS and Go source files so that
-	// derived apps get unique cache names, IndexedDB databases, cookie names,
-	// and BroadcastChannel identifiers.
+	// derived apps get unique cookie names and BroadcastChannel identifiers.
 	for _, f := range []string{
-		filepath.Join("web", "assets", "public", "js", "sw.js"),
-		filepath.Join("web", "assets", "public", "js", "sync.js"),
 		filepath.Join("web", "assets", "public", "js", "broadcast.js"),
 		filepath.Join("internal", "session", "session.go"),
 	} {
@@ -1197,22 +1190,22 @@ var featureDescriptions = map[string]struct{ label, desc string }{
 	FeatureAuth:            {"Auth (Crooner)", "Azure AD / OIDC authentication via crooner"},
 	FeatureGraph:           {"Graph API", "Microsoft Graph API integration for user data"},
 	FeatureAvatar:          {"Avatar Photos", "User profile photo download and caching from Graph"},
-	FeatureDatabase:        {"App data (chuck)", "Repository layer with schema DSL (SQLite base) — implicit, included with MSSQL/PostgreSQL"},
-	FeatureMSSQL:           {"MSSQL", "Microsoft SQL Server support (chuck-backed app data)"},
-	FeaturePostgres:        {"PostgreSQL", "PostgreSQL support (chuck-backed app data)"},
+	// FeatureDatabase is intentionally omitted from the description map: it
+	// tracks the always-on chuck-backed repository layer for marker bookkeeping
+	// and never surfaces in user-facing output. MSSQL/PostgreSQL imply it via
+	// featureDeps.
+	FeatureMSSQL:    {"MSSQL", "Microsoft SQL Server support (chuck-backed app data)"},
+	FeaturePostgres: {"PostgreSQL", "PostgreSQL support (chuck-backed app data)"},
 	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration"},
 	FeatureCaddy:           {"Caddy HTTPS/H3 front-proxy", "Optional HTTPS/H3 front-proxy that sits in front of the templ watcher for local dev. Without it, dev runs plain HTTP."},
 	FeatureDemo:            {"Demo Content", "Demo pages, seed data, and example routes"},
 	FeatureSessionSettings: {"Session Settings", "Per-session theme and layout preferences"},
 	FeatureAlpine:          {"Alpine.js", "Coordinated view state and browser-API bridges"},
 	FeatureCapacitor:       {"Capacitor", "Native mobile wrapper (iOS/Android)"},
-	FeatureOffline:         {"Offline Mode", "Service worker and write queue for offline use"},
-	FeatureSync:            {"Sync", "SQLite data synchronization between client and server"},
 	FeatureCSRF:            {"CSRF Protection", "Token-based CSRF with optional per-request rotation"},
 	FeatureLinkRelations:   {"Link Relations", "Context bars, breadcrumbs, and site map"},
 	FeatureWebStandards:    {"Web Standards", "Server-Timing, Vary, Permissions-Policy, Early Hints"},
 	FeatureBrowserAPIs:     {"Browser APIs", "sendBeacon, BroadcastChannel integration"},
-	FeaturePWA:             {"PWA", "Progressive Web App with offline + sync support"},
 }
 
 // buildFeatureTable generates a markdown table of enabled features for the README.
@@ -1283,7 +1276,7 @@ This app uses [crooner](https://github.com/catgoose/crooner) for Azure AD / Entr
 - ` + "`AZURE_REDIRECT_URL`" + `, ` + "`AZURE_LOGIN_REDIRECT_URL`" + `, ` + "`AZURE_LOGOUT_REDIRECT_URL`" + ` -- OAuth flow URLs
 - ` + "`SESSION_SECRET`" + ` -- session encryption key
 
-Auth is disabled by default (` + "`CroonerDisabled = true`" + ` in config). Set it to ` + "`false`" + ` to enable.
+Auth stays off until the derived app supplies the complete prerequisite set in the environment: ` + "`OIDC_ISSUER_URL`" + `, ` + "`OIDC_CLIENT_ID`" + `, ` + "`OIDC_CLIENT_SECRET`" + `, ` + "`OIDC_REDIRECT_URL`" + ` and ` + "`SESSION_SECRET`" + `. Partial configs leave auth off without failing startup. Routes consult ` + "`cfg.AuthConfigured()`" + ` to decide whether to bootstrap crooner.
 
 `)
 	}
@@ -1321,19 +1314,6 @@ Caddy sits in front of the templ watcher and provides HTTPS/H3 for local develop
 Capacitor wraps the web app for native iOS/Android deployment. Configuration is in ` + "`capacitor.config.ts`" + `.
 
 `)
-	}
-
-	if keep[FeatureOffline] || keep[FeatureSync] || keep[FeaturePWA] {
-		sb.WriteString(`### Offline & Sync
-
-`)
-		if keep[FeaturePWA] {
-			sb.WriteString("This app is configured as a **Progressive Web App** with offline support and data synchronization.\n\n")
-		} else if keep[FeatureSync] {
-			sb.WriteString("Data synchronization is enabled between client SQLite and server.\n\n")
-		} else {
-			sb.WriteString("Offline mode is enabled with service worker caching and a write queue.\n\n")
-		}
 	}
 
 	return sb.String()
@@ -1454,7 +1434,7 @@ func buildEnvTable(features []string, appName, appHTTPPort string) string {
 	sb.WriteString("| `DATABASE_URL` | Database connection string (database enabled when set) | -- |\n")
 
 	if keep[FeatureSessionSettings] {
-		sb.WriteString("| `SESSION_SETTINGS_COOKIE_NAME` | Cookie name for session-backed theme/layout settings | " + session.DefaultCookieName(appName) + " |\n")
+		sb.WriteString("| `SESSION_SETTINGS_COOKIE_NAME` | Cookie name for session-backed theme/layout settings — required when session_settings is enabled (setup writes a default into `.env.development`) | " + session.DefaultCookieName(appName) + " |\n")
 	}
 
 	// Auth

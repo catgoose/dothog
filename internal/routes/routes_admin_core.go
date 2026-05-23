@@ -1,17 +1,6 @@
 package routes
 
 import (
-	// setup:feature:demo:start
-	"fmt"
-	"runtime"
-	"runtime/pprof"
-	"time"
-
-	"catgoose/dothog/internal/admininfo"
-	"catgoose/dothog/internal/config"
-	"catgoose/dothog/internal/version"
-	// setup:feature:demo:end
-
 	"catgoose/dothog/internal/health"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
@@ -19,189 +8,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// initAdminCoreRoutes registers the scaffold-facing admin pages every derived
+// app inherits: the admin index, the structured health page and HTMX
+// fragment, and the debug page. Demo-only admin pages (/admin/system,
+// /admin/config, …) live in routes_admin_demo.go; session-settings admin
+// (DELETE/list) lives in routes_admin_sessions.go.
 func (ar *AppRoutes) initAdminCoreRoutes() {
 	ar.e.GET("/admin", handler.HandleComponent(views.AdminIndexPage()))
 	ar.e.GET("/admin/health", ar.handleAdminHealth)
 	ar.e.GET("/admin/health/check", ar.handleAdminHealthCheck)
 	ar.e.GET("/admin/debug", handler.HandleComponent(views.AdminDebugPage()))
-	// setup:feature:demo:start
-	ar.e.GET("/admin/system", ar.handleSystemInfo)
-	ar.e.GET("/admin/system/check-update", ar.handleCheckUpdate)
-	ar.e.GET("/admin/config", ar.handleConfigInfo)
-	// setup:feature:demo:end
-	// setup:feature:session_settings:start
-	ar.e.GET("/admin/sessions", ar.handleSessionsPage)
-	ar.e.GET("/admin/sessions/table", ar.handleSessionsTable)
-	ar.e.DELETE("/admin/sessions/:uuid", ar.handleSessionsDelete)
-	// setup:feature:session_settings:end
 }
 
-// setup:feature:demo:start
-
-func (ar *AppRoutes) handleSystemInfo(c echo.Context) error {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-
-	numThread := 0
-	if p := pprof.Lookup("threadcreate"); p != nil {
-		numThread = p.Count()
-	}
-
-	info := admininfo.SystemInfo{
-		Version:    version.Version,
-		GoVersion:  runtime.Version(),
-		OS:         runtime.GOOS,
-		Arch:       runtime.GOARCH,
-		NumCPU:     runtime.NumCPU(),
-		Goroutines: runtime.NumGoroutine(),
-		NumThread:  numThread,
-		Uptime:     formatUptime(time.Since(ar.startTime)),
-
-		HeapAllocMB:  fmt.Sprintf("%.1f MB", float64(ms.HeapAlloc)/1024/1024),
-		HeapSysMB:    fmt.Sprintf("%.1f MB", float64(ms.HeapSys)/1024/1024),
-		StackInUseMB: fmt.Sprintf("%.1f MB", float64(ms.StackInuse)/1024/1024),
-		SysMB:        fmt.Sprintf("%.1f MB", float64(ms.Sys)/1024/1024),
-		TotalAllocMB: fmt.Sprintf("%.1f MB", float64(ms.TotalAlloc)/1024/1024),
-
-		GCCycles:        ms.NumGC,
-		LastPauseMicros: ms.PauseNs[(ms.NumGC+255)%256] / 1000,
-		NextGCMB:        fmt.Sprintf("%.1f MB", float64(ms.NextGC)/1024/1024),
-		HeapObjects:     ms.HeapObjects,
-		LiveObjects:     ms.Mallocs - ms.Frees,
-	}
-
-	return handler.RenderBaseLayout(c, views.AdminSystemPage(info))
-}
-
-func (ar *AppRoutes) handleCheckUpdate(c echo.Context) error {
-	info, err := version.CheckLatest(c.Request().Context())
-	if err != nil {
-		return handler.RenderComponent(c, views.UpdateCheckResult(version.UpdateInfo{
-			Current: version.Version,
-		}, err))
-	}
-	return handler.RenderComponent(c, views.UpdateCheckResult(info, nil))
-}
-
-func (ar *AppRoutes) handleConfigInfo(c echo.Context) error {
-	cfg, err := config.GetConfig()
-	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load config", err)
-	}
-
-	entries := []admininfo.ConfigEntry{
-		{Key: "SERVER_LISTEN_PORT", Value: cfg.ServerPort},
-		{Key: "APP_NAME", Value: defaultStr(cfg.AppName, "(not set)")},
-		// setup:feature:database:start
-		{Key: "DATABASE_URL", Value: defaultStr(cfg.DatabaseURL, "(not set)")},
-		// setup:feature:database:end
-		// setup:feature:auth:start
-		{Key: "CROONER_DISABLED", Value: fmt.Sprintf("%t", cfg.CroonerDisabled)},
-		{Key: "SESSION_SECRET", Value: maskSecret(cfg.SessionSecret)},
-		// setup:feature:auth:end
-		// setup:feature:csrf:start
-		{Key: "CSRF_ROTATE_PER_REQUEST", Value: fmt.Sprintf("%t", cfg.CSRFRotatePerRequest)},
-		// setup:feature:csrf:end
-	}
-	// setup:feature:csrf:start
-	if len(cfg.CSRFPerRequestPaths) > 0 {
-		entries = append(entries, admininfo.ConfigEntry{Key: "CSRF_PER_REQUEST_PATHS", Value: fmt.Sprintf("%v", cfg.CSRFPerRequestPaths)})
-	}
-	if len(cfg.CSRFExemptPaths) > 0 {
-		entries = append(entries, admininfo.ConfigEntry{Key: "CSRF_EXEMPT_PATHS", Value: fmt.Sprintf("%v", cfg.CSRFExemptPaths)})
-	}
-	// setup:feature:csrf:end
-
-	return handler.RenderBaseLayout(c, views.AdminConfigPage(entries))
-}
-
-// setup:feature:demo:end
-
-// setup:feature:session_settings:start
-
-func (ar *AppRoutes) handleSessionsPage(c echo.Context) error {
-	if ar.repos.SessionSettings == nil {
-		return handler.HandleHypermediaError(c, 500, "Session settings not configured", nil)
-	}
-	sessions, err := ar.repos.SessionSettings.ListAll(c.Request().Context())
-	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load sessions", err)
-	}
-	return handler.RenderBaseLayout(c, views.AdminSessionsPage(sessions))
-}
-
-func (ar *AppRoutes) handleSessionsTable(c echo.Context) error {
-	if ar.repos.SessionSettings == nil {
-		return handler.HandleHypermediaError(c, 500, "Session settings not configured", nil)
-	}
-	sessions, err := ar.repos.SessionSettings.ListAll(c.Request().Context())
-	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load sessions", err)
-	}
-	return handler.RenderComponent(c, views.AdminSessionsTable(sessions))
-}
-
-// handleSessionsDelete drops a session_settings row and returns the refreshed
-// table so HTMX can swap it in place. The DELETE-By-UUID path is idempotent,
-// so duplicate clicks and stale fragments don't 4xx.
-func (ar *AppRoutes) handleSessionsDelete(c echo.Context) error {
-	if ar.repos.SessionSettings == nil {
-		return handler.HandleHypermediaError(c, 500, "Session settings not configured", nil)
-	}
-	uuid := c.Param("uuid")
-	if uuid == "" {
-		return handler.HandleHypermediaError(c, 400, "Missing session uuid", nil)
-	}
-	if err := ar.repos.SessionSettings.DeleteByUUID(c.Request().Context(), uuid); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to delete session", err)
-	}
-	sessions, err := ar.repos.SessionSettings.ListAll(c.Request().Context())
-	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload sessions", err)
-	}
-	return handler.RenderComponent(c, views.AdminSessionsTable(sessions))
-}
-
-// setup:feature:session_settings:end
-
-// setup:feature:demo:start
-
-func formatUptime(d time.Duration) string {
-	days := int(d.Hours()) / 24
-	hours := int(d.Hours()) % 24
-	mins := int(d.Minutes()) % 60
-	secs := int(d.Seconds()) % 60
-	if days > 0 {
-		return fmt.Sprintf("%dd %dh %dm %ds", days, hours, mins, secs)
-	}
-	if hours > 0 {
-		return fmt.Sprintf("%dh %dm %ds", hours, mins, secs)
-	}
-	if mins > 0 {
-		return fmt.Sprintf("%dm %ds", mins, secs)
-	}
-	return fmt.Sprintf("%ds", secs)
-}
-
-func maskSecret(s string) string {
-	if s == "" {
-		return "(not set)"
-	}
-	return "***REDACTED***"
-}
-
-func defaultStr(s, fallback string) string {
-	if s == "" {
-		return fallback
-	}
-	return s
-}
-
-// setup:feature:demo:end
-
-// healthIntervalsFn returns the current admin interval snapshot. It defaults
-// to a no-op nil-returning function and is overridden in init() inside the
-// feature-gated routes_admin_settings.go when the demo feature is present.
+// healthIntervalsFn returns the current admin interval snapshot. Defaults to
+// a no-op nil-returning function and is overridden in init() inside the
+// demo-gated routes_admin_settings.go when the demo feature is present.
 var healthIntervalsFn = func() map[string]int { return nil }
 
 func (ar *AppRoutes) handleAdminHealth(c echo.Context) error {

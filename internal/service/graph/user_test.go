@@ -1,5 +1,5 @@
 // setup:feature:graph
-package domain
+package graph
 
 import (
 	"testing"

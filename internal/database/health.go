@@ -1,6 +1,4 @@
-// setup:feature:database
-
-package repository
+package database
 
 import (
 	"context"

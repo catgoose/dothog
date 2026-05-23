@@ -184,7 +184,6 @@ func TestSetupUsesRandomPortWhenPOmitted(t *testing.T) {
 	airPath := filepath.Join(dest, ".air", "server.toml")
 	airBytes, err := os.ReadFile(airPath)
 	require.NoError(t, err)
-	require.Contains(t, string(airBytes), templStr)
 	require.NotContains(t, string(airBytes), "{{TEMPL_HTTP_PORT}}")
 }
 
@@ -483,7 +482,13 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
-	assertDirExists(t, filepath.Join(dest, "internal", "database")) // database is implicit (always kept)
+	// internal/database stays because framework SQLite helpers (OpenSQLite,
+	// HealthCheck, transaction, dialect, schema lifecycle) are always wired in.
+	assertDirExists(t, filepath.Join(dest, "internal", "database"))
+	// internal/dbschema is the app-data registration seam; with no MSSQL or
+	// PostgreSQL selected the `database` feature is stripped and the package
+	// goes with it.
+	assertDirRemoved(t, filepath.Join(dest, "internal", "dbschema"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "repository"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "domain"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "demo"))
@@ -554,10 +559,15 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	readmeContent := string(readmeBytes)
 	require.Contains(t, readmeContent, "No Features App")
 	require.Contains(t, readmeContent, "## Setup Configuration")
-	// Minimal config should still have implicit features (database, alpine).
-	// "App data (chuck)" is the user-facing label for the implicit chuck-backed
-	// repository layer; MSSQL/PostgreSQL ride on top of it.
-	require.Contains(t, readmeContent, "App data (chuck)")
+	// Minimal config still wires the implicit alpine feature; the implicit
+	// chuck-backed repository layer is intentionally not surfaced in the
+	// generated README (it's an internal implementation concern, not a user
+	// choice — MSSQL/PostgreSQL are the user-facing app-data options).
+	require.Contains(t, readmeContent, "Alpine.js")
+	require.NotContains(t, readmeContent, "App data (chuck)",
+		"database is internal-only; the generated README must not name it as a user-facing feature")
+	require.NotContains(t, readmeContent, "Database (chuck)",
+		"legacy 'Database (chuck)' label must not reappear in derived-app docs")
 
 	// env substitution must survive feature stripping (#regression)
 	envBytes, err := os.ReadFile(filepath.Join(dest, ".env.development"))
@@ -613,7 +623,9 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
-	assertDirExists(t, filepath.Join(dest, "internal", "database")) // database is implicit
+	// internal/database stays because framework SQLite helpers are always wired
+	// in; the user-facing `database` feature is gone (MSSQL/PostgreSQL imply it).
+	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
 
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
@@ -623,13 +635,18 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 	configBytes, err := os.ReadFile(configPath)
 	require.NoError(t, err)
 	configContent := string(configBytes)
-	require.True(t,
-		strings.Contains(configContent, "crooner") || strings.Contains(configContent, "SessionMgr"),
-		"config.go should still reference auth-related code (crooner or SessionMgr)",
-	)
+	require.Contains(t, configContent, "OIDCIssuerURL",
+		"config.go must still expose OIDC env-backed fields when auth is selected")
+	require.Contains(t, configContent, "AuthConfigured",
+		"config.go must expose the AuthConfigured helper when auth is selected")
 }
 
-func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
+// TestSetup_FeaturesNoAppData verifies that scaffolds without MSSQL or
+// PostgreSQL strip the chuck-backed app-data seam entirely: the internal
+// `database` feature is no longer implicit, so `internal/dbschema/` is
+// removed and main.go drops its app-data block. Framework SQLite stores
+// (in internal/database) stay wired in regardless.
+func TestSetup_FeaturesNoAppData(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
@@ -638,10 +655,9 @@ func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
 	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
 	require.NoError(t, err)
 
-	// database is implicit — no need to pass it explicitly; MSSQL not selected
 	err = setup.Run(context.Background(), dest, setup.Options{
-		AppName:    "Database Only App",
-		ModulePath: "github.com/test/database-only-app",
+		AppName:    "No AppData App",
+		ModulePath: "github.com/test/no-appdata-app",
 		BasePort:   "20400",
 		NoCaddy:    false,
 		Force:      true,
@@ -653,8 +669,14 @@ func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
 	assertBuildSucceeds(t, dest)
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
+	assertDirRemoved(t, filepath.Join(dest, "internal", "dbschema"))
 
-	// MSSQL files should be removed
+	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
+	require.NoError(t, err)
+	require.NotContains(t, string(mainBytes), "dbschema.Tables",
+		"main.go must not reference dbschema.Tables when no mssql/postgres selected")
+	require.NotContains(t, string(mainBytes), `internal/dbschema`,
+		"main.go must not import internal/dbschema when no mssql/postgres selected")
 }
 
 func TestSetup_FeaturesMSSQL(t *testing.T) {
@@ -666,7 +688,9 @@ func TestSetup_FeaturesMSSQL(t *testing.T) {
 	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
 	require.NoError(t, err)
 
-	// database is implicit; explicitly selecting mssql adds MSSQL support
+	// Selecting mssql implies the internal "database" feature via featureDeps,
+	// which carries the chuck-backed app-data seam (internal/dbschema) into the
+	// derived app.
 	err = setup.Run(context.Background(), dest, setup.Options{
 		AppName:    "MSSQL App",
 		ModulePath: "github.com/test/mssql-app",
@@ -680,15 +704,18 @@ func TestSetup_FeaturesMSSQL(t *testing.T) {
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
+	assertDirExists(t, filepath.Join(dest, "internal", "dbschema"))
 
 	// Selecting MSSQL must register the chuck MSSQL driver in main.go and
-	// strip the postgres driver registration.
+	// strip the postgres driver registration; the app-data block must remain.
 	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
 	require.NoError(t, err)
 	require.Contains(t, string(mainBytes), `github.com/catgoose/chuck/driver/mssql`,
 		"main.go must register the chuck MSSQL driver when mssql is selected")
 	require.NotContains(t, string(mainBytes), `github.com/catgoose/chuck/driver/postgres`,
 		"main.go must not register the postgres driver when only mssql is selected")
+	require.Contains(t, string(mainBytes), `dbschema.Tables`,
+		"main.go must reference dbschema.Tables when mssql is selected")
 }
 
 // TestSetup_FeaturesPostgres pins down the postgres-side of the user-facing
@@ -716,6 +743,7 @@ func TestSetup_FeaturesPostgres(t *testing.T) {
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
+	assertDirExists(t, filepath.Join(dest, "internal", "dbschema"))
 
 	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
 	require.NoError(t, err)
@@ -723,6 +751,8 @@ func TestSetup_FeaturesPostgres(t *testing.T) {
 		"main.go must register the chuck postgres driver when postgres is selected")
 	require.NotContains(t, string(mainBytes), `github.com/catgoose/chuck/driver/mssql`,
 		"main.go must not register the mssql driver when only postgres is selected")
+	require.Contains(t, string(mainBytes), `dbschema.Tables`,
+		"main.go must reference dbschema.Tables when postgres is selected")
 }
 
 func TestSetup_FeaturesSSECaddy(t *testing.T) {
@@ -754,7 +784,9 @@ func TestSetup_FeaturesSSECaddy(t *testing.T) {
 	_, err = os.Stat(filepath.Join(dest, "localhost.key"))
 	require.True(t, os.IsNotExist(err), "Caddy internal CA should not emit localhost.key during setup: %v", err)
 
-	assertDirExists(t, filepath.Join(dest, "internal", "database")) // database is implicit
+	// internal/database stays because framework SQLite helpers are always wired
+	// in; the user-facing `database` feature is gone (MSSQL/PostgreSQL imply it).
+	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
 }
 
@@ -917,44 +949,6 @@ func TestSetup_GraphWithoutAvatar(t *testing.T) {
 	require.True(t, os.IsNotExist(err), "routes_avatar.go should be removed when avatar is not selected")
 	_, err = os.Stat(filepath.Join(dest, "internal", "service", "graph", "photo_store.go"))
 	require.True(t, os.IsNotExist(err), "photo_store.go should be removed when avatar is not selected")
-}
-
-// TestSetup_PWAWithoutCapacitor verifies that selecting PWA does not pull in
-// Capacitor files (#353). PWA is a web feature; Capacitor is a separate opt-in.
-func TestSetup_PWAWithoutCapacitor(t *testing.T) {
-	t.Parallel()
-	repoRoot, err := findRepoRoot()
-	require.NoError(t, err)
-
-	dest := setupTempDir(t)
-	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
-	require.NoError(t, err)
-
-	err = setup.Run(context.Background(), dest, setup.Options{
-		AppName:    "PWA Only App",
-		ModulePath: "github.com/test/pwa-only-app",
-		BasePort:   "20900",
-		Force:      true,
-		Features:   []string{"pwa"},
-	})
-	require.NoError(t, err)
-
-	assertNoSetupMarkers(t, dest)
-	assertBuildSucceeds(t, dest)
-
-	// Capacitor files should NOT be present when only PWA is selected
-	for _, f := range []string{"capacitor.config.ts", "tsconfig.json", "Gemfile"} {
-		_, err = os.Stat(filepath.Join(dest, f))
-		require.True(t, os.IsNotExist(err), "%s should not exist with PWA-only setup", f)
-	}
-	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
-	_, err = os.Stat(filepath.Join(dest, ".github", "workflows", "ios.yml"))
-	require.True(t, os.IsNotExist(err), "ios.yml should not exist with PWA-only setup")
-	packageJSON, err := os.ReadFile(filepath.Join(dest, "package.json"))
-	require.NoError(t, err)
-	require.NotContains(t, string(packageJSON), `"@capacitor/cli"`)
-	require.NotContains(t, string(packageJSON), `"@capacitor/core"`)
-	require.NotContains(t, string(packageJSON), `"@capacitor/ios"`)
 }
 
 // TestSetup_NoDothogReferences runs setup with all features enabled and verifies

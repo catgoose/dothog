@@ -1,17 +1,16 @@
-// setup:feature:database
-package repository
+package database
 
 import (
 	"context"
 	"testing"
 
-	"github.com/jmoiron/sqlx"
 	_ "github.com/catgoose/chuck/driver/sqlite"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func openSQLiteInMemory(t *testing.T) *sqlx.DB {
+func openSQLiteInMemoryForTest(t *testing.T) *sqlx.DB {
 	t.Helper()
 	db, err := sqlx.Open("sqlite3", ":memory:")
 	require.NoError(t, err)
@@ -20,14 +19,14 @@ func openSQLiteInMemory(t *testing.T) *sqlx.DB {
 }
 
 func TestHealthCheck_Success(t *testing.T) {
-	db := openSQLiteInMemory(t)
+	db := openSQLiteInMemoryForTest(t)
 	ctx := context.Background()
 	err := HealthCheck(ctx, db)
 	require.NoError(t, err)
 }
 
 func TestHealthCheck_ClosedDB(t *testing.T) {
-	db := openSQLiteInMemory(t)
+	db := openSQLiteInMemoryForTest(t)
 	require.NoError(t, db.Close())
 	ctx := context.Background()
 	err := HealthCheck(ctx, db)
@@ -36,7 +35,7 @@ func TestHealthCheck_ClosedDB(t *testing.T) {
 }
 
 func TestCheckConnection_Success(t *testing.T) {
-	db := openSQLiteInMemory(t)
+	db := openSQLiteInMemoryForTest(t)
 	ctx := context.Background()
 	ok, err := CheckConnection(ctx, db)
 	require.NoError(t, err)
@@ -44,7 +43,7 @@ func TestCheckConnection_Success(t *testing.T) {
 }
 
 func TestCheckConnection_ClosedDB(t *testing.T) {
-	db := openSQLiteInMemory(t)
+	db := openSQLiteInMemoryForTest(t)
 	require.NoError(t, db.Close())
 	ctx := context.Background()
 	ok, err := CheckConnection(ctx, db)

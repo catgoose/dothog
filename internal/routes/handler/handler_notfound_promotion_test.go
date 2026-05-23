@@ -22,7 +22,7 @@ type recordingStore struct {
 	mu        sync.Mutex
 }
 
-func (s *recordingStore) InitSchema() error                           { return nil }
+func (s *recordingStore) EnsureSchema() error                         { return nil }
 func (s *recordingStore) SetOnPromote(fn func(promolog.TraceSummary)) { s.onPromote = fn }
 func (s *recordingStore) PromoteAt(_ context.Context, t promolog.Trace, _ time.Time) error {
 	return s.Promote(context.Background(), t)

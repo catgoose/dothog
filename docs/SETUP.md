@@ -42,7 +42,7 @@ file works on either host.
 ## What Setup Does
 
 1. **Rewrites module path** — replaces `catgoose/dothog` with your module path in all `.go` files and `go.mod`
-2. **Configures ports** — sets `APP_HTTP_PORT`, `TEMPL_HTTP_PORT` (base+1), `CADDY_TLS_PORT` (base+2) in `.env.development`, Caddyfile, air config
+2. **Configures ports** — sets `APP_HTTP_PORT`, `TEMPL_HTTP_PORT` (base+1), `CADDY_TLS_PORT` (base+2) in `.env.development`, `magefile.go`, and Caddyfile when present
 3. **Sets app name** — updates binary name in `magefile.go`, Dockerfile, logger, package.json
 4. **Strips features** — removes code blocks and files for features you didn't select
 5. **Generates README** — from `_template_setup/README.template.md` with your app name and ports
@@ -82,47 +82,40 @@ If `sse` is not selected, everything between `:start` and `:end` (inclusive) is 
 | `auth` | Auth (Crooner) | — | OAuth/OIDC authentication via crooner |
 | `graph` | Graph API | — | Microsoft Graph API integration |
 | `avatar` | Avatar Photos | — | User avatar fetching (requires graph selected separately) |
-| `mssql` | MSSQL (Microsoft SQL Server) | database (implicit) | Chuck-backed app data with MSSQL support |
-| `postgres` | PostgreSQL | database (implicit) | Chuck-backed app data with PostgreSQL support |
+| `mssql` | MSSQL (Microsoft SQL Server) | — | Chuck-backed app data with MSSQL support |
+| `postgres` | PostgreSQL | — | Chuck-backed app data with PostgreSQL support |
 | `sse` | SSE | — | Server-Sent Events (requires caddy selected separately) |
 | `caddy` | Caddy HTTPS/H3 front-proxy | — | Optional HTTPS/H3 front-proxy in front of templ. Without it dev runs plain HTTP. |
 | `link_relations` | Link Relations | — | Context bars, breadcrumbs, site map |
 | `web_standards` | Web Standards | — | Server-Timing, Vary, Permissions-Policy, Early Hints |
 | `browser_apis` | Browser APIs | sse | sendBeacon and BroadcastChannel support (auto-includes sse) |
 | `capacitor` | Capacitor | — | Capacitor mobile wrapper |
-| `offline` | Offline | — | Offline-first with service worker and write queue |
-| `sync` | Sync | offline | SQLite sync between client and server (auto-includes offline) |
-| `pwa` | PWA | offline, sync | Progressive Web App — offline + sync + mobile (auto-includes offline and sync) |
 | `demo` | Demo Content | session_settings | Demo pages, SQLite seed data, example routes (auto-includes session_settings) |
 
 ### Implicit Features
 
-`database` and `alpine` are always included and not presented in the wizard. The chuck-backed repository layer is the base app-data path; MSSQL and PostgreSQL ride on top of it. `_hyperscript` is the default tool for client-side DOM behavior (loaded with HTMX); Alpine.js (CSP build) is kept available for coordinated view state and browser-API bridges — currently the theme picker and offline indicator. The CSP build eliminates `unsafe-eval` from Content Security Policy requirements; any remaining Alpine component is registered via `Alpine.data()` in `alpine-components.js`.
+`alpine` is always included and not presented in the wizard. `_hyperscript` is the default tool for client-side DOM behavior (loaded with HTMX); Alpine.js (CSP build) is kept available for coordinated view state and browser-API bridges, currently the theme picker. The CSP build eliminates `unsafe-eval` from Content Security Policy requirements; any remaining Alpine component is registered via `Alpine.data()` in `alpine-components.js`.
+
+The Chuck-backed app-data layer still exists as an internal setup marker for stripping/bookkeeping, but it is not a user-facing feature choice. Select `mssql` or `postgres` when you want app-data support for one of those engines.
 
 ### Feature Dependencies
 
 Dependencies are auto-resolved:
 - Selecting `browser_apis` auto-includes `sse`
-- Selecting `sync` auto-includes `offline`
-- Selecting `pwa` auto-includes `offline` and `sync`
 - Selecting `demo` auto-includes `session_settings`
-- Selecting `mssql` or `postgres` auto-includes the implicit `database` layer (chuck-backed app data)
 
 ## Interactive Wizard
 
 The wizard (`mage_setup.go`) uses [huh](https://github.com/charmbracelet/huh) for the TUI:
 
-1. **App Configuration** — name, module path, base port
-2. **Feature Selection** — multi-select with preselection (all except demo/alpine)
-3. **Force Confirm** — shown only if module is already customized
-4. **Final Confirmation** — summary of all selections
+1. **Target Directory** — choose where the derived app will be scaffolded
+2. **App Configuration** — name, module path, base port
+3. **Preset / Guided Flow** — pick a preset, the flat checklist, or the guided questions
+4. **Optional App Data Support** — in guided mode, choose `mssql`, `postgres`, or neither
+5. **Feature Questions / Checklist** — guided follow-up questions or the flat multi-select
+6. **Replacement Prompt** — if the target directory already exists and is non-empty, setup asks whether to remove and replace it
 
-### Copy-first Mode
-
-The wizard asks whether to copy the template to a new directory before setup. This is the recommended approach — it leaves the original template untouched for future use. The copy:
-- Excludes `.git`, `bin`, `build`, `tmp`
-- Removes setup-only files (`_template_setup/`, `internal/setup/`, `mage_setup.go`)
-- Optionally runs `git init` in the new directory
+Setup always scaffolds into the target directory rather than mutating the current template checkout. The copy excludes transient/template-only paths such as `.git`, `bin`, `build`, `tmp`, `_template_setup/`, `internal/setup/`, and `mage_setup.go`.
 
 ## CLI Flags
 
@@ -130,9 +123,9 @@ The wizard asks whether to copy the template to a new directory before setup. Th
 -n APP_NAME        Human-readable app name (required)
 -m MODULE_PATH     Go module path (default: github.com/you/<app-name>)
 -p BASE_PORT       5-digit base port < 60000
---features LIST    Comma-separated: auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor,offline,sync,pwa
+--features LIST    Comma-separated: auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor
                    "all" = keep everything, "none" = bare HTMX app
-                   Chuck-backed app data ("database") is implicit and always wired in.
+                   Selecting mssql or postgres auto-includes the internal Chuck-backed app-data layer.
 --no-caddy         Deprecated alias for omitting caddy from --features
 --force            Re-run setup on an already-customized module
 ```
@@ -155,6 +148,99 @@ After `mage setup` with `--features auth,caddy`:
 - All `// setup:feature:sse:start` ... `// setup:feature:sse:end` blocks are removed
 - Remaining code compiles cleanly with `go mod tidy`
 - The app has auth, SQLite, Caddy, and a clean starting point for your own routes
+
+## Adding App Data
+
+App-owned database tables are registered through `internal/dbschema`. The
+package ships empty — derived apps extend `Tables()` with their own
+`schema.TableDef`s and the runtime wires them into the chuck-backed
+`schema.Materializer` automatically. The package itself only ships when the
+derived app selects MSSQL or PostgreSQL during setup; scaffolds without
+app-data support never see it. Framework-owned tables (session settings,
+graph user cache, error traces) live in their own packages and are not
+registered here.
+
+1. Define a table next to the code that owns it (for example
+   `internal/orders/schema.go`):
+
+   ```go
+   package orders
+
+   import "<module>/internal/database/schema"
+
+   var Table = schema.NewTable("Orders").
+       Columns(
+           schema.AutoIncrCol("Id"),
+           schema.Col("CustomerId", schema.TypeInt()).NotNull(),
+           schema.Col("Total", schema.TypeInt()).NotNull(),
+       ).
+       WithTimestamps()
+   ```
+
+2. Register the table in `internal/dbschema/dbschema.go`:
+
+   ```go
+   func Tables() []*schema.TableDef {
+       return []*schema.TableDef{
+           orders.Table,
+       }
+   }
+   ```
+
+3. Build a concrete repository that holds `*sqlx.DB` directly. Run
+   single-statement queries via `GetContext` / `ExecContext` /
+   `SelectContext`; use `database.WithTransaction(ctx, dbx, fn)` for
+   multi-statement work. The chuck `dbrepo` package provides query-builder
+   helpers (`NewSelect`, `NewWhere`, `SetClause`, `InsertInto`):
+
+   ```go
+   package orders
+
+   import (
+       "context"
+       "database/sql"
+       "fmt"
+
+       "github.com/catgoose/chuck/dbrepo"
+       "github.com/jmoiron/sqlx"
+   )
+
+   type Repository struct {
+       db *sqlx.DB
+   }
+
+   func NewRepository(db *sqlx.DB) *Repository {
+       return &Repository{db: db}
+   }
+
+   func (r *Repository) GetByID(ctx context.Context, id int) (*Order, error) {
+       w := dbrepo.NewWhere().And("Id = @Id", sql.Named("Id", id))
+       query, args := dbrepo.NewSelect("Orders", dbrepo.Columns("Id", "CustomerId", "Total")).Where(w).Build()
+       var o Order
+       if err := r.db.GetContext(ctx, &o, query, args...); err != nil {
+           return nil, fmt.Errorf("get order: %w", err)
+       }
+       return &o, nil
+   }
+   ```
+
+   For multi-statement work, take a `*sqlx.Tx`:
+
+   ```go
+   err := database.WithTransaction(ctx, dbx, func(ctx context.Context, tx *sqlx.Tx) error {
+       if _, err := tx.ExecContext(ctx, "...", ...); err != nil {
+           return err
+       }
+       return nil
+   })
+   ```
+
+   `internal/repository/session_settings_repository.go` is the
+   framework-owned reference implementation of this pattern.
+
+`EnsureSchema` runs on every startup and is non-destructive. The template does
+not wire any built-in env flag for destructive `InitSchema` resets; derived
+apps that want that behavior must add their own gating logic.
 
 ## Custom Layouts
 

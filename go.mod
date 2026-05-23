@@ -11,7 +11,7 @@ require (
 	github.com/catgoose/crooner v1.4.16
 	github.com/catgoose/dorman v0.1.16
 	github.com/catgoose/linkwell v0.2.30
-	github.com/catgoose/promolog/sqlite v0.0.0-20260409215859-0fc0b83ab989
+	github.com/catgoose/promolog/sqlite v0.0.0-20260523035546-3cc188d4075a
 	github.com/catgoose/tavern v0.4.79
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -51,7 +51,7 @@ require (
 	github.com/bep/godartsass/v2 v2.5.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
 	github.com/catgoose/chuck v0.1.39
-	github.com/catgoose/promolog v0.2.28
+	github.com/catgoose/promolog v0.2.33
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

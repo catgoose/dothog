@@ -40,11 +40,8 @@ var featureLabels = map[string]string{
 	// Performance & Security
 	setup.FeatureWebStandards: "Web Standards (Server-Timing, Vary, Permissions-Policy, Early Hints)",
 	setup.FeatureBrowserAPIs:  "Browser APIs (sendBeacon, BroadcastChannel)",
-	// Mobile & Offline
+	// Mobile
 	setup.FeatureCapacitor: "Capacitor (mobile wrapper)",
-	setup.FeatureOffline:   "Offline Mode (service worker, write queue)",
-	setup.FeatureSync:      "Sync (offline data synchronization)",
-	setup.FeaturePWA:       "PWA (Progressive Web App — offline + sync + mobile)",
 	// Demo
 	setup.FeatureDemo: "Demo Content",
 }
@@ -68,11 +65,8 @@ var featureLabelOrder = []string{
 	// Performance & Security
 	setup.FeatureWebStandards,
 	setup.FeatureBrowserAPIs,
-	// Mobile & Offline
+	// Mobile
 	setup.FeatureCapacitor,
-	setup.FeatureOffline,
-	setup.FeatureSync,
-	setup.FeaturePWA,
 	// Demo
 	setup.FeatureDemo,
 }
@@ -206,7 +200,7 @@ var presets = map[string][]string{
 	"internal":                {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
 	"microsoft-lite-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
 	"public":                  {setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs},
-	"microsoft-full-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs, setup.FeatureOffline, setup.FeatureSync, setup.FeaturePWA},
+	"microsoft-full-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs},
 	"demo":                    setup.AllFeatures,
 	"minimal":                 {},
 }
@@ -222,7 +216,7 @@ func runWizard() (*setup.Options, error) {
 		preset     string
 		customize  bool
 		// Guided wizard answers
-		dbEngine      string // "sqlite", "mssql", "postgres", "sqlite+mssql", "sqlite+postgres"
+		dbEngine      string // "", "mssql", "postgres" — empty leaves derived app on framework-internal SQLite stores
 		wantSessions  bool
 		wantAuth      bool
 		wantGraph     bool
@@ -232,9 +226,6 @@ func runWizard() (*setup.Options, error) {
 		wantStandards bool
 		wantAPIs      bool
 		wantCapacitor bool
-		wantOffline   bool
-		wantSync      bool
-		wantPWA       bool
 		wantDemo      bool
 	)
 
@@ -290,7 +281,7 @@ func runWizard() (*setup.Options, error) {
 				Options(
 					huh.NewOption("Internal tool — auth, database, sessions, SSE, link relations, web standards", "internal"),
 					huh.NewOption("Microsoft Lite Internal — auth, Graph, avatar, MSSQL app data, SSE + Caddy, link relations, web standards", "microsoft-lite-internal"),
-					huh.NewOption("Microsoft Full Internal — auth, Graph, MSSQL app data, SSE, offline + sync + PWA", "microsoft-full-internal"),
+					huh.NewOption("Microsoft Full Internal — auth, Graph, avatar, MSSQL app data, SSE + Caddy, link relations, web standards, browser APIs", "microsoft-full-internal"),
 					huh.NewOption("Public site — sessions, link relations, web standards, browser APIs", "public"),
 					huh.NewOption("Demo/playground — everything enabled", "demo"),
 					huh.NewOption("Minimal — bare HTMX app", "minimal"),
@@ -346,19 +337,18 @@ func runWizard() (*setup.Options, error) {
 		// ── Guided wizard: ask about dependencies first ────────────
 
 		guidedForm := huh.NewForm(
-			// App data (chuck-backed repository layer is implicit; pick a
-			// production engine if you need one — SQLite is always wired in
-			// for dev/demo).
+			// MSSQL / PostgreSQL are the user-facing app-data choices.
+			// Leaving this at "None" leaves the derived app on its
+			// framework-internal SQLite stores; no separate app-data choice
+			// is exposed.
 			huh.NewGroup(
 				huh.NewSelect[string]().
-					Title("Production database engine").
-					Description("SQLite is always wired in for dev/demo. Pick a production engine if you deploy to one.").
+					Title("MSSQL or PostgreSQL support?").
+					Description("Pick one if you deploy to it. Leave at None otherwise.").
 					Options(
-						huh.NewOption("SQLite only (dev/demo)", "sqlite"),
-						huh.NewOption("SQLite + MSSQL (dev locally, deploy to SQL Server)", "sqlite+mssql"),
-						huh.NewOption("SQLite + PostgreSQL (dev locally, deploy to Postgres)", "sqlite+postgres"),
-						huh.NewOption("MSSQL only", "mssql"),
-						huh.NewOption("PostgreSQL only", "postgres"),
+						huh.NewOption("None", ""),
+						huh.NewOption("MSSQL", "mssql"),
+						huh.NewOption("PostgreSQL", "postgres"),
 					).
 					Value(&dbEngine),
 			).Title("App Data"),
@@ -397,13 +387,10 @@ func runWizard() (*setup.Options, error) {
 				huh.NewConfirm().Title("Want browser APIs?\n  sendBeacon analytics, BroadcastChannel cross-tab sync\n  SSE will be auto-included").Value(&wantAPIs),
 			).Title("Performance & Security"),
 
-			// Mobile & Offline
+			// Mobile
 			huh.NewGroup(
 				huh.NewConfirm().Title("Need mobile app wrapper (Capacitor)?").Value(&wantCapacitor),
-				huh.NewConfirm().Title("Need offline support? (service worker, write queue)\n  Capacitor will be auto-included").Value(&wantOffline),
-				huh.NewConfirm().Title("Need data sync?\n  Offline will be auto-included").Value(&wantSync),
-				huh.NewConfirm().Title("Want full PWA?\n  Includes offline + sync + capacitor").Value(&wantPWA),
-			).Title("Mobile & Offline"),
+			).Title("Mobile"),
 
 			// Demo
 			huh.NewGroup(
@@ -420,13 +407,13 @@ func runWizard() (*setup.Options, error) {
 
 		// Build features from guided answers. "database" is implicit, so
 		// only the production-engine tag needs to be appended; ExpandFeatureDeps
-		// will pull database in automatically.
+		// will pull database in automatically. Empty dbEngine leaves the app on
+		// framework-internal SQLite stores.
 		switch dbEngine {
-		case "mssql", "sqlite+mssql":
+		case "mssql":
 			features = append(features, setup.FeatureMSSQL)
-		case "postgres", "sqlite+postgres":
+		case "postgres":
 			features = append(features, setup.FeaturePostgres)
-			// "sqlite" — database is implicit, nothing extra needed
 		}
 		if wantSessions {
 			features = append(features, setup.FeatureSessionSettings)
@@ -454,15 +441,6 @@ func runWizard() (*setup.Options, error) {
 		}
 		if wantCapacitor {
 			features = append(features, setup.FeatureCapacitor)
-		}
-		if wantOffline {
-			features = append(features, setup.FeatureOffline, setup.FeatureCapacitor)
-		}
-		if wantSync {
-			features = append(features, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor)
-		}
-		if wantPWA {
-			features = append(features, setup.FeaturePWA, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor)
 		}
 		if wantDemo {
 			features = append(features, setup.FeatureDemo)
@@ -758,7 +736,7 @@ func printSetupUsage() {
   -n APP_NAME        Human-readable app name (e.g. "My App"). Required.
   -m MODULE_PATH     Go module path (e.g. "github.com/you/my-app").
   -p BASE_PORT       5-digit base port < 60000; APP_HTTP_PORT=BASE_PORT, TEMPL_HTTP_PORT=BASE_PORT+1, CADDY_TLS_PORT=BASE_PORT+2.
-  --features LIST    Comma-separated user-selectable tags to keep: auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor,offline,sync,pwa.
+  --features LIST    Comma-separated user-selectable tags to keep: auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor.
                      "all" = keep everything (default), "none" = bare HTMX app. The chuck-backed app-data layer is implicit and always wired in.
   --no-caddy         Deprecated. Equivalent to omitting caddy from --features.
   --platform OS      Target host OS for the derived app's dev tooling: linux or windows. Defaults to the current host's GOOS.

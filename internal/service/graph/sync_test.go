@@ -7,8 +7,6 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"catgoose/dothog/internal/database"
-	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/logger"
 )
 
@@ -19,8 +17,8 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func testUsers() []domain.GraphUser {
-	return []domain.GraphUser{
+func testUsers() []GraphUser {
+	return []GraphUser{
 		{AzureID: "aaa-111", DisplayName: "Alice"},
 		{AzureID: "bbb-222", DisplayName: "Bob"},
 	}
@@ -28,9 +26,9 @@ func testUsers() []domain.GraphUser {
 
 func setupTestCache(t *testing.T) *UserCache {
 	t.Helper()
-	db, err := database.OpenSQLiteInMemory()
+	db, err := OpenUserCacheDB()
 	if err != nil {
-		t.Fatalf("open in-memory SQLite: %v", err)
+		t.Fatalf("open user cache DB: %v", err)
 	}
 	t.Cleanup(func() { _ = db.Close() })
 	return NewUserCache(db)
@@ -41,9 +39,9 @@ func TestInitAndSyncUserCache_AfterSyncCalled(t *testing.T) {
 	users := testUsers()
 
 	var callCount atomic.Int32
-	var receivedUsers []domain.GraphUser
+	var receivedUsers []GraphUser
 
-	afterSync := func(_ context.Context, u []domain.GraphUser) {
+	afterSync := func(_ context.Context, u []GraphUser) {
 		callCount.Add(1)
 		receivedUsers = u
 	}
@@ -52,7 +50,7 @@ func TestInitAndSyncUserCache_AfterSyncCalled(t *testing.T) {
 		context.Background(),
 		userCache,
 		3,
-		func() ([]domain.GraphUser, error) { return users, nil },
+		func() ([]GraphUser, error) { return users, nil },
 		afterSync,
 	)
 	if err != nil {
@@ -75,7 +73,7 @@ func TestInitAndSyncUserCache_NilAfterSync(t *testing.T) {
 		context.Background(),
 		userCache,
 		3,
-		func() ([]domain.GraphUser, error) { return users, nil },
+		func() ([]GraphUser, error) { return users, nil },
 		nil,
 	)
 	if err != nil {

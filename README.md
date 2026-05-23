@@ -462,31 +462,6 @@ jobs := NewQueueTable("JobQueue", "Payload")
 | `TypeAutoIncrement()` | `INTEGER PRIMARY KEY AUTOINCREMENT` | `INT PRIMARY KEY IDENTITY(1,1)` |
 | `TypeLiteral(s)`      | `s`                                 | `s`                             |
 
-### Domain Structs
-
-> _"How many fields does your base model have?" "Zero. There is no base model." "Then how do you share behavior?" "I embed only what I need." "What if you need everything?" "Then I have made a series of decisions that I should examine carefully." "Is that a polite way of saying--" "Yes."_
-
-Embeddable structs for domain models:
-
-```go
-type Task struct {
-	ID                 int    `db:"ID"`
-	Title              string `db:"Title"`
-	domain.UUID               // UUID string
-	domain.Status             // Status string
-	domain.SortOrder          // SortOrder int
-	domain.Parent             // ParentID sql.NullInt64
-	domain.Notes              // Notes sql.NullString
-	domain.Expiry             // ExpiresAt sql.NullTime
-	domain.Version            // Version int
-	domain.Archive            // ArchivedAt sql.NullTime
-	domain.Replacement        // ReplacedByID sql.NullInt64
-	domain.Timestamps         // CreatedAt, UpdatedAt time.Time
-	domain.SoftDelete         // DeletedAt sql.NullTime
-	domain.AuditTrail         // CreatedBy, UpdatedBy, DeletedBy sql.NullString
-}
-```
-
 ### Repository Helpers
 
 ```go
@@ -579,7 +554,7 @@ settings := NewConfigTable("Settings", "Key", "Value").
 	)
 
 // Run seed data on startup (safe to run repeatedly)
-repoManager.SeedSchema(ctx)
+appSchema.SeedSchema(ctx)
 ```
 
 ### Schema Lifecycle
@@ -589,22 +564,27 @@ repoManager.SeedSchema(ctx)
 Four stages for managing schemas at different points in the application lifecycle:
 
 ```go
-repoManager := repository.NewManager(db, dialect, usersTable, tasksTable, ...)
+// In dothog-derived apps, the table list comes from internal/dbschema.Tables();
+// the snippet below shows the underlying schema.NewMaterializer call directly for clarity.
+appSchema := schema.NewMaterializer(dbx, dialect, dbschema.Tables()...)
 
 // Development: drop and recreate all tables (destructive)
-repoManager.InitSchema(ctx)
+appSchema.InitSchema(ctx)
 
 // Production startup: create missing tables/indexes (additive, non-destructive)
-repoManager.EnsureSchema(ctx)
+appSchema.EnsureSchema(ctx)
 
 // Production startup: insert seed data (idempotent)
-repoManager.SeedSchema(ctx)
+appSchema.SeedSchema(ctx)
 
 // Production health check: validate all registered tables exist with expected columns
-if err := repoManager.ValidateSchema(ctx); err != nil {
+if err := appSchema.ValidateSchema(ctx); err != nil {
 	log.Fatal("schema validation failed", "error", err)
 }
 ```
+
+Repositories take `*sqlx.DB` directly (not the manager); use
+`database.WithTransaction(ctx, dbx, fn)` for multi-statement work.
 
 | Method           | When                | Behavior                                                    |
 | ---------------- | ------------------- | ----------------------------------------------------------- |
@@ -729,7 +709,7 @@ Map two dimensions -- **where it runs** and **what it manages** -- and six domai
            +------------------+----------------------+----------------------+
 ```
 
-The left column is authority. **Server state** (Go + SQL) is the single source of truth. **Client state** is ephemeral view data the server doesn't care about -- `_hyperscript` handles the common case (local DOM toggles, transitions, one-off bindings) and `Alpine.js` stays in reserve for the rarer cases that need coordinated view state or a browser-API bridge (theme picker, offline indicator). Nothing in the bottom row pretends to be the top row. If your client state is pretending to be server state, you have a distributed systems problem. You do not want a distributed systems problem. Nobody wants a distributed systems problem. People who say they want a distributed systems problem have not had a distributed systems problem.
+The left column is authority. **Server state** (Go + SQL) is the single source of truth. **Client state** is ephemeral view data the server doesn't care about -- `_hyperscript` handles the common case (local DOM toggles, transitions, one-off bindings) and `Alpine.js` stays in reserve for the rarer cases that need coordinated view state or a browser-API bridge (theme picker). Nothing in the bottom row pretends to be the top row. If your client state is pretending to be server state, you have a distributed systems problem. You do not want a distributed systems problem. Nobody wants a distributed systems problem. People who say they want a distributed systems problem have not had a distributed systems problem.
 
 ### The Two Triangles, Or Why Your Backend Has a Frontend Problem
 
@@ -848,6 +828,7 @@ dothog/
 ├── main.go                    # The alpha and the omega. Also the entrypoint.
 ├── magefile.go                # Build automation targets
 ├── internal/
+│   ├── dbschema/               # App-owned table registry (starter seam)
 │   ├── config/                # Configuration management
 │   ├── database/
 │   │   ├── schema/            # Table definitions, traits, DDL generation
@@ -895,23 +876,26 @@ go tool mage setup
 
 The wizard walks you through:
 
-1. **Copy to new directory** -- Optionally copy the template to a new location and run `git init`
+1. **Target directory** -- Required. Setup always scaffolds into the target rather than mutating the current template checkout; an existing non-empty target can be removed and replaced after a confirmation prompt. Setup optionally runs `git init` there.
 2. **App name** -- Human-readable name (e.g. "My App"), used to derive the binary name
 3. **Module path** -- Go module path (e.g. `github.com/you/my-app`)
 4. **Base port** -- 5-digit port number; Dothog uses `BASE_PORT`, templ proxy uses `BASE_PORT+1`, Caddy uses `BASE_PORT+2`
-5. **Feature selection** -- Multi-select which features to include:
+5. **Preset or guided flow** -- Pick a preset (Internal Tool, MS Lite Internal, MS Full Internal, Public Site, Demo, Minimal), the flat checklist, or the guided questions. Presets can be customised before applying.
+6. **App-data engine (guided mode only)** -- Pick MSSQL, PostgreSQL, or None. The chuck-backed app-data layer is internal-only and ships with the derived app only when MSSQL or PostgreSQL is selected; otherwise scaffolds run on framework-internal SQLite stores alone.
+7. **Feature questions / checklist** -- Either guided follow-up confirms (auth, Graph, avatar, SSE, link relations, web standards, browser APIs, capacitor, demo) or the flat multi-select of the same tags.
 
-| Feature          | Description                                           | Default    |
-| ---------------- | ----------------------------------------------------- | ---------- |
-| Auth (Crooner)   | Azure AD authentication via Crooner                   | Selected   |
-| Graph API        | Microsoft Graph SDK integration                       | Selected   |
-| Avatar Photos    | User photo sync from Azure (requires Graph)           | Selected   |
-| Database (MSSQL) | SQL Server database with SQLx                         | Selected   |
-| SSE              | Server-Sent Events real-time updates (requires Caddy) | Selected   |
-| Caddy            | Optional HTTPS/H3 front-proxy in front of templ       | Selected   |
-| Demo Content     | SQLite demo tables, hypermedia examples               | Unselected |
+| Feature      | Description                                                  | Notes                                |
+| ------------ | ------------------------------------------------------------ | ------------------------------------ |
+| Auth         | OIDC authentication via Crooner; CSRF auto-included          | Tolerates partial OIDC env (off)     |
+| Graph API    | Microsoft Graph SDK integration                              | Avatar auto-includes Graph           |
+| Avatar       | User photo sync from Graph                                   | Requires Graph                       |
+| MSSQL        | Chuck-backed app data with MSSQL support                     | Implies the internal database layer  |
+| PostgreSQL   | Chuck-backed app data with PostgreSQL support                | Implies the internal database layer  |
+| SSE          | Server-Sent Events real-time updates                         | Pairs with Caddy for HTTP/2          |
+| Caddy        | HTTPS/H3 front-proxy in front of templ                       | Adds local TLS via Caddy internal CA |
+| Demo         | SQLite demo tables, hypermedia examples                      | Auto-includes session_settings       |
 
-Deselected features have their code, routes, imports, and related files stripped from the project. Dependencies are auto-resolved (SSE includes Caddy, Avatar includes Graph).
+Deselected features have their code, routes, imports, and related files stripped from the derived app. Dependencies are auto-resolved (SSE includes Caddy, Avatar includes Graph, MSSQL/PostgreSQL imply the internal app-data layer, Demo includes session_settings).
 
 ### Non-interactive Setup
 
@@ -927,7 +911,7 @@ go tool mage setup -n "My App" --features all
 | `-n APP_NAME` | App name (required)                                                            |
 | `-m MODULE`   | Go module path                                                                 |
 | `-p PORT`     | 5-digit base port (< 60000)                                                    |
-| `--features`  | Comma-separated: `auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor,offline,sync,pwa`, `all`, or `none`. Chuck-backed app data is implicit and always wired in. |
+| `--features`  | Comma-separated: `auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor`, `all`, or `none`. The internal `database` feature is not user-facing — selecting `mssql` or `postgres` pulls in the chuck-backed app-data layer automatically; scaffolds without those run on framework-internal SQLite stores. |
 | `--force`     | Re-run setup on an already customized project                                  |
 
 After setup, review `.env.development` and start the dev server with `go tool mage watch`.

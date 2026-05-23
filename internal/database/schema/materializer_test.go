@@ -1,5 +1,4 @@
-// setup:feature:database
-package repository
+package schema
 
 import (
 	"context"
@@ -7,25 +6,33 @@ import (
 	"testing"
 
 	dialect "github.com/catgoose/chuck"
-	"catgoose/dothog/internal/database/schema"
 
 	_ "github.com/catgoose/chuck/driver/sqlite"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func openSQLiteInMemory(t *testing.T) *sqlx.DB {
+	t.Helper()
+	db, err := sqlx.Open("sqlite3", ":memory:")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
+	return db
+}
 
 func TestValidateSchema_Valid(t *testing.T) {
 	db := openSQLiteInMemory(t)
 	d := dialect.SQLiteDialect{}
 
-	table := schema.NewTable("Items").
+	table := NewTable("Items").
 		Columns(
-			schema.AutoIncrCol("ID"),
-			schema.Col("Name", schema.TypeString(255)).NotNull(),
+			AutoIncrCol("ID"),
+			Col("Name", TypeString(255)).NotNull(),
 		).
 		WithTimestamps()
 
-	mgr := NewManager(db, d, table)
+	mgr := NewMaterializer(db, d, table)
 	ctx := context.Background()
 
 	require.NoError(t, mgr.InitSchema(ctx))
@@ -36,16 +43,16 @@ func TestValidateSchema_MissingTable(t *testing.T) {
 	db := openSQLiteInMemory(t)
 	d := dialect.SQLiteDialect{}
 
-	table := schema.NewTable("NonExistent").
-		Columns(schema.AutoIncrCol("ID"))
+	table := NewTable("NonExistent").
+		Columns(AutoIncrCol("ID"))
 
-	mgr := NewManager(db, d, table)
+	mgr := NewMaterializer(db, d, table)
 	ctx := context.Background()
 
 	err := mgr.ValidateSchema(ctx)
 	require.Error(t, err)
 
-	var schemaErr *SchemaValidationError
+	var schemaErr *ValidationError
 	require.True(t, errors.As(err, &schemaErr))
 	require.Len(t, schemaErr.Errors, 1)
 	assert.Equal(t, "NonExistent", schemaErr.Errors[0].Table)
@@ -56,26 +63,24 @@ func TestValidateSchema_MissingColumn(t *testing.T) {
 	db := openSQLiteInMemory(t)
 	d := dialect.SQLiteDialect{}
 
-	// Create the table with only ID.
-	actual := schema.NewTable("Items").
-		Columns(schema.AutoIncrCol("ID"))
+	actual := NewTable("Items").
+		Columns(AutoIncrCol("ID"))
 
-	mgr := NewManager(db, d, actual)
+	mgr := NewMaterializer(db, d, actual)
 	ctx := context.Background()
 	require.NoError(t, mgr.InitSchema(ctx))
 
-	// Now validate against a definition that expects an extra column.
-	expected := schema.NewTable("Items").
+	expected := NewTable("Items").
 		Columns(
-			schema.AutoIncrCol("ID"),
-			schema.Col("Name", schema.TypeString(255)).NotNull(),
+			AutoIncrCol("ID"),
+			Col("Name", TypeString(255)).NotNull(),
 		)
 
-	mgr2 := NewManager(db, d, expected)
+	mgr2 := NewMaterializer(db, d, expected)
 	err := mgr2.ValidateSchema(ctx)
 	require.Error(t, err)
 
-	var schemaErr *SchemaValidationError
+	var schemaErr *ValidationError
 	require.True(t, errors.As(err, &schemaErr))
 	require.Len(t, schemaErr.Errors, 1)
 	assert.Equal(t, "Items", schemaErr.Errors[0].Table)
@@ -87,13 +92,13 @@ func TestValidateSchema_MultipleTables(t *testing.T) {
 	db := openSQLiteInMemory(t)
 	d := dialect.SQLiteDialect{}
 
-	users := schema.NewTable("Users").
-		Columns(schema.AutoIncrCol("ID"), schema.Col("Email", schema.TypeString(255)))
+	users := NewTable("Users").
+		Columns(AutoIncrCol("ID"), Col("Email", TypeString(255)))
 
-	orders := schema.NewTable("Orders").
-		Columns(schema.AutoIncrCol("ID"), schema.Col("Total", schema.TypeInt()))
+	orders := NewTable("Orders").
+		Columns(AutoIncrCol("ID"), Col("Total", TypeInt()))
 
-	mgr := NewManager(db, d, users, orders)
+	mgr := NewMaterializer(db, d, users, orders)
 	ctx := context.Background()
 
 	require.NoError(t, mgr.InitSchema(ctx))
@@ -101,8 +106,8 @@ func TestValidateSchema_MultipleTables(t *testing.T) {
 }
 
 func TestValidateSchema_ErrorString(t *testing.T) {
-	err := &SchemaValidationError{
-		Errors: []SchemaError{
+	err := &ValidationError{
+		Errors: []Mismatch{
 			{Table: "Users", Message: "table does not exist"},
 			{Table: "Orders", Column: "Total", Message: "column missing"},
 		},

@@ -13,8 +13,17 @@ import (
 	"path/filepath"
 	"time"
 
+	dialect "github.com/catgoose/chuck"
 	"github.com/jmoiron/sqlx"
 )
+
+// SQLiteDialect constructs a chuck SQLite dialect for the always-on framework
+// SQLite stores (session settings, error traces, graph user cache). Callers
+// reach for this instead of importing chuck directly so the chuck dialect
+// import stays scoped to the app-data feature in main.go.
+func SQLiteDialect() (dialect.Dialect, error) {
+	return dialect.New(dialect.SQLite)
+}
 
 // OpenSQLite opens a SQLite database at the given path with standard settings.
 // Used for framework-internal stores (error traces, session settings) that are
