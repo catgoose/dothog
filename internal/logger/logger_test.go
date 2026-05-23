@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 
@@ -65,6 +67,24 @@ func TestGet_ReturnsSameInstance(t *testing.T) {
 	a := Get()
 	b := Get()
 	assert.Same(t, a, b, "Get must return the same logger every call")
+}
+
+func TestInit_DoesNotCreateFileSinkUnderGoTest(t *testing.T) {
+	resetLogger()
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+
+	tempDir := t.TempDir()
+	require.NoError(t, os.Chdir(tempDir))
+	t.Cleanup(func() {
+		require.NoError(t, os.Chdir(cwd))
+	})
+
+	Init()
+
+	_, err = os.Stat(filepath.Join(tempDir, "log", appLogFile))
+	require.True(t, os.IsNotExist(err), "go test should not create package-local log/dothog.log files")
 }
 
 func TestSetHandlerWrapper_AppliedDuringInit(t *testing.T) {

@@ -4,11 +4,13 @@ package logger
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"catgoose/dothog/internal/shared"
@@ -39,30 +41,32 @@ func SetHandlerWrapper(w HandlerWrapper) {
 
 const appLogFile = "dothog.log"
 
-// Init wires a JSON slog logger to log/dothog.log (monthly lumberjack rotation) plus stdout/stderr; idempotent via sync.Once.
+// Init wires a JSON slog logger to stdout/stderr and, outside go test, to
+// log/dothog.log with monthly lumberjack rotation; idempotent via sync.Once.
 func Init() {
 	once.Do(func() {
-		logDir := "log"
-		if err := os.MkdirAll(logDir, 0o755); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to create log directory: %v\n", err)
-		}
-
 		logLevel := getLogLevel()
 
-		logPath := filepath.Join(logDir, appLogFile)
-		rotator := &lumberjack.Logger{
-			Filename:   logPath,
-			MaxSize:    0,    // No size-based rotation (use time-based only)
-			MaxBackups: 12,   // Keep 12 compressed backups
-			MaxAge:     30,   // Rotate monthly (30 days)
-			Compress:   true, // Compress rotated files
+		var logWriter io.Writer = os.Stderr
+		if env.Dev() {
+			logWriter = os.Stdout
 		}
 
-		var logWriter io.Writer
-		if env.Dev() {
-			logWriter = io.MultiWriter(os.Stdout, rotator)
-		} else {
-			logWriter = io.MultiWriter(os.Stderr, rotator)
+		if !runningUnderGoTest() {
+			logDir := "log"
+			if err := os.MkdirAll(logDir, 0o755); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to create log directory: %v\n", err)
+			} else {
+				logPath := filepath.Join(logDir, appLogFile)
+				rotator := &lumberjack.Logger{
+					Filename:   logPath,
+					MaxSize:    0,    // No size-based rotation (use time-based only)
+					MaxBackups: 12,   // Keep 12 compressed backups
+					MaxAge:     30,   // Rotate monthly (30 days)
+					Compress:   true, // Compress rotated files
+				}
+				logWriter = io.MultiWriter(logWriter, rotator)
+			}
 		}
 
 		opts := &slog.HandlerOptions{
@@ -79,6 +83,14 @@ func Init() {
 		mu.Unlock()
 		slog.SetDefault(logger)
 	})
+}
+
+func runningUnderGoTest() bool {
+	if flag.Lookup("test.v") != nil {
+		return true
+	}
+	base := filepath.Base(os.Args[0])
+	return strings.HasSuffix(base, ".test") || strings.HasSuffix(base, ".test.exe")
 }
 
 // getLogLevel reads LOG_LEVEL; falls back to Debug in dev and Info otherwise.

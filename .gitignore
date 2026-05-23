@@ -43,7 +43,7 @@ localhost.key
 *.pem
 
 # Log files
-/log/
+log/
 *.log
 
 # SQLite database (allow seed.db, demo.db, and gen_seed tool)
