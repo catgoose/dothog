@@ -26,7 +26,7 @@ type SessionSettingsRepository struct {
 // NewSessionSettingsRepository binds db; the result satisfies both
 // session.SettingsProvider and session.SettingsAdmin via implicit interface
 // satisfaction, so it can be wired into session.Middleware and into the
-// route-side Repos struct without further plumbing.
+// route-side Deps struct without further plumbing.
 func NewSessionSettingsRepository(db *sqlx.DB) *SessionSettingsRepository {
 	return &SessionSettingsRepository{db: db}
 }

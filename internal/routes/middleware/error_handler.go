@@ -23,7 +23,7 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 		return nil
 	}
 
-	requestID := GetRequestID(c)
+	requestID := promolog.GetRequestID(c.Request().Context())
 	log := logger.WithContext(c.Request().Context()).With(
 		"status_code", statusCode,
 		"message", message,
@@ -130,7 +130,7 @@ func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Con
 
 		// Promote per-request log buffer to the shared store on error.
 		if reqLogStore != nil {
-			requestID := GetRequestID(c)
+			requestID := promolog.GetRequestID(c.Request().Context())
 			if requestID != "" {
 				var entries []promolog.Entry
 				if buf := promolog.GetBuffer(c.Request().Context()); buf != nil {

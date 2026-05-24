@@ -4,6 +4,7 @@ package routes
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -128,7 +129,7 @@ func (s *componentsState) handleComponentsPage(c echo.Context) error {
 func (s *componentsState) handleStep(c echo.Context) error {
 	step, err := strconv.Atoi(c.Param("step"))
 	if err != nil || step < 1 || step > 4 {
-		return handler.HandleHypermediaError(c, 400, "Invalid step", fmt.Errorf("step=%q", c.Param("step")))
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid step", fmt.Errorf("step=%q", c.Param("step")))
 	}
 	s.mu.Lock()
 	s.wizardStep = step
@@ -143,7 +144,7 @@ func (s *componentsState) handleTab(c echo.Context) error {
 	switch tab {
 	case "overview", "details", "settings":
 	default:
-		return handler.HandleHypermediaError(c, 400, "Invalid tab", fmt.Errorf("tab=%q", tab))
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid tab", fmt.Errorf("tab=%q", tab))
 	}
 	return handler.RenderComponent(c, views.TabContentFragment(tab))
 }
@@ -159,7 +160,7 @@ func (s *componentsState) handleToast(c echo.Context) error {
 func (s *componentsState) handleChatSend(c echo.Context) error {
 	text := c.FormValue("chat-msg")
 	if text == "" {
-		return c.NoContent(200)
+		return c.NoContent(http.StatusOK)
 	}
 
 	s.mu.Lock()

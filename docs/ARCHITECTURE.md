@@ -65,7 +65,7 @@ The link registry (`linkwell`) is the navigation topology of the application. Al
 
 ### Registration
 
-Links are registered at startup in `routes_links.go` using three primitives:
+Links are registered at startup in `links.go` using three primitives:
 
 | Primitive | Semantics | Example |
 |-----------|-----------|---------|
@@ -88,7 +88,7 @@ A page can belong to multiple rings and one hub. The registry deduplicates autom
 Links can also be loaded from the database at startup via `linkwell.LoadStoredLink()`. The demo DB stores link relations in a `stored_links` table, loaded during `InitRoutes()`.
 
 **Key files:**
-- `internal/routes/routes_links.go` — all Hub/Ring/Link declarations
+- `internal/routes/links.go` — all Hub/Ring/Link declarations
 - `internal/routes/middleware/links.go` — `LinkRelationsMiddleware()`
 
 ## Context Bar Resolution
@@ -255,10 +255,10 @@ internal/
 │   ├── handler/     Layout rendering, breadcrumbs, error helpers
 │   ├── middleware/   Echo middleware (session, links, errors, timing, correlation)
 │   ├── params/      Request parameter parsing
-│   ├── routes.go           InitEcho, InitRoutes, NewAppRoutes
-│   ├── routes_links.go     Hub/Ring/Link declarations
-│   ├── routes_inventory.go Example: table with CRUD
-│   └── routes_*.go         One file per feature area
+│   ├── routes.go       InitEcho, InitRoutes, NewAppRoutes
+│   ├── links.go        Hub/Ring/Link declarations
+│   ├── inventory.go    Example: table with CRUD
+│   └── *.go            One file per feature area
 ├── session/         Per-session settings middleware and types
 ├── setup/           Feature flag stripping, template setup logic
 └── version/         Build version info
@@ -284,7 +284,7 @@ web/
 
 ### Naming Conventions
 
-- **Route files**: `routes_<feature>.go` — one file per feature area (inventory, people, kanban, etc.)
+- **Route files**: `<feature>.go` — one file per feature area (inventory, people, kanban, etc.)
 - **View files**: `<feature>.templ` — page-level templates matching route files
 - **Component files**: `<component>.templ` in `web/components/core/` — reusable across pages
 - **Feature gates**: `// setup:feature:TAG:start` / `// setup:feature:TAG:end` for block removal, `// setup:feature:TAG` for whole-file removal

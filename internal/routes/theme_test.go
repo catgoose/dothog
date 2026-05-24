@@ -18,7 +18,7 @@ import (
 
 // fakeSettingsStore captures the last upsert so tests can assert persistence
 // without standing up a database. It satisfies both session.SettingsProvider
-// and session.SettingsAdmin so a single fake can stand in for both Repos
+// and session.SettingsAdmin so a single fake can stand in for both Deps
 // fields.
 type fakeSettingsStore struct {
 	last    *session.Settings
@@ -85,7 +85,7 @@ func TestInitThemeRoutes_WithoutBroker_PersistsTheme(t *testing.T) {
 	store := &fakeSettingsStore{}
 	ar := &AppRoutes{
 		e:     echo.New(),
-		repos: Repos{SessionStore: store, SessionSettings: store},
+		deps: Deps{SessionStore: store, SessionSettings: store},
 	}
 	ar.initThemeRoutes()
 
@@ -112,7 +112,7 @@ func TestInitThemeRoutes_WithoutBroker_RejectsInvalidTheme(t *testing.T) {
 	store := &fakeSettingsStore{}
 	ar := &AppRoutes{
 		e:     echo.New(),
-		repos: Repos{SessionStore: store, SessionSettings: store},
+		deps: Deps{SessionStore: store, SessionSettings: store},
 	}
 	ar.initThemeRoutes()
 
@@ -137,7 +137,7 @@ func TestInitThemeRoutes_WithoutBroker_PersistsLayout(t *testing.T) {
 	store := &fakeSettingsStore{}
 	ar := &AppRoutes{
 		e:     echo.New(),
-		repos: Repos{SessionStore: store, SessionSettings: store},
+		deps: Deps{SessionStore: store, SessionSettings: store},
 	}
 	ar.initThemeRoutes()
 

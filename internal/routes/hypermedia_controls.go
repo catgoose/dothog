@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/middleware"
 	"catgoose/dothog/web/views"
 	"github.com/catgoose/linkwell"
+	"github.com/catgoose/promolog"
 
 	"github.com/labstack/echo/v4"
 )
@@ -270,13 +270,13 @@ func (gs *controlsGalleryState) handleFilter(c echo.Context) error {
 func (gs *controlsGalleryState) handleRowView(c echo.Context) error {
 	id, err := parseGalleryRowID(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 	gs.mu.RLock()
 	row, found := gs.findRow(id)
 	gs.mu.RUnlock()
 	if !found {
-		return handler.HandleHypermediaError(c, 404, "Row not found", fmt.Errorf("row %d not found", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Row not found", fmt.Errorf("row %d not found", id))
 	}
 	return handler.RenderComponent(c, views.RowViewFragment(views.GalleryRowItem{
 		ID: row.ID, Name: row.Name, Category: row.Category, Price: row.Price, Active: row.Active,
@@ -286,13 +286,13 @@ func (gs *controlsGalleryState) handleRowView(c echo.Context) error {
 func (gs *controlsGalleryState) handleRowEdit(c echo.Context) error {
 	id, err := parseGalleryRowID(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 	gs.mu.RLock()
 	row, found := gs.findRow(id)
 	gs.mu.RUnlock()
 	if !found {
-		return handler.HandleHypermediaError(c, 404, "Row not found", fmt.Errorf("row %d not found", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Row not found", fmt.Errorf("row %d not found", id))
 	}
 	return handler.RenderComponent(c, views.RowEditFragment(views.GalleryRowItem{
 		ID: row.ID, Name: row.Name, Category: row.Category, Price: row.Price, Active: row.Active,
@@ -302,13 +302,13 @@ func (gs *controlsGalleryState) handleRowEdit(c echo.Context) error {
 func (gs *controlsGalleryState) handleRowSave(c echo.Context) error {
 	id, err := parseGalleryRowID(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 	gs.mu.Lock()
 	idx := gs.findRowIndex(id)
 	if idx < 0 {
 		gs.mu.Unlock()
-		return handler.HandleHypermediaError(c, 404, "Row not found", fmt.Errorf("row %d not found", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Row not found", fmt.Errorf("row %d not found", id))
 	}
 	gs.rowItems[idx].Name = c.FormValue("name")
 	gs.rowItems[idx].Category = c.FormValue("category")
@@ -324,7 +324,7 @@ func (gs *controlsGalleryState) handleRowSave(c echo.Context) error {
 func (gs *controlsGalleryState) handleRowDelete(c echo.Context) error {
 	id, err := parseGalleryRowID(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 	gs.mu.Lock()
 	idx := gs.findRowIndex(id)
@@ -383,7 +383,7 @@ func (gs *controlsGalleryState) handleErrTransient(c echo.Context) error {
 	gs.mu.Unlock()
 
 	if attempt%2 == 1 {
-		requestID := middleware.GetRequestID(c)
+		requestID := promolog.GetRequestID(c.Request().Context())
 		ec := linkwell.ErrorContext{
 			StatusCode: 500,
 			Message:    fmt.Sprintf("Save failed — transient network error (attempt %d)", attempt),
@@ -419,7 +419,7 @@ func (gs *controlsGalleryState) handleErrValidate(c echo.Context) error {
 	}
 
 	if len(errs) > 0 {
-		requestID := middleware.GetRequestID(c)
+		requestID := promolog.GetRequestID(c.Request().Context())
 		fixURL := fmt.Sprintf("/patterns/controls/errors/validate/fix?name=%s&price=%s",
 			url.QueryEscape(name), url.QueryEscape(price))
 		ec := linkwell.ErrorContext{
@@ -457,7 +457,7 @@ func (gs *controlsGalleryState) handleErrValidateFix(c echo.Context) error {
 
 // Scenario 3: Conflict — record already exists, offer update or copy.
 func (gs *controlsGalleryState) handleErrConflict(c echo.Context) error {
-	requestID := middleware.GetRequestID(c)
+	requestID := promolog.GetRequestID(c.Request().Context())
 	ec := linkwell.ErrorContext{
 		StatusCode: 409,
 		Message:    "'Widget Alpha' already exists (ID: 42)",
@@ -518,7 +518,7 @@ func (gs *controlsGalleryState) handleErrStale(c echo.Context) error {
 	gs.mu.RUnlock()
 
 	if sv < currentVersion {
-		requestID := middleware.GetRequestID(c)
+		requestID := promolog.GetRequestID(c.Request().Context())
 		forceURL := fmt.Sprintf("/patterns/controls/errors/stale/force?name=%s",
 			url.QueryEscape(name))
 		ec := linkwell.ErrorContext{
@@ -600,7 +600,7 @@ func (gs *controlsGalleryState) handleErrCascade(c echo.Context) error {
 			"Already Deleted", "Category was previously removed. Reload page to reset.", resultIDCascade))
 	}
 
-	requestID := middleware.GetRequestID(c)
+	requestID := promolog.GetRequestID(c.Request().Context())
 	ec := linkwell.ErrorContext{
 		StatusCode: 409,
 		Message:    fmt.Sprintf("Cannot delete 'Electronics' — %d items depend on it", len(cascadeDependents)),

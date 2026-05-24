@@ -4,6 +4,7 @@ package routes
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"catgoose/dothog/internal/demo"
@@ -40,7 +41,7 @@ func (ar *AppRoutes) initInventoryRoutes(db *demo.DB) {
 func (d *inventoryRoutes) handleInventoryPage(c echo.Context) error {
 	bar, container, err := d.buildInventoryContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load inventory", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load inventory", err)
 	}
 	return handler.RenderBaseLayout(c, views.InventoryPage(bar, container))
 }
@@ -48,7 +49,7 @@ func (d *inventoryRoutes) handleInventoryPage(c echo.Context) error {
 func (d *inventoryRoutes) handleInventoryItems(c echo.Context) error {
 	bar, container, err := d.buildInventoryContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load items", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load items", err)
 	}
 	if htmx.IsBoosted(c.Request()) {
 		return handler.RenderBaseLayout(c, views.InventoryPage(bar, container))
@@ -85,11 +86,11 @@ func parseItemFromForm(c echo.Context) demo.Item {
 func (d *inventoryRoutes) handleCreateItem(c echo.Context) error {
 	item := parseItemFromForm(c)
 	if _, err := d.db.CreateItem(c.Request().Context(), item); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to create item", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to create item", err)
 	}
 	_, container, err := d.buildInventoryContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload table", err)
 	}
 	setTableReplaceURL(c, inventoryBase)
 	return handler.RenderComponent(c, container)
@@ -98,11 +99,11 @@ func (d *inventoryRoutes) handleCreateItem(c echo.Context) error {
 func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	item, err := d.db.GetItem(c.Request().Context(), id)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 404, "Item not found", err)
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", err)
 	}
 	if !htmx.IsHTMX(c.Request()) || htmx.IsBoosted(c.Request()) {
 		handler.SetPageLabel(c, item.Name)
@@ -114,11 +115,11 @@ func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
 func (d *inventoryRoutes) handleEditItemForm(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	item, err := d.db.GetItem(c.Request().Context(), id)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 404, "Item not found", err)
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", err)
 	}
 	filterQuery := filterQueryFromHXCurrentURL(c)
 	baseURL := fmt.Sprintf(inventoryBase+"/items/%d", id)
@@ -132,16 +133,16 @@ func (d *inventoryRoutes) handleEditItemForm(c echo.Context) error {
 func (d *inventoryRoutes) handleUpdateItem(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	item := parseItemFromForm(c)
 	item.ID = id
 	if err := d.db.UpdateItem(c.Request().Context(), item); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to update item", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to update item", err)
 	}
 	_, container, err := d.buildInventoryContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload table", err)
 	}
 	setTableReplaceURL(c, inventoryBase)
 	return handler.RenderComponent(c, container)
@@ -150,15 +151,15 @@ func (d *inventoryRoutes) handleUpdateItem(c echo.Context) error {
 func (d *inventoryRoutes) handleDeleteItem(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	if err := d.db.DeleteItem(c.Request().Context(), id); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to delete item", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to delete item", err)
 	}
 	applyFilterFromCurrentURL(c)
 	_, container, err := d.buildInventoryContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload table", err)
 	}
 	setTableReplaceURL(c, inventoryBase)
 	return handler.RenderComponent(c, container)

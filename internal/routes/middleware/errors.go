@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/catgoose/linkwell"
+	"github.com/catgoose/promolog"
 
 	"github.com/labstack/echo/v4"
 )
@@ -16,7 +17,7 @@ func errorOpts() linkwell.ErrorControlOpts {
 // newError builds a linkwell.HTTPError with controls dispatched from ErrorControlsForStatus.
 // For 500+ errors, a ReportIssueButton is appended.
 func newError(c echo.Context, statusCode int, message string) error {
-	requestID := GetRequestID(c)
+	requestID := promolog.GetRequestID(c.Request().Context())
 	controls := linkwell.ErrorControlsForStatus(statusCode, errorOpts())
 	if statusCode >= 500 {
 		controls = append(controls, linkwell.ReportIssueButton(linkwell.LabelReportIssue, requestID))
@@ -70,7 +71,7 @@ func HypermediaError(c echo.Context, statusCode int, message string, err error, 
 		Message:    message,
 		Err:        err,
 		Route:      c.Request().URL.Path,
-		RequestID:  GetRequestID(c),
+		RequestID:  promolog.GetRequestID(c.Request().Context()),
 		Closable:   true,
 		Controls:   controls,
 	}

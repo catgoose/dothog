@@ -839,7 +839,7 @@ dothog/
 │   │   ├── middleware/        # Correlation IDs, error promotion (via promolog)
 │   │   ├── response/         # HTMX OOB response builders
 │   │   ├── hypermedia/       # Navigation, filters, table state
-│   │   └── routes_realtime.go # SSE endpoints and publishers
+│   │   └── realtime.go       # SSE endpoints and publishers
 │   ├── demo/                  # SQLite demo database
 │   ├── ssebroker/             # Topic-based pub/sub for SSE
 │   └── domain/                # Data models

@@ -38,9 +38,11 @@ import (
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
 
-// Repos groups repository and store dependencies for the application routes.
-// Generated apps add fields here as features are added.
-type Repos struct {
+// Deps groups repository and store dependencies for the application routes.
+// Generated apps add fields here as features are added. main.go owns
+// construction of every field here so InitRoutes never discovers runtime
+// state on its own (no config.GetConfig, no demo.Open).
+type Deps struct {
 	ReqLogStore   promolog.Storer
 	IssueReporter IssueReporter
 	// setup:feature:session_settings:start
@@ -52,16 +54,31 @@ type Repos struct {
 	// the same concrete repo satisfies both this and SessionSettings.
 	SessionStore session.SettingsProvider
 	// setup:feature:session_settings:end
+	// setup:feature:demo:start
+	// DemoDB is the optional demo SQLite store. Nil means "demo content
+	// disabled" — main.go warns and continues when db/demo.db is missing,
+	// so demo routes that need a backing DB no-op silently.
+	DemoDB *demo.DB
+	// setup:feature:demo:end
+	// AppName is the display label main.go pulls from AppConfig once at
+	// startup. Used for the home page title, the AppNav layout, and the
+	// /health name field.
+	AppName string
 }
 
 // AppRoutes owns the wired Echo server, runtime dependencies, and the SSE
 // broker. Construct via NewAppRoutes, populate runtime deps via SetHealth*,
 // and call Close at shutdown.
 type AppRoutes struct {
-	repos     Repos
+	deps      Deps
 	startTime time.Time
 	ctx       context.Context
 	e         *echo.Echo
+	// healthIntervals returns the live admin section intervals shown on the
+	// /admin/health page. Demo's admin settings hooks this up in
+	// initAdminSettingsRoutes; with demo stripped it stays nil and the
+	// scaffold renders the page with no interval data.
+	healthIntervals func() map[string]int
 	// setup:feature:demo:start
 	demoDB *demo.DB
 	// setup:feature:demo:end
@@ -131,45 +148,65 @@ func (ar *AppRoutes) applyDemoSSEEnvelopes() {
 // instance. It stores route dependencies and defaults, but does not register
 // endpoints yet; call InitRoutes to install the route table onto Echo. Nil
 // IssueReporter falls back to a no-op reporter.
-func NewAppRoutes(ctx context.Context, e *echo.Echo, repos Repos) *AppRoutes {
-	if repos.IssueReporter == nil {
-		repos.IssueReporter = defaultReporter{}
+func NewAppRoutes(ctx context.Context, e *echo.Echo, deps Deps) *AppRoutes {
+	if deps.IssueReporter == nil {
+		deps.IssueReporter = defaultReporter{}
 	}
 	startTime := time.Now()
-	return &AppRoutes{
+	ar := &AppRoutes{
 		e:         e,
 		ctx:       ctx,
-		repos:     repos,
+		deps:     deps,
 		startTime: startTime,
 		healthCfg: health.Config{
+			Name:      deps.AppName,
 			Version:   version.Version,
 			StartTime: startTime,
 		},
 	}
+	// setup:feature:demo:start
+	ar.demoDB = deps.DemoDB
+	// setup:feature:demo:end
+	return ar
 }
 
-// InitRoutes installs the application's route table onto the wrapped Echo and
-// performs route-adjacent runtime setup such as broker creation and
-// feature-gated route wiring. Returns an error only if config load fails;
-// downstream demo features no-op when their data source is unavailable.
+// InitRoutes is the high-level coordinator that wires the application's
+// route table onto the embedded Echo. Each phase is its own helper so the
+// scaffold/admin/SSE/demo boundaries stay legible at a glance; behavior is
+// identical to running every helper inline. Runtime inputs (app name, demo
+// DB) are injected via Deps in NewAppRoutes — InitRoutes does not call
+// config.GetConfig or demo.Open itself.
 func (ar *AppRoutes) InitRoutes() error {
-	// Register known origins for ?from= breadcrumb resolution.
-	// Home (bit 0) is pre-registered. Additional pages register here.
+	ar.initScaffoldRoutes()
+	ar.initHealthRoutes()
+	ar.initScaffoldAdminRoutes()
+	ar.initSSERoutes()
+	// setup:feature:demo:start
+	ar.initDemoSSEShowcase()
+	ar.initDemoExtras()
+	ar.initDemoDBRoutes()
+	// setup:feature:demo:end
+	ar.finalizeRoutes()
+	return nil
+}
+
+// initScaffoldRoutes wires the home page, the session_settings page, and
+// the demo-feature navigation links derived apps reach from the AppNav
+// layout. Single registrar so derived apps know exactly where GET / lives.
+func (ar *AppRoutes) initScaffoldRoutes() {
+	// Register known origins for ?from= breadcrumb resolution. Home (bit 0)
+	// is pre-registered; additional pages register here.
 	// setup:feature:demo:start
 	linkwell.RegisterFrom(linkwell.FromDashboard, linkwell.Breadcrumb{Label: "Dashboard", Href: "/dashboard"})
 	// setup:feature:demo:end
 
-	cfg, err := config.GetConfig()
-	if err != nil {
-		return fmt.Errorf("handler init: %w", err)
-	}
 	// Single root handler — derived apps register GET / exactly once. The
 	// scaffold default serves the HomePage; the demo feature overrides the
 	// handler via the gated assignment below so there is no Echo route
 	// override at registration time. The default assignment looks ineffectual
 	// in the template (with demo present) but becomes the only assignment
 	// once demo is stripped.
-	homeHandler := handler.HandleComponent(views.HomePage(cfg.AppName)) //nolint:ineffassign,staticcheck // default-then-demo-override is intentional under feature stripping.
+	homeHandler := handler.HandleComponent(views.HomePage(ar.deps.AppName)) //nolint:ineffassign,staticcheck // default-then-demo-override is intentional under feature stripping.
 	// setup:feature:demo:start
 	homeHandler = handler.HandleComponent(views.ArchitecturePage())
 	// setup:feature:demo:end
@@ -193,14 +230,21 @@ func (ar *AppRoutes) InitRoutes() error {
 	ar.e.GET("/apps", handler.HandleComponent(views.ApplicationsIndexPage()))
 	ar.e.GET("/platform", handler.HandleComponent(views.PlatformIndexPage()))
 	// setup:feature:demo:end
+}
 
-	// Health check endpoint — returns structured ops metadata.
+// initHealthRoutes wires the structured GET/HEAD /health endpoint backed by
+// healthCfg seeded in NewAppRoutes.
+func (ar *AppRoutes) initHealthRoutes() {
 	healthHandler := func(c echo.Context) error {
 		return c.JSON(http.StatusOK, health.Check(c.Request().Context(), ar.healthCfg))
 	}
 	ar.e.GET("/health", healthHandler)
 	ar.e.HEAD("/health", healthHandler)
+}
 
+// initScaffoldAdminRoutes wires report-issue, admin core, the optional
+// session_settings admin, error traces, and the demo admin showcase pages.
+func (ar *AppRoutes) initScaffoldAdminRoutes() {
 	ar.initReportIssueRoutes()
 
 	ar.initAdminCoreRoutes()
@@ -217,12 +261,13 @@ func (ar *AppRoutes) InitRoutes() error {
 	ar.initComponents2Routes()
 	ar.initComponents3Routes()
 	// setup:feature:demo:end
+}
 
-	// ── Core SSE infrastructure ─────────────────────────────────
-	// Broker construction plus the scaffold-facing SSE routes derived apps
-	// rely on: app-lifeline (consumed by the AppNav layout) and theme SSE
-	// (cross-tab theme sync, paired with theme persistence). Anything else
-	// SSE-flavored is demo content and lives below.
+// initSSERoutes builds the SSE broker and wires the scaffold-facing SSE
+// routes derived apps always need (app-lifeline + cross-tab theme sync).
+// Everything demo-flavored that piggybacks on the broker lives in
+// initDemoSSEShowcase.
+func (ar *AppRoutes) initSSERoutes() {
 	// setup:feature:sse:start
 	ar.initSSEBroker()
 	ar.initLifelineRoutes(ar.broker)
@@ -233,12 +278,16 @@ func (ar *AppRoutes) InitRoutes() error {
 	ar.initThemeSSE(ar.broker)
 	// setup:feature:sse:end
 	// setup:feature:session_settings:end
+}
 
-	// ── Demo-only SSE showcase ──────────────────────────────────
-	// Real-time playground, tavern gallery, and demo dashboards. Every
-	// route here is jointly gated on demo+sse; the topic envelope wrappers
-	// also live here because the wrapped topics are demo dashboards only.
-	// setup:feature:demo:start
+// setup:feature:demo:start
+
+// initDemoSSEShowcase wires the demo+sse playground: realtime, tavern
+// gallery, observatory/auction/sensors, and the demo dashboards. Jointly
+// gated on demo+sse — when sse is stripped the body collapses to nothing.
+// The topic envelope wrappers live here too because the wrapped topics are
+// demo dashboards only.
+func (ar *AppRoutes) initDemoSSEShowcase() {
 	// setup:feature:sse:start
 	ar.applyDemoSSEEnvelopes()
 	ar.initLoggingRoutes(ar.broker)
@@ -260,20 +309,26 @@ func (ar *AppRoutes) InitRoutes() error {
 	ar.initTavernHotZoneRoutes(ar.broker)
 	ar.initTavernToastRoutes(ar.broker)
 	// setup:feature:sse:end
-	// setup:feature:demo:end
+}
 
-	// setup:feature:demo:start
+// initDemoExtras wires the demo-only routes that don't need either the
+// demo DB or the SSE broker: hypermedia, HAL, errors, error modes.
+func (ar *AppRoutes) initDemoExtras() {
 	ar.initHypermediaRoutes()
 	ar.initHALRoutes()
 	ar.initErrorsRoutes()
 	ar.initErrorModesRoutes()
+}
 
-	db, err := demo.Open("db/demo.db")
-	if err != nil {
-		logger.WithContext(ar.ctx).Warn("Demo DB unavailable; app routes disabled", "error", err)
-		return nil
+// initDemoDBRoutes wires every demo route whose handlers touch the demo
+// SQLite store. main.go owns demo.Open and logs the warn-and-continue when
+// db/demo.db is missing; this method returns silently when ar.demoDB is
+// nil, letting the shared finalization tail in InitRoutes still run.
+func (ar *AppRoutes) initDemoDBRoutes() {
+	db := ar.demoDB
+	if db == nil {
+		return
 	}
-	ar.demoDB = db
 	if stored, err := db.ListStoredLinks(); err == nil {
 		for _, s := range stored {
 			linkwell.LoadStoredLink(s.Source, linkwell.LinkRelation{
@@ -310,12 +365,16 @@ func (ar *AppRoutes) InitRoutes() error {
 	// setup:feature:sse:end
 	ar.initDashboardRoutes(db, board, queue, actLog)
 	ar.initAdminErrorReportsRoutes(db)
+}
 
-	// setup:feature:demo:end
+// setup:feature:demo:end
+
+// finalizeRoutes installs the route-not-found handler and primes the
+// breadcrumb route-set with the full GET table. Runs last so InitRouteSet
+// sees every registered route.
+func (ar *AppRoutes) finalizeRoutes() {
 	ar.e.RouteNotFound("/*", handler.HandleNotFound)
-	handler.InitRouteSet(ar.e, cfg.AppName)
-	ar.healthCfg.Name = cfg.AppName
-	return nil
+	handler.InitRouteSet(ar.e, ar.deps.AppName)
 }
 
 // SetHealthDB injects the DB ping target used by GET /health; nil disables the DB row.
@@ -331,7 +390,10 @@ func (ar *AppRoutes) SetHealthStats(fn health.StatsFunc) {
 // InitEcho assembles the project middleware chain (preload-link, correlation, recovery,
 // server-timing, security headers, raw-writer + httpcompression, and feature-gated
 // auth / session / link-relations); call once at startup, nil reqLogStore disables
-// error-trace promotion.
+// error-trace promotion. Each phase is its own helper so the middleware ordering
+// stays explicit at a glance — order matters: preload comes first so the early
+// hints flush before any other handler writes a header, compression must come
+// after the raw-writer save, and the static handler is last.
 func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
 	settingsRepo session.SettingsProvider,
@@ -339,14 +401,33 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	reqLogStore promolog.Storer,
 ) (*echo.Echo, error) {
 	e := echo.New()
-
-	// Preload critical assets. In production (direct H2), send 103 Early Hints
-	// so the browser fetches CSS/JS while the server generates the response.
-	// In `mage watch` the templ HTTP proxy (and optional Caddy in front of it)
-	// is always in the chain — TEMPL_PROXY=true is set there — and 1xx
-	// responses get mangled, so fall back to Link headers on the final
-	// response. The browser still gets the preload hint, just slightly later.
 	behindProxy := os.Getenv("TEMPL_PROXY") != ""
+
+	addPreloadMiddleware(e, behindProxy)
+	addCoreMiddleware(e)
+	addCompressionMiddleware(e)
+	if err := addAuthMiddleware(ctx, e, cfg); err != nil {
+		return nil, err
+	}
+	e.HTTPErrorHandler = middleware.NewHTTPErrorHandler(reqLogStore)
+	// setup:feature:session_settings:start
+	addSessionMiddleware(e, settingsRepo, cfg)
+	// setup:feature:session_settings:end
+	// setup:feature:demo:start
+	e.Use(middleware.LinkRelationsMiddleware())
+	// setup:feature:demo:end
+	addVaryHXRequestMiddleware(e)
+	addStaticHandler(e, staticFS, behindProxy)
+
+	return e, nil
+}
+
+// addPreloadMiddleware installs the Link/Early-Hints preload middleware.
+// In production (direct H2), it sends 103 Early Hints so the browser fetches
+// CSS/JS while the server generates the response. Behind the templ proxy
+// (mage watch), 1xx responses get mangled, so fall back to Link headers on
+// the final response — the browser still gets the preload hint, just later.
+func addPreloadMiddleware(e *echo.Echo, behindProxy bool) {
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			preloadLinks := []string{
@@ -371,7 +452,14 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 			return next(c)
 		}
 	})
+}
 
+// addCoreMiddleware installs Recover, server-timing, correlation,
+// request-logger, security headers, and the raw-writer save. RawWriter must
+// run before the compression middleware because httpcompression finalizes
+// (closes) its writer when the chain unwinds, making it unusable by the
+// time Echo's HTTPErrorHandler runs.
+func addCoreMiddleware(e *echo.Echo) {
 	e.Use(echoMiddleware.Recover())
 	e.Use(middleware.ServerTimingMiddleware())
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
@@ -380,107 +468,127 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
 		CrossOriginOpenerPolicy: "same-origin",
 	})))
-	// Save the raw response writer before the compression middleware wraps it.
-	// The error handler needs the unwrapped writer because httpcompression
-	// finalizes (closes) its writer when the middleware chain unwinds, making
-	// it unusable by the time Echo's HTTPErrorHandler runs.
 	e.Use(middleware.RawWriterMiddleware())
-	// Skip compression when running behind the templ proxy (mage watch).
-	// Chunked compressed responses cause h2 framing errors through
-	// the templ-proxy → Caddy chain. Caddy handles compression instead.
-	if os.Getenv("TEMPL_PROXY") == "" {
-		compress, err := httpcompression.DefaultAdapter()
-		if err != nil {
-			slog.Error("failed to create compression adapter", "error", err)
-		} else {
-			e.Use(echo.WrapMiddleware(compress))
-		}
-	}
+}
 
+// addCompressionMiddleware installs httpcompression unless TEMPL_PROXY is
+// set. Chunked compressed responses cause h2 framing errors through the
+// templ-proxy → Caddy chain in mage watch; Caddy handles compression
+// instead in that mode.
+func addCompressionMiddleware(e *echo.Echo) {
+	if os.Getenv("TEMPL_PROXY") != "" {
+		return
+	}
+	compress, err := httpcompression.DefaultAdapter()
+	if err != nil {
+		slog.Error("failed to create compression adapter", "error", err)
+		return
+	}
+	e.Use(echo.WrapMiddleware(compress))
+}
+
+// addAuthMiddleware wires the crooner SCS session manager, OIDC handlers,
+// and the CSRF protector. No-op when auth is not configured. Returns any
+// crooner construction errors so InitEcho can surface them at startup.
+func addAuthMiddleware(ctx context.Context, e *echo.Echo, cfg *config.AppConfig) error {
 	// setup:feature:auth:start
-	if cfg != nil && cfg.AuthConfigured() {
-		// Build crooner runtime locally from cfg's env-backed OIDC values.
-		// AppConfig stays immutable; the SessionManager + AuthConfig live in
-		// this function's scope.
-		croonerParams := &crooner.AuthConfigParams{
-			IssuerURL:         cfg.OIDCIssuerURL,
-			ClientID:          cfg.OIDCClientID,
-			ClientSecret:      cfg.OIDCClientSecret,
-			RedirectURL:       cfg.OIDCRedirectURL,
-			LoginURLRedirect:  cfg.OIDCLoginRedirectURL,
-			LogoutURLRedirect: cfg.OIDCLogoutRedirectURL,
-			AuthRoutes: &crooner.AuthRoutes{
-				Login:    "/login",
-				Logout:   "/logout",
-				Callback: "/callback",
-			},
-		}
-		sessionMgr, scsMgr, err := crooner.NewSCSManager(
-			crooner.WithPersistentCookieName(cfg.SessionSecret, cfg.AppName),
-			crooner.WithLifetime(24*time.Hour),
-		)
-		if err != nil {
-			return nil, fmt.Errorf("crooner session manager: %w", err)
-		}
-		e.Use(echo.WrapMiddleware(scsMgr.LoadAndSave))
-		croonerParams.SessionMgr = sessionMgr
-		authCfg, err := crooner.NewAuthConfig(ctx, croonerParams)
-		if err != nil {
-			return nil, fmt.Errorf("crooner auth config: %w", err)
-		}
-		e.Use(echo.WrapMiddleware(authCfg.Middleware()))
-		e.GET(croonerParams.AuthRoutes.Login, echo.WrapHandler(authCfg.LoginHandler()))
-		e.GET(croonerParams.AuthRoutes.Logout, echo.WrapHandler(authCfg.LogoutHandler()))
-		e.GET(croonerParams.AuthRoutes.Callback, echo.WrapHandler(authCfg.CallbackHandler()))
-		// setup:feature:csrf:start
-		if cfg.SessionSecret != "" {
-			hash := sha256.Sum256([]byte(cfg.SessionSecret))
-			csrfKey := hash[:]
-			csrfMw := dorman.CSRFProtect(dorman.CSRFConfig{
-				Key:              csrfKey,
-				CookiePath:       "/",
-				FieldName:        "csrf_token",
-				RequestHeader:    "X-CSRF-Token",
-				ExemptPaths:      cfg.CSRFExemptPaths,
-				RotatePerRequest: cfg.CSRFRotatePerRequest,
-				PerRequestPaths:  cfg.CSRFPerRequestPaths,
-			})
-			e.Use(echo.WrapMiddleware(csrfMw))
-			// Inject token into echo context for templates
-			e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-				return func(c echo.Context) error {
-					c.Set("csrf_token", dorman.GetToken(c.Request()))
-					return next(c)
-				}
-			})
-		}
-		// setup:feature:csrf:end
+	if cfg == nil || !cfg.AuthConfigured() {
+		return nil
 	}
+	// Build crooner runtime locally from cfg's env-backed OIDC values.
+	// AppConfig stays immutable; the SessionManager + AuthConfig live in
+	// this function's scope.
+	croonerParams := &crooner.AuthConfigParams{
+		IssuerURL:         cfg.OIDCIssuerURL,
+		ClientID:          cfg.OIDCClientID,
+		ClientSecret:      cfg.OIDCClientSecret,
+		RedirectURL:       cfg.OIDCRedirectURL,
+		LoginURLRedirect:  cfg.OIDCLoginRedirectURL,
+		LogoutURLRedirect: cfg.OIDCLogoutRedirectURL,
+		AuthRoutes: &crooner.AuthRoutes{
+			Login:    "/login",
+			Logout:   "/logout",
+			Callback: "/callback",
+		},
+	}
+	sessionMgr, scsMgr, err := crooner.NewSCSManager(
+		crooner.WithPersistentCookieName(cfg.SessionSecret, cfg.AppName),
+		crooner.WithLifetime(24*time.Hour),
+	)
+	if err != nil {
+		return fmt.Errorf("crooner session manager: %w", err)
+	}
+	e.Use(echo.WrapMiddleware(scsMgr.LoadAndSave))
+	croonerParams.SessionMgr = sessionMgr
+	authCfg, err := crooner.NewAuthConfig(ctx, croonerParams)
+	if err != nil {
+		return fmt.Errorf("crooner auth config: %w", err)
+	}
+	e.Use(echo.WrapMiddleware(authCfg.Middleware()))
+	e.GET(croonerParams.AuthRoutes.Login, echo.WrapHandler(authCfg.LoginHandler()))
+	e.GET(croonerParams.AuthRoutes.Logout, echo.WrapHandler(authCfg.LogoutHandler()))
+	e.GET(croonerParams.AuthRoutes.Callback, echo.WrapHandler(authCfg.CallbackHandler()))
+	// setup:feature:csrf:start
+	if cfg.SessionSecret != "" {
+		hash := sha256.Sum256([]byte(cfg.SessionSecret))
+		csrfKey := hash[:]
+		csrfMw := dorman.CSRFProtect(dorman.CSRFConfig{
+			Key:              csrfKey,
+			CookiePath:       "/",
+			FieldName:        "csrf_token",
+			RequestHeader:    "X-CSRF-Token",
+			ExemptPaths:      cfg.CSRFExemptPaths,
+			RotatePerRequest: cfg.CSRFRotatePerRequest,
+			PerRequestPaths:  cfg.CSRFPerRequestPaths,
+		})
+		e.Use(echo.WrapMiddleware(csrfMw))
+		// Inject token into echo context for templates
+		e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				c.Set("csrf_token", dorman.GetToken(c.Request()))
+				return next(c)
+			}
+		})
+	}
+	// setup:feature:csrf:end
 	// setup:feature:auth:end
+	return nil
+}
 
-	e.HTTPErrorHandler = middleware.NewHTTPErrorHandler(reqLogStore)
+// setup:feature:session_settings:start
 
-	// setup:feature:session_settings:start
-	if settingsRepo != nil {
-		var sessCfg session.Config
-		if cfg != nil && cfg.SessionSettingsCookieName != "" {
-			sessCfg.CookieName = cfg.SessionSettingsCookieName
-		}
-		e.Use(echo.WrapMiddleware(session.Middleware(settingsRepo, nil, sessCfg)))
+// addSessionMiddleware installs the session_settings middleware so request
+// handlers can read the hydrated row via session.GetSettings. Nil
+// settingsRepo skips the middleware so handlers see no session row.
+func addSessionMiddleware(e *echo.Echo, settingsRepo session.SettingsProvider, cfg *config.AppConfig) {
+	if settingsRepo == nil {
+		return
 	}
-	// setup:feature:session_settings:end
+	var sessCfg session.Config
+	if cfg != nil && cfg.SessionSettingsCookieName != "" {
+		sessCfg.CookieName = cfg.SessionSettingsCookieName
+	}
+	e.Use(echo.WrapMiddleware(session.Middleware(settingsRepo, nil, sessCfg)))
+}
 
-	// setup:feature:demo:start
-	e.Use(middleware.LinkRelationsMiddleware())
-	// setup:feature:demo:end
+// setup:feature:session_settings:end
 
+// addVaryHXRequestMiddleware forces Vary: HX-Request on every response so
+// HTTP caches treat HTMX and non-HTMX variants as distinct entries.
+func addVaryHXRequestMiddleware(e *echo.Echo) {
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			c.Response().Header().Set("Vary", "HX-Request")
 			return next(c)
 		}
 	})
+}
 
+// addStaticHandler mounts the embedded static FS under /public with a
+// Cache-Control policy that flips between immutable production caching and
+// no-cache during mage watch (the templ proxy serves rebuilt assets, so the
+// browser must not cache).
+func addStaticHandler(e *echo.Echo, staticFS fs.FS, behindProxy bool) {
 	static := e.Group("/public", func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			if behindProxy {
@@ -492,6 +600,4 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 		}
 	})
 	static.StaticFS("/", staticFS)
-
-	return e, nil
 }

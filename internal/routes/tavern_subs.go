@@ -61,14 +61,16 @@ func (ar *AppRoutes) initTavernSubsRoutes(broker *tavern.SSEBroker) {
 		},
 	))
 
-	ar.e.GET("/realtime/tavern/subscriptions", s.handlePage)
-	ar.e.GET("/realtime/tavern/subscriptions/scoped-panel", s.handleScopedPanel)
-	ar.e.GET("/realtime/tavern/subscriptions/glob-panel", s.handleGlobPanel)
-	ar.e.GET("/sse/tavern/subs/scoped", s.handleScopedSSE)
-	ar.e.GET("/sse/tavern/subs/glob", s.handleGlobSSE)
-	ar.e.GET("/sse/tavern/subs/multi", s.handleMultiSSE)
-	ar.e.GET("/sse/tavern/subs/dynamic", echo.WrapHandler(broker.DynamicGroupHandler("tavern-subs-dynamic")))
-	ar.e.POST("/realtime/tavern/subscriptions/group", s.handleGroupSwitch)
+	subs := ar.e.Group("/realtime/tavern/subscriptions")
+	subs.GET("", s.handlePage)
+	subs.GET("/scoped-panel", s.handleScopedPanel)
+	subs.GET("/glob-panel", s.handleGlobPanel)
+	subs.POST("/group", s.handleGroupSwitch)
+	subsSSE := ar.e.Group("/sse/tavern/subs")
+	subsSSE.GET("/scoped", s.handleScopedSSE)
+	subsSSE.GET("/glob", s.handleGlobSSE)
+	subsSSE.GET("/multi", s.handleMultiSSE)
+	subsSSE.GET("/dynamic", echo.WrapHandler(broker.DynamicGroupHandler("tavern-subs-dynamic")))
 
 	broker.RunPublisher(ar.ctx, s.startPublisher)
 }

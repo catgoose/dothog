@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand/v2"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -129,7 +130,7 @@ func (s *components2State) handleComponents2Page(c echo.Context) error {
 func (s *components2State) handleCarouselSlide(c echo.Context) error {
 	idx, err := strconv.Atoi(c.Param("index"))
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid index", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid index", err)
 	}
 	s.mu.RLock()
 	total := len(s.carouselSlides)
@@ -177,7 +178,7 @@ func (s *components2State) handleCascadingSelect(c echo.Context) error {
 	subItems, ok := s.categories[category]
 	if !ok {
 		s.mu.RUnlock()
-		return handler.HandleHypermediaError(c, 400, "Unknown category", fmt.Errorf("category=%q", category))
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Unknown category", fmt.Errorf("category=%q", category))
 	}
 	items := make([]string, len(subItems))
 	copy(items, subItems)
@@ -209,19 +210,19 @@ func (s *components2State) handleRange(c echo.Context) error {
 func (s *components2State) handleUpload(c echo.Context) error {
 	file, err := c.FormFile("file")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "No file uploaded", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "No file uploaded", err)
 	}
 
 	// Open and immediately close to validate readability
 	src, err := file.Open()
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to read file", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to read file", err)
 	}
 	defer func() { _ = src.Close() }()
 	// Count actual bytes read
 	n, err := io.Copy(io.Discard, src)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to read file", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to read file", err)
 	}
 
 	return handler.RenderComponent(c, views.UploadResultFragment(views.UploadResultData{
@@ -236,12 +237,12 @@ func (s *components2State) handleUpload(c echo.Context) error {
 func (s *components2State) handleAccordionPanel(c echo.Context) error {
 	idx, err := strconv.Atoi(c.Param("panel"))
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid panel", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid panel", err)
 	}
 	s.mu.RLock()
 	if idx < 0 || idx >= len(s.accordionPanels) {
 		s.mu.RUnlock()
-		return handler.HandleHypermediaError(c, 400, "Panel out of range", fmt.Errorf("panel=%d", idx))
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Panel out of range", fmt.Errorf("panel=%d", idx))
 	}
 	panel := s.accordionPanels[idx]
 	s.mu.RUnlock()

@@ -4,6 +4,7 @@ package routes
 
 import (
 	"fmt"
+	"net/http"
 
 	"catgoose/dothog/internal/demo"
 	"catgoose/dothog/internal/routes/handler"
@@ -34,12 +35,12 @@ func (a *approvalRoutes) handleApprovalsPage(c echo.Context) error {
 func (a *approvalRoutes) handleApprovalAction(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid request ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid request ID", err)
 	}
 	action := c.FormValue("action")
 	req, ok := a.queue.TransitionRequest(id, action, "Admin")
 	if !ok {
-		return handler.HandleHypermediaError(c, 400, fmt.Sprintf("Cannot %s request %d", action, id), nil)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, fmt.Sprintf("Cannot %s request %d", action, id), nil)
 	}
 	evt := a.actLog.Record(action, "approval", id, req.Title, fmt.Sprintf("$%.2f %s", req.Amount, action))
 	BroadcastActivity(a.broker, evt)

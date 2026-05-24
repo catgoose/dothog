@@ -8,6 +8,7 @@ import (
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/web/views"
 	"github.com/catgoose/tavern"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
@@ -32,12 +33,12 @@ func (k *kanbanRoutes) handleKanbanPage(c echo.Context) error {
 func (k *kanbanRoutes) handleMoveTask(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid task ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid task ID", err)
 	}
 	newStatus := c.FormValue("status")
 	task, ok := k.board.MoveTask(id, newStatus)
 	if !ok {
-		return handler.HandleHypermediaError(c, 404, "Task not found or invalid status", nil)
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Task not found or invalid status", nil)
 	}
 	evt := k.actLog.Record("moved", "task", id, task.Title, "moved to "+newStatus)
 	BroadcastActivity(k.broker, evt)

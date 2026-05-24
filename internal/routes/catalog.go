@@ -9,6 +9,7 @@ import (
 	"catgoose/dothog/web/views"
 	htmx "github.com/angelofallars/htmx-go"
 	"github.com/catgoose/linkwell"
+	"net/http"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
@@ -29,7 +30,7 @@ func (ar *AppRoutes) initCatalogRoutes(db *demo.DB) {
 func (cat *catalogRoutes) handleCatalogPage(c echo.Context) error {
 	bar, container, err := cat.buildCatalogContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load catalog", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load catalog", err)
 	}
 	return handler.RenderBaseLayout(c, views.CatalogPage(bar, container))
 }
@@ -37,7 +38,7 @@ func (cat *catalogRoutes) handleCatalogPage(c echo.Context) error {
 func (cat *catalogRoutes) handleCatalogItems(c echo.Context) error {
 	bar, container, err := cat.buildCatalogContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load items", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load items", err)
 	}
 	if htmx.IsBoosted(c.Request()) {
 		return handler.RenderBaseLayout(c, views.CatalogPage(bar, container))
@@ -49,11 +50,11 @@ func (cat *catalogRoutes) handleCatalogItems(c echo.Context) error {
 func (cat *catalogRoutes) handleCatalogDetailPage(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	item, err := cat.db.GetItem(c.Request().Context(), id)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 404, "Item not found", err)
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", err)
 	}
 	handler.SetPageLabel(c, item.Name)
 	return handler.RenderBaseLayout(c, views.CatalogDetailPage(item))
@@ -62,11 +63,11 @@ func (cat *catalogRoutes) handleCatalogDetailPage(c echo.Context) error {
 func (cat *catalogRoutes) handleCatalogItemDetails(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	item, err := cat.db.GetItem(c.Request().Context(), id)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 404, "Item not found", err)
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", err)
 	}
 	return handler.RenderComponent(c, views.CatalogDetailContent(item))
 }

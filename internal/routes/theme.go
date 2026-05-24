@@ -62,8 +62,8 @@ func (ar *AppRoutes) handleTheme() echo.HandlerFunc {
 		}
 		settings := session.GetSettings(c.Request())
 		settings.Theme = theme
-		if ar.repos.SessionStore != nil {
-			if err := ar.repos.SessionStore.Upsert(c.Request().Context(), settings); err != nil {
+		if ar.deps.SessionStore != nil {
+			if err := ar.deps.SessionStore.Upsert(c.Request().Context(), settings); err != nil {
 				logger.WithContext(c.Request().Context()).Error("Failed to save theme setting", "error", err)
 			}
 		}
@@ -94,8 +94,8 @@ func (ar *AppRoutes) handleLayout() echo.HandlerFunc {
 		}
 		settings := session.GetSettings(c.Request())
 		settings.Layout = layout
-		if ar.repos.SessionStore != nil {
-			if err := ar.repos.SessionStore.Upsert(c.Request().Context(), settings); err != nil {
+		if ar.deps.SessionStore != nil {
+			if err := ar.deps.SessionStore.Upsert(c.Request().Context(), settings); err != nil {
 				logger.WithContext(c.Request().Context()).Error("Failed to save layout setting", "error", err)
 			}
 		}

@@ -23,8 +23,8 @@ const loggingBase = "/platform/logging"
 func (ar *AppRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 	// setup:feature:sse:start
 	// Wire up SSE broadcasting on error trace promotion.
-	if ar.repos.ReqLogStore != nil {
-		ar.repos.ReqLogStore.SetOnPromote(func(summary promolog.TraceSummary) {
+	if ar.deps.ReqLogStore != nil {
+		ar.deps.ReqLogStore.SetOnPromote(func(summary promolog.TraceSummary) {
 			broadcastErrorTrace(broker, summary)
 		})
 	}
@@ -85,14 +85,14 @@ func (ar *AppRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 
 	// List recent traces
 	ar.e.GET(loggingBase+"/traces", func(c echo.Context) error {
-		if ar.repos.ReqLogStore == nil {
+		if ar.deps.ReqLogStore == nil {
 			return handler.RenderComponent(c, views.LoggingTracesList(nil))
 		}
-		traces, _, err := ar.repos.ReqLogStore.ListTraces(c.Request().Context(), promolog.TraceFilter{
+		traces, _, err := ar.deps.ReqLogStore.ListTraces(c.Request().Context(), promolog.TraceFilter{
 			Sort: "CreatedAt", Dir: "desc", Page: 1, PerPage: 20,
 		})
 		if err != nil {
-			return handler.HandleHypermediaError(c, 500, "Failed to load traces", err)
+			return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load traces", err)
 		}
 		return handler.RenderComponent(c, views.LoggingTracesList(traces))
 	})
@@ -100,16 +100,16 @@ func (ar *AppRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 	// Simulate support report — returns formatted JSON of what IssueReporter would receive.
 	ar.e.GET(loggingBase+"/report/:requestID", func(c echo.Context) error {
 		requestID := c.Param("requestID")
-		if ar.repos.ReqLogStore == nil {
-			return handler.HandleHypermediaError(c, 404, "Store not configured", nil)
+		if ar.deps.ReqLogStore == nil {
+			return handler.HandleHypermediaError(c, http.StatusNotFound, "Store not configured", nil)
 		}
-		trace, err := ar.repos.ReqLogStore.Get(c.Request().Context(), requestID)
+		trace, err := ar.deps.ReqLogStore.Get(c.Request().Context(), requestID)
 		if err != nil {
 			logger.WithContext(c.Request().Context()).Error("Failed to retrieve error trace",
 				"request_id", requestID, "error", err)
 		}
 		if trace == nil {
-			return handler.HandleHypermediaError(c, 404, "Trace not found or expired", nil)
+			return handler.HandleHypermediaError(c, http.StatusNotFound, "Trace not found or expired", nil)
 		}
 
 		payload := map[string]any{
@@ -126,7 +126,7 @@ func (ar *AppRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 		}
 		jsonBytes, err := json.MarshalIndent(payload, "", "  ")
 		if err != nil {
-			return handler.HandleHypermediaError(c, 500, "Failed to marshal report", err)
+			return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to marshal report", err)
 		}
 		return handler.RenderComponent(c, views.LoggingReportOutput(trace, string(jsonBytes)))
 	})

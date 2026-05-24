@@ -24,15 +24,15 @@ func (ar *AppRoutes) initReportIssueRoutes() {
 		requestID := c.Param("requestID")
 		description := c.FormValue("description")
 		var trace *promolog.Trace
-		if ar.repos.ReqLogStore != nil && requestID != "" {
+		if ar.deps.ReqLogStore != nil && requestID != "" {
 			var err error
-			trace, err = ar.repos.ReqLogStore.Get(c.Request().Context(), requestID)
+			trace, err = ar.deps.ReqLogStore.Get(c.Request().Context(), requestID)
 			if err != nil {
 				logger.WithContext(c.Request().Context()).Error("Failed to retrieve error trace for report",
 					"request_id", requestID, "error", err)
 			}
 		}
-		if err := ar.repos.IssueReporter.Report(requestID, description, trace); err != nil {
+		if err := ar.deps.IssueReporter.Report(requestID, description, trace); err != nil {
 			logger.WithContext(c.Request().Context()).Error("Issue report failed",
 				"reported_request_id", requestID, "error", err)
 			c.Response().Header().Set("HX-Trigger", `{"showAlert":"Failed to submit report. Please try again."}`)
@@ -40,45 +40,59 @@ func (ar *AppRoutes) initReportIssueRoutes() {
 			return c.String(http.StatusInternalServerError, "")
 		}
 		// setup:feature:demo:start
-		if ar.demoDB != nil {
-			logEntries := "[]"
-			if trace != nil {
-				if b, err := json.Marshal(trace.Entries); err == nil {
-					logEntries = string(b)
-				}
-			}
-			var statusCode int
-			var route string
-			if trace != nil {
-				statusCode = trace.StatusCode
-				route = trace.Route
-			}
-			report := demo.ErrorReport{
-				RequestID:   requestID,
-				Description: description,
-				Route:       route,
-				StatusCode:  statusCode,
-				UserAgent:   c.Request().UserAgent(),
-				LogEntries:  logEntries,
-			}
-			if _, err := ar.demoDB.InsertErrorReport(c.Request().Context(), report); err != nil {
-				logger.WithContext(c.Request().Context()).Error("Failed to store error report",
-					"request_id", requestID, "error", err)
-			}
-		}
+		ar.persistReportToDemoDB(c, requestID, description, trace)
 		// setup:feature:demo:end
 		c.Response().Header().Set("HX-Trigger", `{"showAlert":"Issue reported. Thank you for your feedback!"}`)
 		c.Response().Header().Set("HX-Reswap", "none")
 		return c.String(http.StatusOK, "")
 	}
-	ar.e.POST("/report-issue", reportHandler)
-	ar.e.POST("/report-issue/:requestID", reportHandler)
+	reports := ar.e.Group("/report-issue")
+	reports.POST("", reportHandler)
+	reports.POST("/:requestID", reportHandler)
 
 	// GET /report-issue/:requestID — returns the Report Issue modal fragment.
 	// The modal auto-opens via HyperScript on load.
-	ar.e.GET("/report-issue/:requestID", func(c echo.Context) error {
+	reports.GET("/:requestID", func(c echo.Context) error {
 		requestID := c.Param("requestID")
 		cfg := linkwell.ReportIssueModal(requestID)
 		return handler.RenderComponent(c, corecomponents.ReportIssueModal(cfg))
 	})
 }
+
+// setup:feature:demo:start
+
+// persistReportToDemoDB writes the submitted issue into the demo SQLite
+// store so the admin error-reports page can list it. Demo-feature only:
+// no-op when ar.demoDB is nil, since main.go warns and continues when
+// db/demo.db is unavailable.
+func (ar *AppRoutes) persistReportToDemoDB(c echo.Context, requestID, description string, trace *promolog.Trace) {
+	if ar.demoDB == nil {
+		return
+	}
+	logEntries := "[]"
+	if trace != nil {
+		if b, err := json.Marshal(trace.Entries); err == nil {
+			logEntries = string(b)
+		}
+	}
+	var statusCode int
+	var route string
+	if trace != nil {
+		statusCode = trace.StatusCode
+		route = trace.Route
+	}
+	report := demo.ErrorReport{
+		RequestID:   requestID,
+		Description: description,
+		Route:       route,
+		StatusCode:  statusCode,
+		UserAgent:   c.Request().UserAgent(),
+		LogEntries:  logEntries,
+	}
+	if _, err := ar.demoDB.InsertErrorReport(c.Request().Context(), report); err != nil {
+		logger.WithContext(c.Request().Context()).Error("Failed to store error report",
+			"request_id", requestID, "error", err)
+	}
+}
+
+// setup:feature:demo:end

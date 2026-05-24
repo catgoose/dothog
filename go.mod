@@ -5,7 +5,6 @@ go 1.26.3
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/CAFxX/httpcompression v0.0.9
-	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/a-h/templ v0.3.1001
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.16

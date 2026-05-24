@@ -50,43 +50,46 @@ func newHypermediaState() *hypermediaState {
 }
 
 func (ar *AppRoutes) initHypermediaRoutes() {
-	// Links demo page
-	ar.e.GET("/api/links", ar.handleLinksPage)
-	ar.e.POST("/api/links", ar.handleLinksCreate)
-	ar.e.DELETE("/api/links/:id", ar.handleLinksDelete)
+	// /api group: links demo + hypermedia standards page
+	api := ar.e.Group("/api")
+	api.GET("/links", ar.handleLinksPage)
+	api.POST("/links", ar.handleLinksCreate)
+	api.DELETE("/links/:id", ar.handleLinksDelete)
+	api.GET("/standards", handler.HandleComponent(views.HypermediaStandardsPage()))
 
 	s := newHypermediaState()
 
 	// CRUD page
-	ar.e.GET(patternsBase+"/crud", s.handleCRUDPage)
-	ar.e.GET(patternsBase+"/crud/items", s.handleCRUDItems)
-	ar.e.POST(patternsBase+"/crud/items", s.handleCRUDCreate)
-	ar.e.GET(patternsBase+"/crud/items/:id", s.handleCRUDItemRow)
-	ar.e.GET(patternsBase+"/crud/items/:id/edit", s.handleCRUDEditForm)
-	ar.e.PUT(patternsBase+"/crud/items/:id", s.handleCRUDUpdate)
-	ar.e.PATCH(patternsBase+"/crud/items/:id/toggle", s.handleCRUDPatchToggle)
-	ar.e.DELETE(patternsBase+"/crud/items/:id", s.handleCRUDDelete)
+	crud := ar.e.Group(patternsBase + "/crud")
+	crud.GET("", s.handleCRUDPage)
+	crud.GET("/items", s.handleCRUDItems)
+	crud.POST("/items", s.handleCRUDCreate)
+	crud.GET("/items/:id", s.handleCRUDItemRow)
+	crud.GET("/items/:id/edit", s.handleCRUDEditForm)
+	crud.PUT("/items/:id", s.handleCRUDUpdate)
+	crud.PATCH("/items/:id/toggle", s.handleCRUDPatchToggle)
+	crud.DELETE("/items/:id", s.handleCRUDDelete)
 
 	// Lists page
-	ar.e.GET(patternsBase+"/lists", s.handleListsPage)
-	ar.e.GET(patternsBase+"/lists/items", handleListsItems)
+	lists := ar.e.Group(patternsBase + "/lists")
+	lists.GET("", s.handleListsPage)
+	lists.GET("/items", handleListsItems)
 
 	// Interactions page
-	ar.e.GET(patternsBase+"/interactions", s.handleInteractionsPage)
-	ar.e.GET(patternsBase+"/interactions/modal", s.handleInteractionsModal)
-	ar.e.POST(patternsBase+"/interactions/submit", s.handleInteractionsSubmit)
-	ar.e.POST(patternsBase+"/interactions/preview", s.handleInteractionsPreview)
-	ar.e.POST(patternsBase+"/interactions/comment", s.handleInteractionsComment)
-	ar.e.POST(patternsBase+"/interactions/inline-title", handleInteractionsInlineTitle)
-
-	// Standards page
-	ar.e.GET("/api/standards", handler.HandleComponent(views.HypermediaStandardsPage()))
+	interactions := ar.e.Group(patternsBase + "/interactions")
+	interactions.GET("", s.handleInteractionsPage)
+	interactions.GET("/modal", s.handleInteractionsModal)
+	interactions.POST("/submit", s.handleInteractionsSubmit)
+	interactions.POST("/preview", s.handleInteractionsPreview)
+	interactions.POST("/comment", s.handleInteractionsComment)
+	interactions.POST("/inline-title", handleInteractionsInlineTitle)
 
 	// State page
-	ar.e.GET(patternsBase+"/state", s.handleStatePage)
-	ar.e.POST(patternsBase+"/state/like", s.handleStateLike)
-	ar.e.POST(patternsBase+"/state/toggle", s.handleStateToggle)
-	ar.e.GET(patternsBase+"/state/panel", s.handleStatePanel)
+	state := ar.e.Group(patternsBase + "/state")
+	state.GET("", s.handleStatePage)
+	state.POST("/like", s.handleStateLike)
+	state.POST("/toggle", s.handleStateToggle)
+	state.GET("/panel", s.handleStatePanel)
 }
 
 // ─── CRUD handlers ────────────────────────────────────────────────────────────
@@ -124,13 +127,13 @@ func (s *hypermediaState) handleCRUDCreate(c echo.Context) error {
 func (s *hypermediaState) handleCRUDItemRow(c echo.Context) error {
 	id, err := parseCRUDID(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	s.mu.RLock()
 	item, found := s.findItem(id)
 	s.mu.RUnlock()
 	if !found {
-		return handler.HandleHypermediaError(c, 404, "Item not found", fmt.Errorf("id=%d", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", fmt.Errorf("id=%d", id))
 	}
 	return handler.RenderComponent(c, views.CRUDItemRow(item.toView()))
 }
@@ -138,13 +141,13 @@ func (s *hypermediaState) handleCRUDItemRow(c echo.Context) error {
 func (s *hypermediaState) handleCRUDEditForm(c echo.Context) error {
 	id, err := parseCRUDID(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	s.mu.RLock()
 	item, found := s.findItem(id)
 	s.mu.RUnlock()
 	if !found {
-		return handler.HandleHypermediaError(c, 404, "Item not found", fmt.Errorf("id=%d", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", fmt.Errorf("id=%d", id))
 	}
 	return handler.RenderComponent(c, views.CRUDEditRow(item.toView()))
 }
@@ -152,18 +155,18 @@ func (s *hypermediaState) handleCRUDEditForm(c echo.Context) error {
 func (s *hypermediaState) handleCRUDUpdate(c echo.Context) error {
 	id, err := parseCRUDID(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	name := c.FormValue("name")
 	if name == "" {
-		return handler.HandleHypermediaError(c, 400, "Name is required", fmt.Errorf("empty name for id=%d", id))
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Name is required", fmt.Errorf("empty name for id=%d", id))
 	}
 	notes := c.FormValue("notes")
 	s.mu.Lock()
 	idx := s.findIndex(id)
 	if idx < 0 {
 		s.mu.Unlock()
-		return handler.HandleHypermediaError(c, 404, "Item not found", fmt.Errorf("id=%d", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", fmt.Errorf("id=%d", id))
 	}
 	s.items[idx].Name = name
 	s.items[idx].Notes = notes
@@ -175,13 +178,13 @@ func (s *hypermediaState) handleCRUDUpdate(c echo.Context) error {
 func (s *hypermediaState) handleCRUDPatchToggle(c echo.Context) error {
 	id, err := parseCRUDID(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	s.mu.Lock()
 	idx := s.findIndex(id)
 	if idx < 0 {
 		s.mu.Unlock()
-		return handler.HandleHypermediaError(c, 404, "Item not found", fmt.Errorf("id=%d", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", fmt.Errorf("id=%d", id))
 	}
 	if s.items[idx].Status == "active" {
 		s.items[idx].Status = "inactive"
@@ -196,7 +199,7 @@ func (s *hypermediaState) handleCRUDPatchToggle(c echo.Context) error {
 func (s *hypermediaState) handleCRUDDelete(c echo.Context) error {
 	id, err := parseCRUDID(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid item ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid item ID", err)
 	}
 	s.mu.Lock()
 	idx := s.findIndex(id)
@@ -292,7 +295,7 @@ func (s *hypermediaState) handleInteractionsPreview(c echo.Context) error {
 func (s *hypermediaState) handleInteractionsComment(c echo.Context) error {
 	text := c.FormValue("comment-text")
 	if text == "" {
-		return c.NoContent(200)
+		return c.NoContent(http.StatusOK)
 	}
 	s.mu.Lock()
 	s.comments = append(s.comments, text)

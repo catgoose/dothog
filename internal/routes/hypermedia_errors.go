@@ -11,10 +11,10 @@ import (
 
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/routes/middleware"
 	corecomponents "catgoose/dothog/web/components/core"
 	"catgoose/dothog/web/views"
 	"github.com/catgoose/linkwell"
+	"github.com/catgoose/promolog"
 
 	"github.com/labstack/echo/v4"
 )
@@ -94,7 +94,7 @@ func (ar *AppRoutes) initErrorsRoutes() {
 
 	// OOB warning — returns success content plus an OOB error banner.
 	ar.e.GET(base+"/oob-warning", func(c echo.Context) error {
-		requestID := middleware.GetRequestID(c)
+		requestID := promolog.GetRequestID(c.Request().Context())
 		ec := linkwell.ErrorContext{
 			StatusCode: http.StatusOK,
 			Message:    "Data loaded with warnings — some fields may be stale",
@@ -121,7 +121,7 @@ func (ar *AppRoutes) initErrorsRoutes() {
 	ar.e.GET(base+"/flaky", func(c echo.Context) error {
 		n := atomic.AddInt64(&flakyCount, 1)
 		if n%2 == 1 {
-			requestID := middleware.GetRequestID(c)
+			requestID := promolog.GetRequestID(c.Request().Context())
 			c.Response().Status = http.StatusInternalServerError
 			ec := linkwell.ErrorContext{
 				StatusCode: http.StatusInternalServerError,

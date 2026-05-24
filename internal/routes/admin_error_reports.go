@@ -3,6 +3,7 @@
 package routes
 
 import (
+	"net/http"
 	"strconv"
 
 	"catgoose/dothog/internal/demo"
@@ -30,7 +31,7 @@ func (ar *AppRoutes) initAdminErrorReportsRoutes(db *demo.DB) {
 func (d *errorReportRoutes) handleErrorReportsPage(c echo.Context) error {
 	bar, container, err := d.buildErrorReportsContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load error reports", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load error reports", err)
 	}
 	return handler.RenderBaseLayout(c, views.AdminErrorReportsPage(bar, container))
 }
@@ -38,7 +39,7 @@ func (d *errorReportRoutes) handleErrorReportsPage(c echo.Context) error {
 func (d *errorReportRoutes) handleErrorReportsTable(c echo.Context) error {
 	_, container, err := d.buildErrorReportsContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load error reports", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load error reports", err)
 	}
 	setTableReplaceURL(c, errorReportsBase)
 	return handler.RenderComponent(c, container)
@@ -47,15 +48,15 @@ func (d *errorReportRoutes) handleErrorReportsTable(c echo.Context) error {
 func (d *errorReportRoutes) handleResolveReport(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid report ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid report ID", err)
 	}
 	if err := d.db.UpdateErrorReportStatus(c.Request().Context(), id, demo.ErrorReportStatusResolved); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to resolve report", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to resolve report", err)
 	}
 	applyFilterFromCurrentURL(c)
 	_, container, err := d.buildErrorReportsContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload table", err)
 	}
 	setTableReplaceURL(c, errorReportsBase)
 	return handler.RenderComponent(c, container)
@@ -64,15 +65,15 @@ func (d *errorReportRoutes) handleResolveReport(c echo.Context) error {
 func (d *errorReportRoutes) handleDismissReport(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid report ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid report ID", err)
 	}
 	if err := d.db.UpdateErrorReportStatus(c.Request().Context(), id, demo.ErrorReportStatusDismissed); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to dismiss report", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to dismiss report", err)
 	}
 	applyFilterFromCurrentURL(c)
 	_, container, err := d.buildErrorReportsContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload table", err)
 	}
 	setTableReplaceURL(c, errorReportsBase)
 	return handler.RenderComponent(c, container)

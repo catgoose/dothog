@@ -5,6 +5,7 @@ package routes
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"catgoose/dothog/internal/demo"
@@ -33,7 +34,7 @@ func (ar *AppRoutes) initBulkRoutes(db *demo.DB) {
 func (b *bulkRoutes) handleBulkPage(c echo.Context) error {
 	bar, container, err := b.buildBulkContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load bulk table", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load bulk table", err)
 	}
 	return handler.RenderBaseLayout(c, views.BulkPage(bar, container))
 }
@@ -41,7 +42,7 @@ func (b *bulkRoutes) handleBulkPage(c echo.Context) error {
 func (b *bulkRoutes) handleBulkItems(c echo.Context) error {
 	_, container, err := b.buildBulkContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load items", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load items", err)
 	}
 	setTableReplaceURL(c, bulkBase)
 	return handler.RenderComponent(c, container)
@@ -57,7 +58,7 @@ func (b *bulkRoutes) handleBulkDeleteItems(c echo.Context) error {
 	applyFilterFromCurrentURL(c)
 	_, container, err := b.buildBulkContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload table", err)
 	}
 	setTableReplaceURL(c, bulkBase)
 	return handler.RenderComponent(c, container)
@@ -78,7 +79,7 @@ func (b *bulkRoutes) handleBulkActivateItems(c echo.Context) error {
 	applyFilterFromCurrentURL(c)
 	_, container, err := b.buildBulkContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload table", err)
 	}
 	setTableReplaceURL(c, bulkBase)
 	return handler.RenderComponent(c, container)
@@ -99,7 +100,7 @@ func (b *bulkRoutes) handleBulkDeactivateItems(c echo.Context) error {
 	applyFilterFromCurrentURL(c)
 	_, container, err := b.buildBulkContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload table", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload table", err)
 	}
 	setTableReplaceURL(c, bulkBase)
 	return handler.RenderComponent(c, container)

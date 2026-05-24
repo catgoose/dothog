@@ -252,7 +252,7 @@ Step-by-step guide for adding a new page to the application:
 
 ### 1. Create the route file
 
-Create `internal/routes/routes_myfeature.go`:
+Create `internal/routes/myfeature.go`:
 
 ```go
 package routes
@@ -295,7 +295,7 @@ ar.initMyFeatureRoutes()
 
 ### 4. Add to the link registry
 
-In `internal/routes/routes_links.go`, add the page to a hub and/or ring:
+In `internal/routes/links.go`, add the page to a hub and/or ring:
 
 ```go
 // Add as a spoke of the Demo hub

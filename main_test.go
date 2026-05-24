@@ -38,7 +38,7 @@ func setupAppEcho(t *testing.T) *echo.Echo {
 	require.NoError(t, err)
 	require.NotNil(t, e)
 
-	ar := routes.NewAppRoutes(ctx, e, routes.Repos{})
+	ar := routes.NewAppRoutes(ctx, e, routes.Deps{AppName: cfg.AppName})
 	require.NoError(t, ar.InitRoutes())
 	return e
 }
@@ -72,7 +72,7 @@ func TestApplicationStartup(t *testing.T) {
 	assert.NotNil(t, appCtx)
 
 	// Test routes setup
-	ar := routes.NewAppRoutes(appCtx, e, routes.Repos{})
+	ar := routes.NewAppRoutes(appCtx, e, routes.Deps{AppName: cfg.AppName})
 	assert.NotNil(t, ar)
 
 	err = ar.InitRoutes()
@@ -193,6 +193,22 @@ func TestWorkflow404(t *testing.T) {
 	e.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+// setupAppEcho injects routes.Deps with DemoDB unset, so this exercises
+// the demoDB == nil path. The "Resource not found" string comes from
+// views.NotFoundPage, which only renders when handler.HandleNotFound is the
+// active RouteNotFound — proving the common finalization tail in
+// InitRoutes runs even when demo DB is unavailable.
+func TestWorkflow404_DemoDBNil_RunsCommonFinalization(t *testing.T) {
+	e := setupAppEcho(t)
+	req := httptest.NewRequest(http.MethodGet, "/missing-route", nil)
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Contains(t, rec.Body.String(), "Resource not found",
+		"InitRoutes must register handler.HandleNotFound (via the common tail) even when ar.demoDB is nil")
 }
 
 func TestWorkflow404HTMX(t *testing.T) {

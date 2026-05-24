@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
 	"sync/atomic"
 
@@ -43,7 +44,7 @@ func (ar *AppRoutes) initPeopleRoutes(db *demo.DB, broker *tavern.SSEBroker, act
 func (p *peopleRoutes) handlePeoplePage(c echo.Context) error {
 	people, total, bar, cols, info, err := p.buildPeopleContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load people", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load people", err)
 	}
 	from := c.QueryParam("from")
 	return handler.RenderBaseLayout(c, views.PeoplePage(people, total, bar, cols, info, from))
@@ -52,7 +53,7 @@ func (p *peopleRoutes) handlePeoplePage(c echo.Context) error {
 func (p *peopleRoutes) handlePeopleList(c echo.Context) error {
 	people, _, _, cols, info, err := p.buildPeopleContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load people", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load people", err)
 	}
 	from := c.QueryParam("from")
 	return handler.RenderComponent(c, views.PeopleTableContainer(cols, people, info, from))
@@ -61,11 +62,11 @@ func (p *peopleRoutes) handlePeopleList(c echo.Context) error {
 func (p *peopleRoutes) handlePersonProfile(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 	person, err := p.db.GetPerson(c.Request().Context(), id)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 404, "Person not found", err)
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Person not found", err)
 	}
 	from := c.QueryParam("from")
 	handler.SetPageLabel(c, person.FullName())
@@ -75,11 +76,11 @@ func (p *peopleRoutes) handlePersonProfile(c echo.Context) error {
 func (p *peopleRoutes) handlePersonEdit(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 	person, err := p.db.GetPerson(c.Request().Context(), id)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 404, "Person not found", err)
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Person not found", err)
 	}
 	return handler.RenderComponent(c, views.PersonEditForm(person))
 }
@@ -87,11 +88,11 @@ func (p *peopleRoutes) handlePersonEdit(c echo.Context) error {
 func (p *peopleRoutes) handlePersonCard(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 	person, err := p.db.GetPerson(c.Request().Context(), id)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 404, "Person not found", err)
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Person not found", err)
 	}
 	return handler.RenderComponent(c, views.PersonProfileCard(person))
 }
@@ -99,7 +100,7 @@ func (p *peopleRoutes) handlePersonCard(c echo.Context) error {
 func (p *peopleRoutes) handlePersonUpdate(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 	person := demo.Person{
 		ID:         id,
@@ -114,12 +115,12 @@ func (p *peopleRoutes) handlePersonUpdate(c echo.Context) error {
 		Bio:        c.FormValue("bio"),
 	}
 	if err := p.db.UpdatePerson(c.Request().Context(), person); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to update person", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to update person", err)
 	}
 	// Re-fetch to get full data including created_at
 	person, err = p.db.GetPerson(c.Request().Context(), id)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to re-fetch person after update", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to re-fetch person after update", err)
 	}
 
 	// Record activity and broadcast to feed
@@ -151,7 +152,7 @@ func (p *peopleRoutes) broadcastPersonUpdate(person demo.Person) {
 func (p *peopleRoutes) handlePersonSSE(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid person ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid person ID", err)
 	}
 	topic := fmt.Sprintf("%s-%d", TopicPeopleUpdate, id)
 

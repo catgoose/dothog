@@ -22,8 +22,8 @@ func (ar *AppRoutes) initReportDemoRoutes() {
 		description := c.FormValue("description")
 
 		var trace *views.ReportEmailData
-		if ar.repos.ReqLogStore != nil && requestID != "" {
-			t, _ := ar.repos.ReqLogStore.Get(c.Request().Context(), requestID)
+		if ar.deps.ReqLogStore != nil && requestID != "" {
+			t, _ := ar.deps.ReqLogStore.Get(c.Request().Context(), requestID)
 			if t != nil {
 				jsonBytes, _ := json.MarshalIndent(map[string]any{
 					"request_id":  t.RequestID,

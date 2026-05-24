@@ -181,7 +181,7 @@ The principle: **the server declares what's possible, the client discovers it fr
 End-to-end example: adding a new page to the Demo hub with ring membership.
 
 ```go
-// 1. Add Hub spoke in routes_links.go
+// 1. Add Hub spoke in links.go
 hypermedia.Hub("/demo", "Demo",
     // ... existing spokes ...
     hypermedia.Rel("/demo/newpage", "New Page"),

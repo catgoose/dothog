@@ -4,6 +4,7 @@ package routes
 
 import (
 	"fmt"
+	"net/http"
 	"runtime"
 	"runtime/pprof"
 	"time"
@@ -19,11 +20,12 @@ import (
 
 // initAdminDemoRoutes registers the demo-only admin pages: runtime stats,
 // update checker, config dump. These ship only with derived apps that keep
-// the demo feature; scaffold-facing admin pages live in routes_admin_core.go.
+// the demo feature; scaffold-facing admin pages live in admin_core.go.
 func (ar *AppRoutes) initAdminDemoRoutes() {
-	ar.e.GET("/admin/system", ar.handleSystemInfo)
-	ar.e.GET("/admin/system/check-update", ar.handleCheckUpdate)
-	ar.e.GET("/admin/config", ar.handleConfigInfo)
+	admin := ar.e.Group("/admin")
+	admin.GET("/system", ar.handleSystemInfo)
+	admin.GET("/system/check-update", ar.handleCheckUpdate)
+	admin.GET("/config", ar.handleConfigInfo)
 }
 
 func (ar *AppRoutes) handleSystemInfo(c echo.Context) error {
@@ -74,7 +76,7 @@ func (ar *AppRoutes) handleCheckUpdate(c echo.Context) error {
 func (ar *AppRoutes) handleConfigInfo(c echo.Context) error {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load config", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load config", err)
 	}
 
 	entries := []admininfo.ConfigEntry{

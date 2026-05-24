@@ -47,6 +47,9 @@ func initAdminIntervals() {
 
 func (ar *AppRoutes) initAdminSettingsRoutes(broker *tavern.SSEBroker) {
 	initAdminIntervals()
+	// Surface live intervals to the scaffold /admin/health page; with demo
+	// stripped the field stays nil and that page shows an empty interval set.
+	ar.healthIntervals = snapshotAdminIntervals
 	ar.e.GET("/admin/settings", ar.handleAdminSettings(broker))
 	ar.e.POST("/admin/settings/interval", handleAdminInterval)
 	ar.e.GET("/sse/admin", echo.WrapHandler(broker.SSEHandler(TopicAdminPanel)))
@@ -90,12 +93,6 @@ func snapshotAdminIntervals() map[string]int {
 		out[k] = v
 	}
 	return out
-}
-
-// Override the no-op default in routes_admin_core.go so the admin health page
-// shows live interval values when the demo feature is present.
-func init() {
-	healthIntervalsFn = snapshotAdminIntervals
 }
 
 // ── Publisher ────────────────────────────────────────────────────────────────

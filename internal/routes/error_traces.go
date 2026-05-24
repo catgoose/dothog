@@ -3,6 +3,7 @@ package routes
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -24,7 +25,7 @@ import (
 const errorTracesBase = "/admin/error-traces"
 
 func (ar *AppRoutes) initErrorTracesRoutes() {
-	if ar.repos.ReqLogStore == nil {
+	if ar.deps.ReqLogStore == nil {
 		return
 	}
 	ar.e.GET(errorTracesBase, ar.handleErrorTracesPage)
@@ -36,7 +37,7 @@ func (ar *AppRoutes) initErrorTracesRoutes() {
 func (ar *AppRoutes) handleErrorTracesPage(c echo.Context) error {
 	group, container, err := ar.buildErrorTracesContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load error traces", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load error traces", err)
 	}
 	return handler.RenderBaseLayout(c, views.ErrorTracesPage(group.Bar, container))
 }
@@ -44,7 +45,7 @@ func (ar *AppRoutes) handleErrorTracesPage(c echo.Context) error {
 func (ar *AppRoutes) handleErrorTracesList(c echo.Context) error {
 	group, container, err := ar.buildErrorTracesContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to load error traces", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load error traces", err)
 	}
 	if htmx.IsHTMX(c.Request()) {
 		pushURL := errorTracesBase
@@ -63,21 +64,21 @@ func (ar *AppRoutes) handleErrorTracesList(c echo.Context) error {
 
 func (ar *AppRoutes) handleErrorTraceDetail(c echo.Context) error {
 	requestID := c.Param("requestID")
-	trace, err := ar.repos.ReqLogStore.Get(c.Request().Context(), requestID)
+	trace, err := ar.deps.ReqLogStore.Get(c.Request().Context(), requestID)
 	if err != nil {
 		logger.WithContext(c.Request().Context()).Error("Failed to retrieve error trace",
 			"request_id", requestID, "error", err)
 	}
 	if trace == nil {
-		return handler.HandleHypermediaError(c, 404, "Error trace not found", nil)
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Error trace not found", nil)
 	}
 	return handler.RenderComponent(c, views.ErrorTraceDetailContent(trace))
 }
 
 func (ar *AppRoutes) handleErrorTraceDelete(c echo.Context) error {
 	requestID := c.Param("requestID")
-	if err := ar.repos.ReqLogStore.DeleteTrace(c.Request().Context(), requestID); err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to delete trace", err)
+	if err := ar.deps.ReqLogStore.DeleteTrace(c.Request().Context(), requestID); err != nil {
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to delete trace", err)
 	}
 	// Re-apply current filters from HX-Current-URL
 	if raw := c.Request().Header.Get("HX-Current-URL"); raw != "" {
@@ -87,7 +88,7 @@ func (ar *AppRoutes) handleErrorTraceDelete(c echo.Context) error {
 	}
 	group, container, err := ar.buildErrorTracesContent(c)
 	if err != nil {
-		return handler.HandleHypermediaError(c, 500, "Failed to reload traces", err)
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload traces", err)
 	}
 	ctx := c.Request().Context()
 	w := c.Response()
@@ -113,12 +114,12 @@ func (ar *AppRoutes) buildErrorTracesContent(c echo.Context) (linkwell.FilterGro
 		PerPage: perPage,
 	}
 
-	traces, total, err := ar.repos.ReqLogStore.ListTraces(c.Request().Context(), f)
+	traces, total, err := ar.deps.ReqLogStore.ListTraces(c.Request().Context(), f)
 	if err != nil {
 		return linkwell.FilterGroup{}, nil, err
 	}
 
-	avail, err := ar.repos.ReqLogStore.AvailableFilters(c.Request().Context(), f)
+	avail, err := ar.deps.ReqLogStore.AvailableFilters(c.Request().Context(), f)
 	if err != nil {
 		return linkwell.FilterGroup{}, nil, err
 	}

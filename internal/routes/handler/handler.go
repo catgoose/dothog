@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/catgoose/linkwell"
+	"github.com/catgoose/promolog"
 	"net/http"
 	"strings"
 
@@ -118,17 +119,21 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 }
 
 // appNavNavConfig returns a NavConfig with icons for use with the AppNavLayout.
-// This is a curated projection of the hub topology declared in routes_links.go,
-// enriched with SVG icon paths. Feature-gated items match the routes that
-// actually exist after setup stripping — Settings only ships with the
-// session_settings feature; demo entries strip with demo.
-// TestAppNavCoversHubs enforces alignment between this list and the hub declarations.
+// The minimal scaffold nav is Home + Settings (session_settings) + Admin —
+// the items every generated app gets out of the box. Demo entries
+// (Dashboard, Patterns, Components, Real-time, API, Apps, Platform) live
+// behind setup:feature:demo and disappear cleanly when demo is stripped,
+// leaving a clean starter nav rather than an empty header.
+// TestAppNavCoversHubs enforces alignment between the full list and the
+// hub declarations in links.go.
 func appNavNavConfig() linkwell.NavConfig {
 	return linkwell.NavConfig{
 		AppName: appName,
 		Items: []linkwell.NavItem{
-			// setup:feature:demo:start
+			// Scaffold nav: always-on items derived apps inherit.
 			{Label: "Home", Href: "/", Icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"},
+			// setup:feature:demo:start
+			// Demo nav: removed cleanly with the demo feature.
 			{Label: "Dashboard", Href: "/dashboard", Icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"},
 			{Label: "Patterns", Href: "/patterns", Icon: "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"},
 			{Label: "Components", Href: "/components", Icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"},
@@ -253,7 +258,7 @@ func HandleError(c echo.Context, statusCode int, message string, err error) erro
 	if errors.Is(c.Request().Context().Err(), context.Canceled) {
 		return nil
 	}
-	requestID := middleware.GetRequestID(c)
+	requestID := promolog.GetRequestID(c.Request().Context())
 	logger.WithContext(c.Request().Context()).Error("Request error", "error", err, "status_code", statusCode, "message", message)
 	c.Response().Status = statusCode
 	renderErr := corecomponents.ErrorStatus(statusCode, message, err, c.Request().URL.Path, requestID, true).Render(c.Request().Context(), c.Response())
@@ -277,7 +282,7 @@ func HandleHypermediaError(c echo.Context, statusCode int, message string, err e
 		opts := linkwell.ErrorControlOpts{HomeURL: "/", LoginURL: "/login"}
 		controls = linkwell.ErrorControlsForStatus(statusCode, opts)
 		if statusCode >= 500 {
-			requestID := middleware.GetRequestID(c)
+			requestID := promolog.GetRequestID(c.Request().Context())
 			controls = append(controls, linkwell.ReportIssueButton(linkwell.LabelReportIssue, requestID))
 		}
 	}

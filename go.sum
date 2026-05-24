@@ -21,8 +21,6 @@ github.com/BurntSushi/locker v0.0.0-20171006230638-a6e239ea1c69 h1:+tu3HOoMXB7RX
 github.com/BurntSushi/locker v0.0.0-20171006230638-a6e239ea1c69/go.mod h1:L1AbZdiDllfyYH5l5OkAaZtk7VkWe89bPJFmnDBNHxg=
 github.com/CAFxX/httpcompression v0.0.9 h1:0ue2X8dOLEpxTm8tt+OdHcgA+gbDge0OqFQWGKSqgrg=
 github.com/CAFxX/httpcompression v0.0.9/go.mod h1:XX8oPZA+4IDcfZ0A71Hz0mZsv/YJOgYygkFhizVPilM=
-github.com/DATA-DOG/go-sqlmock v1.5.2 h1:OcvFkGmslmlZibjAjaHm3L//6LiuBgolP7OputlJIzU=
-github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ+JlNzwDqpNU=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/a-h/parse v0.0.0-20250122154542-74294addb73e h1:HjVbSQHy+dnlS6C3XajZ69NYAb5jbGNfHanvm1+iYlo=
@@ -82,12 +80,8 @@ github.com/catgoose/dorman v0.1.16 h1:vGFPk9BPZpoAz8myZz/RbhdnWrRy5/sx4yGtRCFhn9
 github.com/catgoose/dorman v0.1.16/go.mod h1:RpA+QcMI9k12FPUkkbjBAdHL919x6JW+1GzQnSqvKlU=
 github.com/catgoose/linkwell v0.2.30 h1:CNvsFmfCZRjmAp3wH5nuAVzfLX3g6/V0RPpsun2WQ3w=
 github.com/catgoose/linkwell v0.2.30/go.mod h1:25OAouFDBNjMgrMpL31pJYR6GwBf7d4heCaD0YnHBz4=
-github.com/catgoose/promolog v0.2.28 h1:Sc4G3OmVtmS6Fv1S9nTILf7TNOiGm6Zev/hF5+TpHrE=
-github.com/catgoose/promolog v0.2.28/go.mod h1:ml44Fkt/KONxjTO6yL+3EQDSuv3+KdVJQOjM5pPnCKk=
 github.com/catgoose/promolog v0.2.33 h1:BLcby6IcfnL8BaMo3nJD79OWYdst355mq8HnzZXXW0E=
 github.com/catgoose/promolog v0.2.33/go.mod h1:HUfFwwa01fLHEVPESvYqIC0v9gAxRoHmUBnkyli97G4=
-github.com/catgoose/promolog/sqlite v0.0.0-20260409215859-0fc0b83ab989 h1:HUgCDs4EgHHLb3bssCWncflb0jsxAoObtKVlfp2w634=
-github.com/catgoose/promolog/sqlite v0.0.0-20260409215859-0fc0b83ab989/go.mod h1:Vo2raEZh+FnB8R3zYAJDS+cFRHsxoOqXvu9H8Ey9fZg=
 github.com/catgoose/promolog/sqlite v0.0.0-20260523035546-3cc188d4075a h1:SVjcmYq7uOrbLWh9xFR2g4+Af6RIzL31vpgXV8TARa8=
 github.com/catgoose/promolog/sqlite v0.0.0-20260523035546-3cc188d4075a/go.mod h1:4OAoOJ2I2p/4WtdQCThWHbX4agScjC/I/bSYt3Gkyvw=
 github.com/catgoose/tavern v0.4.79 h1:U/tYxqfvwR7L+tw1YMsZgkMw5gfd2MZtrMIZBK0LWcs=
@@ -226,7 +220,6 @@ github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8Hm
 github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
 github.com/keybase/go-keychain v0.0.1 h1:way+bWYa6lDppZoZcgMbYsvC7GxljxrskdNInRtuthU=
 github.com/keybase/go-keychain v0.0.1/go.mod h1:PdEILRW3i9D8JcdM+FmY6RwkHGnhHxXwkPPMeUgOK1k=
-github.com/kisielk/sqlstruct v0.0.0-20201105191214-5f3e10d3ab46/go.mod h1:yyMNCyc/Ib3bDTKd379tNMpB/7/H5TjM2Y9QJ5THLbE=
 github.com/klauspost/compress v1.16.7/go.mod h1:ntbaceVETuRiXiv4DpjP66DpAtAGkEQskQzEyD//IeE=
 github.com/klauspost/compress v1.18.5 h1:/h1gH5Ce+VWNLSWqPzOVn6XBO+vJbCNGvjoaGBFW2IE=
 github.com/klauspost/compress v1.18.5/go.mod h1:cwPg85FWrGar70rWktvGQj8/hthj3wpl0PGDogxkrSQ=

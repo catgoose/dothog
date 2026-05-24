@@ -887,17 +887,17 @@ func TestSetup_SessionSettingsWithoutSSE(t *testing.T) {
 	require.NotContains(t, routesContent, "ar.initThemeSSE",
 		"routes.go must not reference initThemeSSE when sse is stripped")
 
-	// routes_theme.go must still be present and have the POST /settings/theme
+	// theme.go must still be present and have the POST /settings/theme
 	// registration, with no remaining tavern import (sse bits stripped).
-	themeBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes_theme.go"))
+	themeBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "theme.go"))
 	require.NoError(t, err)
 	themeContent := string(themeBytes)
 	require.Contains(t, themeContent, `POST("/settings/theme"`,
-		"routes_theme.go must keep the POST /settings/theme route when sse is stripped")
+		"theme.go must keep the POST /settings/theme route when sse is stripped")
 	require.NotContains(t, themeContent, "github.com/catgoose/tavern",
-		"routes_theme.go must not import tavern when sse is stripped")
+		"theme.go must not import tavern when sse is stripped")
 	require.NotContains(t, themeContent, "ar.broker",
-		"routes_theme.go must not reference ar.broker when sse is stripped")
+		"theme.go must not reference ar.broker when sse is stripped")
 
 	envBytes, err := os.ReadFile(filepath.Join(dest, ".env.development"))
 	require.NoError(t, err)
@@ -947,8 +947,8 @@ func TestSetup_GraphWithoutAvatar(t *testing.T) {
 	require.Contains(t, mainContent, "graph.OpenDirectory",
 		"graph-only scaffolds still open the persistent Graph directory for the user cache")
 
-	_, err = os.Stat(filepath.Join(dest, "internal", "routes", "routes_avatar.go"))
-	require.True(t, os.IsNotExist(err), "routes_avatar.go should be removed when avatar is not selected")
+	_, err = os.Stat(filepath.Join(dest, "internal", "routes", "avatar.go"))
+	require.True(t, os.IsNotExist(err), "avatar.go should be removed when avatar is not selected")
 	_, err = os.Stat(filepath.Join(dest, "internal", "service", "graph", "photo_cache.go"))
 	require.True(t, os.IsNotExist(err), "photo_cache.go should be removed when avatar is not selected")
 }

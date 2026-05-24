@@ -15,6 +15,9 @@ import (
 
 	"catgoose/dothog/internal/config"
 	"catgoose/dothog/internal/database"
+	// setup:feature:demo:start
+	"catgoose/dothog/internal/demo"
+	// setup:feature:demo:end
 	// setup:feature:database:start
 	"catgoose/dothog/internal/dbschema"
 
@@ -185,10 +188,25 @@ func main() {
 		logger.Fatal("Failed to initialize Echo", "error", err)
 	}
 
+	// setup:feature:demo:start
+	// Demo content uses a small on-disk SQLite store; missing file is a
+	// soft failure so the rest of the app still boots. main.go owns the
+	// open and the warn-and-continue log so InitRoutes only consumes the
+	// resulting handle (nil when unavailable).
+	demoDB, demoErr := demo.Open("db/demo.db")
+	if demoErr != nil {
+		logger.WithContext(appCtx).Warn("Demo DB unavailable; app routes disabled", "error", demoErr)
+	}
+	// setup:feature:demo:end
+
 	// NewAppRoutes owns the route layer on top of Echo: it receives the app's
 	// stores/runtime dependencies and later registers endpoints via InitRoutes.
-	ar := routes.NewAppRoutes(appCtx, e, routes.Repos{
+	ar := routes.NewAppRoutes(appCtx, e, routes.Deps{
+		AppName:     cfg.AppName,
 		ReqLogStore: reqLogStore,
+		// setup:feature:demo:start
+		DemoDB: demoDB,
+		// setup:feature:demo:end
 		// setup:feature:session_settings:start
 		SessionSettings: settingsRepo,
 		SessionStore:    settingsRepo,

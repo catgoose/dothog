@@ -5,6 +5,7 @@ package routes
 import (
 	"fmt"
 	"math/rand"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -140,7 +141,7 @@ func (s *components3State) handleFeedPage(c echo.Context) error {
 	start := (page - 1) * pageSize
 	if start >= total {
 		s.mu.RUnlock()
-		return c.NoContent(200)
+		return c.NoContent(http.StatusOK)
 	}
 	end := start + pageSize
 	if end > total {
@@ -158,7 +159,7 @@ func (s *components3State) handleFeedPage(c echo.Context) error {
 func (s *components3State) handleFavoriteToggle(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 
 	// Simulate network latency so the optimistic update is visible
@@ -174,7 +175,7 @@ func (s *components3State) handleFavoriteToggle(c echo.Context) error {
 	}
 	if idx < 0 {
 		s.mu.Unlock()
-		return handler.HandleHypermediaError(c, 404, "Item not found", fmt.Errorf("id=%d", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", fmt.Errorf("id=%d", id))
 	}
 	s.favorites[idx].Favorited = !s.favorites[idx].Favorited
 	item := s.favorites[idx]
@@ -188,7 +189,7 @@ func (s *components3State) handleFavoriteToggle(c echo.Context) error {
 func (s *components3State) handleUndoDelete(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 
 	s.mu.Lock()
@@ -201,7 +202,7 @@ func (s *components3State) handleUndoDelete(c echo.Context) error {
 	}
 	if idx < 0 {
 		s.mu.Unlock()
-		return handler.HandleHypermediaError(c, 404, "Item not found", fmt.Errorf("id=%d", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", fmt.Errorf("id=%d", id))
 	}
 	s.undoItems[idx].Deleted = true
 	item := s.undoItems[idx]
@@ -213,7 +214,7 @@ func (s *components3State) handleUndoDelete(c echo.Context) error {
 func (s *components3State) handleUndoRestore(c echo.Context) error {
 	id, err := params.ParseParamID(c, "id")
 	if err != nil {
-		return handler.HandleHypermediaError(c, 400, "Invalid ID", err)
+		return handler.HandleHypermediaError(c, http.StatusBadRequest, "Invalid ID", err)
 	}
 
 	s.mu.Lock()
@@ -226,7 +227,7 @@ func (s *components3State) handleUndoRestore(c echo.Context) error {
 	}
 	if idx < 0 {
 		s.mu.Unlock()
-		return handler.HandleHypermediaError(c, 404, "Item not found", fmt.Errorf("id=%d", id))
+		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", fmt.Errorf("id=%d", id))
 	}
 	s.undoItems[idx].Deleted = false
 	item := s.undoItems[idx]
@@ -248,7 +249,7 @@ func (s *components3State) handleUndoList(c echo.Context) error {
 func handleCalculate(c echo.Context) error {
 	a := rand.Intn(100) + 1
 	b := rand.Intn(100) + 1
-	return c.HTML(200, fmt.Sprintf("%d + %d = <strong>%d</strong>", a, b, a+b))
+	return c.HTML(http.StatusOK, fmt.Sprintf("%d + %d = <strong>%d</strong>", a, b, a+b))
 }
 
 // ─── helpers ────────────────────────────────────────────────────────────────────

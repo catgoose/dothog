@@ -15,7 +15,7 @@ func TestHandleSessionsDelete_RemovesByUUIDAndRendersTable(t *testing.T) {
 	store := &fakeSettingsStore{}
 	ar := &AppRoutes{
 		e:     echo.New(),
-		repos: Repos{SessionStore: store, SessionSettings: store},
+		deps: Deps{SessionStore: store, SessionSettings: store},
 	}
 	ar.e.DELETE("/admin/sessions/:uuid", ar.handleSessionsDelete)
 
