@@ -4,10 +4,10 @@ package routes
 
 import (
 	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/htmxutil"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/web/views"
-	htmx "github.com/angelofallars/htmx-go"
 	"github.com/catgoose/linkwell"
 	"net/http"
 
@@ -40,7 +40,7 @@ func (cat *catalogRoutes) handleCatalogItems(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load items", err)
 	}
-	if htmx.IsBoosted(c.Request()) {
+	if htmxutil.IsBoosted(c.Request()) {
 		return handler.RenderBaseLayout(c, views.CatalogPage(bar, container))
 	}
 	setTableReplaceURL(c, catalogBase)

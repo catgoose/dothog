@@ -20,7 +20,7 @@ const photoCheckFreshness = 24 * time.Hour
 // true. Graph "no photo" responses persist a missing-marker row via
 // MarkMissing so the next sync within the window can skip the user without
 // re-querying. Requests are throttled to avoid hitting Graph rate limits.
-func SyncPhotos(ctx context.Context, client *Client, cache *PhotoCache, users []GraphUser, force bool) error {
+func SyncPhotos(ctx context.Context, client *Client, cache *PhotoCache, users []User, force bool) error {
 	log := logger.WithContext(ctx)
 	var downloaded, skipped, noPhoto, errCount int
 

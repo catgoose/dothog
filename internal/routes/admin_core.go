@@ -19,6 +19,7 @@ func (ar *AppRoutes) initAdminCoreRoutes() {
 	admin.GET("/health", ar.handleAdminHealth)
 	admin.GET("/health/check", ar.handleAdminHealthCheck)
 	admin.GET("/debug", handler.HandleComponent(views.AdminDebugPage()))
+	ar.initAdminErrorScenariosRoutes()
 }
 
 func (ar *AppRoutes) handleAdminHealth(c echo.Context) error {

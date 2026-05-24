@@ -2,6 +2,8 @@ package components
 
 // RenderError dispatches an ErrorPresentation to the appropriate surface renderer.
 // This is the single entry point for the unified error rendering contract.
+// Page renders only the inner content block — the caller composes it inside
+// the host layout. Document renders a self-contained HTML shell.
 templ RenderError(p ErrorPresentation) {
 	switch p.Surface {
 		case SurfaceBanner:
@@ -10,15 +12,31 @@ templ RenderError(p ErrorPresentation) {
 			@InlineErrorPanel(p.toErrorContext())
 		case SurfaceInlineFull:
 			@InlineFullErrorPanel(p.toErrorContext(), string(p.Size))
-		case SurfaceFullPage:
-			@renderFullPageFromPresentation(p)
+		case SurfacePage:
+			@renderPageFromPresentation(p)
+		case SurfaceDocument:
+			@renderDocumentFromPresentation(p)
 		default:
 			@InlineErrorPanel(p.toErrorContext())
 	}
 }
 
-// renderFullPageFromPresentation composes the full-page surface from the unified contract.
-templ renderFullPageFromPresentation(p ErrorPresentation) {
+// renderPageFromPresentation emits the inner error content centered both
+// horizontally and vertically inside the host AppNavLayout chrome. The 70vh
+// min-height anchors the block against the viewport so a page-surface error
+// reads as a real route view rather than a small fragment floating below the
+// nav. Centering pattern ported from the derived-app proof.
+templ renderPageFromPresentation(p ErrorPresentation) {
+	<div class="flex min-h-[70vh] items-center justify-center py-8">
+		@ErrorPageContent(p.Status, p.Title, p.Detail, p.Route, p.RequestID) {
+			@ErrorControls(p.Controls)
+		}
+	</div>
+}
+
+// renderDocumentFromPresentation composes the standalone-shell surface from
+// the unified contract.
+templ renderDocumentFromPresentation(p ErrorPresentation) {
 	@ErrorPageShell(p.Title, p.Theme) {
 		@ErrorPageContent(p.Status, p.Title, p.Detail, p.Route, p.RequestID) {
 			@ErrorControls(p.Controls)

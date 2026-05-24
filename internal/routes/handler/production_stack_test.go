@@ -1,4 +1,4 @@
-package middleware
+package handler
 
 import (
 	"bytes"
@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"catgoose/dothog/internal/routes/middleware"
+
 	"github.com/CAFxX/httpcompression"
 	"github.com/catgoose/dorman"
 	"github.com/catgoose/promolog"
@@ -18,19 +20,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// setupProductionStack mirrors the middleware ordering wired by routes.InitEcho:
-// correlation → security headers → raw-writer save → httpcompression → custom
-// HTTPErrorHandler. The compression middleware closes its writer once the chain
-// unwinds; the error handler must swap back to the raw writer (saved by
-// RawWriterMiddleware) before rendering, or the compressed-then-closed writer
-// panics. Auth/CSRF/session middleware are out of scope here — they're tested
-// elsewhere and don't interact with the compression/error-handler hot path.
+// setupProductionStack builds the smallest slice of the InitEcho chain needed
+// to exercise the compression/error-handler hot path: correlation,
+// security headers, raw-writer save, httpcompression, and the custom
+// HTTPErrorHandler. The full response-policy bundle now lives under
+// internal/responsepolicy and is tested separately; auth/CSRF/session are also
+// out of scope here because they do not affect the compressed-writer restore
+// path this test is guarding.
 func setupProductionStack(t *testing.T) *echo.Echo {
 	t.Helper()
 	e := echo.New()
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
 	e.Use(echo.WrapMiddleware(dorman.SecurityHeaders()))
-	e.Use(RawWriterMiddleware())
+	e.Use(middleware.RawWriterMiddleware())
 	compress, err := httpcompression.DefaultAdapter()
 	require.NoError(t, err)
 	e.Use(echo.WrapMiddleware(compress))

@@ -145,7 +145,7 @@ func errorStatusBody(ec linkwell.ErrorContext) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><button class=\"absolute top-1.5 right-1.5 inline-flex items-center p-1 rounded hover:bg-error-content/20 transition-colors\" _=\"on click\n\t\t\t  call navigator.clipboard.writeText((closest [data-error-json])'s @data-error-json)\n\t\t\t  remove .hidden from the next <.copy-tip/>\n\t\t\t  wait 1500ms\n\t\t\t  add .hidden to the next <.copy-tip/>\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z\"></path></svg></button> <span class=\"copy-tip hidden absolute top-8 right-1.5 bg-base-content text-base-100 text-xs rounded px-2 py-0.5 whitespace-nowrap shadow\">Copied!</span><dl class=\"grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs pr-6\"><dt class=\"font-semibold\">Status</dt><dd>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><button class=\"absolute top-1.5 right-1.5 inline-flex items-center p-1 rounded hover:bg-error-content/20 transition-colors\" onclick=\"navigator.clipboard.writeText(this.closest('[data-error-json]').getAttribute('data-error-json'))\" _=\"on click\n\t\t\t  remove .hidden from the next <.copy-tip/>\n\t\t\t  wait 1500ms\n\t\t\t  add .hidden to the next <.copy-tip/>\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z\"></path></svg></button> <span class=\"copy-tip hidden absolute top-8 right-1.5 bg-base-content text-base-100 text-xs rounded px-2 py-0.5 whitespace-nowrap shadow\">Copied!</span><dl class=\"grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs pr-6\"><dt class=\"font-semibold\">Status</dt><dd>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -571,7 +571,7 @@ func inlineErrorActions(controls []linkwell.Control) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if dismiss, ok := inlineDismissControl(controls); ok {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<button class=\"join-item btn btn-sm border-error-content/20 bg-error-content/10 text-error-content hover:bg-error-content/20\" _=\"on click set (closest div[id])'s innerHTML to ''\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<button class=\"join-item btn btn-sm border-error-content/20 bg-error-content/10 text-error-content hover:bg-error-content/20\" _=\"on click empty the closest <div[id]/>\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -778,7 +778,7 @@ func inlineFullXS(ec linkwell.ErrorContext) templ.Component {
 			}
 		}
 		if dismiss, ok := inlineDismissControl(ec.Controls); ok {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<button class=\"btn btn-xs h-5 min-h-5 text-[0.6rem] border-error/20 bg-error/10 text-error hover:bg-error/20\" _=\"on click set (closest div[id])'s innerHTML to ''\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<button class=\"btn btn-xs h-5 min-h-5 text-[0.6rem] border-error/20 bg-error/10 text-error hover:bg-error/20\" _=\"on click empty the closest <div[id]/>\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -917,7 +917,7 @@ func inlineFullSM(ec linkwell.ErrorContext) templ.Component {
 			}
 		}
 		if dismiss, ok := inlineDismissControl(ec.Controls); ok {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<button class=\"btn btn-xs border-error/20 bg-error/10 text-error hover:bg-error/20\" _=\"on click set (closest div[id])'s innerHTML to ''\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<button class=\"btn btn-xs border-error/20 bg-error/10 text-error hover:bg-error/20\" _=\"on click empty the closest <div[id]/>\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1102,7 +1102,7 @@ func inlineFullMD(ec linkwell.ErrorContext) templ.Component {
 			}
 		}
 		if dismiss, ok := inlineDismissControl(ec.Controls); ok {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "<button class=\"btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20\" _=\"on click set (closest div[id])'s innerHTML to ''\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "<button class=\"btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20\" _=\"on click empty the closest <div[id]/>\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1306,7 +1306,7 @@ func inlineFullLG(ec linkwell.ErrorContext) templ.Component {
 			}
 		}
 		if dismiss, ok := inlineDismissControl(ec.Controls); ok {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "<button class=\"btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20\" _=\"on click set (closest div[id])'s innerHTML to ''\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "<button class=\"btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20\" _=\"on click empty the closest <div[id]/>\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1823,7 +1823,7 @@ func inlineFullActions(ec linkwell.ErrorContext, btnSize string) templ.Component
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 150, "\" _=\"on click set (closest div[id])'s innerHTML to ''\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 150, "\" _=\"on click empty the closest <div[id]/>\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

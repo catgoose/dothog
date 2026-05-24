@@ -25,7 +25,7 @@ func TestReplaceUsers_PrunesAbsentUsers(t *testing.T) {
 	ctx := context.Background()
 	dir := openDirectoryForTest(t)
 
-	first := []GraphUser{
+	first := []User{
 		{AzureID: "azure-1", DisplayName: "Alice", UserPrincipalName: "alice@example.com"},
 		{AzureID: "azure-2", DisplayName: "Bob", UserPrincipalName: "bob@example.com"},
 		{AzureID: "azure-3", DisplayName: "Carol", UserPrincipalName: "carol@example.com"},
@@ -36,7 +36,7 @@ func TestReplaceUsers_PrunesAbsentUsers(t *testing.T) {
 	assert.Equal(t, 3, got)
 
 	// Bob is removed/disabled in Graph; the next snapshot drops him.
-	second := []GraphUser{
+	second := []User{
 		{AzureID: "azure-1", DisplayName: "Alice", UserPrincipalName: "alice@example.com"},
 		{AzureID: "azure-3", DisplayName: "Carol", UserPrincipalName: "carol@example.com"},
 	}
@@ -53,7 +53,7 @@ func TestReplaceUsers_EmptySnapshotClearsCache(t *testing.T) {
 	ctx := context.Background()
 	dir := openDirectoryForTest(t)
 
-	require.NoError(t, dir.ReplaceUsers(ctx, []GraphUser{
+	require.NoError(t, dir.ReplaceUsers(ctx, []User{
 		{AzureID: "azure-1", DisplayName: "Alice", UserPrincipalName: "alice@example.com"},
 	}))
 	// Degraded fetches surface as non-nil errors; an empty successful fetch

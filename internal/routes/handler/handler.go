@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"catgoose/dothog/internal/htmxutil"
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/middleware"
 	"catgoose/dothog/internal/version"
@@ -67,7 +68,7 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 		csrfToken = t
 	}
 	// setup:feature:csrf:end
-	var theme string //nolint:gosimple,staticcheck // declared before setup:feature gate
+	var theme string //nolint:staticcheck // split declaration is intentional across the setup:feature gate
 	// setup:feature:session_settings:start
 	theme = session.GetSettings(c.Request()).Theme
 	// setup:feature:session_settings:end
@@ -286,22 +287,23 @@ func HandleHypermediaError(c echo.Context, statusCode int, message string, err e
 			controls = append(controls, linkwell.ReportIssueButton(linkwell.LabelReportIssue, requestID))
 		}
 	}
-	ec := middleware.HypermediaError(c, statusCode, message, err, controls...)
+	ec := HypermediaError(c, statusCode, message, err, controls...)
 	return linkwell.NewHTTPError(ec)
 }
 
-// HandleNotFound is the e.RouteNotFound target: full-page 404 for direct nav,
-// hypermedia error with back/home/report controls for HTMX. Both branches return a 404
-// so Echo's HTTPErrorHandler runs and the log buffer reaches the error-trace store.
+// HandleNotFound is the e.RouteNotFound target. Both branches return a
+// surface-carrying error so Echo's HTTPErrorHandler owns the actual render
+// (and trace promotion + request-ID stamping run once). HTMX requests resolve
+// to the banner OOB swap; direct-nav requests get the in-chrome page surface
+// with the NotFoundPage's resource navigation grid composed inside the host
+// AppNavLayout via the SurfaceError Body override.
 func HandleNotFound(c echo.Context) error {
-	if c.Request().Header.Get("HX-Request") == "true" {
+	if htmxutil.IsHTMX(c.Request()) {
 		return HandleHypermediaError(c, http.StatusNotFound, "Not Found", nil)
 	}
-	c.Response().Status = http.StatusNotFound
-	if err := RenderBaseLayout(c, views.NotFoundPage(c.Request().URL.Path)); err != nil {
-		return err
-	}
-	return echo.NewHTTPError(http.StatusNotFound, "Not Found")
+	return NewSurfaceError(c, corecomponents.SurfacePage, http.StatusNotFound,
+		"Not Found", "The page you requested does not exist.", nil).
+		WithBody(views.NotFoundPage(c.Request().URL.Path))
 }
 
 // HandleComponent adapts a templ.Component into an echo.HandlerFunc that

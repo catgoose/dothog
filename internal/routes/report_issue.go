@@ -6,6 +6,7 @@ import (
 	// setup:feature:demo:start
 	"catgoose/dothog/internal/demo"
 	// setup:feature:demo:end
+	"catgoose/dothog/internal/htmxutil"
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
 	"github.com/catgoose/linkwell"
@@ -35,15 +36,19 @@ func (ar *AppRoutes) initReportIssueRoutes() {
 		if err := ar.deps.IssueReporter.Report(requestID, description, trace); err != nil {
 			logger.WithContext(c.Request().Context()).Error("Issue report failed",
 				"reported_request_id", requestID, "error", err)
-			c.Response().Header().Set("HX-Trigger", `{"showAlert":"Failed to submit report. Please try again."}`)
-			c.Response().Header().Set("HX-Reswap", "none")
+			_ = htmxutil.New().
+				TriggerDetail("showAlert", "Failed to submit report. Please try again.").
+				ReswapNone().
+				Write(c.Response())
 			return c.String(http.StatusInternalServerError, "")
 		}
 		// setup:feature:demo:start
 		ar.persistReportToDemoDB(c, requestID, description, trace)
 		// setup:feature:demo:end
-		c.Response().Header().Set("HX-Trigger", `{"showAlert":"Issue reported. Thank you for your feedback!"}`)
-		c.Response().Header().Set("HX-Reswap", "none")
+		_ = htmxutil.New().
+			TriggerDetail("showAlert", "Issue reported. Thank you for your feedback!").
+			ReswapNone().
+			Write(c.Response())
 		return c.String(http.StatusOK, "")
 	}
 	reports := ar.e.Group("/report-issue")

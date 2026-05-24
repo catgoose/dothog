@@ -1,4 +1,4 @@
-package middleware
+package handler
 
 import (
 	"net/http"
@@ -14,8 +14,8 @@ func errorOpts() linkwell.ErrorControlOpts {
 	return linkwell.ErrorControlOpts{HomeURL: "/", LoginURL: "/login"}
 }
 
-// newError builds a linkwell.HTTPError with controls dispatched from ErrorControlsForStatus.
-// For 500+ errors, a ReportIssueButton is appended.
+// newError builds a linkwell.HTTPError with controls dispatched from
+// ErrorControlsForStatus. For 500+ errors a ReportIssueButton is appended.
 func newError(c echo.Context, statusCode int, message string) error {
 	requestID := promolog.GetRequestID(c.Request().Context())
 	controls := linkwell.ErrorControlsForStatus(statusCode, errorOpts())

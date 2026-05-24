@@ -47,39 +47,44 @@ const (
 	FeatureAlpine          = "alpine"
 	FeatureCapacitor       = "capacitor"
 	FeatureCSRF            = "csrf"
-	FeatureLinkRelations   = "link_relations"
-	FeatureWebStandards    = "web_standards"
-	FeatureBrowserAPIs     = "browser_apis"
 )
 
 // AllFeatures is the canonical feature tag list used for marker bookkeeping
-// (stripping, README/env tables, dep expansion). "database" stays in this
-// list because it tracks the always-on chuck-backed repository layer, but it
-// is hidden from the wizard surface in mage_setup.go (no label / no order
-// entry); users choose MSSQL/PostgreSQL instead, which imply it.
-var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureCSRF, FeatureLinkRelations, FeatureWebStandards, FeatureBrowserAPIs}
+// (stripping, README/env tables, dep expansion). "database" is a hidden tag:
+// MSSQL/PostgreSQL imply it via featureDeps so the chuck-backed app-data
+// scaffolding ships with them. Scaffolds that select neither (e.g. "minimal")
+// strip the database tag and run on framework-internal SQLite stores only.
+var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureCSRF}
 
 // ImplicitFeatures are always selected and not presented to the user.
-// "alpine" is implicit because Alpine.js is kept available for coordinated view state
-// and browser-API bridges (theme picker). _hyperscript handles the
-// common local-DOM case and ships with HTMX.
+// "alpine" is implicit because Alpine.js is kept available for coordinated
+// view state (theme picker, alert listener). _hyperscript handles the common
+// local-DOM case and ships with HTMX.
 // "database" is intentionally NOT implicit: the chuck-backed app-data seam
 // (internal/dbschema) only ships when the user picks MSSQL or PostgreSQL,
 // which imply "database" via featureDeps.
 var ImplicitFeatures = []string{FeatureAlpine}
 
-// featureDeps maps a feature to the features it implies.
-// capacitor is an opt-in native wrapper.
-// MSSQL/PostgreSQL imply the implicit "database" feature, making the relationship
-// explicit even though database is always kept.
+// featureDeps maps a feature to the features it implies. Empty entries are
+// omitted — only the real implication relationships appear here.
+//
+// Hard deps (compile-coupled):
+//   - Avatar pulls user photos through Graph, so the package imports break
+//     without Graph code.
+//
+// Hidden-layer deps (selecting one auto-includes a hidden support tag):
+//   - MSSQL/PostgreSQL imply the (hidden) database feature so the chuck-backed
+//     repository layer ships with them.
+//   - SSE implies the (hidden) caddy feature so the dev HTTPS/H3 front-proxy
+//     ships alongside the SSE broker; there is no supported "Caddy without
+//     SSE" setup shape.
+//   - Demo content reads session settings.
 var featureDeps = map[string][]string{
-	FeatureDemo:          {FeatureSessionSettings},
-	FeatureMSSQL:         {FeatureDatabase},
-	FeaturePostgres:      {FeatureDatabase},
-	FeatureCSRF:          {},
-	FeatureLinkRelations: {},
-	FeatureBrowserAPIs:   {FeatureSSE},
-	FeatureWebStandards:  {},
+	FeatureDemo:     {FeatureSessionSettings},
+	FeatureMSSQL:    {FeatureDatabase},
+	FeaturePostgres: {FeatureDatabase},
+	FeatureAvatar:   {FeatureGraph},
+	FeatureSSE:      {FeatureCaddy},
 }
 
 // ExpandFeatureDeps walks featureDeps to a fixed point.
@@ -143,7 +148,6 @@ type Options struct {
 	Platform string
 	Features []string
 	Force    bool
-	NoCaddy  bool
 }
 
 // resolvePlatform returns the canonical host platform for the requested value,
@@ -369,12 +373,6 @@ func Run(ctx context.Context, dir string, opts Options) error {
 
 	if err := applyPlatformAdjustments(dir, platform); err != nil {
 		return fmt.Errorf("applying platform adjustments: %w", err)
-	}
-
-	// Legacy --no-caddy flag: remove Caddyfile if requested.
-	// The new Features mechanism handles this too (see removeOptionalContent).
-	if opts.NoCaddy {
-		_ = os.Remove(filepath.Join(dir, "config", "Caddyfile"))
 	}
 
 	// Compose .env.development from the tracked .env.development.
@@ -1190,22 +1188,20 @@ var featureDescriptions = map[string]struct{ label, desc string }{
 	FeatureAuth:            {"Auth (Crooner)", "Azure AD / OIDC authentication via crooner"},
 	FeatureGraph:           {"Graph API", "Microsoft Graph API integration for user data"},
 	FeatureAvatar:          {"Avatar Photos", "User profile photo download and caching from Graph"},
-	// FeatureDatabase is intentionally omitted from the description map: it
-	// tracks the always-on chuck-backed repository layer for marker bookkeeping
-	// and never surfaces in user-facing output. MSSQL/PostgreSQL imply it via
-	// featureDeps.
+	// FeatureDatabase and FeatureCaddy are intentionally omitted from the
+	// description map. Both are hidden marker-bookkeeping tags:
+	//   - MSSQL/PostgreSQL imply database via featureDeps; scaffolds that
+	//     select neither strip the chuck-backed app-data layer entirely.
+	//   - SSE implies caddy via featureDeps; selecting SSE pulls the dev
+	//     HTTPS/H3 front-proxy in alongside the broker.
 	FeatureMSSQL:    {"MSSQL", "Microsoft SQL Server support (chuck-backed app data)"},
 	FeaturePostgres: {"PostgreSQL", "PostgreSQL support (chuck-backed app data)"},
-	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration"},
-	FeatureCaddy:           {"Caddy HTTPS/H3 front-proxy", "Optional HTTPS/H3 front-proxy that sits in front of the templ watcher for local dev. Without it, dev runs plain HTTP."},
+	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration. Auto-includes Caddy for HTTPS/H3 in dev."},
 	FeatureDemo:            {"Demo Content", "Demo pages, seed data, and example routes"},
 	FeatureSessionSettings: {"Session Settings", "Per-session theme and layout preferences"},
 	FeatureAlpine:          {"Alpine.js", "Coordinated view state and browser-API bridges"},
 	FeatureCapacitor:       {"Capacitor", "Native mobile wrapper (iOS/Android)"},
 	FeatureCSRF:            {"CSRF Protection", "Token-based CSRF with optional per-request rotation"},
-	FeatureLinkRelations:   {"Link Relations", "Context bars, breadcrumbs, and site map"},
-	FeatureWebStandards:    {"Web Standards", "Server-Timing, Vary, Permissions-Policy, Early Hints"},
-	FeatureBrowserAPIs:     {"Browser APIs", "sendBeacon, BroadcastChannel integration"},
 }
 
 // buildFeatureTable generates a markdown table of enabled features for the README.

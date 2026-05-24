@@ -9,7 +9,7 @@ import (
 	"catgoose/dothog/internal/demo"
 	"github.com/catgoose/linkwell"
 
-	htmx "github.com/angelofallars/htmx-go"
+	"catgoose/dothog/internal/htmxutil"
 
 	"github.com/labstack/echo/v4"
 )
@@ -81,38 +81,32 @@ func buildTableContent(c echo.Context, db *demo.DB, p tableParams, itemsURL, tar
 	return tableContent{Items: items, Total: total, Bar: bar, Cols: cols, Info: info}, nil
 }
 
-// filterQueryFromHXCurrentURL extracts the raw query string from the HX-Current-URL
-// header that HTMX sends on every request. Returns "" if the header is absent or unparseable.
+// filterQueryFromHXCurrentURL returns the raw query string from HX-Current-URL
+// for the "preserve table filters across mutation responses" pattern. Thin
+// adapter over htmxutil.CurrentRawQuery so the in-package call sites keep
+// reading like domain code.
 func filterQueryFromHXCurrentURL(c echo.Context) string {
-	raw := c.Request().Header.Get("HX-Current-URL")
-	if raw == "" {
-		return ""
-	}
-	u, err := url.Parse(raw)
-	if err != nil {
-		return ""
-	}
-	return u.RawQuery
+	return htmxutil.CurrentRawQuery(c.Request())
 }
 
 // setTableReplaceURL sets HX-Replace-Url to basePath?{currentQueryString} so the browser
 // URL stays in sync with the active filters after any table-replacing response.
 func setTableReplaceURL(c echo.Context, basePath string) {
-	if !htmx.IsHTMX(c.Request()) {
+	if !htmxutil.IsHTMX(c.Request()) {
 		return
 	}
 	pushURL := basePath
 	if q := c.Request().URL.RawQuery; q != "" {
 		pushURL += "?" + q
 	}
-	_ = htmx.NewResponse().ReplaceURL(pushURL).Write(c.Response())
+	_ = htmxutil.New().ReplaceURL(pushURL).Write(c.Response())
 }
 
 // applyFilterFromCurrentURL reads HX-Current-URL and sets the request URL's query string
 // so that buildXxxContent(c) can read filter params via c.QueryParam() on mutation requests
 // (DELETE, PUT, POST) where no query params are present in the request URL.
 func applyFilterFromCurrentURL(c echo.Context) {
-	if rawQuery := filterQueryFromHXCurrentURL(c); rawQuery != "" {
+	if rawQuery := htmxutil.CurrentRawQuery(c.Request()); rawQuery != "" {
 		c.Request().URL.RawQuery = rawQuery
 	}
 }

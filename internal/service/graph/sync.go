@@ -39,8 +39,8 @@ func InitAndSyncDirectory(
 	ctx context.Context,
 	dir *Directory,
 	refreshHour int,
-	fetchUsersFunc func(ctx context.Context) ([]GraphUser, error),
-	afterSync func(ctx context.Context, users []GraphUser),
+	fetchUsersFunc func(ctx context.Context) ([]User, error),
+	afterSync func(ctx context.Context, users []User),
 ) error {
 	ctx = shared.WithContextIDAndDescription(ctx, shared.GenerateContextID(), "directory init")
 	log := logger.WithContext(ctx)

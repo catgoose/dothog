@@ -15,8 +15,8 @@ import (
 	"github.com/catgoose/linkwell"
 	"github.com/catgoose/promolog"
 
+	"catgoose/dothog/internal/htmxutil"
 	corecomponents "catgoose/dothog/web/components/core"
-	htmx "github.com/angelofallars/htmx-go"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
@@ -47,12 +47,12 @@ func (ar *AppRoutes) handleErrorTracesList(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load error traces", err)
 	}
-	if htmx.IsHTMX(c.Request()) {
+	if htmxutil.IsHTMX(c.Request()) {
 		pushURL := errorTracesBase
 		if q := c.Request().URL.RawQuery; q != "" {
 			pushURL += "?" + q
 		}
-		_ = htmx.NewResponse().ReplaceURL(pushURL).Write(c.Response())
+		_ = htmxutil.New().ReplaceURL(pushURL).Write(c.Response())
 	}
 	ctx := c.Request().Context()
 	w := c.Response()
@@ -80,11 +80,10 @@ func (ar *AppRoutes) handleErrorTraceDelete(c echo.Context) error {
 	if err := ar.deps.ReqLogStore.DeleteTrace(c.Request().Context(), requestID); err != nil {
 		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to delete trace", err)
 	}
-	// Re-apply current filters from HX-Current-URL
-	if raw := c.Request().Header.Get("HX-Current-URL"); raw != "" {
-		if u, err := url.Parse(raw); err == nil && u.RawQuery != "" {
-			c.Request().URL.RawQuery = u.RawQuery
-		}
+	// Re-apply current filters from HX-Current-URL so the post-delete list
+	// view still honors active filter params.
+	if q := htmxutil.CurrentRawQuery(c.Request()); q != "" {
+		c.Request().URL.RawQuery = q
 	}
 	group, container, err := ar.buildErrorTracesContent(c)
 	if err != nil {

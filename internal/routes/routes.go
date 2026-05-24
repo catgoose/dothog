@@ -10,6 +10,7 @@ import (
 	"github.com/catgoose/tavern"
 	// setup:feature:sse:end
 	"catgoose/dothog/internal/health"
+	"catgoose/dothog/internal/responsepolicy"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/version"
 	"github.com/catgoose/promolog"
@@ -387,13 +388,14 @@ func (ar *AppRoutes) SetHealthStats(fn health.StatsFunc) {
 	ar.healthCfg.Stats = fn
 }
 
-// InitEcho assembles the project middleware chain (preload-link, correlation, recovery,
-// server-timing, security headers, raw-writer + httpcompression, and feature-gated
-// auth / session / link-relations); call once at startup, nil reqLogStore disables
-// error-trace promotion. Each phase is its own helper so the middleware ordering
-// stays explicit at a glance — order matters: preload comes first so the early
-// hints flush before any other handler writes a header, compression must come
-// after the raw-writer save, and the static handler is last.
+// InitEcho assembles the project middleware chain. The web-standards response
+// policy (103/preload, Server-Timing, security headers, Vary: HX-Request) is
+// installed first via internal/responsepolicy as one explicit owner; the rest
+// of the chain — Recover/correlation/logging, raw-writer, compression,
+// feature-gated auth/session/link-relations, and the HTTPErrorHandler — stays
+// here in InitEcho. Order matters: response-policy precedes everything so 103
+// Early Hints flushes before any other handler writes a header, the raw-writer
+// save must precede compression, and the static handler runs last.
 func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
 	settingsRepo session.SettingsProvider,
@@ -403,71 +405,45 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	e := echo.New()
 	behindProxy := os.Getenv("TEMPL_PROXY") != ""
 
-	addPreloadMiddleware(e, behindProxy)
+	responsepolicy.Install(e, responsepolicy.Config{
+		BehindProxy: behindProxy,
+		PreloadLinks: []string{
+			"<" + version.Asset("/public/css/tailwind.css") + ">; rel=preload; as=style; fetchpriority=high",
+			"<" + version.Asset("/public/css/daisyui.css") + ">; rel=preload; as=style",
+			"<" + version.Asset("/public/js/htmx.min.js") + ">; rel=preload; as=script; fetchpriority=high",
+		},
+		Security: dorman.SecurityHeadersConfig{
+			PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+			CrossOriginOpenerPolicy: "same-origin",
+		},
+	})
+
 	addCoreMiddleware(e)
 	addCompressionMiddleware(e)
 	if err := addAuthMiddleware(ctx, e, cfg); err != nil {
 		return nil, err
 	}
-	e.HTTPErrorHandler = middleware.NewHTTPErrorHandler(reqLogStore)
+	e.HTTPErrorHandler = handler.NewHTTPErrorHandler(reqLogStore)
 	// setup:feature:session_settings:start
 	addSessionMiddleware(e, settingsRepo, cfg)
 	// setup:feature:session_settings:end
 	// setup:feature:demo:start
 	e.Use(middleware.LinkRelationsMiddleware())
 	// setup:feature:demo:end
-	addVaryHXRequestMiddleware(e)
 	addStaticHandler(e, staticFS, behindProxy)
 
 	return e, nil
 }
 
-// addPreloadMiddleware installs the Link/Early-Hints preload middleware.
-// In production (direct H2), it sends 103 Early Hints so the browser fetches
-// CSS/JS while the server generates the response. Behind the templ proxy
-// (mage watch), 1xx responses get mangled, so fall back to Link headers on
-// the final response — the browser still gets the preload hint, just later.
-func addPreloadMiddleware(e *echo.Echo, behindProxy bool) {
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			preloadLinks := []string{
-				"<" + version.Asset("/public/css/tailwind.css") + ">; rel=preload; as=style; fetchpriority=high",
-				"<" + version.Asset("/public/css/daisyui.css") + ">; rel=preload; as=style",
-				"<" + version.Asset("/public/js/htmx.min.js") + ">; rel=preload; as=script; fetchpriority=high",
-			}
-			if !behindProxy && c.Request().ProtoMajor >= 2 {
-				w := c.Response().Writer
-				if flusher, ok := w.(http.Flusher); ok {
-					for _, link := range preloadLinks {
-						w.Header().Add("Link", link)
-					}
-					w.WriteHeader(http.StatusEarlyHints) // 103
-					flusher.Flush()
-				}
-			} else {
-				for _, link := range preloadLinks {
-					c.Response().Header().Add("Link", link)
-				}
-			}
-			return next(c)
-		}
-	})
-}
-
-// addCoreMiddleware installs Recover, server-timing, correlation,
-// request-logger, security headers, and the raw-writer save. RawWriter must
-// run before the compression middleware because httpcompression finalizes
-// (closes) its writer when the chain unwinds, making it unusable by the
-// time Echo's HTTPErrorHandler runs.
+// addCoreMiddleware installs Recover, correlation, request logging, and the
+// raw-writer save. The web-standards response policy ran earlier via
+// responsepolicy.Install; RawWriter must run before compression so the error
+// handler can swap back to the raw writer after httpcompression finalises its
+// wrapper.
 func addCoreMiddleware(e *echo.Echo) {
 	e.Use(echoMiddleware.Recover())
-	e.Use(middleware.ServerTimingMiddleware())
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
 	e.Use(echoMiddleware.RequestLogger())
-	e.Use(echo.WrapMiddleware(dorman.SecurityHeaders(dorman.SecurityHeadersConfig{
-		PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
-		CrossOriginOpenerPolicy: "same-origin",
-	})))
 	e.Use(middleware.RawWriterMiddleware())
 }
 
@@ -572,17 +548,6 @@ func addSessionMiddleware(e *echo.Echo, settingsRepo session.SettingsProvider, c
 }
 
 // setup:feature:session_settings:end
-
-// addVaryHXRequestMiddleware forces Vary: HX-Request on every response so
-// HTTP caches treat HTMX and non-HTMX variants as distinct entries.
-func addVaryHXRequestMiddleware(e *echo.Echo) {
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			c.Response().Header().Set("Vary", "HX-Request")
-			return next(c)
-		}
-	})
-}
 
 // addStaticHandler mounts the embedded static FS under /public with a
 // Cache-Control policy that flips between immutable production caching and

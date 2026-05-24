@@ -50,7 +50,7 @@ func (d *Directory) Photos() *PhotoCache {
 
 // InsertOrUpdateUsers upserts each Graph user in a single transaction,
 // rolling back on the first row that fails.
-func (d *Directory) InsertOrUpdateUsers(ctx context.Context, users []GraphUser) error {
+func (d *Directory) InsertOrUpdateUsers(ctx context.Context, users []User) error {
 	log := logger.WithContext(ctx)
 
 	if err := d.EnsureSchema(ctx); err != nil {
@@ -112,7 +112,7 @@ const userSelect = "SELECT AzureId, GivenName, Surname, DisplayName, UserPrincip
 
 // SearchUsers ANDs LIKE clauses across GivenName/Surname/DisplayName/AccountName
 // for each term and returns up to limit rows ordered by DisplayName.
-func (d *Directory) SearchUsers(ctx context.Context, terms []string, limit int) ([]GraphUser, error) {
+func (d *Directory) SearchUsers(ctx context.Context, terms []string, limit int) ([]User, error) {
 	if len(terms) == 0 {
 		return nil, fmt.Errorf("no search terms provided")
 	}
@@ -136,7 +136,7 @@ func (d *Directory) SearchUsers(ctx context.Context, terms []string, limit int) 
 
 	args = append(args, sql.Named("Limit", limit))
 
-	var users []GraphUser
+	var users []User
 	if err := d.db.SelectContext(ctx, &users, query, args...); err != nil {
 		return nil, fmt.Errorf("failed to search users: %w", err)
 	}
@@ -145,9 +145,9 @@ func (d *Directory) SearchUsers(ctx context.Context, terms []string, limit int) 
 
 // AllUsers dumps the entire Users table (DisplayName-sorted). Intended for
 // one-off admin views; large directories should prefer SearchUsers.
-func (d *Directory) AllUsers(ctx context.Context) ([]GraphUser, error) {
+func (d *Directory) AllUsers(ctx context.Context) ([]User, error) {
 	query := userSelect + " FROM Users ORDER BY DisplayName"
-	var users []GraphUser
+	var users []User
 	if err := d.db.SelectContext(ctx, &users, query); err != nil {
 		return nil, fmt.Errorf("failed to retrieve all users: %w", err)
 	}
@@ -155,9 +155,9 @@ func (d *Directory) AllUsers(ctx context.Context) ([]GraphUser, error) {
 }
 
 // UserByAzureID wraps sql.ErrNoRows in a contextual error when the row is missing.
-func (d *Directory) UserByAzureID(ctx context.Context, azureID string) (*GraphUser, error) {
+func (d *Directory) UserByAzureID(ctx context.Context, azureID string) (*User, error) {
 	query := userSelect + " FROM Users WHERE AzureId = @AzureId"
-	var user GraphUser
+	var user User
 	if err := d.db.GetContext(ctx, &user, query, sql.Named("AzureId", azureID)); err != nil {
 		return nil, fmt.Errorf("failed to retrieve user by Azure ID: %w", err)
 	}
@@ -198,7 +198,7 @@ func (d *Directory) UserCount(ctx context.Context) (int, error) {
 // is a valid snapshot — it clears the cache. Degraded fetches show up as a
 // non-nil error from fetchUsersFunc, not as an empty users slice, so the
 // caller can distinguish "Graph said nothing" from "Graph is empty".
-func (d *Directory) ReplaceUsers(ctx context.Context, users []GraphUser) error {
+func (d *Directory) ReplaceUsers(ctx context.Context, users []User) error {
 	if len(users) == 0 {
 		// Wipe the table — successful empty snapshot means no Graph users.
 		res, err := d.db.ExecContext(ctx, "DELETE FROM Users")

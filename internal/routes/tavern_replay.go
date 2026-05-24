@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/htmxutil"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 
@@ -159,8 +160,12 @@ func (r *tavernReplayRoutes) handlePreset(c echo.Context) error {
 	r.reconnectDelay.Store(int64(5 * time.Second))
 	r.publishRate.Store(int64(2 * time.Second))
 	// Tell the client to sync slider values.
-	c.Response().Header().Set("HX-Trigger", fmt.Sprintf(
-		`{"replay-preset":{"window":%d,"lifetime":3,"delay":5,"rate":2000}}`, window))
+	_ = htmxutil.New().TriggerDetail("replay-preset", map[string]int{
+		"window":   window,
+		"lifetime": 3,
+		"delay":    5,
+		"rate":     2000,
+	}).Write(c.Response())
 	return c.NoContent(http.StatusNoContent)
 }
 

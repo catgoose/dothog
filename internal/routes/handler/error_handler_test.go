@@ -1,4 +1,4 @@
-package middleware
+package handler
 
 import (
 	"context"
@@ -6,23 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
-	"catgoose/dothog/internal/logger"
 	"github.com/catgoose/linkwell"
 
 	"github.com/catgoose/promolog"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMain(m *testing.M) {
-	_ = os.Setenv("LOG_LEVEL", "ERROR")
-	logger.Init()
-	os.Exit(m.Run())
-}
 
 // setupEcho creates an Echo instance with promolog correlation and the HTTPErrorHandler.
 func setupEcho(reqLogStore promolog.Storer) *echo.Echo {
@@ -90,8 +82,8 @@ func TestHTTPErrorHandler_EchoHTTPError_NonHTMX(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 	body := rec.Body.String()
 	require.Contains(t, body, "bad request", "expected error message in HTML body")
-	require.Contains(t, body, "<!doctype html>", "expected full HTML page for non-HTMX")
-	require.Contains(t, body, "Close", "expected Dismiss control in error page")
+	require.Contains(t, body, "<!doctype html>", "non-HTMX errors render via the document surface")
+	require.NotContains(t, body, ">Close<", "document surface strips the dismiss control — a standalone shell can't be dismissed")
 }
 
 // ---------------------------------------------------------------------------

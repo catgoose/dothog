@@ -5,6 +5,7 @@ package routes
 import (
 	"net/http"
 
+	"catgoose/dothog/internal/htmxutil"
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/session"
@@ -99,7 +100,7 @@ func (ar *AppRoutes) handleLayout() echo.HandlerFunc {
 				logger.WithContext(c.Request().Context()).Error("Failed to save layout setting", "error", err)
 			}
 		}
-		c.Response().Header().Set("HX-Refresh", "true")
+		_ = htmxutil.New().Refresh().Write(c.Response())
 		return c.String(http.StatusOK, "")
 	}
 }

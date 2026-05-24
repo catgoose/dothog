@@ -44,7 +44,7 @@ func consistencyLevelHeaders() *abstractions.RequestHeaders {
 }
 
 // FetchAllEnabledUsers pages through every accountEnabled=true user (top=999, eventual consistency) and returns a flattened slice.
-func (c *Client) FetchAllEnabledUsers(ctx context.Context) ([]GraphUser, error) {
+func (c *Client) FetchAllEnabledUsers(ctx context.Context) ([]User, error) {
 	filter := "accountEnabled eq true"
 	selectCols := []string{"id", "displayName", "userPrincipalName", "mail", "officeLocation", "department", "givenName", "surname", "companyName", "jobTitle"}
 	requestConfig := &users.UsersRequestBuilderGetRequestConfiguration{
@@ -67,9 +67,9 @@ func (c *Client) FetchAllEnabledUsers(ctx context.Context) ([]GraphUser, error) 
 	if err != nil {
 		return nil, fmt.Errorf("page iterator: %w", err)
 	}
-	var all []GraphUser
+	var all []User
 	err = pageIterator.Iterate(ctx, func(user models.Userable) bool {
-		all = append(all, userableToGraphUser(user))
+		all = append(all, userableToUser(user))
 		return true
 	})
 	if err != nil {
@@ -78,8 +78,8 @@ func (c *Client) FetchAllEnabledUsers(ctx context.Context) ([]GraphUser, error) 
 	return all, nil
 }
 
-func userableToGraphUser(u models.Userable) GraphUser {
-	g := GraphUser{}
+func userableToUser(u models.Userable) User {
+	g := User{}
 	if u == nil {
 		return g
 	}

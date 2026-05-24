@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"catgoose/dothog/internal/htmxutil"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 
@@ -57,7 +58,7 @@ func (ar *AppRoutes) initReportDemoRoutes() {
 			}
 		}
 
-		c.Response().Header().Set("HX-Trigger", `{"showReportModal":""}`)
+		_ = htmxutil.New().TriggerDetail("showReportModal", "").Write(c.Response())
 		c.Response().Status = http.StatusOK
 		return handler.RenderComponent(c, views.ReportEmailModal(*trace))
 	})

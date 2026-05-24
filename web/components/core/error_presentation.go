@@ -6,11 +6,14 @@ import "github.com/catgoose/linkwell"
 type ErrorSurface string
 
 // ErrorSurface values: where in the page the error renders, which controls Normalize's defaults.
+// Page and Document split the former "full-page" surface — Page renders inside
+// the host app's normal chrome, Document renders a standalone HTML shell.
 const (
 	SurfaceBanner     ErrorSurface = "banner"
 	SurfaceInline     ErrorSurface = "inline"
 	SurfaceInlineFull ErrorSurface = "inline-full"
-	SurfaceFullPage   ErrorSurface = "full-page"
+	SurfacePage       ErrorSurface = "page"
+	SurfaceDocument   ErrorSurface = "document"
 )
 
 // ErrorSize is a semantic size hint for container-owning surfaces.
@@ -59,15 +62,14 @@ func (p *ErrorPresentation) Normalize() {
 	if p.Title == "" {
 		p.Title = "Error"
 	}
-	// Banner: force closable, set default OOB target.
 	if p.Surface == SurfaceBanner {
 		p.Closable = true
 		if p.OOBTarget == "" {
 			p.OOBTarget = linkwell.DefaultErrorStatusTarget
 		}
 	}
-	// Full-page: dismiss makes no sense — strip dismiss-only controls.
-	if p.Surface == SurfaceFullPage {
+	// Standalone shells can't be dismissed — strip dismiss controls.
+	if p.Surface == SurfaceDocument || p.Surface == SurfacePage {
 		p.Closable = false
 		p.Controls = filterNonDismiss(p.Controls)
 	}
@@ -98,8 +100,6 @@ func (p *ErrorPresentation) toErrorContext() linkwell.ErrorContext {
 		OOBSwap:    p.OOBSwap,
 	}
 }
-
-// --- Ergonomic constructors ---
 
 // NewBannerError builds an ErrorPresentation on SurfaceBanner; Normalize stamps defaults.
 func NewBannerError(status int, title string, controls ...linkwell.Control) ErrorPresentation {
@@ -138,10 +138,28 @@ func NewInlineFullError(status int, title string, size ErrorSize, controls ...li
 	return p
 }
 
-// NewFullPageError builds an ErrorPresentation on SurfaceFullPage; Normalize stamps defaults.
-func NewFullPageError(status int, title, detail, route, requestID, theme string, controls ...linkwell.Control) ErrorPresentation {
+// NewPageError builds an in-chrome page-surface presentation. The caller is
+// expected to render it inside the host layout (e.g. handler.RenderBaseLayout).
+func NewPageError(status int, title, detail, route, requestID string, controls ...linkwell.Control) ErrorPresentation {
 	p := ErrorPresentation{
-		Surface:   SurfaceFullPage,
+		Surface:   SurfacePage,
+		Status:    status,
+		Title:     title,
+		Detail:    detail,
+		Route:     route,
+		RequestID: requestID,
+		Controls:  controls,
+	}
+	p.Normalize()
+	return p
+}
+
+// NewDocumentError builds a standalone-shell ErrorPresentation. The render
+// emits its own <html>/<body> and is appropriate for auth/system boundaries
+// or last-resort renders that can't rely on host chrome being available.
+func NewDocumentError(status int, title, detail, route, requestID, theme string, controls ...linkwell.Control) ErrorPresentation {
+	p := ErrorPresentation{
+		Surface:   SurfaceDocument,
 		Status:    status,
 		Title:     title,
 		Detail:    detail,

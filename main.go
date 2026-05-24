@@ -245,9 +245,9 @@ func main() {
 		// declaration is intentional — setup:feature:avatar strips the
 		// assignment but leaves the declaration so graph-without-avatar
 		// scaffolds still compile.
-		var afterSync func(ctx context.Context, users []graph.GraphUser) //nolint:staticcheck // S1021: split intentional, see comment above.
+		var afterSync func(ctx context.Context, users []graph.User) //nolint:staticcheck // S1021: split intentional, see comment above.
 		// setup:feature:avatar:start
-		afterSync = func(ctx context.Context, users []graph.GraphUser) {
+		afterSync = func(ctx context.Context, users []graph.User) {
 			if err := graph.SyncPhotos(ctx, graphClient, photoCache, users, false); err != nil {
 				logger.Error("Photo sync failed", "error", err)
 			}

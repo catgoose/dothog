@@ -10,8 +10,8 @@ go tool mage setup
 
 # CLI flags
 go tool mage setup -n "My App" -m "github.com/you/my-app" -p 12345
-go tool mage setup -n "My App" --features auth,sse,caddy
-go tool mage setup -n "My App" --features auth,mssql,sse,caddy   # MSSQL app data
+go tool mage setup -n "My App" --features auth,sse
+go tool mage setup -n "My App" --features auth,mssql,sse   # MSSQL app data
 go tool mage setup -n "My App" --features none  # bare HTMX app
 
 # Cross-host generation (autodetects from runtime.GOOS when omitted)
@@ -84,11 +84,7 @@ If `sse` is not selected, everything between `:start` and `:end` (inclusive) is 
 | `avatar` | Avatar Photos | — | User avatar fetching (requires graph selected separately) |
 | `mssql` | MSSQL (Microsoft SQL Server) | — | Chuck-backed app data with MSSQL support |
 | `postgres` | PostgreSQL | — | Chuck-backed app data with PostgreSQL support |
-| `sse` | SSE | — | Server-Sent Events (requires caddy selected separately) |
-| `caddy` | Caddy HTTPS/H3 front-proxy | — | Optional HTTPS/H3 front-proxy in front of templ. Without it dev runs plain HTTP. |
-| `link_relations` | Link Relations | — | Context bars, breadcrumbs, site map |
-| `web_standards` | Web Standards | — | Server-Timing, Vary, Permissions-Policy, Early Hints |
-| `browser_apis` | Browser APIs | sse | sendBeacon and BroadcastChannel support (auto-includes sse) |
+| `sse` | SSE | caddy (hidden) | Server-Sent Events. Auto-includes the hidden Caddy HTTPS/H3 dev proxy. |
 | `capacitor` | Capacitor | — | Capacitor mobile wrapper |
 | `demo` | Demo Content | session_settings | Demo pages, SQLite seed data, example routes (auto-includes session_settings) |
 
@@ -100,9 +96,13 @@ The Chuck-backed app-data layer still exists as an internal setup marker for str
 
 ### Feature Dependencies
 
-Dependencies are auto-resolved:
-- Selecting `browser_apis` auto-includes `sse`
-- Selecting `demo` auto-includes `session_settings`
+Dependencies are auto-resolved (closed by `setup.ExpandFeatureDeps` before stripping):
+- Selecting `avatar` auto-includes `graph` — avatar code imports the Graph package directly.
+- Selecting `mssql` or `postgres` auto-includes the hidden `database` tag — the chuck-backed app-data layer ships with the production engine.
+- Selecting `sse` auto-includes the hidden `caddy` tag — the dev HTTPS/H3 front-proxy ships alongside the SSE broker. There is no supported "Caddy without SSE" setup shape.
+- Selecting `demo` auto-includes `session_settings` — demo content reads session settings.
+
+Web-standards behavior (Server-Timing, `Vary: HX-Request`, Permissions-Policy via dorman, 103 Early Hints) and the link-relations registry (context bars, breadcrumbs, site map, `Link` headers) are always-on baseline behavior owned by `internal/responsepolicy` and `linkwell` respectively; neither is a user-selectable feature.
 
 ## Interactive Wizard
 
@@ -123,10 +123,9 @@ Setup always scaffolds into the target directory rather than mutating the curren
 -n APP_NAME        Human-readable app name (required)
 -m MODULE_PATH     Go module path (default: github.com/you/<app-name>)
 -p BASE_PORT       5-digit base port < 60000
---features LIST    Comma-separated: auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor
+--features LIST    Comma-separated: auth,graph,avatar,mssql,postgres,sse,demo,session_settings,csrf,capacitor
                    "all" = keep everything, "none" = bare HTMX app
-                   Selecting mssql or postgres auto-includes the internal Chuck-backed app-data layer.
---no-caddy         Deprecated alias for omitting caddy from --features
+                   Hidden tags resolve via featureDeps: mssql/postgres imply database; sse implies the Caddy HTTPS/H3 dev proxy.
 --force            Re-run setup on an already-customized module
 ```
 
@@ -141,13 +140,12 @@ These files are only needed for running setup. Derived apps don't need them.
 
 ## Derived App Layout
 
-After `mage setup` with `--features auth,caddy`:
+After `mage setup` with `--features auth,sse`:
 
 - All `// setup:feature:demo` files are deleted
 - All `// setup:feature:demo:start` ... `// setup:feature:demo:end` blocks are removed
-- All `// setup:feature:sse:start` ... `// setup:feature:sse:end` blocks are removed
 - Remaining code compiles cleanly with `go mod tidy`
-- The app has auth, SQLite, Caddy, and a clean starting point for your own routes
+- The app has auth, SQLite, the SSE broker, the Caddy HTTPS/H3 dev proxy (pulled in by sse), and a clean starting point for your own routes
 
 ## Adding App Data
 

@@ -58,9 +58,9 @@ func (ar *AppRoutes) initErrorModesRoutes() {
 		demos := views.ContractDemoPresentations()
 		return handler.RenderComponent(c, views.ErrorModesContractResult(demos[2]))
 	})
-	ar.e.GET(base+"/contract/full-page", func(c echo.Context) error {
+	ar.e.GET(base+"/contract/document", func(c echo.Context) error {
 		theme := session.GetSettings(c.Request()).Theme
-		p := views.ContractFullPagePresentation(theme)
-		return handler.RenderComponent(c, views.ErrorModesContractFullPage(p))
+		p := views.ContractDocumentPresentation(theme)
+		return handler.RenderComponent(c, views.ErrorModesContractDocument(p))
 	})
 }

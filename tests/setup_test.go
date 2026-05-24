@@ -36,8 +36,12 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 		AppName:    "Test App",
 		ModulePath: "github.com/example/test-app",
 		BasePort:   "12345",
-		NoCaddy:    true,
-		Force:      true,
+		// session_settings only: keeps the session cookie env line for the
+		// assertion below, strips everything else — including the hidden
+		// Caddy tag that SSE would have implied — so the Caddyfile removal
+		// assertion stays meaningful too.
+		Features: []string{"session_settings"},
+		Force:    true,
 	})
 	require.NoError(t, err)
 
@@ -106,7 +110,7 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 	require.Contains(t, string(loggerBytes), `appLogFile = "test-app.log"`)
 
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
-	require.True(t, os.IsNotExist(err), "Caddyfile should be removed when using --no-caddy")
+	require.True(t, os.IsNotExist(err), "Caddyfile should be removed when no feature pulls Caddy in")
 
 	err = filepath.Walk(dest, func(path string, info os.FileInfo, errWalk error) error {
 		if errWalk != nil {
@@ -152,7 +156,6 @@ func TestSetupUsesRandomPortWhenPOmitted(t *testing.T) {
 		AppName:    "Random Port App",
 		ModulePath: "github.com/example/random-port-app",
 		BasePort:   "",
-		NoCaddy:    true,
 		Force:      true,
 	})
 	require.NoError(t, err)
@@ -431,7 +434,6 @@ func TestSetup_FeaturesAll(t *testing.T) {
 		AppName:    "All Features App",
 		ModulePath: "github.com/test/all-features-app",
 		BasePort:   "20100",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   features,
 	})
@@ -473,7 +475,6 @@ func TestSetup_FeaturesNone(t *testing.T) {
 		AppName:    "No Features App",
 		ModulePath: "github.com/test/no-features-app",
 		BasePort:   "20200",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   []string{},
 	})
@@ -615,7 +616,6 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 		AppName:    "Auth Only App",
 		ModulePath: "github.com/test/auth-only-app",
 		BasePort:   "20300",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   []string{"auth"},
 	})
@@ -659,7 +659,6 @@ func TestSetup_FeaturesNoAppData(t *testing.T) {
 		AppName:    "No AppData App",
 		ModulePath: "github.com/test/no-appdata-app",
 		BasePort:   "20400",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   []string{},
 	})
@@ -695,7 +694,6 @@ func TestSetup_FeaturesMSSQL(t *testing.T) {
 		AppName:    "MSSQL App",
 		ModulePath: "github.com/test/mssql-app",
 		BasePort:   "20450",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   []string{"mssql"},
 	})
@@ -734,7 +732,6 @@ func TestSetup_FeaturesPostgres(t *testing.T) {
 		AppName:    "Postgres App",
 		ModulePath: "github.com/test/postgres-app",
 		BasePort:   "20460",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   []string{"postgres"},
 	})
@@ -755,7 +752,7 @@ func TestSetup_FeaturesPostgres(t *testing.T) {
 		"main.go must reference dbschema.Tables when postgres is selected")
 }
 
-func TestSetup_FeaturesSSECaddy(t *testing.T) {
+func TestSetup_FeaturesSSEPullsCaddy(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
@@ -768,9 +765,8 @@ func TestSetup_FeaturesSSECaddy(t *testing.T) {
 		AppName:    "SSE Caddy App",
 		ModulePath: "github.com/test/sse-caddy-app",
 		BasePort:   "20500",
-		NoCaddy:    false,
 		Force:      true,
-		Features:   []string{"sse", "caddy"},
+		Features:   []string{"sse"},
 	})
 	require.NoError(t, err)
 
@@ -778,7 +774,7 @@ func TestSetup_FeaturesSSECaddy(t *testing.T) {
 	assertBuildSucceeds(t, dest)
 
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
-	require.NoError(t, err, "Caddyfile should exist when caddy is selected")
+	require.NoError(t, err, "Caddyfile should exist when sse is selected")
 	_, err = os.Stat(filepath.Join(dest, "localhost.crt"))
 	require.True(t, os.IsNotExist(err), "Caddy internal CA should not emit localhost.crt during setup: %v", err)
 	_, err = os.Stat(filepath.Join(dest, "localhost.key"))
@@ -803,9 +799,8 @@ func TestSetup_FeaturesDemo(t *testing.T) {
 		AppName:    "Demo App",
 		ModulePath: "github.com/test/demo-app",
 		BasePort:   "20600",
-		NoCaddy:    false,
 		Force:      true,
-		Features:   []string{"demo", "sse", "caddy"},
+		Features:   []string{"demo", "sse"},
 	})
 	require.NoError(t, err)
 
@@ -835,7 +830,6 @@ func TestSetup_FeaturesDemoWithoutSSE(t *testing.T) {
 		AppName:    "Demo No SSE App",
 		ModulePath: "github.com/test/demo-no-sse-app",
 		BasePort:   "20650",
-		NoCaddy:    true,
 		Force:      true,
 		Features:   []string{"demo"},
 	})
@@ -868,7 +862,6 @@ func TestSetup_SessionSettingsWithoutSSE(t *testing.T) {
 		AppName:    "Session Settings No SSE App",
 		ModulePath: "github.com/test/session-no-sse-app",
 		BasePort:   "20660",
-		NoCaddy:    true,
 		Force:      true,
 		Features:   []string{"session_settings"},
 	})
@@ -922,7 +915,6 @@ func TestSetup_GraphWithoutAvatar(t *testing.T) {
 		AppName:    "Graph Only App",
 		ModulePath: "github.com/test/graph-only-app",
 		BasePort:   "20670",
-		NoCaddy:    true,
 		Force:      true,
 		Features:   []string{"graph"},
 	})
@@ -978,7 +970,6 @@ func TestSetup_NoDothogReferences(t *testing.T) {
 		AppName:    appName,
 		ModulePath: modulePath,
 		BasePort:   "21000",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   setup.AllFeatures,
 	})

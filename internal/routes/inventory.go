@@ -8,10 +8,10 @@ import (
 	"strconv"
 
 	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/htmxutil"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/params"
 	"catgoose/dothog/web/views"
-	htmx "github.com/angelofallars/htmx-go"
 	"github.com/catgoose/linkwell"
 
 	"github.com/a-h/templ"
@@ -51,7 +51,7 @@ func (d *inventoryRoutes) handleInventoryItems(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load items", err)
 	}
-	if htmx.IsBoosted(c.Request()) {
+	if htmxutil.IsBoosted(c.Request()) {
 		return handler.RenderBaseLayout(c, views.InventoryPage(bar, container))
 	}
 	setTableReplaceURL(c, inventoryBase)
@@ -105,7 +105,7 @@ func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", err)
 	}
-	if !htmx.IsHTMX(c.Request()) || htmx.IsBoosted(c.Request()) {
+	if !htmxutil.IsHTMX(c.Request()) || htmxutil.IsBoosted(c.Request()) {
 		handler.SetPageLabel(c, item.Name)
 		return handler.RenderBaseLayout(c, views.InventoryDetailPage(item))
 	}

@@ -207,7 +207,7 @@ The server giveth and the client rendereth. This has been true since 1991. We si
 - **Link Relations Registry** -- The server declares resource relationships using [IANA link relations](https://www.iana.org/assignments/link-relations/link-relations.xhtml). Three composable primitives: **Ring** (peers link to peers), **Hub** (parent links to children), **Link** (explicit pairwise). One registry drives context bars, breadcrumbs, site map, and `Link` HTTP headers. `curl -I /demo/inventory` tells you everything about that resource's relationships. The navigation graph IS the application architecture, and the application architecture IS an HTTP header. This is either HATEOAS or madness. We are no longer distinguishing.
 - **Context Navigation** -- Local context bar (immediate siblings), hierarchy breadcrumbs (where this page lives). All server-rendered. All dismissable. All driven by the link registry. The server knows where you are. The server has always known where you are. The server finds your lack of `rel="up"` disturbing.
 - **Web Standards Over Libraries** -- Native `<dialog>` for modals. Native `popover` for dismissable UI. Native `<details name>` for accordions. Native `<datalist>` for autocomplete. `inputmode` for mobile keyboards. `enterkeyhint` for mobile enter keys. `content-visibility: auto` for rendering performance. `text-wrap: balance` for typography. `accent-color` for form theming. View Transitions for animated navigation. Every feature the browser already has is a library you didn't install. Every library you didn't install is a `node_modules` you didn't feed. The `node_modules` is always hungry. Do not feed the `node_modules`.
-- **Browser APIs** -- `navigator.sendBeacon()` for fire-and-forget analytics (replaces your analytics vendor and their seventeen tracking pixels). `BroadcastChannel` for cross-tab sync (change the theme in one tab, all tabs update, no server round-trip, no polling, no React context provider, no Zustand store, no `useThemeAcrossTabs` hook). `Server-Timing` header for DevTools performance metrics (open Network tab, click any request, your server's DB query time is right there, you're welcome).
+- **Browser APIs** -- `BroadcastChannel` for cross-tab sync (change the theme in one tab, all tabs update, no server round-trip, no polling, no React context provider, no Zustand store, no `useThemeAcrossTabs` hook). `Server-Timing` header for DevTools performance metrics (open Network tab, click any request, your server's DB query time is right there, you're welcome).
 - **Inline Relationship Editor** -- Edit the link registry from the browser at `/hypermedia/links`. Add rings, hubs, and pairwise relationships. The context bars, breadcrumbs, and site map update immediately. The navigation graph is a living document. You are editing the document. The document is editing you. _(This last part is not technically true but we felt it was thematically appropriate.)_
 - **Site Map Footer** -- Rendered from the link registry. Hub centers as headings, their spokes as links. The same data that drives the context bar drives the footer. One source of truth. Grug approve. Many source of truth make grug mass of confusion.
 
@@ -891,11 +891,10 @@ The wizard walks you through:
 | Avatar       | User photo sync from Graph                                   | Requires Graph                       |
 | MSSQL        | Chuck-backed app data with MSSQL support                     | Implies the internal database layer  |
 | PostgreSQL   | Chuck-backed app data with PostgreSQL support                | Implies the internal database layer  |
-| SSE          | Server-Sent Events real-time updates                         | Pairs with Caddy for HTTP/2          |
-| Caddy        | HTTPS/H3 front-proxy in front of templ                       | Adds local TLS via Caddy internal CA |
+| SSE          | Server-Sent Events real-time updates                         | Auto-includes the Caddy HTTPS/H3 dev proxy |
 | Demo         | SQLite demo tables, hypermedia examples                      | Auto-includes session_settings       |
 
-Deselected features have their code, routes, imports, and related files stripped from the derived app. Dependencies are auto-resolved (SSE includes Caddy, Avatar includes Graph, MSSQL/PostgreSQL imply the internal app-data layer, Demo includes session_settings).
+Deselected features have their code, routes, imports, and related files stripped from the derived app. Dependencies are auto-resolved (Avatar includes Graph, MSSQL/PostgreSQL imply the internal app-data layer, SSE pulls in the hidden Caddy dev proxy, Demo includes session_settings). Caddy is no longer a standalone selectable feature — it ships only when SSE is selected.
 
 ### Non-interactive Setup
 
@@ -911,7 +910,7 @@ go tool mage setup -n "My App" --features all
 | `-n APP_NAME` | App name (required)                                                            |
 | `-m MODULE`   | Go module path                                                                 |
 | `-p PORT`     | 5-digit base port (< 60000)                                                    |
-| `--features`  | Comma-separated: `auth,graph,avatar,mssql,postgres,sse,caddy,demo,session_settings,csrf,link_relations,web_standards,browser_apis,capacitor`, `all`, or `none`. The internal `database` feature is not user-facing — selecting `mssql` or `postgres` pulls in the chuck-backed app-data layer automatically; scaffolds without those run on framework-internal SQLite stores. |
+| `--features`  | Comma-separated: `auth,graph,avatar,mssql,postgres,sse,demo,session_settings,csrf,capacitor`, `all`, or `none`. Hidden tags resolve via `featureDeps`: `mssql`/`postgres` imply the internal `database` tag (chuck-backed app-data layer); `sse` implies the hidden `caddy` tag (Caddy HTTPS/H3 dev proxy). Scaffolds that select none of those stay on framework-internal SQLite stores with no Caddy. Web-standards response policy (Server-Timing, `Vary: HX-Request`, Permissions-Policy, 103 Early Hints) and the link-relations registry (context bars, breadcrumbs, site map, `Link` headers) are always-on baseline behavior, not feature toggles. |
 | `--force`     | Re-run setup on an already customized project                                  |
 
 After setup, review `.env.development` and start the dev server with `go tool mage watch`.
@@ -940,14 +939,16 @@ go tool mage watch
 ```
 
 Dothog's Echo origin runs as plain HTTP in development. `mage watch` puts
-templ's HTTP proxy in front of it; when the `caddy` feature is selected, Caddy
-sits in front of templ and provides HTTPS/H3. Without `caddy`, the dev URL is
-`http://localhost:<TEMPL_HTTP_PORT>`. With `caddy`, the dev URL is
+templ's HTTP proxy in front of it; when `sse` is selected (which pulls in the
+hidden `caddy` tag), Caddy sits in front of templ and provides HTTPS/H3.
+Without `sse`/`caddy`, the dev URL is `http://localhost:<TEMPL_HTTP_PORT>`. With
+the Caddy proxy, the dev URL is
 `https://localhost:<CADDY_TLS_PORT>`. Edit `.env.development` to change settings.
 
-### HTTPS Development Setup (Caddy feature only)
+### HTTPS Development Setup (SSE/Caddy only)
 
-Only the `caddy` feature provides local HTTPS. Caddy fronts the templ proxy and
+Local HTTPS only ships when `sse` is selected, which pulls in the hidden
+`caddy` tag. Caddy fronts the templ proxy and
 uses `tls internal`, so setup does not generate `localhost.crt` /
 `localhost.key` files or require `openssl`. On first run, Caddy attempts to
 install its local CA root into your trust store automatically. If the browser

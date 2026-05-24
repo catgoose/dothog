@@ -19,8 +19,8 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func testUsers() []GraphUser {
-	return []GraphUser{
+func testUsers() []User {
+	return []User{
 		{AzureID: "aaa-111", DisplayName: "Alice"},
 		{AzureID: "bbb-222", DisplayName: "Bob"},
 	}
@@ -42,9 +42,9 @@ func TestInitAndSyncDirectory_AfterSyncCalled(t *testing.T) {
 	users := testUsers()
 
 	var callCount atomic.Int32
-	var receivedUsers []GraphUser
+	var receivedUsers []User
 
-	afterSync := func(_ context.Context, u []GraphUser) {
+	afterSync := func(_ context.Context, u []User) {
 		callCount.Add(1)
 		receivedUsers = u
 	}
@@ -53,7 +53,7 @@ func TestInitAndSyncDirectory_AfterSyncCalled(t *testing.T) {
 		context.Background(),
 		directory,
 		3,
-		func(context.Context) ([]GraphUser, error) { return users, nil },
+		func(context.Context) ([]User, error) { return users, nil },
 		afterSync,
 	)
 	if err != nil {
@@ -83,7 +83,7 @@ func TestInitAndSyncDirectory_FetchErrorWithExistingSnapshot_KeepsCacheAndProcee
 		ctx,
 		directory,
 		3,
-		func(context.Context) ([]GraphUser, error) { return nil, fetchErr },
+		func(context.Context) ([]User, error) { return nil, fetchErr },
 		nil,
 	)
 	if err != nil {
@@ -109,7 +109,7 @@ func TestInitAndSyncDirectory_FetchErrorWithNoSnapshot_ReturnsError(t *testing.T
 		ctx,
 		directory,
 		3,
-		func(context.Context) ([]GraphUser, error) { return nil, fetchErr },
+		func(context.Context) ([]User, error) { return nil, fetchErr },
 		nil,
 	)
 	if err == nil {
@@ -128,7 +128,7 @@ func TestInitAndSyncDirectory_NilAfterSync(t *testing.T) {
 		context.Background(),
 		directory,
 		3,
-		func(context.Context) ([]GraphUser, error) { return users, nil },
+		func(context.Context) ([]User, error) { return users, nil },
 		nil,
 	)
 	if err != nil {
