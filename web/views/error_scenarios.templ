@@ -1,11 +1,14 @@
 package views
 
-// AdminErrorScenariosPage is the scaffold-facing teaching surface for the
-// runtime error contract. Each card is a scenario rather than a surface
-// sampler — request mode, status, chosen surface, and the workflow reason
-// the handler picked that surface — so derived-app authors learn how to
-// wire their own error responses against the central pipeline.
-templ AdminErrorScenariosPage() {
+// ErrorScenariosPage is the scaffold-facing teaching surface for the runtime
+// error contract. Each card is a scenario rather than a flat surface sampler —
+// request mode, status, chosen surface, and the workflow reason the handler
+// picked that surface — so derived-app authors learn how to wire their own
+// error responses against the central pipeline. Lives at
+// /examples/error-scenarios as a child of the /examples hub registered in
+// internal/routes/examples.go; non-demo scaffolds inherit both the parent
+// /examples discovery page and this child via the always-on examples init.
+templ ErrorScenariosPage() {
 	<div class="p-4 space-y-6 max-w-4xl mx-auto">
 		<div class="space-y-1">
 			<h1 class="text-2xl font-bold">Error Scenarios</h1>
@@ -14,10 +17,6 @@ templ AdminErrorScenariosPage() {
 				flows through <code class="bg-base-200 px-1 rounded">handler.NewSurfaceError</code>
 				and the central error handler — what you see here is what your handlers
 				produce when wired against the same APIs.
-			</p>
-			<p class="text-xs text-base-content/50">
-				Looking for a flat surface gallery instead? See
-				<a href="/patterns/errors/modes" class="link link-primary">/patterns/errors/modes</a> (component-only).
 			</p>
 		</div>
 
@@ -30,7 +29,7 @@ templ AdminErrorScenariosPage() {
 					<strong>Why:</strong> the user typed or followed a stale link to a missing resource. The host nav should stay so they can recover; the error renders centered inside <code class="bg-base-200 px-1 rounded">AppNavLayout</code>.
 				</p>
 				<a
-					href="/admin/error-scenarios/route-404"
+					href="/examples/error-scenarios/route-404"
 					class="btn btn-sm btn-error btn-outline w-fit"
 					target="_blank"
 				>Open 404 page</a>
@@ -46,7 +45,7 @@ templ AdminErrorScenariosPage() {
 					<strong>Why:</strong> session expired before chrome could load — the host nav is unavailable because no user context exists. Document surface emits its own minimal HTML shell. No Report Issue button: this isn't a bug, it's a sign-in prompt.
 				</p>
 				<a
-					href="/admin/error-scenarios/auth-boundary"
+					href="/examples/error-scenarios/auth-boundary"
 					class="btn btn-sm btn-error btn-outline w-fit"
 					target="_blank"
 				>Open boundary document</a>
@@ -63,7 +62,7 @@ templ AdminErrorScenariosPage() {
 				</p>
 				<button
 					class="btn btn-sm btn-error btn-outline w-fit"
-					hx-get="/admin/error-scenarios/validation-inline"
+					hx-get="/examples/error-scenarios/validation-inline"
 					hx-target="#scenarios-validation-result"
 					hx-swap="innerHTML"
 					data-error-accept="inline,banner"
@@ -83,7 +82,7 @@ templ AdminErrorScenariosPage() {
 				</p>
 				<button
 					class="btn btn-sm btn-error btn-outline w-fit"
-					hx-get="/admin/error-scenarios/panel-inline-full"
+					hx-get="/examples/error-scenarios/panel-inline-full"
 					hx-target="#scenarios-panel-result"
 					hx-swap="innerHTML"
 					data-error-accept="inline-full,banner"
@@ -103,7 +102,7 @@ templ AdminErrorScenariosPage() {
 				</p>
 				<button
 					class="btn btn-sm btn-error btn-outline w-fit"
-					hx-get="/admin/error-scenarios/banner-fallback"
+					hx-get="/examples/error-scenarios/banner-fallback"
 					hx-swap="none"
 				>Trigger background job (will fail)</button>
 			</div>
@@ -118,7 +117,7 @@ templ AdminErrorScenariosPage() {
 					<strong>Why:</strong> the operation actually broke and we want the user to send the trace. The default 500 control set appends a Report Issue button bound to the request ID; clicking it opens the report modal with the captured trace pre-attached.
 				</p>
 				<a
-					href="/admin/error-scenarios/reportable-500"
+					href="/examples/error-scenarios/reportable-500"
 					class="btn btn-sm btn-error btn-outline w-fit"
 					target="_blank"
 				>Open reportable 500</a>

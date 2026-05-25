@@ -11,15 +11,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// initAdminErrorScenariosRoutes wires the scaffold-facing /admin/error-scenarios
+// initErrorScenariosRoutes wires the scaffold-facing /examples/error-scenarios
 // teaching surface. Each scenario demonstrates a realistic combination of
 // request mode, handler intent, chosen surface, and recovery controls — what
 // derived-app authors will hit when they wire their own error responses
-// against the central pipeline. Routes still go through handler.NewSurfaceError
-// so what users see here matches what real handlers produce.
-func (ar *AppRoutes) initAdminErrorScenariosRoutes() {
-	es := ar.e.Group("/admin/error-scenarios")
-	es.GET("", handler.HandleComponent(views.AdminErrorScenariosPage()))
+// against the central pipeline. Routes go through handler.NewSurfaceError so
+// what users see here matches what real handlers produce.
+//
+// Always-on (not feature-gated): derived apps inherit the page after
+// `mage setup` regardless of the demo feature so the teaching surface is
+// available to scaffolds that never select demo. Registered as a child of
+// the /examples hub by initExamplesRoutes; no separate Hub() call needed
+// here.
+func (ar *AppRoutes) initErrorScenariosRoutes() {
+	es := ar.e.Group("/examples/error-scenarios")
+	es.GET("", handler.HandleComponent(views.ErrorScenariosPage()))
 
 	// Scenario 1 — route-level 404 in chrome.
 	// Request: direct navigation (non-HTMX). Handler returns SurfacePage so

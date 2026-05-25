@@ -1,11 +1,15 @@
-// setup:feature:demo
 package components
 
 import "github.com/catgoose/linkwell"
 
-// SiteMap renders a footer site map grid from the hub/spoke topology.
+// SiteMap renders a footer site-map grid from the registered linkwell hub
+// tree. Scaffold-facing infrastructure: the component runs on every page
+// and renders whatever hubs are registered. A non-demo scaffold has just
+// the /examples hub; a demo-equipped scaffold has the full /apps/patterns/
+// components/realtime/api/admin/dashboard topology. Render is skipped when
+// no hubs are registered so empty scaffolds don't ship a bare separator.
 templ SiteMap(hubs []linkwell.HubEntry) {
-	if len(hubs) > 1 {
+	if len(hubs) > 0 {
 		<div class="border-t border-base-300 bg-base-200/30 px-4 py-6">
 			<div class="max-w-6xl mx-auto">
 				<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 text-sm">

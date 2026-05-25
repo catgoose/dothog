@@ -1,3 +1,4 @@
+// setup:feature:demo
 /**
  * Interval control helpers called from hyperscript.
  *

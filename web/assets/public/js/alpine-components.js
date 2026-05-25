@@ -30,57 +30,6 @@ document.addEventListener('alpine:init', function () {
       }
     };
   });
-
-  // -- Theme picker (settings_app.templ) ---------------------------------
-  Alpine.data('themePicker', function () {
-    var root = null;
-    return {
-      current: '',
-      init: function () {
-        root = this.$el;
-        this.current = root.dataset.currentTheme || 'dark';
-      },
-      setTheme: function (theme) {
-        this.current = theme;
-        document.documentElement.dataset.theme = theme;
-        // Update all visual indicators
-        var select = root.querySelector('select');
-        if (select) select.value = theme;
-        var preview = root.querySelector('.theme-preview-swatch');
-        if (preview) preview.dataset.theme = theme;
-        root.querySelectorAll('.theme-swatch').forEach(function (btn) {
-          if (btn.dataset.themeValue === theme) {
-            btn.classList.add('ring-2', 'ring-primary', 'ring-offset-1');
-          } else {
-            btn.classList.remove('ring-2', 'ring-primary', 'ring-offset-1');
-          }
-        });
-        var t = document.querySelector('meta[name="csrf-token"]');
-        fetch('/settings/theme', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRF-Token': t ? t.content : ''
-          },
-          body: 'theme=' + theme
-        });
-        if (window.appChannel) {
-          window.appChannel.postMessage({ type: 'theme-change', theme: theme });
-        }
-      },
-      pickSwatch: function (event) {
-        var btn = event.target.closest('.theme-swatch');
-        if (!btn) return;
-        var theme = btn.dataset.themeValue;
-        if (theme) this.setTheme(theme);
-      },
-      pickFromSelect: function (event) {
-        var theme = event.target.value;
-        if (theme) this.setTheme(theme);
-      }
-    };
-  });
-
   // -- NavBar close-on-outside-click (nav.templ) ------------------------
   Alpine.data('navBar', function () {
     return {

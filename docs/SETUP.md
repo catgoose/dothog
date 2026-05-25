@@ -102,7 +102,7 @@ Dependencies are auto-resolved (closed by `setup.ExpandFeatureDeps` before strip
 - Selecting `sse` auto-includes the hidden `caddy` tag — the dev HTTPS/H3 front-proxy ships alongside the SSE broker. There is no supported "Caddy without SSE" setup shape.
 - Selecting `demo` auto-includes `session_settings` — demo content reads session settings.
 
-Web-standards behavior (Server-Timing, `Vary: HX-Request`, Permissions-Policy via dorman, 103 Early Hints) and the link-relations registry (context bars, breadcrumbs, site map, `Link` headers) are always-on baseline behavior owned by `internal/responsepolicy` and `linkwell` respectively; neither is a user-selectable feature.
+Web-standards behavior (Server-Timing, `Vary: HX-Request`, Permissions-Policy via dorman, 103 Early Hints) and the link-relations registry (context bars, breadcrumbs, footer site map, `Link` headers) are always-on baseline behavior owned by `internal/responsepolicy` and `linkwell` respectively; neither is a user-selectable feature. The registry has two seams: scaffold-facing relations are declared in route initializers (e.g. `internal/routes/examples.go`); demo-only relations live in `internal/routes/links.go`. Both write to the same global registry. The curated top nav (`internal/routes/handler/handler.go::appNavNavConfig`) is a separate concern from the registry — the nav lists discoverability anchors, not every page in the link graph.
 
 ## Interactive Wizard
 

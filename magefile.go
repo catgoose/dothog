@@ -40,19 +40,16 @@ var (
 	// setup:feature:caddy:start
 	caddyTLSPort = "{{CADDY_TLS_PORT}}"
 	// setup:feature:caddy:end
-	htmxURL                = "https://unpkg.com/htmx.org"
-	htmxResponseTargetsURL = "https://unpkg.com/htmx-ext-response-targets"
+	htmxURL = "https://unpkg.com/htmx.org"
 	// setup:feature:sse:start
 	htmxSSEURL = "https://unpkg.com/htmx-ext-sse"
 	// setup:feature:sse:end
 	// setup:feature:demo:start
 	tavernJSURL = "https://cdn.jsdelivr.net/gh/catgoose/tavern-js@latest/dist/tavern.min.js"
 	// setup:feature:demo:end
-	hyperscriptURL     = "https://unpkg.com/hyperscript.org"
-	alpineURL          = "https://unpkg.com/@alpinejs/csp@3/dist/cdn.min.js"
-	alpineMorphURL     = "https://unpkg.com/@alpinejs/morph@3/dist/cdn.min.js"
-	htmxAlpineMorphURL = "https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js"
-	publicSourceDir    = "web/assets/public"
+	hyperscriptURL  = "https://unpkg.com/hyperscript.org"
+	alpineURL       = "https://unpkg.com/@alpinejs/csp@3/dist/cdn.min.js"
+	publicSourceDir = "web/assets/public"
 	publicOutputDir    = filepath.Join(buildPath, publicSourceDir)
 	publicJSDir        = filepath.Join(publicSourceDir, "js")
 	publicCSSDir       = filepath.Join(publicSourceDir, "css")
@@ -358,13 +355,10 @@ func DaisyUpdate() error {
 	return downloadFile(daisyURL, filepath.Join(publicCSSDir, "daisyui.css"))
 }
 
-// HtmxUpdate downloads HTMX core and the response-targets/SSE extensions into public/js.
+// HtmxUpdate downloads HTMX core (and the SSE extension when selected) into public/js.
 func HtmxUpdate() error {
 	mg.Deps(PrepareDirs)
 	if err := downloadFile(htmxURL, filepath.Join(publicJSDir, "htmx.min.js")); err != nil {
-		return err
-	}
-	if err := downloadFile(htmxResponseTargetsURL, filepath.Join(publicJSDir, "htmx.response-targets.js")); err != nil {
 		return err
 	}
 	// setup:feature:sse:start
@@ -389,16 +383,10 @@ func TavernJSUpdate() error {
 
 // setup:feature:demo:end
 
-// AlpineUpdate downloads Alpine.js core, the morph plugin, and the htmx alpine-morph extension.
+// AlpineUpdate downloads the Alpine.js CSP core bundle into public/js.
 func AlpineUpdate() error {
 	mg.Deps(PrepareDirs)
-	if err := downloadFile(alpineURL, filepath.Join(publicJSDir, "alpine.min.js")); err != nil {
-		return err
-	}
-	if err := downloadFile(alpineMorphURL, filepath.Join(publicJSDir, "alpine.morph.min.js")); err != nil {
-		return err
-	}
-	return downloadFile(htmxAlpineMorphURL, filepath.Join(publicJSDir, "htmx.alpine-morph.js"))
+	return downloadFile(alpineURL, filepath.Join(publicJSDir, "alpine.min.js"))
 }
 
 // UpdateAssets downloads every vendored client asset (HTMX, Alpine, Hyperscript, DaisyUI, Tailwind, tavern-js).

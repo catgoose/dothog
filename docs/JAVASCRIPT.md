@@ -19,7 +19,8 @@ needed.
 - **\_hyperscript** — First choice for client-side behavior. Keeps behavior on
   the element. Declarative, self-contained, no orphaned listeners.
 - **Inline `<script>` tags** — When \_hyperscript can't express what you need.
-  Keep next to the element it relates to. Always use JSDoc.
+  Keep next to the element it relates to. Use JSDoc when the script does
+  anything non-trivial.
 - **JavaScript files** — Shared utilities, library initialization, complex logic
   that doesn't belong inline. Acceptable — but recognize you've traded locality.
   Keep files small, purpose-specific, always documented with JSDoc.
@@ -28,7 +29,7 @@ needed.
 
 Not everything fits inline. External JS files are correct for:
 
-- **Browser API bridges** — BroadcastChannel, EventSource, or similar
+- **Browser API bridges** — EventSource or similar
   long-lived browser APIs that need shared state across the page.
 - **Library interop** — HTMX extensions, Alpine.js component registrations,
   morph strategies. These must run before the library initializes.
@@ -44,7 +45,8 @@ Writing to `window` is acceptable when it serves as a bridge:
 
 - `window._ivUp`, `window._ivDown`, `window._ivPost` — Called from \_hyperscript
   on interval slider elements.
-- `window.appChannel` — Shared BroadcastChannel instance read by multiple files.
+- `window.themeController` — Global theme bridge that owns canonical theme application
+  plus the async HTMX send path for the theme picker.
 - `window.htmxLog`, `window.hsDebug` — Dev console APIs.
 
 The rule: globals are bridge points between \_hyperscript/Alpine and JS, or dev
@@ -52,8 +54,9 @@ APIs. Never use `window` for app state.
 
 ## JSDoc
 
-All JavaScript — inline or external — must use JSDoc. Document every function,
-every parameter, every return value. JS without JSDoc is a guessing game.
+Owned JavaScript should use JSDoc where it materially improves readability.
+Start with file-level `@fileoverview` comments and add function/parameter docs
+for public hooks, exported globals, event bridges, and other non-obvious code.
 
 - **Files**: Use `@fileoverview` or a top-level doc comment explaining purpose.
 - **Functions**: `@param`, `@returns`, `@type` as needed.
@@ -77,8 +80,8 @@ Example from `interval-control.js`:
 - Use `const` and `let`. No `var`.
 - IIFE pattern `(function() { ... })()` for files that don't need to export
   globals — prevents pollution.
-- Prefer browser APIs over libraries (`fetch` over axios, `BroadcastChannel`
-  over custom pubsub, `EventSource` over polling).
+- Prefer browser APIs over libraries (`fetch` over axios, `EventSource`
+  over polling).
 - No frameworks. No bundlers. No transpilers. Scripts are served as-is.
 - Feature-gated files use `// setup:feature:<name>` on line 1.
 
@@ -95,12 +98,11 @@ Example from `interval-control.js`:
 | File | Description |
 |------|-------------|
 | `alpine-components.js` | Alpine.js CSP-compatible component registrations |
-| `broadcast.js` | BroadcastChannel for cross-tab sync (demo feature) |
 | `csrf-header.js` | Attaches CSRF token to HTMX requests |
 | `debug-restore.js` | Restores debug toggles from localStorage |
 | `dev-logging.js` | Development logging for HTMX and \_hyperscript |
-| `htmx.alpine-morph.js` | HTMX extension using Alpine.morph for DOM updates |
+| `htmx.error-capabilities.js` | Advertises accepted error surfaces on HTMX requests |
 | `interval-control.js` | Interval slider helpers called from \_hyperscript |
-| `theme-sync.js` | Syncs server theme to `<html>` after hx-boost swaps |
-| `theme-sse.js` | SSE listener for server-sent theme changes (SSE + demo feature) |
+| `theme-controller.js` | Global theme owner and HTMX send bridge (`session_settings`) |
+| `theme-sse.js` | SSE listener for server-sent theme changes (`sse` + `session_settings`) |
 | `trusted-types.js` | Trusted Types policy for CSP compliance |

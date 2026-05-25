@@ -91,6 +91,9 @@ func Setup() error {
 		if err := maybeInstallCaddyForSetup(".", parsed); err != nil {
 			return err
 		}
+		if err := initializeGitRepo("."); err != nil {
+			return err
+		}
 		if err := setup.Run(context.Background(), ".", *parsed); err != nil {
 			return err
 		}
@@ -165,11 +168,8 @@ func Setup() error {
 	if err := setup.CopyRepoTo(".", absTarget, []string{".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp", "localhost.crt", "localhost.key"}); err != nil {
 		return fmt.Errorf("copying template: %w", err)
 	}
-	gitInit, _ := huhConfirm("Run git init in the new directory?")
-	if gitInit {
-		cmd := exec.Command("git", "init")
-		cmd.Dir = absTarget
-		_ = cmd.Run()
+	if err := initializeGitRepo(absTarget); err != nil {
+		return err
 	}
 	// Remove setup-only files before running setup so that go mod tidy
 	// does not see the rewritten mage_setup.go import.
@@ -597,6 +597,20 @@ func appNameSuggestionFromTargetDir(targetDir string) string {
 		parts[i] = strings.ToUpper(part[:1]) + part[1:]
 	}
 	return strings.Join(parts, " ")
+}
+
+func initializeGitRepo(dir string) error {
+	cmd := exec.Command("git", "init")
+	cmd.Dir = dir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		msg := strings.TrimSpace(string(output))
+		if msg == "" {
+			return fmt.Errorf("git init in %s: %w", dir, err)
+		}
+		return fmt.Errorf("git init in %s: %w: %s", dir, err, msg)
+	}
+	return nil
 }
 
 func describeFeatures(features []string) string {

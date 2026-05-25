@@ -157,7 +157,7 @@ func NewAppRoutes(ctx context.Context, e *echo.Echo, deps Deps) *AppRoutes {
 	ar := &AppRoutes{
 		e:         e,
 		ctx:       ctx,
-		deps:     deps,
+		deps:      deps,
 		startTime: startTime,
 		healthCfg: health.Config{
 			Name:      deps.AppName,
@@ -181,6 +181,7 @@ func (ar *AppRoutes) InitRoutes() error {
 	ar.initScaffoldRoutes()
 	ar.initHealthRoutes()
 	ar.initScaffoldAdminRoutes()
+	ar.initExamplesRoutes()
 	ar.initSSERoutes()
 	// setup:feature:demo:start
 	ar.initDemoSSEShowcase()
@@ -265,7 +266,7 @@ func (ar *AppRoutes) initScaffoldAdminRoutes() {
 }
 
 // initSSERoutes builds the SSE broker and wires the scaffold-facing SSE
-// routes derived apps always need (app-lifeline + cross-tab theme sync).
+// routes derived apps always need (app-lifeline + session-owned theme sync).
 // Everything demo-flavored that piggybacks on the broker lives in
 // initDemoSSEShowcase.
 func (ar *AppRoutes) initSSERoutes() {
@@ -427,9 +428,12 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
 	addSessionMiddleware(e, settingsRepo, cfg)
 	// setup:feature:session_settings:end
-	// setup:feature:demo:start
+	// LinkRelationsMiddleware is scaffold-facing infrastructure: it powers
+	// breadcrumbs and the LocalContextBar via the link registry, which is
+	// always-on baseline behavior. Demo and scaffold seams both register
+	// relations into the same registry; the middleware reads whatever was
+	// registered.
 	e.Use(middleware.LinkRelationsMiddleware())
-	// setup:feature:demo:end
 	addStaticHandler(e, staticFS, behindProxy)
 
 	return e, nil

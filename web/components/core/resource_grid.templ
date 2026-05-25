@@ -1,0 +1,44 @@
+package components
+
+// ResourceItem describes one entry in a ResourceGrid. Templates assemble the
+// slice manually so ordering, copy, and iconography stay presentation-owned
+// — no auto-generation from linkwell or a route registry.
+type ResourceItem struct {
+	Href        string
+	Title       string
+	Description string
+	IconPath    string
+}
+
+// ResourceGrid renders a 1/2/3-column responsive grid of ResourceCards. Used
+// by scaffold-facing discovery pages like /admin, /patterns, and /examples to
+// list child resources as clickable tiles. The caller owns ordering and copy;
+// this component owns only the grid + card layout.
+templ ResourceGrid(items []ResourceItem) {
+	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+		for _, item := range items {
+			@ResourceCard(item)
+		}
+	</div>
+}
+
+// ResourceCard renders a single tile: large icon, title, short description,
+// linked to the resource's home. Hover styles signal interactivity without
+// requiring JS.
+templ ResourceCard(item ResourceItem) {
+	<a href={ templ.URL(item.Href) } class="card bg-base-100 shadow border border-base-300 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer">
+		<div class="card-body p-4">
+			<div class="flex items-start gap-3">
+				<div class="bg-base-200 rounded-lg p-2 shrink-0">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d={ item.IconPath }></path>
+					</svg>
+				</div>
+				<div>
+					<h3 class="font-semibold text-sm">{ item.Title }</h3>
+					<p class="text-xs text-base-content/50 mt-1">{ item.Description }</p>
+				</div>
+			</div>
+		</div>
+	</a>
+}

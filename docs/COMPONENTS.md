@@ -295,25 +295,45 @@ ar.initMyFeatureRoutes()
 
 ### 4. Add to the link registry
 
-In `internal/routes/links.go`, add the page to a hub and/or ring:
+Pick the seam that matches your feature's ownership:
 
-```go
-// Add as a spoke of the Demo hub
-hypermedia.Hub("/demo", "Demo",
-    // ... existing spokes ...
-    hypermedia.Rel("/demo/myfeature", "My Feature"),
-)
+- **Scaffold-facing feature** (always-on, no setup gate): co-locate the
+  registration with the route initializer. Example from
+  `internal/routes/examples.go`:
 
-// Add to a ring for peer navigation
-hypermedia.Ring("Data",
-    // ... existing members ...
-    hypermedia.Rel("/demo/myfeature", "My Feature"),
-)
-```
+  ```go
+  func (ar *AppRoutes) initMyFeatureRoutes() {
+      linkwell.Hub("/myfeature", "My Feature",
+          linkwell.Rel("/myfeature/child", "Child"),
+      )
+      ar.e.GET("/myfeature", handler.HandleComponent(views.MyFeaturePage()))
+  }
+  ```
+
+- **Demo-only feature**: add to `internal/routes/links.go::initLinkRelations`
+  (the file is `setup:feature:demo` so the call disappears when demo is
+  stripped):
+
+  ```go
+  // Add as a spoke of an existing hub (Hub is append-only across calls)
+  linkwell.Hub("/demo", "Demo",
+      linkwell.Rel("/demo/myfeature", "My Feature"),
+  )
+
+  linkwell.Ring("Data",
+      linkwell.Rel("/demo/myfeature", "My Feature"),
+  )
+  ```
+
+The **curated top nav** in `internal/routes/handler/handler.go::appNavNavConfig`
+is a separate concern from the link registry. If your feature wants a
+top-nav entry, add it manually; the link registry alone does not drive top
+nav.
 
 ### 5. Done
 
-Context bars, breadcrumbs, and the site map footer update automatically based on the link registry. No template changes needed for navigation.
+Context bars, breadcrumbs, and the footer site map update automatically
+based on the link registry. No template changes needed for navigation.
 
 ## Page Composition Patterns
 

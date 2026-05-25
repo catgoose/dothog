@@ -2,7 +2,11 @@
 
 package main
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 func TestAppNameSuggestionFromTargetDir(t *testing.T) {
 	tests := []struct {
@@ -46,5 +50,17 @@ func TestModulePathSuggestion(t *testing.T) {
 				t.Fatalf("modulePathSuggestion(%q, %q) = %q, want %q", tt.appName, tt.appNameSuggestion, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestInitializeGitRepoCreatesDotGit(t *testing.T) {
+	dir := t.TempDir()
+
+	if err := initializeGitRepo(dir); err != nil {
+		t.Fatalf("initializeGitRepo(%q) error = %v", dir, err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, ".git")); err != nil {
+		t.Fatalf("expected git repo in %q: %v", dir, err)
 	}
 }

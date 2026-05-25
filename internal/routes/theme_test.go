@@ -12,6 +12,9 @@ import (
 	"testing"
 
 	"catgoose/dothog/internal/session"
+	// setup:feature:sse:start
+	"github.com/catgoose/tavern"
+	// setup:feature:sse:end
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 )
@@ -78,13 +81,12 @@ func withSession(req *http.Request, s *session.Settings) *http.Request {
 	return req.WithContext(ctx)
 }
 
-// TestInitThemeRoutes_WithoutBroker_PersistsTheme is the core regression:
-// a scaffold without sse must still be able to register and serve
-// POST /settings/theme so theme changes survive a reload.
+// TestInitThemeRoutes_WithoutBroker_PersistsTheme keeps the non-HTMX fallback
+// honest: POST /settings/theme persists then redirects back to /settings.
 func TestInitThemeRoutes_WithoutBroker_PersistsTheme(t *testing.T) {
 	store := &fakeSettingsStore{}
 	ar := &AppRoutes{
-		e:     echo.New(),
+		e:    echo.New(),
 		deps: Deps{SessionStore: store, SessionSettings: store},
 	}
 	ar.initThemeRoutes()
@@ -98,20 +100,89 @@ func TestInitThemeRoutes_WithoutBroker_PersistsTheme(t *testing.T) {
 	rec := httptest.NewRecorder()
 	ar.e.ServeHTTP(rec, req)
 
-	require.Equal(t, http.StatusOK, rec.Code, "POST /settings/theme should succeed without a broker")
+	require.Equal(t, http.StatusSeeOther, rec.Code, "plain POST /settings/theme should redirect back to settings")
+	require.Equal(t, "/settings", rec.Header().Get("Location"))
 	require.Equal(t, 1, store.upserts, "theme change should upsert once")
 	last := store.lastSettings()
 	require.NotNil(t, last)
 	require.Equal(t, "dark", last.Theme, "upserted Settings should carry the new theme")
 }
 
-// TestInitThemeRoutes_WithoutBroker_RejectsInvalidTheme reuses the same shape
-// to confirm the invalid-theme fallback path still works without a broker
-// (and that persistence happens at the fallback value).
+// TestInitThemeRoutes_WithoutBroker_HTMXThemeChangeReturnsPicker keeps the
+// server-driven seam honest: htmx requests get the canonical picker fragment
+// back plus the theme-change trigger header.
+func TestInitThemeRoutes_WithoutBroker_HTMXThemeChangeReturnsPicker(t *testing.T) {
+	store := &fakeSettingsStore{}
+	ar := &AppRoutes{
+		e:    echo.New(),
+		deps: Deps{SessionStore: store, SessionSettings: store},
+	}
+	ar.initThemeRoutes()
+
+	form := url.Values{}
+	form.Set("theme", "dark")
+	req := httptest.NewRequest(http.MethodPost, "/settings/theme", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("HX-Request", "true")
+	req = withSession(req, session.NewDefaultSettings("test-uuid"))
+
+	rec := httptest.NewRecorder()
+	ar.e.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Contains(t, rec.Header().Get("HX-Trigger"), "app:theme-change")
+	require.Contains(t, rec.Body.String(), "data-theme-picker")
+	require.Contains(t, rec.Body.String(), `<option value="dark" selected>dark</option>`)
+	last := store.lastSettings()
+	require.NotNil(t, last)
+	require.Equal(t, "dark", last.Theme)
+}
+
+// setup:feature:sse:start
+
+// TestInitThemeRoutes_WithBroker_HTMXThemeChangeUsesSendOnlyResponse keeps
+// the SSE-enabled flow honest: the POST is only the send channel and the UI
+// update comes back over SSE, so the response itself is an empty 204 no-swap ack.
+func TestInitThemeRoutes_WithBroker_HTMXThemeChangeUsesSendOnlyResponse(t *testing.T) {
+	store := &fakeSettingsStore{}
+	broker := tavern.NewSSEBroker()
+	defer broker.Close()
+
+	ar := &AppRoutes{
+		e:      echo.New(),
+		deps:   Deps{SessionStore: store, SessionSettings: store},
+		broker: broker,
+	}
+	ar.initThemeRoutes()
+
+	form := url.Values{}
+	form.Set("theme", "dark")
+	req := httptest.NewRequest(http.MethodPost, "/settings/theme", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("HX-Request", "true")
+	req = withSession(req, session.NewDefaultSettings("test-uuid"))
+
+	rec := httptest.NewRecorder()
+	ar.e.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusNoContent, rec.Code)
+	require.Equal(t, "none", rec.Header().Get("HX-Reswap"))
+	require.Empty(t, rec.Header().Get("HX-Trigger"))
+	require.Empty(t, rec.Body.String())
+	last := store.lastSettings()
+	require.NotNil(t, last)
+	require.Equal(t, "dark", last.Theme)
+}
+
+// setup:feature:sse:end
+
+// TestInitThemeRoutes_WithoutBroker_RejectsInvalidTheme confirms the
+// invalid-theme fallback still persists and re-renders at the canonical
+// fallback value.
 func TestInitThemeRoutes_WithoutBroker_RejectsInvalidTheme(t *testing.T) {
 	store := &fakeSettingsStore{}
 	ar := &AppRoutes{
-		e:     echo.New(),
+		e:    echo.New(),
 		deps: Deps{SessionStore: store, SessionSettings: store},
 	}
 	ar.initThemeRoutes()
@@ -120,6 +191,7 @@ func TestInitThemeRoutes_WithoutBroker_RejectsInvalidTheme(t *testing.T) {
 	form.Set("theme", "no-such-theme")
 	req := httptest.NewRequest(http.MethodPost, "/settings/theme", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("HX-Request", "true")
 	req = withSession(req, session.NewDefaultSettings("test-uuid"))
 
 	rec := httptest.NewRecorder()
@@ -129,14 +201,40 @@ func TestInitThemeRoutes_WithoutBroker_RejectsInvalidTheme(t *testing.T) {
 	last := store.lastSettings()
 	require.NotNil(t, last)
 	require.Equal(t, "light", last.Theme, "invalid theme should fall back to 'light' and still persist")
+	require.Contains(t, rec.Body.String(), `<option value="light" selected>light</option>`)
 }
 
-// TestInitThemeRoutes_WithoutBroker_PersistsLayout guards the layout endpoint
-// which lives on the same code path and was also previously broker-coupled.
+// TestInitThemeRoutes_WithoutBroker_ThemePickerFragmentUsesSessionTheme keeps
+// the scoped HTMX refresh target honest.
+func TestInitThemeRoutes_WithoutBroker_ThemePickerFragmentUsesSessionTheme(t *testing.T) {
+	store := &fakeSettingsStore{}
+	ar := &AppRoutes{
+		e:    echo.New(),
+		deps: Deps{SessionStore: store, SessionSettings: store},
+	}
+	ar.initThemeRoutes()
+
+	req := httptest.NewRequest(http.MethodGet, "/settings/theme/picker", nil)
+	req.Header.Set("HX-Request", "true")
+	settings := session.NewDefaultSettings("test-uuid")
+	settings.Theme = "forest"
+	req = withSession(req, settings)
+
+	rec := httptest.NewRecorder()
+	ar.e.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Contains(t, rec.Body.String(), `hx-trigger="app:theme-picker-sync from:body"`)
+	require.Contains(t, rec.Body.String(), `<option value="forest" selected>forest</option>`)
+}
+
+// TestInitThemeRoutes_WithoutBroker_PersistsLayout guards that the layout
+// endpoint shares the theme endpoint's code path and persists with a nil SSE
+// broker.
 func TestInitThemeRoutes_WithoutBroker_PersistsLayout(t *testing.T) {
 	store := &fakeSettingsStore{}
 	ar := &AppRoutes{
-		e:     echo.New(),
+		e:    echo.New(),
 		deps: Deps{SessionStore: store, SessionSettings: store},
 	}
 	ar.initThemeRoutes()

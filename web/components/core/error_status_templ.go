@@ -1894,7 +1894,8 @@ func inlineFullActions(ec linkwell.ErrorContext, btnSize string) templ.Component
 	})
 }
 
-// ErrorStatus is the backward-compatible wrapper. All existing call sites are unchanged.
+// ErrorStatus is the positional-args convenience over ErrorStatusFromContext for
+// callers that don't already have a linkwell.ErrorContext in hand.
 func ErrorStatus(statusCode int, message string, err error, route string, requestID string, closable bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

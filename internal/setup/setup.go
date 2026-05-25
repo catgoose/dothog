@@ -450,10 +450,9 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		}
 	}
 
-	// Replace {{BINARY_NAME}} placeholder in JS and Go source files so that
-	// derived apps get unique cookie names and BroadcastChannel identifiers.
+	// Replace {{BINARY_NAME}} placeholder in source files so derived apps get
+	// unique cookie names without retaining template placeholder text.
 	for _, f := range []string{
-		filepath.Join("web", "assets", "public", "js", "broadcast.js"),
 		filepath.Join("internal", "session", "session.go"),
 	} {
 		p := filepath.Join(dir, f)
@@ -563,29 +562,24 @@ const featureBlockEndSuffix = ":end"
 // Feature-aware content removal
 // ---------------------------------------------------------------------------
 
-// removeOptionalContent strips deselected feature content (when opts.Features
-// is non-nil). Demo content is removed unless the "demo" feature is selected.
+// removeOptionalContent strips deselected feature content. Features listed in
+// opts.Features (after dependency expansion) plus the ImplicitFeatures set are
+// kept; every other AllFeatures entry is removed. A nil or empty Features
+// slice is the bare scaffold — every optional feature gets stripped.
 func removeOptionalContent(dir string, opts Options) error {
-	// Build set of features being removed (empty when Features is nil — legacy mode)
+	expanded := ExpandFeatureDeps(opts.Features)
+	keep := make(map[string]bool, len(expanded)+len(ImplicitFeatures))
+	for _, f := range expanded {
+		keep[f] = true
+	}
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
 	removeTags := make(map[string]bool)
-	if opts.Features != nil {
-		expanded := ExpandFeatureDeps(opts.Features)
-		keep := make(map[string]bool)
-		for _, f := range expanded {
-			keep[f] = true
+	for _, f := range AllFeatures {
+		if !keep[f] {
+			removeTags[f] = true
 		}
-		// Implicit features are always kept
-		for _, f := range ImplicitFeatures {
-			keep[f] = true
-		}
-		for _, f := range AllFeatures {
-			if !keep[f] {
-				removeTags[f] = true
-			}
-		}
-	} else {
-		// Legacy/programmatic usage (Features == nil): remove demo content
-		removeTags[FeatureDemo] = true
 	}
 
 	// Remove dothog-specific documentation that is not relevant to derived apps.
@@ -1185,17 +1179,17 @@ func goPkgName(importPath string) string {
 // featureDescriptions maps feature tags to human-readable descriptions
 // for the generated README.
 var featureDescriptions = map[string]struct{ label, desc string }{
-	FeatureAuth:            {"Auth (Crooner)", "Azure AD / OIDC authentication via crooner"},
-	FeatureGraph:           {"Graph API", "Microsoft Graph API integration for user data"},
-	FeatureAvatar:          {"Avatar Photos", "User profile photo download and caching from Graph"},
+	FeatureAuth:   {"Auth (Crooner)", "Azure AD / OIDC authentication via crooner"},
+	FeatureGraph:  {"Graph API", "Microsoft Graph API integration for user data"},
+	FeatureAvatar: {"Avatar Photos", "User profile photo download and caching from Graph"},
 	// FeatureDatabase and FeatureCaddy are intentionally omitted from the
 	// description map. Both are hidden marker-bookkeeping tags:
 	//   - MSSQL/PostgreSQL imply database via featureDeps; scaffolds that
 	//     select neither strip the chuck-backed app-data layer entirely.
 	//   - SSE implies caddy via featureDeps; selecting SSE pulls the dev
 	//     HTTPS/H3 front-proxy in alongside the broker.
-	FeatureMSSQL:    {"MSSQL", "Microsoft SQL Server support (chuck-backed app data)"},
-	FeaturePostgres: {"PostgreSQL", "PostgreSQL support (chuck-backed app data)"},
+	FeatureMSSQL:           {"MSSQL", "Microsoft SQL Server support (chuck-backed app data)"},
+	FeaturePostgres:        {"PostgreSQL", "PostgreSQL support (chuck-backed app data)"},
 	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration. Auto-includes Caddy for HTTPS/H3 in dev."},
 	FeatureDemo:            {"Demo Content", "Demo pages, seed data, and example routes"},
 	FeatureSessionSettings: {"Session Settings", "Per-session theme and layout preferences"},
@@ -1672,12 +1666,12 @@ func removeEmptyDirs(dir string) error {
 
 // CopyRepoTo copies directory tree from src to dest, skipping any entry
 // (file or directory) whose basename appears in exclude, and skipping symlinks.
-// The legacy parameter name "excludeDirs" is kept for callers; entries may name
-// either directories (e.g. "node_modules") or files (e.g. "localhost.crt").
-func CopyRepoTo(src, dest string, excludeDirs []string) error {
-	exclude := make(map[string]bool)
-	for _, d := range excludeDirs {
-		exclude[d] = true
+// Entries may name either directories (e.g. "node_modules") or files
+// (e.g. "localhost.crt").
+func CopyRepoTo(src, dest string, exclude []string) error {
+	skip := make(map[string]bool, len(exclude))
+	for _, d := range exclude {
+		skip[d] = true
 	}
 	srcAbs, err := filepath.Abs(src)
 	if err != nil {
@@ -1701,7 +1695,7 @@ func CopyRepoTo(src, dest string, excludeDirs []string) error {
 		if rel == "." {
 			return os.MkdirAll(dest, info.Mode())
 		}
-		if exclude[filepath.Base(path)] {
+		if skip[filepath.Base(path)] {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}

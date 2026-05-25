@@ -93,95 +93,55 @@ Each library exists because a single responsibility needed a home. None of them 
 
 > _"How many libraries does it take to return HTML?" "Seven. But they're small. And they don't talk to each other. And one of them is just environment variables."_
 
+The request pipeline is a single ordered chain installed in `InitEcho` (`internal/routes/routes.go`). `internal/responsepolicy` owns the always-on web-standards layer (103 Early Hints / Link preload, Server-Timing, dorman security headers, `Vary: HX-Request`). Handlers either render through `templ` or return a `*handler.SurfaceError` that the central `HTTPErrorHandler` renders at the chosen surface — `banner | inline | inline-full | page | document` — with HTMX clients negotiating via `X-Error-Accept-Surfaces` and `X-Error-Fallback-Surface`. `internal/htmxutil` is the thin transport seam over htmx-go that handlers reach for when they need to set HTMX response headers (`Retarget`, `Reswap`, `TriggerAfterSettle`, …).
+
 ```mermaid
 graph TB
-    subgraph browser ["Browser"]
-        HTML["HTML + HTMX"]
-        SSE["SSE EventSource"]
-    end
+    Browser["Browser<br/>HTML + HTMX"]
 
-    subgraph dothog ["Dothog"]
+    subgraph pipeline ["Echo pipeline · InitEcho"]
         direction TB
-
-        subgraph startup ["Startup"]
-            CHUCK_DDL["<b>chuck</b><br/>schema · DDL · migrations"]
-        end
-
-        subgraph pipeline ["Request Pipeline"]
-            direction LR
-            DORMAN["<b>dorman</b><br/>security headers<br/>max body · CSRF · authz"]
-            CROONER["<b>crooner</b><br/>OIDC sessions"]
-            PROMOLOG["<b>promolog</b><br/>request capture<br/>policy-driven promotion"]
-            HANDLER["handler"]
-            DORMAN --> CROONER --> PROMOLOG --> HANDLER
-        end
-
-        subgraph response ["Response"]
-            LINKWELL["<b>linkwell</b><br/>hypermedia controls<br/>link relations · breadcrumbs"]
-            TEMPL["templ → HTML"]
-        end
-
-        TAVERN["<b>tavern</b><br/>SSE pub/sub broker"]
-        CHUCK_Q["<b>chuck</b><br/>queries · dbrepo"]
-        SQLITE[("SQLite")]
+        RP["<b>responsepolicy</b><br/>103/Link preload · Server-Timing<br/>dorman security headers · Vary: HX-Request"]
+        CORE["core<br/>Recover · promolog correlation<br/>access log · raw-writer save"]
+        COMP["compression<br/>(skipped behind templ proxy)"]
+        AUTH["crooner OIDC + SCS · dorman CSRF<br/>session settings"]
+        LINKS["LinkRelationsMiddleware<br/>linkwell.LinksFor(path) → Link header + ctx"]
+        RP --> CORE --> COMP --> AUTH --> LINKS
     end
 
-    HTML -- "HTTP request" --> PORTER
-    HANDLER --> CHUCK_Q --> SQLITE
-    HANDLER --> LINKWELL --> TEMPL
-    TEMPL -- "HTML response" --> HTML
-    HANDLER -. "publish" .-> TAVERN
-    TAVERN -. "SSE stream" .-> SSE
-    CHUCK_DDL -. "DDL" .-> SQLITE
+    subgraph handle ["Handler"]
+        direction TB
+        HDL["handler (route)"]
+        TEMPL["templ → HTML"]
+        SE["*SurfaceError / linkwell.HTTPError"]
+        EH["handler.NewHTTPErrorHandler<br/>capability negotiation"]
+        SURF["banner · inline · inline-full · page · document"]
+        HDL -- success --> TEMPL
+        HDL -- error --> SE --> EH --> SURF
+    end
+
+    subgraph sidecars ["Sidecars"]
+        direction TB
+        HTMXUTIL["<b>htmxutil</b><br/>local transport seam over htmx-go<br/>IsHTMX · Retarget · TriggerAfterSettle"]
+        LINKWELL["<b>linkwell</b><br/>Hub · Ring · Link<br/>breadcrumbs · context bar · site map"]
+        TAVERN["<b>tavern</b><br/>SSE broker · pub/sub topics · OOB swaps"]
+        CHUCK["<b>chuck</b><br/>schema (Init/Ensure/Seed/Validate)<br/>queries · dbrepo"]
+        PROMOLOG["<b>promolog</b><br/>per-request log buffers<br/>promote-on-error → SQLite trace store"]
+    end
+
+    Browser -- "HTTP request" --> RP
+    LINKS --> HDL
+    TEMPL -- "HTML response" --> Browser
+    SURF -- "HTML response" --> Browser
+    HDL -. "publish" .-> TAVERN
+    TAVERN -. "SSE stream" .-> Browser
+    HDL -- "query" --> CHUCK
 ```
 
 <details>
 <summary>ASCII version</summary>
 
-```
-                             ┌──────────────────────────────────────────────────────────────┐
-                             │                          DOTHOG                              │
-                             │                                                              │
-                             │  STARTUP                                                     │
-                             │                          ┌──────────────────────┐             │
-                             │                          │       chuck          │             │
-                             │                          │  schema · DDL        │             │
-                             │                          └──────────┬───────────┘             │
-                             │                                     │ DDL                     │
-                             │                                     ▼                         │
-  ┌─────────────┐            │  REQUEST PIPELINE                          ┌──────────┐      │
-  │   Browser   │            │  ┌──────────┐  ┌──────────┐  ┌──────────┐ │  SQLite  │      │
-  │             │  request   │  │  dorman  ├─►│ crooner  ├─►│ promolog │ │          │      │
-  │  HTML+HTMX ─┼───────────┼─►│ security │  │   OIDC   │  │ request  │ └──────────┘      │
-  │             │            │  │ headers  │  │ sessions │  │ capture  │      ▲             │
-  │             │            │  │ CSRF     │  │          │  │ policy   │      │             │
-  │             │            │  │ authz    │  │          │  │ promote  │      │             │
-  │             │            │  └──────────┘  └──────────┘  └────┬─────┘      │             │
-  │             │            │                                   │            │             │
-  │             │            │                              ┌────▼────┐       │             │
-  │             │            │                              │ handler ├───────┤             │
-  │             │            │                              └──┬───┬──┘       │             │
-  │             │            │                                 │   │          │             │
-  │             │            │                    ┌─────────────┘   └──────┐  │             │
-  │             │            │                    ▼                       ▼  │             │
-  │             │            │              ┌──────────┐            ┌────────┴┐ ┌────────┐  │
-  │             │            │              │ linkwell │            │  chuck  │ │ tavern │  │
-  │             │            │              │ controls │            │  query  │ │  SSE   │  │
-  │             │            │              │ links    │            │  dbrepo │ │ pub/   │  │
-  │             │            │              │ crumbs   │            │         │ │ sub    │  │
-  │             │            │              └────┬─────┘            └─────────┘ └───┬────┘  │
-  │             │            │                   ▼                                  │       │
-  │             │            │              ┌──────────┐                            │       │
-  │             │            │              │  templ   │                            │       │
-  │             │            │              │  → HTML  │                            │       │
-  │             │            │              └────┬─────┘                            │       │
-  │             │  response  │                   │                                  │       │
-  │             │◄───────────┼───────────────────┘                                 │       │
-  │             │            │                                                      │       │
-  │ EventSource │◄── SSE ───┼──────────────────────────────────────────────────────┘       │
-  │             │            │                                                              │
-  └─────────────┘            └──────────────────────────────────────────────────────────────┘
-```
+The boxed companion lives in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — request pipeline, error-surface contract, link registry, and SSE all rendered for inline reading.
 
 </details>
 
@@ -207,7 +167,7 @@ The server giveth and the client rendereth. This has been true since 1991. We si
 - **Link Relations Registry** -- The server declares resource relationships using [IANA link relations](https://www.iana.org/assignments/link-relations/link-relations.xhtml). Three composable primitives: **Ring** (peers link to peers), **Hub** (parent links to children), **Link** (explicit pairwise). One registry drives context bars, breadcrumbs, site map, and `Link` HTTP headers. `curl -I /demo/inventory` tells you everything about that resource's relationships. The navigation graph IS the application architecture, and the application architecture IS an HTTP header. This is either HATEOAS or madness. We are no longer distinguishing.
 - **Context Navigation** -- Local context bar (immediate siblings), hierarchy breadcrumbs (where this page lives). All server-rendered. All dismissable. All driven by the link registry. The server knows where you are. The server has always known where you are. The server finds your lack of `rel="up"` disturbing.
 - **Web Standards Over Libraries** -- Native `<dialog>` for modals. Native `popover` for dismissable UI. Native `<details name>` for accordions. Native `<datalist>` for autocomplete. `inputmode` for mobile keyboards. `enterkeyhint` for mobile enter keys. `content-visibility: auto` for rendering performance. `text-wrap: balance` for typography. `accent-color` for form theming. View Transitions for animated navigation. Every feature the browser already has is a library you didn't install. Every library you didn't install is a `node_modules` you didn't feed. The `node_modules` is always hungry. Do not feed the `node_modules`.
-- **Browser APIs** -- `BroadcastChannel` for cross-tab sync (change the theme in one tab, all tabs update, no server round-trip, no polling, no React context provider, no Zustand store, no `useThemeAcrossTabs` hook). `Server-Timing` header for DevTools performance metrics (open Network tab, click any request, your server's DB query time is right there, you're welcome).
+- **Browser APIs** -- `EventSource` for server-owned session sync (theme changes persist on the server, then flow back to every tab over SSE). `Server-Timing` header for DevTools performance metrics (open Network tab, click any request, your server's DB query time is right there, you're welcome).
 - **Inline Relationship Editor** -- Edit the link registry from the browser at `/hypermedia/links`. Add rings, hubs, and pairwise relationships. The context bars, breadcrumbs, and site map update immediately. The navigation graph is a living document. You are editing the document. The document is editing you. _(This last part is not technically true but we felt it was thematically appropriate.)_
 - **Site Map Footer** -- Rendered from the link registry. Hub centers as headings, their spokes as links. The same data that drives the context bar drives the footer. One source of truth. Grug approve. Many source of truth make grug mass of confusion.
 

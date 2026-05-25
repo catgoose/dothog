@@ -85,8 +85,10 @@ func filterNonDismiss(controls []linkwell.Control) []linkwell.Control {
 	return out
 }
 
-// toErrorContext converts an ErrorPresentation to a linkwell.ErrorContext
-// for compatibility with existing template components.
+// toErrorContext projects the presentation fields a linkwell-driven surface
+// template (ErrorStatusFromContext, InlineErrorPanel, InlineFullErrorPanel)
+// needs. The non-projected fields (Size, Surface, Status) belong to the
+// dispatcher in error_presentation.templ.
 func (p *ErrorPresentation) toErrorContext() linkwell.ErrorContext {
 	return linkwell.ErrorContext{
 		StatusCode: p.Status,

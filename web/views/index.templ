@@ -72,11 +72,9 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:demo:end
 		<script defer src={ version.Asset("/public/js/_hyperscript.min.js") }></script>
 		<script defer src={ version.Asset("/public/js/htmx.error-capabilities.js") }></script>
-		<script defer src={ version.Asset("/public/js/htmx.alpine-morph.js") }></script>
-		<script defer src={ version.Asset("/public/js/alpine.morph.min.js") }></script>
-		// setup:feature:demo:start
-		<script defer src={ version.Asset("/public/js/broadcast.js") }></script>
-		// setup:feature:demo:end
+		// setup:feature:session_settings:start
+		<script defer src={ version.Asset("/public/js/theme-controller.js") }></script>
+		// setup:feature:session_settings:end
 		<script defer src={ version.Asset("/public/js/alpine-components.js") }></script>
 		<script defer src={ version.Asset("/public/js/alpine.min.js") }></script>
 		// setup:feature:sse:start
@@ -118,7 +116,6 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		if devMode {
 			<script src={ version.Asset("/public/js/dev-logging.js") }></script>
 		}
-		<script src={ version.Asset("/public/js/theme-sync.js") }></script>
 		<script defer src={ version.Asset("/public/js/debug-restore.js") }></script>
 		// setup:feature:sse:start
 		// setup:feature:session_settings:start
@@ -133,11 +130,6 @@ templ Layout(content templ.Component) {
 	<div id="base-content">
 		@content
 	</div>
-}
-
-// ThemeChanged is returned by the POST /settings/theme handler.
-templ ThemeChanged(theme string) {
-	<span class="hidden">{ theme }</span>
 }
 
 // ThemeCategory groups themes under a label (e.g. "Light", "Dark").
@@ -167,4 +159,3 @@ func init() {
 		DaisyThemes = append(DaisyThemes, cat.Themes...)
 	}
 }
-

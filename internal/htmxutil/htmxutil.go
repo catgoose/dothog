@@ -92,5 +92,62 @@ func (r *Response) ReswapNone() *Response {
 	return r
 }
 
+// Reswap adds HX-Reswap with the given swap strategy, overriding the
+// triggering element's hx-swap. Use for the general case (innerHTML,
+// outerHTML, beforeend, afterbegin, delete, none). For the common
+// "skip the swap entirely" call, ReswapNone is clearer.
+func (r *Response) Reswap(strategy string) *Response {
+	r.r = r.r.Reswap(htmx.SwapStrategy(strategy))
+	return r
+}
+
+// Retarget adds HX-Retarget so htmx swaps the response into the element
+// matched by selector instead of the triggering element's hx-target. Server
+// chooses the destination late, after seeing the response — useful when a
+// validation error wants to go to a different region than the form's own
+// success target.
+func (r *Response) Retarget(selector string) *Response {
+	r.r = r.r.Retarget(selector)
+	return r
+}
+
+// Reselect adds HX-Reselect so htmx picks the named subtree of the response
+// HTML before swapping. Lets the server return a wider fragment than the
+// client asked for and let the client narrow it without changing markup.
+func (r *Response) Reselect(selector string) *Response {
+	r.r = r.r.Reselect(selector)
+	return r
+}
+
+// TriggerAfterSwap adds HX-Trigger-After-Swap with a plain event name. Fires
+// after the DOM swap completes but before settle — useful when listeners
+// need the new nodes in the tree but don't care about CSS transitions.
+func (r *Response) TriggerAfterSwap(name string) *Response {
+	r.r = r.r.AddTriggerAfterSwap(htmx.Trigger(name))
+	return r
+}
+
+// TriggerAfterSwapDetail adds HX-Trigger-After-Swap with a JSON detail
+// payload. Same timing as TriggerAfterSwap.
+func (r *Response) TriggerAfterSwapDetail(name string, detail any) *Response {
+	r.r = r.r.AddTriggerAfterSwap(htmx.TriggerObject(name, detail))
+	return r
+}
+
+// TriggerAfterSettle adds HX-Trigger-After-Settle with a plain event name.
+// Fires after both swap and settle complete — appropriate for listeners that
+// need final CSS transitions / settled layout (toast spawn, focus, scroll).
+func (r *Response) TriggerAfterSettle(name string) *Response {
+	r.r = r.r.AddTriggerAfterSettle(htmx.Trigger(name))
+	return r
+}
+
+// TriggerAfterSettleDetail adds HX-Trigger-After-Settle with a JSON detail
+// payload. Same timing as TriggerAfterSettle.
+func (r *Response) TriggerAfterSettleDetail(name string, detail any) *Response {
+	r.r = r.r.AddTriggerAfterSettle(htmx.TriggerObject(name, detail))
+	return r
+}
+
 // Write flushes the accumulated headers onto w.
 func (r *Response) Write(w http.ResponseWriter) error { return r.r.Write(w) }

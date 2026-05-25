@@ -26,10 +26,12 @@ var themeCounter atomic.Int64
 
 // setup:feature:sse:end
 
-// initThemeRoutes registers POST /settings/theme and POST /settings/layout.
-// Both persist into the session_settings row. Cross-browser broadcast is wired
-// separately by initThemeSSE when the sse feature is enabled.
+// initThemeRoutes registers the theme picker fragment plus POST /settings/theme
+// and POST /settings/layout.
+// Both persist into the session_settings row. When SSE is enabled, the theme
+// receive path is wired separately by initThemeSSE.
 func (ar *AppRoutes) initThemeRoutes() {
+	ar.e.GET("/settings/theme/picker", ar.handleThemePicker())
 	ar.e.POST("/settings/theme", ar.handleTheme())
 	ar.e.POST("/settings/layout", ar.handleLayout())
 }
@@ -46,8 +48,18 @@ func (ar *AppRoutes) initThemeSSE(broker *tavern.SSEBroker) {
 
 // setup:feature:sse:end
 
+// handleThemePicker returns the canonical picker fragment for the current
+// session theme. The settings page and the picker's component refresh both
+// render through this fragment.
+func (ar *AppRoutes) handleThemePicker() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return handler.RenderComponent(c, views.ThemePicker(session.GetSettings(c.Request()).Theme))
+	}
+}
+
 // handleTheme persists the requested theme on the session_settings row.
-// In sse builds the change is also broadcast so other tabs/devices receive it.
+// In sse builds the send path is this POST and the canonical receive path is
+// the theme-change SSE event.
 func (ar *AppRoutes) handleTheme() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		theme := c.FormValue("theme")
@@ -79,7 +91,26 @@ func (ar *AppRoutes) handleTheme() echo.HandlerFunc {
 		}
 		// setup:feature:sse:end
 
-		return handler.RenderComponent(c, views.ThemeChanged(theme))
+		if htmxutil.IsHTMX(c.Request()) && !htmxutil.IsBoosted(c.Request()) {
+			// setup:feature:sse:start
+			if ar.broker != nil {
+				_ = htmxutil.New().
+					ReswapNone().
+					Write(c.Response())
+				return c.NoContent(http.StatusNoContent)
+			}
+			// setup:feature:sse:end
+
+			_ = htmxutil.New().
+				TriggerDetail("app:theme-change", map[string]any{
+					"theme":  theme,
+					"source": "server",
+				}).
+				Write(c.Response())
+			return handler.RenderComponent(c, views.ThemePicker(theme))
+		}
+
+		return c.Redirect(http.StatusSeeOther, "/settings")
 	}
 }
 

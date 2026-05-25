@@ -144,7 +144,7 @@
         console.log("Triggering element:", d.elt);
         console.log("Element hx-target:", d.elt && d.elt.getAttribute("hx-target"));
         console.log("Element hx-target-error:", d.elt && d.elt.getAttribute("hx-target-error"));
-        console.log("Element hx-target-*:", d.elt && d.elt.getAttribute("hx-target-4*"));
+        console.log("Element hx-target:", d.elt && d.elt.getAttribute("hx-target"));
         console.log("Closest hx-target-error:", d.elt && d.elt.closest("[hx-target-error]"));
         console.groupEnd();
       });

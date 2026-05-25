@@ -2,8 +2,8 @@
  * @fileoverview Trusted Types pass-through policy for CSP compliance.
  *
  * This is a hypermedia application — the server is the trusted source of all
- * HTML. HTMX and Alpine.morph both inject server-rendered markup into the DOM,
- * which triggers Trusted Types checks in browsers that enforce the
+ * HTML. HTMX and other fragment-swapping helpers inject server-rendered markup
+ * into the DOM, which triggers Trusted Types checks in browsers that enforce the
  * require-trusted-types-for CSP directive.
  *
  * The policy is intentionally a pass-through: it does not sanitize. Client-side

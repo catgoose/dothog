@@ -4,9 +4,17 @@ package routes
 
 import "github.com/catgoose/linkwell"
 
-// initLinkRelations registers all link relation declarations for the app.
-// Hubs define parent→child discovery pages. Rings define peer groups.
-// This is the single source of truth for the app's navigation topology.
+// initLinkRelations registers DEMO-ONLY link relation declarations.
+// Scaffold-facing relations (e.g. the /examples hub registered by
+// initExamplesRoutes) live in their own scaffold-owned seams; this function
+// only describes pages that ship with the demo feature. Linkwell Hub calls
+// are append-only, so demo and scaffold seams can both extend a shared hub
+// (e.g. /admin) without stepping on each other.
+//
+// The link registry is the relationship graph (breadcrumbs, context bar,
+// site map). The curated top nav in handler.go::appNavNavConfig is a
+// separate concern — the top nav lists discoverability anchors, not every
+// page in the link graph.
 func (ar *AppRoutes) initLinkRelations() {
 	// ── Hubs (discovery / index pages) ──────────────────────────────
 
@@ -35,6 +43,14 @@ func (ar *AppRoutes) initLinkRelations() {
 		linkwell.Rel("/patterns/errors", "Errors"),
 	)
 
+	// Error patterns sub-hub: covers the component-only mode gallery. The
+	// runtime teaching surface lives at /examples/error-scenarios under the
+	// scaffold-facing /examples hub (registered in examples.go) and is
+	// intentionally NOT listed here because /patterns/* IA is demo-only.
+	linkwell.Hub("/patterns/errors", "Error Patterns",
+		linkwell.Rel("/patterns/errors/modes", "Modes"),
+	)
+
 	linkwell.Hub("/components", "Components",
 		linkwell.Rel("/components/widgets", "Widgets"),
 		linkwell.Rel("/components/cards", "Cards & Data"),
@@ -55,13 +71,11 @@ func (ar *AppRoutes) initLinkRelations() {
 	)
 
 	linkwell.Hub("/admin", "Admin",
-		linkwell.Rel("/admin/health", "Health"),
-		linkwell.Rel("/admin/sessions", "Sessions"),
 		linkwell.Rel("/admin/settings", "Control Panel"),
-		linkwell.Rel("/admin/error-traces", "Error Traces"),
 		linkwell.Rel("/admin/error-reports", "Error Reports"),
 		linkwell.Rel("/admin/system", "System"),
 		linkwell.Rel("/admin/config", "Config"),
+		linkwell.Rel("/admin/sqlite", "SQLite"),
 	)
 
 	linkwell.Hub("/dashboard", "Dashboard",
@@ -118,6 +132,7 @@ func (ar *AppRoutes) initLinkRelations() {
 		linkwell.Rel("/patterns/state", "State"),
 		linkwell.Rel("/patterns/errors", "Errors"),
 	)
+
 
 	// Real-time pages
 	linkwell.Ring("Real-time",

@@ -1,3 +1,4 @@
+// setup:feature:csrf
 /**
  * Attach the CSRF token to every outgoing HTMX request.
  * Reads the token from the <meta name="csrf-token"> tag injected

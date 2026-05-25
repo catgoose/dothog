@@ -1,0 +1,36 @@
+package views
+
+import components "catgoose/dothog/web/components/core"
+
+// ExamplesIndexPage renders the scaffold-facing /examples discovery page.
+// Lists always-on teaching surfaces derived apps inherit after `mage setup`.
+// Distinct from /patterns (demo-only component gallery) and /demo
+// (demo-feature content) — /examples is for scaffold-owned reference
+// implementations every derived app gets out of the box.
+templ ExamplesIndexPage() {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<div class="space-y-1">
+			<h1 class="text-2xl font-bold">Examples</h1>
+			<p class="text-sm text-base-content/60">
+				Scaffold-owned reference implementations. Every derived app inherits these
+				after <code class="bg-base-200 px-1 rounded">mage setup</code>; delete the
+				ones you don't want.
+			</p>
+		</div>
+
+		@components.ResourceGrid([]components.ResourceItem{
+			{
+				Href: "/examples/error-scenarios",
+				Title: "Error Scenarios",
+				Description: "Realistic handler-side error responses for every render surface — page, document, inline, inline-full, banner, reportable 500.",
+				IconPath: "M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z",
+			},
+			{
+				Href: "/examples/forms",
+				Title: "Forms",
+				Description: "Server-driven HTMX validation. Inline 422 rerenders preserving values, conflict-style 409 workflow errors, generic 500 degrading through the central pipeline to a banner.",
+				IconPath: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+			},
+		})
+	</div>
+}

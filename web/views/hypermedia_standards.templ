@@ -279,11 +279,11 @@ templ standardsBrowserAPIs() {
 			</p>
 			<div class="space-y-3">
 				<div class="border-l-2 border-primary/30 pl-3">
-					<h3 class="font-semibold text-sm mb-1">BroadcastChannel</h3>
+					<h3 class="font-semibold text-sm mb-1">EventSource</h3>
 					<p class="text-sm text-base-content/70">
-						Cross-tab communication for theme sync. When you change the theme in one tab,
-						all other tabs update immediately via a
-						<code class="text-xs bg-base-200 px-1 rounded">BroadcastChannel</code> message.
+						Server-owned session sync for theme changes. The picker sends an async POST,
+						then every tab converges through a
+						<code class="text-xs bg-base-200 px-1 rounded">theme-change</code> SSE event.
 					</p>
 				</div>
 				<div class="border-l-2 border-primary/30 pl-3">

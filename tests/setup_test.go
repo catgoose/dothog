@@ -290,6 +290,13 @@ func assertDirExists(t *testing.T, dir string) {
 	require.True(t, info.IsDir())
 }
 
+func assertFileExists(t *testing.T, path string) {
+	t.Helper()
+	info, err := os.Stat(path)
+	require.NoError(t, err, "file should exist: %s", path)
+	require.False(t, info.IsDir(), "expected file, got directory: %s", path)
+}
+
 func assertDirRemoved(t *testing.T, dir string) {
 	t.Helper()
 	_, err := os.Stat(dir)
@@ -1202,4 +1209,67 @@ func TestSetup_PlatformUnsupportedRejected(t *testing.T) {
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported setup platform")
+}
+
+// TestSetup_ExamplesScaffoldFacing proves the /examples section and all its
+// teaching children (error-scenarios, forms) survive `mage setup` even when
+// no optional features are selected. The route files, view files, and the
+// initExamplesRoutes + child-init wiring all need to be present in the
+// generated scaffold so derived-app authors inherit every teaching surface
+// regardless of the demo feature.
+func TestSetup_ExamplesScaffoldFacing(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Bare Scaffold App",
+		ModulePath: "github.com/test/bare-scaffold-app",
+		BasePort:   "20680",
+		Force:      true,
+		// Empty Features → bare HTMX app; no demo, no session_settings, etc.
+		Features: []string{},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	// Route + view files must survive bare-feature stripping for the
+	// /examples landing and every teaching child.
+	assertFileExists(t, filepath.Join(dest, "internal", "routes", "examples.go"))
+	assertFileExists(t, filepath.Join(dest, "internal", "routes", "error_scenarios.go"))
+	assertFileExists(t, filepath.Join(dest, "internal", "routes", "forms.go"))
+	assertFileExists(t, filepath.Join(dest, "web", "views", "examples_index.templ"))
+	assertFileExists(t, filepath.Join(dest, "web", "views", "error_scenarios.templ"))
+	assertFileExists(t, filepath.Join(dest, "web", "views", "forms.templ"))
+
+	// The InitRoutes wiring must still call initExamplesRoutes, and
+	// initExamplesRoutes must still chain both children — file-on-disk
+	// isn't enough.
+	routesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes.go"))
+	require.NoError(t, err)
+	require.Contains(t, string(routesBytes), "ar.initExamplesRoutes()",
+		"InitRoutes must still call initExamplesRoutes after demo stripping")
+
+	examplesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "examples.go"))
+	require.NoError(t, err)
+	require.Contains(t, string(examplesBytes), "ar.initErrorScenariosRoutes()",
+		"initExamplesRoutes must still chain initErrorScenariosRoutes")
+	require.Contains(t, string(examplesBytes), "ar.initFormsRoutes()",
+		"initExamplesRoutes must still chain initFormsRoutes")
+
+	// None of the scaffold-facing route files may carry a setup:feature
+	// marker that would have removed them under the empty-features bundle.
+	for _, name := range []string{"examples.go", "error_scenarios.go", "forms.go"} {
+		path := filepath.Join(dest, "internal", "routes", name)
+		body, err := os.ReadFile(path)
+		require.NoError(t, err)
+		require.NotContains(t, string(body), "// setup:feature:",
+			"%s must not carry a setup:feature marker — scaffold-facing teaching surfaces are always-on", name)
+	}
 }

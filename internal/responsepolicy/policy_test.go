@@ -50,9 +50,9 @@ func TestServerTiming_PresentOnHandlerWriteError(t *testing.T) {
 	assert.NotEmpty(t, rec.Header().Get("Server-Timing"))
 }
 
-// TestVary_AppendsRatherThanClobbers pins the fix called out by plan-048:
-// the old routes.go helper used Set, which discarded any Vary value upstream
-// middleware already declared. Add preserves them.
+// TestVary_AppendsRatherThanClobbers pins the invariant that the Vary
+// middleware appends to whatever Vary values upstream middleware already
+// declared, rather than replacing them.
 func TestVary_AppendsRatherThanClobbers(t *testing.T) {
 	c, _ := newCtx(http.MethodGet, "/")
 	c.Response().Header().Add("Vary", "Accept-Encoding")

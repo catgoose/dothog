@@ -17,21 +17,21 @@ import (
 
 // setupScenarios builds an Echo wired with correlation + the production
 // HTTPErrorHandler so SurfaceError flows through the real central pipeline,
-// then registers the scaffold-facing /admin/error-scenarios routes.
+// then registers the scaffold-facing /examples/error-scenarios routes.
 func setupScenarios(t *testing.T) *echo.Echo {
 	t.Helper()
 	e := echo.New()
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
 	e.HTTPErrorHandler = handler.NewHTTPErrorHandler(nil)
 	ar := &AppRoutes{e: e, ctx: context.Background()}
-	ar.initAdminErrorScenariosRoutes()
+	ar.initErrorScenariosRoutes()
 	return e
 }
 
-func TestAdminErrorScenarios_Index_Renders(t *testing.T) {
+func TestErrorScenarios_Index_Renders(t *testing.T) {
 	e := setupScenarios(t)
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/error-scenarios", http.NoBody)
+	req := httptest.NewRequest(http.MethodGet, "/examples/error-scenarios", http.NoBody)
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 
@@ -39,15 +39,15 @@ func TestAdminErrorScenarios_Index_Renders(t *testing.T) {
 	body := rec.Body.String()
 	assert.Contains(t, body, "Error Scenarios")
 	assert.Contains(t, body, "data-error-accept=\"inline,banner\"")
-	assert.Contains(t, body, "/admin/error-scenarios/route-404",
+	assert.Contains(t, body, "/examples/error-scenarios/route-404",
 		"index must link to the route-404 scenario")
-	assert.Contains(t, body, "/admin/error-scenarios/auth-boundary",
+	assert.Contains(t, body, "/examples/error-scenarios/auth-boundary",
 		"index must link to the auth-boundary scenario")
 }
 
-func TestAdminErrorScenarios_BannerFallback_HTMXNoAdvertisement(t *testing.T) {
+func TestErrorScenarios_BannerFallback_HTMXNoAdvertisement(t *testing.T) {
 	e := setupScenarios(t)
-	req := httptest.NewRequest(http.MethodGet, "/admin/error-scenarios/banner-fallback", http.NoBody)
+	req := httptest.NewRequest(http.MethodGet, "/examples/error-scenarios/banner-fallback", http.NoBody)
 	req.Header.Set("HX-Request", "true")
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
@@ -59,9 +59,9 @@ func TestAdminErrorScenarios_BannerFallback_HTMXNoAdvertisement(t *testing.T) {
 	assert.Contains(t, body, "Background job failed")
 }
 
-func TestAdminErrorScenarios_ValidationInline_NegotiatesInline(t *testing.T) {
+func TestErrorScenarios_ValidationInline_NegotiatesInline(t *testing.T) {
 	e := setupScenarios(t)
-	req := httptest.NewRequest(http.MethodGet, "/admin/error-scenarios/validation-inline", http.NoBody)
+	req := httptest.NewRequest(http.MethodGet, "/examples/error-scenarios/validation-inline", http.NoBody)
 	req.Header.Set("HX-Request", "true")
 	req.Header.Set(handler.HeaderErrorAcceptSurfaces, "inline,banner")
 	rec := httptest.NewRecorder()
@@ -76,9 +76,9 @@ func TestAdminErrorScenarios_ValidationInline_NegotiatesInline(t *testing.T) {
 	assert.Contains(t, body, "Email is required")
 }
 
-func TestAdminErrorScenarios_Route404_PageInChrome(t *testing.T) {
+func TestErrorScenarios_Route404_PageInChrome(t *testing.T) {
 	e := setupScenarios(t)
-	req := httptest.NewRequest(http.MethodGet, "/admin/error-scenarios/route-404", http.NoBody)
+	req := httptest.NewRequest(http.MethodGet, "/examples/error-scenarios/route-404", http.NoBody)
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 
@@ -88,12 +88,12 @@ func TestAdminErrorScenarios_Route404_PageInChrome(t *testing.T) {
 		"page surface must compose inside the host AppNavLayout chrome")
 	assert.Contains(t, body, "project not found")
 	assert.Contains(t, body, "flex min-h-[70vh] items-center justify-center py-8",
-		"page surface must use the proven derived-app centering wrapper (plan-059)")
+		"page surface must wrap content in the 70vh viewport-centered flex container so it reads as a real route view")
 }
 
-func TestAdminErrorScenarios_AuthBoundary_StandaloneShell(t *testing.T) {
+func TestErrorScenarios_AuthBoundary_StandaloneShell(t *testing.T) {
 	e := setupScenarios(t)
-	req := httptest.NewRequest(http.MethodGet, "/admin/error-scenarios/auth-boundary", http.NoBody)
+	req := httptest.NewRequest(http.MethodGet, "/examples/error-scenarios/auth-boundary", http.NoBody)
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 
@@ -108,9 +108,9 @@ func TestAdminErrorScenarios_AuthBoundary_StandaloneShell(t *testing.T) {
 		"auth-boundary scenario must not include a Report Issue control")
 }
 
-func TestAdminErrorScenarios_Reportable500_AppendsReportIssue(t *testing.T) {
+func TestErrorScenarios_Reportable500_AppendsReportIssue(t *testing.T) {
 	e := setupScenarios(t)
-	req := httptest.NewRequest(http.MethodGet, "/admin/error-scenarios/reportable-500", http.NoBody)
+	req := httptest.NewRequest(http.MethodGet, "/examples/error-scenarios/reportable-500", http.NoBody)
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 

@@ -21,12 +21,11 @@ import (
 )
 
 // setupProductionStack builds the smallest slice of the InitEcho chain needed
-// to exercise the compression/error-handler hot path: correlation,
-// security headers, raw-writer save, httpcompression, and the custom
-// HTTPErrorHandler. The full response-policy bundle now lives under
-// internal/responsepolicy and is tested separately; auth/CSRF/session are also
-// out of scope here because they do not affect the compressed-writer restore
-// path this test is guarding.
+// to exercise the compression/error-handler hot path: correlation, security
+// headers, raw-writer save, httpcompression, and the custom HTTPErrorHandler.
+// The full response-policy bundle is covered by internal/responsepolicy's own
+// tests, and auth/CSRF/session do not affect the compressed-writer restore
+// path this stack is guarding, so both are deliberately omitted here.
 func setupProductionStack(t *testing.T) *echo.Echo {
 	t.Helper()
 	e := echo.New()

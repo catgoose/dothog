@@ -161,7 +161,7 @@ func TestNewSurfaceError_500DefaultControlsIncludeReport(t *testing.T) {
 // capability-driven HTMX path: a route that picks SurfaceInline against a
 // client that advertised inline acceptance renders the inline panel (not the
 // banner OOB swap). The server stays free of DOM-target knowledge — the
-// client's hx-target / response-targets ext places the fragment.
+// client's hx-target places the fragment.
 func TestHTTPErrorHandler_SurfaceError_HTMXNegotiatesAcceptedInline(t *testing.T) {
 	e := setupEcho(nil)
 	e.GET("/test", func(c echo.Context) error {
@@ -208,8 +208,8 @@ func TestHTTPErrorHandler_SurfaceError_HTMXFallbackKicksIn(t *testing.T) {
 }
 
 // TestHTTPErrorHandler_SurfaceError_HTMXNoAdvertisementKeepsBanner pins the
-// no-regression rule: pre-capability HTMX clients (no headers advertised)
-// keep the original banner-OOB behavior from before this pass.
+// rule that HTMX clients which advertise no capability headers fall through
+// to the banner OOB swap regardless of the route's chosen surface.
 func TestHTTPErrorHandler_SurfaceError_HTMXNoAdvertisementKeepsBanner(t *testing.T) {
 	e := setupEcho(nil)
 	e.GET("/test", func(c echo.Context) error {

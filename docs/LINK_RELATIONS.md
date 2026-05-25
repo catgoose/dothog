@@ -178,33 +178,53 @@ The principle: **the server declares what's possible, the client discovers it fr
 
 ### Adding a New Section
 
-End-to-end example: adding a new page to the Demo hub with ring membership.
+Registration is split into two seams that both write to the same global
+linkwell registry. Pick the seam that matches the page's feature ownership.
+
+**Scaffold-facing pages** (always-on, survive `mage setup` regardless of
+feature selection) co-locate the link relations with the route initializer.
+Example: `internal/routes/examples.go::initExamplesRoutes` registers the
+`/examples` hub right where it registers `GET /examples`:
 
 ```go
-// 1. Add Hub spoke in links.go
-hypermedia.Hub("/demo", "Demo",
-    // ... existing spokes ...
-    hypermedia.Rel("/demo/newpage", "New Page"),
-)
-
-// 2. Add to a Ring (or create a new one)
-hypermedia.Ring("MyGroup",
-    hypermedia.Rel("/demo/newpage", "New Page"),
-    hypermedia.Rel("/demo/otherpage", "Other Page"),
-)
-
-// 3. Register routes
-ar.e.GET("/demo/newpage", handler.HandleComponent(views.NewPage()))
-
-// 4. Done — context bars, breadcrumbs, and site map update automatically
+func (ar *AppRoutes) initExamplesRoutes() {
+    linkwell.Hub("/examples", "Examples",
+        linkwell.Rel("/examples/error-scenarios", "Error Scenarios"),
+    )
+    ar.e.GET("/examples", handler.HandleComponent(views.ExamplesIndexPage()))
+    ar.initErrorScenariosRoutes()
+}
 ```
 
-What happens:
-- `/demo/newpage` gets `rel="up"` to `/demo` (from the Hub)
-- `/demo/newpage` gets `rel="related"` to `/demo/otherpage` (from the Ring)
-- `/demo` context bar shows "New Page" grouped under its ring
-- Breadcrumbs on `/demo/newpage`: Home > Demo > New Page
-- Site map footer includes "New Page" under the Demo hub
+**Demo-only pages** register in `internal/routes/links.go::initLinkRelations`
+(which is `setup:feature:demo`-gated). The demo and scaffold seams can both
+extend a shared hub like `/admin` because `linkwell.Hub` is append-only:
+
+```go
+// internal/routes/links.go (demo-only)
+linkwell.Hub("/demo", "Demo",
+    linkwell.Rel("/demo/newpage", "New Page"),
+)
+
+linkwell.Ring("MyGroup",
+    linkwell.Rel("/demo/newpage", "New Page"),
+    linkwell.Rel("/demo/otherpage", "Other Page"),
+)
+```
+
+Either way:
+- The route handler stays unchanged.
+- Context bars, breadcrumbs, and the site-map footer derive from the
+  registry automatically.
+- The **curated top nav** in `internal/routes/handler/handler.go::appNavNavConfig`
+  is a separate concern. Adding a top-nav entry does not register a link,
+  and registering a link does not add a nav entry. Keep them aligned manually.
+
+What you get after registration:
+- The new page gets `rel="up"` to its hub center (from the Hub).
+- The new page gets `rel="related"` to its ring peers (from the Ring).
+- The hub center's context bar lists the new page under its ring group.
+- Breadcrumbs walk the `rel="up"` chain back to Home.
 
 ### Understanding Context Bar Resolution
 

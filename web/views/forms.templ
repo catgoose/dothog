@@ -1,0 +1,168 @@
+package views
+
+// FormsState captures one form submission's fields, validation outcome, and
+// any per-field error messages. Used by FormsShell to render the form on
+// initial GET (empty state) and again on each POST (preserving submitted
+// values + showing inline errors).
+type FormsState struct {
+	Errors map[string]string
+	Name   string
+	Email  string
+	Color  string
+}
+
+// FormsPage is the /examples/forms teaching surface. Three demonstrations
+// share one endpoint: missing fields trigger inline validation errors,
+// email=conflict@example.com triggers a conflict-style workflow error
+// (still inline), email=boom@example.com triggers a generic 500 that
+// degrades through the central handler to a banner.
+templ FormsPage(state FormsState) {
+	<div class="p-4 space-y-6 max-w-4xl mx-auto">
+		<div class="space-y-1">
+			<h1 class="text-2xl font-bold">Forms</h1>
+			<p class="text-sm text-base-content/60">
+				Server-driven HTMX validation. The form rerenders itself on validation
+				errors (status 422) with submitted values preserved. Conflict-style
+				workflow errors (409) stay inline too. A generic failure (500) routes
+				through <code class="bg-base-200 px-1 rounded">handler.NewSurfaceError</code>
+				and degrades to the global banner — the form stays on screen.
+			</p>
+		</div>
+
+		<div class="card bg-base-100 shadow border border-base-300">
+			<div class="card-body p-4">
+				<h2 class="card-title text-base">Add contact</h2>
+				<p class="text-xs text-base-content/50 mb-2">
+					Try: empty fields (inline validation), <code>conflict@example.com</code>
+					(workflow conflict), <code>boom@example.com</code> (generic failure → banner),
+					or a valid email (success).
+				</p>
+				@FormsShell(state)
+			</div>
+		</div>
+	</div>
+}
+
+// FormsShell renders the form on initial load and on each validation
+// rerender. The form's hx-target is itself, so server-returned HTML
+// replaces the same shell — values + errors round-trip naturally.
+templ FormsShell(state FormsState) {
+	<form
+		id="forms-shell"
+		hx-post="/examples/forms/save"
+		hx-target="#forms-shell"
+		hx-swap="outerHTML"
+		data-error-accept="banner"
+		_="on focusFirstError from window
+		  set first to first <input.input-error, select.select-error/>
+		  if first then call first.focus()"
+		class="space-y-3"
+	>
+		@formsField("name", "Name", state.Name, state.Errors["name"], false)
+		@formsField("email", "Email", state.Email, state.Errors["email"], false)
+		@formsColorField(state.Color, state.Errors["color"])
+		<div class="flex items-center gap-2 pt-1">
+			<button type="submit" class="btn btn-sm btn-primary">Save contact</button>
+			if len(state.Errors) > 0 {
+				<span class="text-xs text-error">{ formsSummary(state) }</span>
+			}
+		</div>
+	</form>
+}
+
+// formsField renders one text/email input with optional error message.
+// Error styling lights the input's border via input-error so _hyperscript
+// focusFirstError can find it via the CSS selector .input-error.
+templ formsField(name, label, value, errMsg string, _ bool) {
+	<div class="form-control">
+		<label class="label py-1" for={ "forms-" + name }>
+			<span class="label-text text-sm">{ label }</span>
+		</label>
+		<input
+			type="text"
+			id={ "forms-" + name }
+			name={ name }
+			value={ value }
+			class={ formsFieldClass(errMsg) }
+		/>
+		if errMsg != "" {
+			<p class="text-xs text-error mt-1">{ errMsg }</p>
+		}
+	</div>
+}
+
+// formsColorField renders the favorite-color select. Same error pattern
+// as formsField, but with a select element so the demo covers both control
+// types.
+templ formsColorField(value, errMsg string) {
+	<div class="form-control">
+		<label class="label py-1" for="forms-color">
+			<span class="label-text text-sm">Favorite color</span>
+		</label>
+		<select
+			id="forms-color"
+			name="color"
+			class={ formsSelectClass(errMsg) }
+		>
+			<option value="" selected?={ value == "" }>Pick one…</option>
+			<option value="blue" selected?={ value == "blue" }>Blue</option>
+			<option value="green" selected?={ value == "green" }>Green</option>
+			<option value="red" selected?={ value == "red" }>Red</option>
+		</select>
+		if errMsg != "" {
+			<p class="text-xs text-error mt-1">{ errMsg }</p>
+		}
+	</div>
+}
+
+// FormsSuccess renders the success fragment on a valid submit. Replaces
+// the form shell entirely — the user sees a clear "saved" state with the
+// captured values plus a link to try again.
+templ FormsSuccess(state FormsState) {
+	<div id="forms-shell" class="alert alert-success text-sm">
+		<div>
+			<p class="font-semibold">Saved.</p>
+			<p class="mt-0.5">
+				Captured <strong>{ state.Name }</strong> ({ state.Email })
+				if state.Color != "" {
+					— favorite color: { state.Color }
+				}
+			</p>
+			<a
+				href="/examples/forms"
+				hx-boost="true"
+				class="link link-primary text-xs"
+			>Submit another</a>
+		</div>
+	</div>
+}
+
+// formsFieldClass picks input border styling based on whether the field
+// carries an error message.
+func formsFieldClass(errMsg string) string {
+	base := "input input-sm w-full"
+	if errMsg != "" {
+		return base + " input-error"
+	}
+	return base
+}
+
+// formsSelectClass mirrors formsFieldClass for select elements.
+func formsSelectClass(errMsg string) string {
+	base := "select select-sm w-full"
+	if errMsg != "" {
+		return base + " select-error"
+	}
+	return base
+}
+
+// formsSummary builds the inline error summary line shown next to the
+// submit button when validation fails.
+func formsSummary(state FormsState) string {
+	switch len(state.Errors) {
+	case 1:
+		return "Fix the error above to continue."
+	default:
+		return "Fix the errors above to continue."
+	}
+}

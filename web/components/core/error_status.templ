@@ -517,7 +517,8 @@ templ inlineFullActions(ec linkwell.ErrorContext, btnSize string) {
 	</div>
 }
 
-// ErrorStatus is the backward-compatible wrapper. All existing call sites are unchanged.
+// ErrorStatus is the positional-args convenience over ErrorStatusFromContext for
+// callers that don't already have a linkwell.ErrorContext in hand.
 templ ErrorStatus(statusCode int, message string, err error, route string, requestID string, closable bool) {
 	@ErrorStatusFromContext(linkwell.ErrorContext{
 		StatusCode: statusCode,

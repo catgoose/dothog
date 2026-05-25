@@ -5,6 +5,7 @@ import (
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 
+	"github.com/catgoose/linkwell"
 	"github.com/labstack/echo/v4"
 )
 
@@ -14,12 +15,25 @@ import (
 // /admin/config, …) live in admin_demo.go; session-settings admin
 // (DELETE/list) lives in admin_sessions.go.
 func (ar *AppRoutes) initAdminCoreRoutes() {
+	spokes := []linkwell.RelEntry{
+		linkwell.Rel("/admin/health", "Health"),
+		linkwell.Rel("/admin/debug", "Debug Controls"),
+	}
+	// setup:feature:session_settings:start
+	if ar.deps.SessionSettings != nil {
+		spokes = append(spokes, linkwell.Rel("/admin/sessions", "Sessions"))
+	}
+	// setup:feature:session_settings:end
+	if ar.deps.ReqLogStore != nil {
+		spokes = append(spokes, linkwell.Rel("/admin/error-traces", "Error Traces"))
+	}
+	linkwell.Hub("/admin", "Admin", spokes...)
+
 	admin := ar.e.Group("/admin")
 	admin.GET("", handler.HandleComponent(views.AdminIndexPage()))
 	admin.GET("/health", ar.handleAdminHealth)
 	admin.GET("/health/check", ar.handleAdminHealthCheck)
 	admin.GET("/debug", handler.HandleComponent(views.AdminDebugPage()))
-	ar.initAdminErrorScenariosRoutes()
 }
 
 func (ar *AppRoutes) handleAdminHealth(c echo.Context) error {

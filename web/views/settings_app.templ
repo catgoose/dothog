@@ -17,7 +17,7 @@ templ AppSettingsPage(currentTheme string) {
 							<h3 class="text-sm font-medium">Theme</h3>
 							<p class="text-sm text-base-content/70">Choose a color theme for the application.</p>
 							<div class="mt-2 max-w-xs">
-								@themeDropdown(currentTheme)
+								@ThemePicker(currentTheme)
 							</div>
 						</div>
 					</div>
@@ -47,10 +47,19 @@ templ AppSettingsPage(currentTheme string) {
 	</div>
 }
 
-// themeDropdown renders a dropdown select for choosing a DaisyUI theme,
-// grouped by light/dark category, with a visual color-swatch grid below.
-templ themeDropdown(currentTheme string) {
-	<div x-data="themePicker" data-current-theme={ currentTheme }>
+// ThemePicker renders the server-owned theme picker. POST /settings/theme is
+// the send channel; the canonical UI update comes back over the app-level SSE
+// feed, which announces the component-scoped theme-picker-sync event.
+templ ThemePicker(currentTheme string) {
+	<form
+		data-theme-picker
+		data-current-theme={ currentTheme }
+		method="post"
+		action="/settings/theme"
+		hx-get="/settings/theme/picker"
+		hx-trigger="app:theme-picker-sync from:body"
+		onsubmit="return window.themeController.submitTheme(this)"
+	>
 		<div class="flex items-center gap-3">
 			<div class="theme-preview-swatch flex gap-0.5 shrink-0" data-theme={ currentTheme }>
 				<span class="w-2 h-4 rounded-sm bg-primary"></span>
@@ -58,8 +67,9 @@ templ themeDropdown(currentTheme string) {
 				<span class="w-2 h-4 rounded-sm bg-accent"></span>
 			</div>
 			<select
+				name="theme"
 				class="select select-bordered select-sm w-full max-w-xs capitalize"
-				x-on:change="pickFromSelect"
+				onchange="return window.themeController.submitTheme(this)"
 			>
 				for _, cat := range ThemeCategories {
 					<optgroup label={ cat.Label }>
@@ -75,14 +85,17 @@ templ themeDropdown(currentTheme string) {
 			for _, cat := range ThemeCategories {
 				<div class="mb-2">
 					<p class="text-xs font-medium text-base-content/50 mb-1">{ cat.Label }</p>
-					<div class="flex flex-wrap gap-1.5" x-on:click="pickSwatch">
+					<div class="flex flex-wrap gap-1.5">
 						for _, theme := range cat.Themes {
 							<button
-								type="button"
+								type="submit"
+								name="theme"
+								value={ theme }
 								class={ "theme-swatch rounded-md overflow-hidden cursor-pointer",
 									templ.KV("ring-2 ring-primary ring-offset-1", theme == currentTheme) }
 								data-theme-value={ theme }
 								title={ theme }
+								onclick="return window.themeController.submitTheme(this)"
 							>
 								<div data-theme={ theme } class="flex gap-0.5 p-1 bg-base-100">
 									<span class="w-2 h-4 rounded-sm bg-primary"></span>
@@ -96,5 +109,5 @@ templ themeDropdown(currentTheme string) {
 				</div>
 			}
 		</div>
-	</div>
+	</form>
 }

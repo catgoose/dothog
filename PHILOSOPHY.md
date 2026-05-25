@@ -1066,7 +1066,7 @@ CSS can do what used to require runtime code:
 The platform ships APIs that replace entire categories of npm packages:
 
 - `navigator.sendBeacon()` — fire-and-forget logging without blocking navigation. Replaces analytics libraries.
-- `BroadcastChannel` — cross-tab sync (theme changes propagate to all tabs). No polling, no extra SSE connections.
+- `EventSource` — server-owned session sync (a theme change persists once, then every tab converges through SSE). No polling, no client-owned state bus.
 - `localStorage` — dismiss state for context bars. Persists across sessions.
 - Service Worker — offline caching for PWA, gated behind production mode.
 
