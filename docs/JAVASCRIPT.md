@@ -88,21 +88,71 @@ Example from `interval-control.js`:
 ## CSP compliance
 
 - No `unsafe-eval`. Alpine.js uses the CSP build (`@alpinejs/csp`).
-- No `unsafe-inline` in production. Inline scripts in templates must either be
-  externalized or covered by a CSP hash.
+- No inline event handlers (`onclick`, `onsubmit`, `onchange`) on
+  scaffold-owned surfaces. Replace them with `_hyperscript` (`_=`),
+  Alpine bindings on a registered component (`x-on:click="method()"`), or
+  HTMX attributes. The theme picker and error-status clipboard already
+  follow this convention.
 - External `.js` files loaded via `version.Asset()` are covered by
   `script-src 'self'`.
+- The `csp` setup feature ships the strict
+  `script-src 'self'` policy described in
+  [docs/SECURITY.md](SECURITY.md#content-security-policy-setupfeaturecsp)
+  via the `CSP_HEADER` env var; the contract is config-driven so source-repo
+  runs never accidentally emit it. The feature is mutually exclusive with
+  `demo` (rejected by `setup.Run`) because demo views still carry inline
+  `<script>` blocks and handlers that a strict policy would block.
 
-## File inventory
+## Asset layout
+
+`web/assets/public/js/` is split into three groups so the path immediately
+identifies what kind of file it is:
+
+- **`vendor/`** — Upstream third-party libraries shipped as-is. Do not edit
+  these files; replace them when bumping the upstream version.
+- **`app/`** — Dothog-owned runtime assets. Some always load; others are
+  gated by `// setup:feature:<tag>` markers in `web/views/index.templ`, so a
+  derived app only ships the files for features it selected.
+- **`dev/`** — Dothog-owned debug tooling. The files here exist for the
+  developer experience, but their load conditions are file-specific —
+  `debug-restore.js` rehydrates persisted debug flags on every page load,
+  while `dev-logging.js` only loads when `devMode` is active.
+
+### `vendor/` — third-party bundles
 
 | File | Description |
 |------|-------------|
-| `alpine-components.js` | Alpine.js CSP-compatible component registrations |
-| `csrf-header.js` | Attaches CSRF token to HTMX requests |
-| `debug-restore.js` | Restores debug toggles from localStorage |
-| `dev-logging.js` | Development logging for HTMX and \_hyperscript |
-| `htmx.error-capabilities.js` | Advertises accepted error surfaces on HTMX requests |
-| `interval-control.js` | Interval slider helpers called from \_hyperscript |
-| `theme-controller.js` | Global theme owner and HTMX send bridge (`session_settings`) |
-| `theme-sse.js` | SSE listener for server-sent theme changes (`sse` + `session_settings`) |
-| `trusted-types.js` | Trusted Types policy for CSP compliance |
+| `alpine.min.js` | Alpine.js CSP build |
+| `_hyperscript.min.js` | \_hyperscript runtime |
+| `htmx.ext.sse.js` | HTMX SSE extension |
+| `htmx.min.js` | HTMX core |
+| `tavern.min.js` | Tavern client |
+
+### `app/` — owned runtime
+
+Shell behaviors that only react to local DOM events — toast spawning,
+nav dropdown exclusivity, close-on-outside-click — live in `_hyperscript`
+on the element that owns them. Alpine is reserved for coordinated client
+state that spans multiple DOM regions. Feature-local Alpine components
+ship in their own `*.alpine.js` file and register through
+`dothog.alpine.register(name, factory)` exposed by `alpine-helper.js`, so
+the helper can queue them until `alpine:init` fires. The helper exists for
+CSP-safe named registrations; without CSP, inline `x-data="{...}"` would
+also be viable.
+
+| File | Feature gate | Description |
+|------|--------------|-------------|
+| `alpine-helper.js` | always | Exposes `window.dothog.alpine.register(name, factory)` and queues registrations until `alpine:init` |
+| `csrf-header.js` | always | Attaches CSRF token to HTMX requests |
+| `htmx.error-capabilities.js` | always | Advertises accepted error surfaces on HTMX requests |
+| `trusted-types.js` | always | Trusted Types policy for CSP compliance |
+| `interval-control.js` | `demo` | Interval slider helpers called from \_hyperscript |
+| `theme-controller.js` | `session_settings` | Private theme controller. Owns the canonical `applyTheme`, syncs every `[data-theme-picker]` in place, sends picker edits via HTMX AJAX, and delegates `submit`/`change`/`click` on the document so the picker form is plain data-marked HTML. Carries an inner `sse:start/end` block that opens the single `/sse/theme` EventSource and republishes events as `app:theme-change`. No `window` export. |
+| `admin-sessions.alpine.js` | `session_settings` | Page-scoped Alpine registration for `x-data="sessionsSelection"` on /admin/sessions. Owns the outer selection state so HTMX/SSE table refreshes don't destroy per-row checkbox state; reconciles on `htmx:afterSwap`. |
+
+### `dev/` — debug tooling
+
+| File | Load condition | Description |
+|------|----------------|-------------|
+| `debug-restore.js` | every page | Rehydrates persisted debug toggles from `localStorage` so flags survive reload |
+| `dev-logging.js` | when `devMode` | Development logging for HTMX and \_hyperscript |

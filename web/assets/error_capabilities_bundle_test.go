@@ -13,7 +13,7 @@ import (
 // regression in the JS file would break that contract without surfacing in
 // Go tests.
 func TestErrorCapabilitiesBundleContract(t *testing.T) {
-	data, err := os.ReadFile("public/js/htmx.error-capabilities.js")
+	data, err := os.ReadFile("public/js/app/htmx.error-capabilities.js")
 	if err != nil {
 		t.Fatalf("cannot read htmx.error-capabilities.js: %v", err)
 	}

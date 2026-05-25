@@ -204,8 +204,11 @@ func TestInitThemeRoutes_WithoutBroker_RejectsInvalidTheme(t *testing.T) {
 	require.Contains(t, rec.Body.String(), `<option value="light" selected>light</option>`)
 }
 
-// TestInitThemeRoutes_WithoutBroker_ThemePickerFragmentUsesSessionTheme keeps
-// the scoped HTMX refresh target honest.
+// TestInitThemeRoutes_WithoutBroker_ThemePickerFragmentUsesSessionTheme pins
+// the GET /settings/theme/picker route's contract: it renders the canonical
+// picker fragment for the current session theme. The fragment is a plain
+// data-theme-picker form (no Alpine seam) — theme-controller.js takes over
+// via delegated submit/change/click events on [data-theme-picker].
 func TestInitThemeRoutes_WithoutBroker_ThemePickerFragmentUsesSessionTheme(t *testing.T) {
 	store := &fakeSettingsStore{}
 	ar := &AppRoutes{
@@ -224,8 +227,12 @@ func TestInitThemeRoutes_WithoutBroker_ThemePickerFragmentUsesSessionTheme(t *te
 	ar.e.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.Contains(t, rec.Body.String(), `hx-trigger="app:theme-picker-sync from:body"`)
-	require.Contains(t, rec.Body.String(), `<option value="forest" selected>forest</option>`)
+	body := rec.Body.String()
+	require.Contains(t, body, `data-theme-picker`,
+		"picker fragment must keep the data-theme-picker marker theme-controller.js delegates from")
+	require.Contains(t, body, `<option value="forest" selected>forest</option>`)
+	require.NotContains(t, body, "app:theme-picker-sync",
+		"picker should not re-fetch via the dropped app:theme-picker-sync event after the controller's syncPicker already mutates the DOM in place")
 }
 
 // TestInitThemeRoutes_WithoutBroker_PersistsLayout guards that the layout

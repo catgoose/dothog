@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/catgoose/dorman"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -70,7 +71,7 @@ func TestPreload_FallbackEmitsLinkHeader(t *testing.T) {
 	c, rec := newCtx(http.MethodGet, "/")
 	links := []string{
 		"</public/css/tailwind.css>; rel=preload; as=style",
-		"</public/js/htmx.min.js>; rel=preload; as=script",
+		"</public/js/vendor/htmx.min.js>; rel=preload; as=script",
 	}
 	h := Preload(links, true)(func(c echo.Context) error { return nil })
 	require.NoError(t, h(c))
@@ -93,4 +94,41 @@ func TestInstall_RegistersServerTimingAndVary(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 	assert.NotEmpty(t, rec.Header().Get("Server-Timing"))
 	assert.Contains(t, rec.Header().Values("Vary"), "HX-Request")
+}
+
+// TestInstall_CSPEmittedWhenConfigured pins the CSP-selected derived-app
+// contract: a non-empty ContentSecurityPolicy lands on every response as the
+// Content-Security-Policy header. dorman's SecurityHeaders middleware owns
+// the actual emission; this test exercises the path through responsepolicy
+// so a regression in either layer is caught here.
+func TestInstall_CSPEmittedWhenConfigured(t *testing.T) {
+	e := echo.New()
+	policy := "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+	Install(e, Config{
+		Security: dorman.SecurityHeadersConfig{ContentSecurityPolicy: policy},
+	})
+	e.GET("/test", func(c echo.Context) error { return c.String(http.StatusOK, "ok") })
+
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, policy, rec.Header().Get("Content-Security-Policy"))
+}
+
+// TestInstall_CSPOmittedByDefault keeps the CSP-unselected contract honest:
+// the default Install call (no csp feature) emits no CSP header at all, so
+// derived apps that have not opted in stay free of inline-handler breakage.
+func TestInstall_CSPOmittedByDefault(t *testing.T) {
+	e := echo.New()
+	Install(e, Config{})
+	e.GET("/test", func(c echo.Context) error { return c.String(http.StatusOK, "ok") })
+
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Empty(t, rec.Header().Get("Content-Security-Policy"))
 }

@@ -14,8 +14,16 @@ templ Index(layoutContent templ.Component, menuContent templ.Component, csrfToke
 		<body
 			hx-history="false"
 			hx-boost="true"
-			x-data="alertListener"
-			x-on:show-alert.window="showAlert($event)"
+			_="on show-alert from window
+			  make a <div.alert.alert-info.shadow-lg/> called toastAlert
+			  set toastAlert.textContent to event.detail
+			  make a <div.toast.toast-end.toast-top.z-50/> called toastShell
+			  put toastAlert into toastShell
+			  put toastShell at end of body
+			  wait 3s
+			  transition toastShell's opacity to 0 over 300ms
+			  wait 300ms
+			  remove toastShell"
 		>
 			<meta name="page-theme" content={ theme }/>
 			<div id="error-status" class="sticky top-0 z-40" aria-live="assertive"></div>
@@ -63,25 +71,29 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<meta name="description" content={ appName + " - IT operations dashboard for managing infrastructure, inventory, and real-time monitoring" }/>
 		<link rel="preload" href={ version.Asset("/public/css/tailwind.css") } as="style" fetchpriority="high"/>
-		<link rel="preload" href={ version.Asset("/public/js/htmx.min.js") } as="script" fetchpriority="high"/>
-		<link rel="preload" href={ version.Asset("/public/js/_hyperscript.min.js") } as="script"/>
-		<script src={ version.Asset("/public/js/trusted-types.js") }></script>
-		<script defer src={ version.Asset("/public/js/htmx.min.js") }></script>
+		<link rel="preload" href={ version.Asset("/public/js/vendor/htmx.min.js") } as="script" fetchpriority="high"/>
+		<link rel="preload" href={ version.Asset("/public/js/vendor/_hyperscript.min.js") } as="script"/>
+		<script src={ version.Asset("/public/js/app/trusted-types.js") }></script>
+		<script defer src={ version.Asset("/public/js/vendor/htmx.min.js") }></script>
 		// setup:feature:demo:start
-		<script src={ version.Asset("/public/js/interval-control.js") }></script>
+		<script src={ version.Asset("/public/js/app/interval-control.js") }></script>
 		// setup:feature:demo:end
-		<script defer src={ version.Asset("/public/js/_hyperscript.min.js") }></script>
-		<script defer src={ version.Asset("/public/js/htmx.error-capabilities.js") }></script>
+		<script defer src={ version.Asset("/public/js/vendor/_hyperscript.min.js") }></script>
+		<script defer src={ version.Asset("/public/js/app/htmx.error-capabilities.js") }></script>
 		// setup:feature:session_settings:start
-		<script defer src={ version.Asset("/public/js/theme-controller.js") }></script>
+		<script defer src={ version.Asset("/public/js/app/theme-controller.js") }></script>
 		// setup:feature:session_settings:end
-		<script defer src={ version.Asset("/public/js/alpine-components.js") }></script>
-		<script defer src={ version.Asset("/public/js/alpine.min.js") }></script>
+		<script defer src={ version.Asset("/public/js/app/admin-debug.js") }></script>
+		<script defer src={ version.Asset("/public/js/app/alpine-helper.js") }></script>
+		// setup:feature:session_settings:start
+		<script defer src={ version.Asset("/public/js/app/admin-sessions.alpine.js") }></script>
+		// setup:feature:session_settings:end
+		<script defer src={ version.Asset("/public/js/vendor/alpine.min.js") }></script>
 		// setup:feature:sse:start
-		<script defer src={ version.Asset("/public/js/htmx.ext.sse.js") }></script>
+		<script defer src={ version.Asset("/public/js/vendor/htmx.ext.sse.js") }></script>
 		// setup:feature:sse:end
 		// setup:feature:demo:start
-		<script defer src={ version.Asset("/public/js/tavern.min.js") }></script>
+		<script defer src={ version.Asset("/public/js/vendor/tavern.min.js") }></script>
 		// setup:feature:demo:end
 		<link rel="stylesheet" href={ version.Asset("/public/css/tailwind.css") } type="text/css"/>
 		<link rel="stylesheet" href={ version.Asset("/public/css/daisyui.css") } type="text/css"/>
@@ -114,14 +126,9 @@ templ header(csrfToken string, devMode bool, appName string, extraCSS []string) 
 		// setup:feature:demo:end
 		<title>{ appName }</title>
 		if devMode {
-			<script src={ version.Asset("/public/js/dev-logging.js") }></script>
+			<script src={ version.Asset("/public/js/dev/dev-logging.js") }></script>
 		}
-		<script defer src={ version.Asset("/public/js/debug-restore.js") }></script>
-		// setup:feature:sse:start
-		// setup:feature:session_settings:start
-		<script defer src={ version.Asset("/public/js/theme-sse.js") }></script>
-		// setup:feature:session_settings:end
-		// setup:feature:sse:end
+		<script defer src={ version.Asset("/public/js/dev/debug-restore.js") }></script>
 	</head>
 }
 

@@ -167,7 +167,7 @@ func appNav(cfg linkwell.NavConfig) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<nav class=\"app-nav\" x-data><div class=\"nav-tabs flex items-stretch\"><!-- Brand (desktop only, hidden on mobile via CSS) -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<nav class=\"app-nav\"><div class=\"nav-tabs flex items-stretch\"><!-- Brand (desktop only, hidden on mobile via CSS) -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

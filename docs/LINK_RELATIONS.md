@@ -190,9 +190,11 @@ Example: `internal/routes/examples.go::initExamplesRoutes` registers the
 func (ar *AppRoutes) initExamplesRoutes() {
     linkwell.Hub("/examples", "Examples",
         linkwell.Rel("/examples/error-scenarios", "Error Scenarios"),
+        linkwell.Rel("/examples/forms", "Forms"),
     )
     ar.e.GET("/examples", handler.HandleComponent(views.ExamplesIndexPage()))
     ar.initErrorScenariosRoutes()
+    ar.initFormsRoutes()
 }
 ```
 

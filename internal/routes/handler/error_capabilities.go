@@ -9,8 +9,8 @@ import (
 )
 
 // Capability header names. Wire side, kept neutral so the JS hook in
-// web/assets/public/js/htmx.error-capabilities.js and the server-side parser
-// stay in sync without leaking framework specifics.
+// web/assets/public/js/app/htmx.error-capabilities.js and the server-side
+// parser stay in sync without leaking framework specifics.
 const (
 	HeaderErrorAcceptSurfaces  = "X-Error-Accept-Surfaces"
 	HeaderErrorFallbackSurface = "X-Error-Fallback-Surface"

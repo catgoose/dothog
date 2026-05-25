@@ -59,7 +59,7 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 
 // appNav renders a single nav element that CSS repositions based on screen size.
 templ appNav(cfg linkwell.NavConfig) {
-	<nav class="app-nav" x-data>
+	<nav class="app-nav">
 		<div class="nav-tabs flex items-stretch">
 			<!-- Brand (desktop only, hidden on mobile via CSS) -->
 			if cfg.Brand != nil {

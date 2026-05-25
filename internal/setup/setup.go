@@ -47,6 +47,7 @@ const (
 	FeatureAlpine          = "alpine"
 	FeatureCapacitor       = "capacitor"
 	FeatureCSRF            = "csrf"
+	FeatureCSP             = "csp"
 )
 
 // AllFeatures is the canonical feature tag list used for marker bookkeeping
@@ -54,7 +55,7 @@ const (
 // MSSQL/PostgreSQL imply it via featureDeps so the chuck-backed app-data
 // scaffolding ships with them. Scaffolds that select neither (e.g. "minimal")
 // strip the database tag and run on framework-internal SQLite stores only.
-var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureCSRF}
+var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureCSRF, FeatureCSP}
 
 // ImplicitFeatures are always selected and not presented to the user.
 // "alpine" is implicit because Alpine.js is kept available for coordinated
@@ -85,6 +86,37 @@ var featureDeps = map[string][]string{
 	FeaturePostgres: {FeatureDatabase},
 	FeatureAvatar:   {FeatureGraph},
 	FeatureSSE:      {FeatureCaddy},
+}
+
+// featureIncompatibilities lists mutually-exclusive feature pairs. Selecting
+// both surfaces in the same scaffold yields a runtime contract setup cannot
+// honestly deliver, so Run rejects the combination up front.
+//
+//   - csp + demo: the strict CSP header (script-src 'self') would break the
+//     demo views, which still ship inline <script> blocks and inline event
+//     handlers. Honest csp coverage of demo surfaces is a separate pass.
+var featureIncompatibilities = [][2]string{
+	{FeatureCSP, FeatureDemo},
+}
+
+// validateFeatureCompatibility rejects mutually-exclusive feature selections
+// before any file mutation. Runs after dep expansion so an implicit demo
+// (e.g. via featureDeps) is caught alongside the explicit one.
+func validateFeatureCompatibility(features []string) error {
+	if len(features) == 0 {
+		return nil
+	}
+	expanded := ExpandFeatureDeps(features)
+	have := make(map[string]bool, len(expanded))
+	for _, f := range expanded {
+		have[f] = true
+	}
+	for _, pair := range featureIncompatibilities {
+		if have[pair[0]] && have[pair[1]] {
+			return fmt.Errorf("features %q and %q cannot be combined: demo views still ship inline scripts and handlers that strict CSP would block; pick one", pair[0], pair[1])
+		}
+	}
+	return nil
 }
 
 // ExpandFeatureDeps walks featureDeps to a fixed point.
@@ -255,6 +287,9 @@ func replaceTemplateNames(dir, binaryName, appName string) error {
 func Run(ctx context.Context, dir string, opts Options) error {
 	if opts.AppName == "" {
 		return fmt.Errorf("APP_NAME is required")
+	}
+	if err := validateFeatureCompatibility(opts.Features); err != nil {
+		return err
 	}
 	binaryName := binaryNameFromApp(opts.AppName)
 
@@ -1196,6 +1231,7 @@ var featureDescriptions = map[string]struct{ label, desc string }{
 	FeatureAlpine:          {"Alpine.js", "Coordinated view state and browser-API bridges"},
 	FeatureCapacitor:       {"Capacitor", "Native mobile wrapper (iOS/Android)"},
 	FeatureCSRF:            {"CSRF Protection", "Token-based CSRF with optional per-request rotation"},
+	FeatureCSP:             {"Content Security Policy", "Strict CSP header without unsafe-eval or unsafe-inline on scripts"},
 }
 
 // buildFeatureTable generates a markdown table of enabled features for the README.

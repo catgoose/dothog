@@ -64,9 +64,10 @@ templ errorStatusBody(ec linkwell.ErrorContext) {
 		data-error-json={ errorJSON(ec) }
 	>
 		<button
+			type="button"
 			class="absolute top-1.5 right-1.5 inline-flex items-center p-1 rounded hover:bg-error-content/20 transition-colors"
-			onclick="navigator.clipboard.writeText(this.closest('[data-error-json]').getAttribute('data-error-json'))"
 			_="on click
+			  call navigator.clipboard.writeText(@data-error-json of closest <[data-error-json]/>)
 			  remove .hidden from the next <.copy-tip/>
 			  wait 1500ms
 			  add .hidden to the next <.copy-tip/>"

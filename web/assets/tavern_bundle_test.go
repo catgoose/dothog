@@ -13,7 +13,7 @@ import (
 // regressions where the JS asset reverts to an older version during branch
 // operations or squash merges.
 func TestTavernBundleContract(t *testing.T) {
-	data, err := os.ReadFile("public/js/tavern.min.js")
+	data, err := os.ReadFile("public/js/vendor/tavern.min.js")
 	if err != nil {
 		t.Fatalf("cannot read tavern.min.js: %v", err)
 	}

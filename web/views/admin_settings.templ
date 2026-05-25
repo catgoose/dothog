@@ -110,7 +110,7 @@ templ AdminSettingsPage(data AdminPanelData) {
 
 				<div class="fieldset">
 					<label class="label cursor-pointer justify-start gap-4 py-1">
-						<input id="debug-all" type="checkbox" class="toggle toggle-sm" onchange="window._dbg.toggleAll(this.checked)"/>
+						<input id="debug-all" type="checkbox" class="toggle toggle-sm" data-debug-all/>
 						<span class="label-text font-bold text-sm">Enable All</span>
 					</label>
 				</div>
@@ -160,7 +160,6 @@ templ AdminSettingsPage(data AdminPanelData) {
 	>
 		<div sse-swap="admin-panel" hx-swap="innerHTML settle:0 transition:false" style="display:none"></div>
 	</div>
-	@debugScript()
 }
 
 // --- OOB templates (published via tavern SSE) ---
@@ -231,4 +230,5 @@ templ metricCard(label, value string) {
 	</div>
 }
 
-// debugToggle and debugScript are defined in admin_debug.templ (shared with base app).
+// debugToggle is defined in admin_debug.templ; the controller lives in
+// web/assets/public/js/app/admin-debug.js so the markup stays CSP-safe.

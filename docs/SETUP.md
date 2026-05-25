@@ -87,10 +87,11 @@ If `sse` is not selected, everything between `:start` and `:end` (inclusive) is 
 | `sse` | SSE | caddy (hidden) | Server-Sent Events. Auto-includes the hidden Caddy HTTPS/H3 dev proxy. |
 | `capacitor` | Capacitor | — | Capacitor mobile wrapper |
 | `demo` | Demo Content | session_settings | Demo pages, SQLite seed data, example routes (auto-includes session_settings) |
+| `csp` | Content Security Policy | — | Strict `Content-Security-Policy` header via `CSP_HEADER` env (no `unsafe-eval`, no `unsafe-inline` on script-src). Incompatible with `demo`. |
 
 ### Implicit Features
 
-`alpine` is always included and not presented in the wizard. `_hyperscript` is the default tool for client-side DOM behavior (loaded with HTMX); Alpine.js (CSP build) is kept available for coordinated view state and browser-API bridges, currently the theme picker. The CSP build eliminates `unsafe-eval` from Content Security Policy requirements; any remaining Alpine component is registered via `Alpine.data()` in `alpine-components.js`.
+`alpine` is always included and not presented in the wizard. `_hyperscript` is the default tool for client-side DOM behavior (loaded with HTMX) and owns the shell-local seams — the alert-toast spawn on `show-alert`, the nav bar's close-on-outside-click, and the top-nav dropdown exclusivity all live inline on the element. Alpine.js (CSP build) is reserved for coordinated client state across multiple DOM regions; admin-sessions bulk selection (`sessionsSelection`) is the worked example, registered via `dothog.alpine.register(name, factory)` from `alpine-helper.js`. The CSP build eliminates `unsafe-eval`, and the `csp` feature pairs with it to emit a strict `script-src 'self'` policy. The theme picker is server-owned: `theme-controller.js` is a private file (no `window` export) that delegates `submit`/`change`/`click` on `[data-theme-picker]` forms, sends edits through HTMX to `POST /settings/theme`, applies the canonical theme locally, and (with SSE enabled) opens the single `/sse/theme` EventSource and applies live updates via `applyTheme` + `syncPicker`.
 
 The Chuck-backed app-data layer still exists as an internal setup marker for stripping/bookkeeping, but it is not a user-facing feature choice. Select `mssql` or `postgres` when you want app-data support for one of those engines.
 
@@ -101,6 +102,9 @@ Dependencies are auto-resolved (closed by `setup.ExpandFeatureDeps` before strip
 - Selecting `mssql` or `postgres` auto-includes the hidden `database` tag — the chuck-backed app-data layer ships with the production engine.
 - Selecting `sse` auto-includes the hidden `caddy` tag — the dev HTTPS/H3 front-proxy ships alongside the SSE broker. There is no supported "Caddy without SSE" setup shape.
 - Selecting `demo` auto-includes `session_settings` — demo content reads session settings.
+
+Incompatible combinations are rejected up front by `setup.Run`:
+- `csp` + `demo` — demo views still ship inline `<script>` blocks and event handlers that the strict CSP would block.
 
 Web-standards behavior (Server-Timing, `Vary: HX-Request`, Permissions-Policy via dorman, 103 Early Hints) and the link-relations registry (context bars, breadcrumbs, footer site map, `Link` headers) are always-on baseline behavior owned by `internal/responsepolicy` and `linkwell` respectively; neither is a user-selectable feature. The registry has two seams: scaffold-facing relations are declared in route initializers (e.g. `internal/routes/examples.go`); demo-only relations live in `internal/routes/links.go`. Both write to the same global registry. The curated top nav (`internal/routes/handler/handler.go::appNavNavConfig`) is a separate concern from the registry — the nav lists discoverability anchors, not every page in the link graph.
 

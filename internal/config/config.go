@@ -44,6 +44,13 @@ type AppConfig struct {
 	CSRFExemptPaths           []string
 	GraphUserCacheRefreshHour int
 	CSRFRotatePerRequest      bool
+	// ContentSecurityPolicy carries the verbatim header value to emit on
+	// every response when non-empty. Setup writes a strict policy into
+	// CSP_HEADER for derived apps that select the csp feature; bare source
+	// runs and scaffolds that did not opt in leave the field empty so no
+	// header is set. The runtime contract is config-driven so demo-bearing
+	// builds (source repo, demo scaffold) cannot accidentally claim CSP.
+	ContentSecurityPolicy string
 }
 
 // setup:feature:auth:start
@@ -126,6 +133,8 @@ func buildConfig() (*AppConfig, error) {
 	}
 	cfg.GraphUserCacheRefreshHour = graphHour
 	// setup:feature:graph:end
+
+	cfg.ContentSecurityPolicy = envStr("CSP_HEADER", "")
 
 	return cfg, nil
 }

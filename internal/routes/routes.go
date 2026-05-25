@@ -40,9 +40,9 @@ import (
 )
 
 // Deps groups repository and store dependencies for the application routes.
-// Generated apps add fields here as features are added. main.go owns
-// construction of every field here so InitRoutes never discovers runtime
-// state on its own (no config.GetConfig, no demo.Open).
+// Every field is constructed in main.go and injected here; InitRoutes never
+// discovers runtime state on its own. Derived apps add fields as features
+// are introduced.
 type Deps struct {
 	ReqLogStore   promolog.Storer
 	IssueReporter IssueReporter
@@ -171,12 +171,9 @@ func NewAppRoutes(ctx context.Context, e *echo.Echo, deps Deps) *AppRoutes {
 	return ar
 }
 
-// InitRoutes is the high-level coordinator that wires the application's
-// route table onto the embedded Echo. Each phase is its own helper so the
-// scaffold/admin/SSE/demo boundaries stay legible at a glance; behavior is
-// identical to running every helper inline. Runtime inputs (app name, demo
-// DB) are injected via Deps in NewAppRoutes — InitRoutes does not call
-// config.GetConfig or demo.Open itself.
+// InitRoutes wires the application's route table onto the embedded Echo.
+// Each phase is its own helper so the scaffold/admin/SSE/demo boundaries stay
+// legible at a glance.
 func (ar *AppRoutes) InitRoutes() error {
 	ar.initScaffoldRoutes()
 	ar.initHealthRoutes()
@@ -193,8 +190,8 @@ func (ar *AppRoutes) InitRoutes() error {
 }
 
 // initScaffoldRoutes wires the home page, the session_settings page, and
-// the demo-feature navigation links derived apps reach from the AppNav
-// layout. Single registrar so derived apps know exactly where GET / lives.
+// the demo-feature navigation links the AppNav layout links to. Every
+// derived app reaches GET / exactly through this registrar.
 func (ar *AppRoutes) initScaffoldRoutes() {
 	// Register known origins for ?from= breadcrumb resolution. Home (bit 0)
 	// is pre-registered; additional pages register here.
@@ -389,14 +386,13 @@ func (ar *AppRoutes) SetHealthStats(fn health.StatsFunc) {
 	ar.healthCfg.Stats = fn
 }
 
-// InitEcho assembles the project middleware chain. The web-standards response
-// policy (103/preload, Server-Timing, security headers, Vary: HX-Request) is
-// installed first via internal/responsepolicy as one explicit owner; the rest
-// of the chain — Recover/correlation/logging, raw-writer, compression,
-// feature-gated auth/session/link-relations, and the HTTPErrorHandler — stays
-// here in InitEcho. Order matters: response-policy precedes everything so 103
-// Early Hints flushes before any other handler writes a header, the raw-writer
-// save must precede compression, and the static handler runs last.
+// InitEcho assembles the project middleware chain. internal/responsepolicy
+// installs the web-standards layer (103/preload, Server-Timing, security
+// headers, Vary: HX-Request) first; Recover/correlation/logging, raw-writer,
+// compression, feature-gated auth/session/link-relations, and the central
+// HTTPErrorHandler follow. Order matters: response-policy precedes everything
+// so 103 Early Hints flushes before any other handler writes a header, the
+// raw-writer save must precede compression, and the static handler runs last.
 func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	// setup:feature:session_settings:start
 	settingsRepo session.SettingsProvider,
@@ -406,17 +402,24 @@ func InitEcho(ctx context.Context, staticFS fs.FS, cfg *config.AppConfig,
 	e := echo.New()
 	behindProxy := os.Getenv("TEMPL_PROXY") != ""
 
+	security := dorman.SecurityHeadersConfig{
+		PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+		CrossOriginOpenerPolicy: "same-origin",
+	}
+	// CSP_HEADER is config-driven, not code-gated. Setup writes a strict
+	// policy here for derived apps that opted into the csp feature; source
+	// runs and bare scaffolds leave it empty so the header is omitted.
+	if cfg != nil && cfg.ContentSecurityPolicy != "" {
+		security.ContentSecurityPolicy = cfg.ContentSecurityPolicy
+	}
 	responsepolicy.Install(e, responsepolicy.Config{
 		BehindProxy: behindProxy,
 		PreloadLinks: []string{
 			"<" + version.Asset("/public/css/tailwind.css") + ">; rel=preload; as=style; fetchpriority=high",
 			"<" + version.Asset("/public/css/daisyui.css") + ">; rel=preload; as=style",
-			"<" + version.Asset("/public/js/htmx.min.js") + ">; rel=preload; as=script; fetchpriority=high",
+			"<" + version.Asset("/public/js/vendor/htmx.min.js") + ">; rel=preload; as=script; fetchpriority=high",
 		},
-		Security: dorman.SecurityHeadersConfig{
-			PermissionsPolicy:       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
-			CrossOriginOpenerPolicy: "same-origin",
-		},
+		Security: security,
 	})
 
 	addCoreMiddleware(e)

@@ -6,17 +6,19 @@ import (
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
 
 // initAdminSessionsRoutes registers the framework-owned admin surface for the
-// session_settings store: list and delete by UUID. Only ships when the
-// session_settings feature is kept.
+// session_settings store: list, delete by UUID, and batch-delete by UUID
+// list. Only ships when the session_settings feature is kept.
 func (ar *AppRoutes) initAdminSessionsRoutes() {
 	sessions := ar.e.Group("/admin/sessions")
 	sessions.GET("", ar.handleSessionsPage)
 	sessions.GET("/table", ar.handleSessionsTable)
+	sessions.POST("/delete", ar.handleSessionsBatchDelete)
 	sessions.DELETE("/:uuid", ar.handleSessionsDelete)
 }
 
@@ -55,6 +57,33 @@ func (ar *AppRoutes) handleSessionsDelete(c echo.Context) error {
 	}
 	if err := ar.deps.SessionSettings.DeleteByUUID(c.Request().Context(), uuid); err != nil {
 		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to delete session", err)
+	}
+	sessions, err := ar.deps.SessionSettings.ListAll(c.Request().Context())
+	if err != nil {
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to reload sessions", err)
+	}
+	return handler.RenderComponent(c, views.AdminSessionsTable(sessions))
+}
+
+// handleSessionsBatchDelete drops every session_settings row in the
+// comma-separated "uuids" form field and returns the refreshed table. Each
+// per-UUID delete is idempotent, so duplicates and stale uuids no-op rather
+// than failing the batch.
+func (ar *AppRoutes) handleSessionsBatchDelete(c echo.Context) error {
+	if ar.deps.SessionSettings == nil {
+		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Session settings not configured", nil)
+	}
+	raw := c.FormValue("uuids")
+	if raw != "" {
+		for _, uuid := range strings.Split(raw, ",") {
+			uuid = strings.TrimSpace(uuid)
+			if uuid == "" {
+				continue
+			}
+			if err := ar.deps.SessionSettings.DeleteByUUID(c.Request().Context(), uuid); err != nil {
+				return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to delete session", err)
+			}
+		}
 	}
 	sessions, err := ar.deps.SessionSettings.ListAll(c.Request().Context())
 	if err != nil {

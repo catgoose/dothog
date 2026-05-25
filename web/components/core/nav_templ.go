@@ -50,7 +50,7 @@ func NavBar(items []linkwell.NavItem) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<nav class=\"navbar bg-base-200 shadow-sm\" x-data=\"navBar\" x-on:click.window=\"closeOthers($event)\"><div class=\"flex-1\"><ul class=\"menu menu-horizontal\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<nav class=\"navbar bg-base-200 shadow-sm\" _=\"on click from window\n\t\t  for d in <details[open]/> in me\n\t\t    if event.target is not within d\n\t\t      set d.open to false\n\t\t    end\n\t\t  end\"><div class=\"flex-1\"><ul class=\"menu menu-horizontal\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -90,7 +90,7 @@ func navMenuItem(item linkwell.NavItem) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(item.Children) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<li><details x-data=\"navMenuDropdown\" x-on:toggle=\"closeOtherDropdowns()\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<li><details _=\"on toggle\n\t\t\t\t  if me.open\n\t\t\t\t    for d in <details/> in the closest <ul.menu-horizontal/>\n\t\t\t\t      if d is not me\n\t\t\t\t        set d.open to false\n\t\t\t\t      end\n\t\t\t\t    end\n\t\t\t\t  end\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -123,7 +123,7 @@ func navMenuItem(item linkwell.NavItem) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(item.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 49, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 59, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func navMenuItem(item linkwell.NavItem) templ.Component {
 			var templ_7745c5c3_Var7 templ.SafeURL
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(item.Href))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 61, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 71, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -198,7 +198,7 @@ func navMenuItem(item linkwell.NavItem) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(item.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 66, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 76, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -249,7 +249,7 @@ func Breadcrumbs(crumbs []linkwell.Breadcrumb) templ.Component {
 				var templ_7745c5c3_Var11 templ.SafeURL
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(crumb.Href))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 79, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 89, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -262,7 +262,7 @@ func Breadcrumbs(crumbs []linkwell.Breadcrumb) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(crumb.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 79, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 89, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -280,7 +280,7 @@ func Breadcrumbs(crumbs []linkwell.Breadcrumb) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(crumb.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 81, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/nav.templ`, Line: 91, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
