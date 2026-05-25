@@ -14,6 +14,7 @@ import (
 	// setup:feature:sse:start
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	"github.com/catgoose/tavern"
 	// setup:feature:sse:end
@@ -21,8 +22,37 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// isValidTheme reports whether theme matches one of the views.DaisyThemes
+// the picker exposes. handleTheme uses it for the user self-edit fallback;
+// derived apps with an admin-row edit handler can reuse the same canonical
+// validation.
+func isValidTheme(theme string) bool {
+	for _, t := range views.DaisyThemes {
+		if t == theme {
+			return true
+		}
+	}
+	return false
+}
+
 // setup:feature:sse:start
+
 var themeCounter atomic.Int64
+
+// publishThemeChange fans the supplied theme to the cookie-derived session
+// topic via the SSE broker so only the session whose preference changed
+// receives the event. No-op when broker or sessionUUID is empty, so the
+// stale-cookie / pre-cookie cases do not emit ghost events.
+func publishThemeChange(broker *tavern.SSEBroker, sessionUUID, theme string) {
+	if broker == nil || sessionUUID == "" {
+		return
+	}
+	eventID := fmt.Sprintf("tc%d", themeCounter.Add(1))
+	msg := tavern.NewSSEMessage("theme-change", theme).
+		WithID(eventID).
+		String()
+	broker.PublishWithID(ThemeTopicForSession(sessionUUID), eventID, msg)
+}
 
 // setup:feature:sse:end
 
@@ -38,12 +68,34 @@ func (ar *AppRoutes) initThemeRoutes() {
 
 // setup:feature:sse:start
 
-// initThemeSSE adds the cross-browser theme-change feed and replay policy.
-// Only called when the sse feature is enabled and a broker has been built.
+// initThemeSSE wires /sse/theme to the cookie-backed session's private topic
+// while preserving the public SSE event name "theme-change". The handler
+// derives the session UUID from session middleware, subscribes that
+// connection to ThemeTopicForSession(uuid), and streams via tavern.StreamSSE
+// so the SSE event field stays "theme-change" (using DynamicGroupHandler
+// would leak the private topic name into the event field and break clients
+// that listen for "theme-change"). Only called when the sse feature is
+// enabled and a broker has been built.
 func (ar *AppRoutes) initThemeSSE(broker *tavern.SSEBroker) {
-	broker.SetReplayPolicy(TopicThemeChange, 1)
-	broker.SetReplayGapPolicy(TopicThemeChange, tavern.GapFallbackToSnapshot, nil)
-	ar.e.GET("/sse/theme", echo.WrapHandler(broker.SSEHandler(TopicThemeChange)))
+	ar.e.GET("/sse/theme", func(c echo.Context) error {
+		s := session.GetSettings(c.Request())
+		if s == nil || s.SessionUUID == "" {
+			return c.NoContent(http.StatusNoContent)
+		}
+
+		c.Response().Header().Set("X-Accel-Buffering", "no")
+		lastID := c.Request().Header.Get("Last-Event-ID")
+		msgs, unsub := broker.SubscribeFromID(ThemeTopicForSession(s.SessionUUID), lastID)
+		defer unsub()
+
+		return tavern.StreamSSE(
+			c.Request().Context(),
+			c.Response(),
+			msgs,
+			func(msg string) string { return msg },
+			tavern.WithStreamHeartbeat(30*time.Second),
+		)
+	})
 }
 
 // setup:feature:sse:end
@@ -59,18 +111,11 @@ func (ar *AppRoutes) handleThemePicker() echo.HandlerFunc {
 
 // handleTheme persists the requested theme on the session_settings row.
 // In sse builds the send path is this POST and the canonical receive path is
-// the theme-change SSE event.
+// the per-session theme-change SSE event.
 func (ar *AppRoutes) handleTheme() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		theme := c.FormValue("theme")
-		valid := false
-		for _, t := range views.DaisyThemes {
-			if t == theme {
-				valid = true
-				break
-			}
-		}
-		if !valid {
+		if !isValidTheme(theme) {
 			theme = "light"
 		}
 		settings := session.GetSettings(c.Request())
@@ -82,13 +127,7 @@ func (ar *AppRoutes) handleTheme() echo.HandlerFunc {
 		}
 
 		// setup:feature:sse:start
-		if ar.broker != nil {
-			eventID := fmt.Sprintf("tc%d", themeCounter.Add(1))
-			msg := tavern.NewSSEMessage("theme-change", theme).
-				WithID(eventID).
-				String()
-			ar.broker.PublishWithID(TopicThemeChange, eventID, msg)
-		}
+		publishThemeChange(ar.broker, settings.SessionUUID, theme)
 		// setup:feature:sse:end
 
 		if htmxutil.IsHTMX(c.Request()) && !htmxutil.IsBoosted(c.Request()) {

@@ -51,9 +51,10 @@ templ AppSettingsPage(currentTheme string) {
 // data-theme-picker-marked HTML; theme-controller.js takes over via
 // delegated submit/change/click events on the document, sends the POST
 // as an HTMX AJAX call, and applies the canonical theme returned over
-// the /sse/theme feed (which mutates every mounted picker in place via
-// syncPicker). Without JS the native form posts to /settings/theme and
-// the server returns a redirect.
+// the per-session /sse/theme feed (which mutates every mounted picker
+// in place via syncPicker). The picker has no native submit button, so
+// it is JS-required; the form's method/action remain so the controller
+// can post through htmx.ajax without hard-coding the URL.
 templ ThemePicker(currentTheme string) {
 	<form
 		data-theme-picker

@@ -13,6 +13,8 @@ import (
 
 	"catgoose/dothog/internal/session"
 	// setup:feature:sse:start
+	"time"
+
 	"github.com/catgoose/tavern"
 	// setup:feature:sse:end
 	"github.com/labstack/echo/v4"
@@ -172,6 +174,83 @@ func TestInitThemeRoutes_WithBroker_HTMXThemeChangeUsesSendOnlyResponse(t *testi
 	last := store.lastSettings()
 	require.NotNil(t, last)
 	require.Equal(t, "dark", last.Theme)
+}
+
+// TestInitThemeRoutes_PublishScopedToSessionTopic pins the per-session SSE
+// contract: a POST /settings/theme for session A publishes only to A's
+// topic, so a subscriber on session B's topic sees nothing. Prevents the
+// global-broadcast regression where one user's theme change rethemed every
+// connected browser.
+func TestInitThemeRoutes_PublishScopedToSessionTopic(t *testing.T) {
+	store := &fakeSettingsStore{}
+	broker := tavern.NewSSEBroker()
+	defer broker.Close()
+
+	ar := &AppRoutes{
+		e:      echo.New(),
+		deps:   Deps{SessionStore: store, SessionSettings: store},
+		broker: broker,
+	}
+	ar.initThemeRoutes()
+
+	aMsgs, aUnsub := broker.Subscribe(ThemeTopicForSession("session-a"))
+	defer aUnsub()
+	bMsgs, bUnsub := broker.Subscribe(ThemeTopicForSession("session-b"))
+	defer bUnsub()
+
+	form := url.Values{}
+	form.Set("theme", "dark")
+	req := httptest.NewRequest(http.MethodPost, "/settings/theme", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("HX-Request", "true")
+	req = withSession(req, session.NewDefaultSettings("session-a"))
+
+	rec := httptest.NewRecorder()
+	ar.e.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusNoContent, rec.Code)
+
+	select {
+	case msg := <-aMsgs:
+		require.Contains(t, msg, "theme-change", "session-a's topic should receive its own theme-change event")
+		require.Contains(t, msg, "dark", "the published payload should carry the chosen theme")
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("session-a's topic did not receive the theme-change event")
+	}
+
+	select {
+	case msg := <-bMsgs:
+		t.Fatalf("session-b's topic must not receive session-a's theme change; got %q", msg)
+	case <-time.After(100 * time.Millisecond):
+	}
+}
+
+// TestInitThemeRoutes_NoPublishWhenSessionUUIDMissing keeps the defensive
+// gate honest: with a nil-UUID session (no cookie yet), the handler still
+// persists/redirects but does not publish to any topic.
+func TestInitThemeRoutes_NoPublishWhenSessionUUIDMissing(t *testing.T) {
+	store := &fakeSettingsStore{}
+	broker := tavern.NewSSEBroker()
+	defer broker.Close()
+
+	ar := &AppRoutes{
+		e:      echo.New(),
+		deps:   Deps{SessionStore: store, SessionSettings: store},
+		broker: broker,
+	}
+	ar.initThemeRoutes()
+
+	form := url.Values{}
+	form.Set("theme", "dark")
+	req := httptest.NewRequest(http.MethodPost, "/settings/theme", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req = withSession(req, session.NewDefaultSettings(""))
+
+	rec := httptest.NewRecorder()
+	ar.e.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusSeeOther, rec.Code, "no SSE response shape change when UUID is missing")
+	require.Equal(t, 0, broker.SubscriberCount(),
+		"no session UUID means no subscribers and no publishes")
 }
 
 // setup:feature:sse:end
