@@ -1112,6 +1112,26 @@ func TestSetup_CSPAndDemo_Rejected(t *testing.T) {
 		"rejection error should name the demo feature")
 }
 
+// TestSetup_SQLiteDatabaseURLIsRepoRelative pins the scaffolded SQLite
+// example to the repo-relative `sqlite://db/app.db` form. The triple-slash
+// `sqlite:///db/app.db` variant resolves to absolute `/db/app.db` and fails
+// with `mkdir /db: permission denied` on local derived apps.
+func TestSetup_SQLiteDatabaseURLIsRepoRelative(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	for _, name := range []string{".env.sample", ".env.development"} {
+		envBytes, err := os.ReadFile(filepath.Join(repoRoot, name))
+		require.NoError(t, err, "read %s", name)
+		content := string(envBytes)
+		require.NotContains(t, content, "sqlite:///db/app.db",
+			"%s must not carry the absolute-path sqlite example (sqlite:///db/app.db resolves to /db and fails with permission denied)", name)
+		require.Contains(t, content, "sqlite://db/app.db",
+			"%s must keep the repo-relative sqlite example (sqlite://db/app.db)", name)
+	}
+}
+
 // TestSetup_SourceRepoRuntimeOmitsCSP keeps the source-repo runtime
 // contract honest: the bare .env.development in the source tree carries no
 // uncommented CSP_HEADER value, so a developer running the source repo

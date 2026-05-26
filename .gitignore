@@ -46,10 +46,12 @@ localhost.key
 log/
 *.log
 
-# SQLite database (allow seed.db, demo.db, and gen_seed tool)
+# SQLite database files are runtime state and are not tracked.
+# The gen_seed tool is the developer recipe used to regenerate
+# db/seed.db locally (see db/gen_seed/main.go); demo.db and the
+# other runtime db files are recreated on first start via
+# os.MkdirAll + CREATE TABLE IF NOT EXISTS.
 db/*
-!db/seed.db
-!db/demo.db
 !db/gen_seed/
 
 # build output
