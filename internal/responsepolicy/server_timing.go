@@ -9,10 +9,8 @@ import (
 
 // ServerTiming measures the wall-clock duration of the inner handler and
 // emits a Server-Timing header so browser DevTools can chart it. The header
-// is written via echo.Response.Before so it sticks even on responses that
-// commit through c.String / c.JSON / c.Render — the previous "set after
-// next" shape was a no-op for every real handler because the body had
-// already flushed by the time the outer middleware ran.
+// is written via echo.Response.Before so it lands before the body flushes
+// even on responses that commit through c.String / c.JSON / c.Render.
 func ServerTiming() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

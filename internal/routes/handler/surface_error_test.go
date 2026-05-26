@@ -64,9 +64,8 @@ func TestHTTPErrorHandler_SurfaceError_PageBodyOverrideHonored(t *testing.T) {
 }
 
 // TestHTTPErrorHandler_SurfaceError_DocumentStillStandalone pins the runtime
-// document-surface path against the page-surface change: a SurfaceDocument
-// SurfaceError must still produce a standalone shell, not get pulled into
-// host chrome.
+// document-surface path: a SurfaceDocument SurfaceError produces a
+// standalone shell rather than composing into host chrome.
 func TestHTTPErrorHandler_SurfaceError_DocumentStillStandalone(t *testing.T) {
 	e := setupEcho(nil)
 	e.GET("/test", func(c echo.Context) error {
@@ -108,10 +107,9 @@ func TestHTTPErrorHandler_SurfaceError_HTMXFallsBackToBanner(t *testing.T) {
 }
 
 // TestHTTPErrorHandler_SurfaceError_500AppendsReportIssue pins the
-// request-ID/report-issue contract that the pre-refactor central error path
-// preserved for 500+ responses: when the caller doesn't supply explicit
-// controls, the default control set must include a Report Issue button so
-// the user can attach the request trace.
+// request-ID/report-issue contract for 500+ responses: when the caller
+// doesn't supply explicit controls, the default control set must include
+// a Report Issue button so the user can attach the request trace.
 func TestHTTPErrorHandler_SurfaceError_500AppendsReportIssue(t *testing.T) {
 	e := setupEcho(nil)
 	e.GET("/test", func(c echo.Context) error {
@@ -133,9 +131,8 @@ func TestHTTPErrorHandler_SurfaceError_500AppendsReportIssue(t *testing.T) {
 
 // TestNewSurfaceError_500DefaultControlsIncludeReport guards the constructor
 // contract directly: the default control set for 500+ statuses ends with a
-// ReportIssueButton bound to the current request ID. Caller-supplied controls
-// override the default and are not augmented (matches the pre-refactor
-// HandleHypermediaError behavior).
+// ReportIssueButton bound to the current request ID. Caller-supplied
+// controls override the default and are not augmented.
 func TestNewSurfaceError_500DefaultControlsIncludeReport(t *testing.T) {
 	e := echo.New()
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
