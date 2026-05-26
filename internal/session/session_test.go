@@ -19,7 +19,10 @@ type stubAdmin struct{}
 
 func (stubAdmin) ListAll(context.Context) ([]Settings, error)          { return nil, nil }
 func (stubAdmin) GetByUUID(context.Context, string) (*Settings, error) { return nil, nil }
-func (stubAdmin) DeleteByUUID(context.Context, string) error           { return nil }
+func (stubAdmin) UpdateThemeByUUID(context.Context, string, string) (bool, error) {
+	return true, nil
+}
+func (stubAdmin) DeleteByUUID(context.Context, string) error { return nil }
 
 // Compile-time proof that the contracts are split: middleware never sees
 // DeleteByUUID, admin never sees Touch.

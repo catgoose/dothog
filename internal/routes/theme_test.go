@@ -26,15 +26,31 @@ import (
 // and session.SettingsAdmin so a single fake can stand in for both Deps
 // fields.
 type fakeSettingsStore struct {
-	last    *session.Settings
-	deleted []string
-	mu      sync.Mutex
-	upserts int
+	last         *session.Settings
+	rows         map[string]*session.Settings
+	deleted      []string
+	themeUpdates []themeUpdateCall
+	missingUUIDs map[string]bool
+	mu           sync.Mutex
+	upserts      int
 }
 
-func (s *fakeSettingsStore) GetByUUID(_ context.Context, _ string) (*session.Settings, error) {
+type themeUpdateCall struct {
+	uuid  string
+	theme string
+}
+
+func (s *fakeSettingsStore) GetByUUID(_ context.Context, uuid string) (*session.Settings, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.rows != nil {
+		forUUID := s.rows[uuid]
+		if forUUID == nil {
+			return nil, nil
+		}
+		clone := *forUUID
+		return &clone, nil
+	}
 	if s.last == nil {
 		return nil, nil
 	}
@@ -54,7 +70,29 @@ func (s *fakeSettingsStore) DeleteByUUID(_ context.Context, uuid string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.deleted = append(s.deleted, uuid)
+	if s.rows != nil {
+		delete(s.rows, uuid)
+	}
 	return nil
+}
+
+func (s *fakeSettingsStore) UpdateThemeByUUID(_ context.Context, uuid, theme string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.themeUpdates = append(s.themeUpdates, themeUpdateCall{uuid: uuid, theme: theme})
+	if s.missingUUIDs != nil && s.missingUUIDs[uuid] {
+		return false, nil
+	}
+	if s.rows != nil {
+		row := s.rows[uuid]
+		if row == nil {
+			return false, nil
+		}
+		clone := *row
+		clone.Theme = theme
+		s.rows[uuid] = &clone
+	}
+	return true, nil
 }
 
 func (s *fakeSettingsStore) Upsert(_ context.Context, settings *session.Settings) error {
@@ -63,6 +101,9 @@ func (s *fakeSettingsStore) Upsert(_ context.Context, settings *session.Settings
 	clone := *settings
 	s.last = &clone
 	s.upserts++
+	if s.rows != nil {
+		s.rows[settings.SessionUUID] = &clone
+	}
 	return nil
 }
 
@@ -74,6 +115,14 @@ func (s *fakeSettingsStore) lastSettings() *session.Settings {
 	}
 	clone := *s.last
 	return &clone
+}
+
+func (s *fakeSettingsStore) themeUpdateCalls() []themeUpdateCall {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]themeUpdateCall, len(s.themeUpdates))
+	copy(out, s.themeUpdates)
+	return out
 }
 
 // withSession injects a Settings into the request context so handleTheme

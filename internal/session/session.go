@@ -164,12 +164,14 @@ type SettingsProvider interface {
 }
 
 // SettingsAdmin is the route-facing contract for /admin/sessions-style
-// management surfaces: enumerate rows, fetch one, drop one. Implementations
+// management surfaces: enumerate rows, fetch one, update a row's Theme
+// without falsifying request-activity timestamps, and drop one. Implementations
 // usually also satisfy SettingsProvider, but admin routes depend on this
 // narrower interface so the extension seam stays obvious.
 type SettingsAdmin interface {
 	ListAll(ctx context.Context) ([]Settings, error)
 	GetByUUID(ctx context.Context, uuid string) (*Settings, error)
+	UpdateThemeByUUID(ctx context.Context, uuid, theme string) (bool, error)
 	DeleteByUUID(ctx context.Context, uuid string) error
 }
 

@@ -123,6 +123,28 @@ func (r *SessionSettingsRepository) ListAll(ctx context.Context) ([]session.Sett
 	return rows, nil
 }
 
+// UpdateThemeByUUID rewrites Theme only. UpdatedAt stays request-activity
+// owned by session.Middleware, so admin theme edits do not make a session
+// look newly active. The bool reports whether a row matched.
+func (r *SessionSettingsRepository) UpdateThemeByUUID(ctx context.Context, uuid, theme string) (bool, error) {
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE SessionUUID = @SessionUUID",
+		tableName,
+		dbrepo.SetClause("Theme"),
+	)
+	res, err := r.db.ExecContext(ctx, query,
+		sql.Named("Theme", theme),
+		sql.Named("SessionUUID", uuid),
+	)
+	if err != nil {
+		return false, fmt.Errorf("update session theme: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("rows affected session theme: %w", err)
+	}
+	return n > 0, nil
+}
+
 // DeleteByUUID removes the row matching uuid; missing rows are not an error
 // so admin handlers can stay idempotent across duplicate clicks and stale
 // fragment refreshes.

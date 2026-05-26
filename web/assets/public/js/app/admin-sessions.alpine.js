@@ -9,36 +9,64 @@
  * htmx:afterSwap listener that calls reconcile() to drop UUIDs no longer
  * present in the refreshed table.
  *
- * Change events bubble from per-row [data-session-uuid] checkboxes and the
+ * Change events bubble from per-row checkboxes, row theme selects, and the
  * [data-session-select-all] header checkbox into one onChange handler, so the
  * swapped table fragment never needs Alpine re-initialization.
  */
 (function () {
-  function uuidsIn(root) {
+  function rowCheckboxes(root) {
     return Array.prototype.slice.call(
-      root.querySelectorAll('[data-session-uuid]')
+      root.querySelectorAll('input[type="checkbox"][data-session-select-uuid]')
+    );
+  }
+
+  function themeSelects(root) {
+    return Array.prototype.slice.call(
+      root.querySelectorAll('select[data-theme-session-uuid]')
+    );
+  }
+
+  function saveButtons(root) {
+    return Array.prototype.slice.call(
+      root.querySelectorAll('[data-session-theme-save]')
     );
   }
 
   function syncCheckboxes(root, selected) {
-    uuidsIn(root).forEach(function (cb) {
-      cb.checked = selected.indexOf(cb.dataset.sessionUuid) !== -1;
+    rowCheckboxes(root).forEach(function (cb) {
+      cb.checked = selected.indexOf(cb.dataset.sessionSelectUuid) !== -1;
     });
     var selectAll = root.querySelector('[data-session-select-all]');
     if (selectAll) {
-      var boxes = uuidsIn(root);
+      var boxes = rowCheckboxes(root);
       selectAll.checked =
         boxes.length > 0 &&
         boxes.every(function (cb) {
-          return selected.indexOf(cb.dataset.sessionUuid) !== -1;
+          return selected.indexOf(cb.dataset.sessionSelectUuid) !== -1;
         });
     }
+  }
+
+  function syncDraftControls(root, drafts) {
+    themeSelects(root).forEach(function (select) {
+      var uuid = select.dataset.themeSessionUuid;
+      var draft = drafts[uuid];
+      if (draft && select.value !== draft) {
+        select.value = draft;
+      }
+    });
+    saveButtons(root).forEach(function (button) {
+      button.hidden = !drafts[button.dataset.sessionThemeSave];
+    });
   }
 
   window.dothog.alpine.register('sessionsSelection', function () {
     return {
       /** @type {string[]} */
       selected: [],
+
+      /** @type {Record<string, string>} */
+      drafts: {},
 
       init: function () {
         var self = this;
@@ -65,18 +93,33 @@
       },
 
       /**
-       * @param {Event} event - Bubbled change event from a checkbox.
+       * @param {Event} event - Bubbled change event from a row checkbox, the
+       * select-all checkbox, or a row theme select.
        */
       onChange: function (event) {
         var target = event.target;
-        if (!target || target.tagName !== 'INPUT') {
+        if (!target) {
+          return;
+        }
+        if (target.tagName === 'SELECT' && target.hasAttribute('data-theme-session-uuid')) {
+          var themeUUID = target.dataset.themeSessionUuid;
+          var canonicalTheme = target.dataset.canonicalTheme || '';
+          if (target.value === canonicalTheme) {
+            delete this.drafts[themeUUID];
+          } else {
+            this.drafts[themeUUID] = target.value;
+          }
+          syncDraftControls(this.$root, this.drafts);
+          return;
+        }
+        if (target.tagName !== 'INPUT') {
           return;
         }
         if (target.hasAttribute('data-session-select-all')) {
-          var boxes = uuidsIn(this.$root);
+          var boxes = rowCheckboxes(this.$root);
           if (target.checked) {
             this.selected = boxes.map(function (cb) {
-              return cb.dataset.sessionUuid;
+              return cb.dataset.sessionSelectUuid;
             });
           } else {
             this.selected = [];
@@ -84,8 +127,8 @@
           syncCheckboxes(this.$root, this.selected);
           return;
         }
-        if (target.hasAttribute('data-session-uuid')) {
-          var uuid = target.dataset.sessionUuid;
+        if (target.hasAttribute('data-session-select-uuid')) {
+          var uuid = target.dataset.sessionSelectUuid;
           if (target.checked) {
             if (this.selected.indexOf(uuid) === -1) {
               this.selected.push(uuid);
@@ -104,14 +147,30 @@
        * server-driven table swap, then resync DOM checkbox state.
        */
       reconcile: function () {
+        var self = this;
         var present = {};
-        uuidsIn(this.$root).forEach(function (cb) {
-          present[cb.dataset.sessionUuid] = true;
+        rowCheckboxes(this.$root).forEach(function (cb) {
+          present[cb.dataset.sessionSelectUuid] = true;
         });
         this.selected = this.selected.filter(function (u) {
           return present[u];
         });
+
+        var nextDrafts = {};
+        themeSelects(this.$root).forEach(function (select) {
+          var uuid = select.dataset.themeSessionUuid;
+          var draft = self.drafts[uuid];
+          if (!draft) {
+            return;
+          }
+          if (draft !== (select.dataset.canonicalTheme || '')) {
+            nextDrafts[uuid] = draft;
+          }
+        });
+        this.drafts = nextDrafts;
+
         syncCheckboxes(this.$root, this.selected);
+        syncDraftControls(this.$root, this.drafts);
       },
 
       /**
@@ -121,6 +180,9 @@
        */
       batchDelete: function () {
         if (this.selected.length === 0) {
+          return;
+        }
+        if (!window.confirm('Delete the selected session rows? The browser cookie will be re-issued on next request.')) {
           return;
         }
         var payload = this.selected.slice().join(',');
