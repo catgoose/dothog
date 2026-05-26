@@ -221,10 +221,14 @@ func renderHTMXSurfaceError(c echo.Context, se *SurfaceError) error {
 	}
 }
 
+// errPromotedKey marks a request whose trace has already been promoted so
+// re-entry into the central error handler does not duplicate that side effect.
+const errPromotedKey = "_promolog_promoted"
+
 // NewHTTPErrorHandler is the e.HTTPErrorHandler replacement that renders
 // errors through the route-owned surface contract; non-nil reqLogStore
 // promotes the per-request log buffer to the shared store so issue reports
-// can retrieve it.
+// can retrieve it. Trace promotion is idempotent per request.
 func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Context) {
 	return func(err error, c echo.Context) {
 		// The httpcompression writer is finalized (closed) by the time the
@@ -245,9 +249,11 @@ func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Con
 			statusCode = he.Code
 		}
 
-		if reqLogStore != nil {
+		alreadyPromoted, _ := c.Get(errPromotedKey).(bool)
+		if reqLogStore != nil && !alreadyPromoted {
 			requestID := promolog.GetRequestID(c.Request().Context())
 			if requestID != "" {
+				c.Set(errPromotedKey, true)
 				var entries []promolog.Entry
 				if buf := promolog.GetBuffer(c.Request().Context()); buf != nil {
 					entries = buf.Entries()

@@ -1395,9 +1395,9 @@ func TestRepresentativeBundle_MicrosoftInternal(t *testing.T) {
 	)
 }
 
-// TestRepresentativeBundle_AvatarPullsGraph guards the Avatar→Graph hard dep
-// against regression at the bundle level: a bundle that names Avatar without
-// Graph must still keep Graph (avatar.go imports the Graph package directly).
+// TestRepresentativeBundle_AvatarPullsGraph verifies that selecting Avatar
+// keeps Graph in the stripped bundle because avatar.go imports Graph
+// directly.
 func TestRepresentativeBundle_AvatarPullsGraph(t *testing.T) {
 	got := stripWithBundle(t, []string{FeatureAvatar})
 	assertBundleSurvival(t, got,

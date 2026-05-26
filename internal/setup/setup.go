@@ -93,9 +93,9 @@ var featureDeps = map[string][]string{
 // both surfaces in the same scaffold yields a runtime contract setup cannot
 // honestly deliver, so Run rejects the combination up front.
 //
-//   - csp + demo: the strict CSP header (script-src 'self') would break the
-//     demo views, which still ship inline <script> blocks and inline event
-//     handlers. Honest csp coverage of demo surfaces is a separate pass.
+//   - csp + demo: the strict CSP header (script-src 'self') is incompatible
+//     with demo views that still rely on inline <script> blocks and inline
+//     event handlers.
 var featureIncompatibilities = [][2]string{
 	{FeatureCSP, FeatureDemo},
 }
@@ -636,7 +636,8 @@ func removeOptionalContent(dir string, opts Options) error {
 	// derived apps.  The generated README is sufficient.
 	_ = os.RemoveAll(filepath.Join(dir, "docs"))
 
-	// Remove the setup package itself — it only exists for template setup (#377).
+	// Remove the setup package itself; it is only needed while turning the
+	// template into a derived app.
 	_ = os.RemoveAll(filepath.Join(dir, "internal", "setup"))
 	_ = os.Remove(filepath.Join(dir, "tests", "setup_test.go"))
 
@@ -647,9 +648,8 @@ func removeOptionalContent(dir string, opts Options) error {
 	_ = os.Remove(filepath.Join(dir, "mage_setup.go"))
 	_ = os.RemoveAll(filepath.Join(dir, TemplateSetupDir))
 
-	// Replace demo-specific e2e tests with a minimal smoke suite (#356).
-	// Keep helpers.ts and playwright.config.ts (they contain general utilities
-	// and the binary-name aware config). Remove all demo page spec files and
+	// Replace demo-specific e2e tests with a minimal smoke suite. Keep
+	// helpers.ts and playwright.config.ts, remove demo page specs, and
 	// generate a smoke test that verifies the app loads.
 	replaceE2EWithSmoke(dir, opts.AppName)
 
@@ -1209,7 +1209,7 @@ func goPkgName(importPath string) string {
 }
 
 // ---------------------------------------------------------------------------
-// README feature generation (#360)
+// README feature generation
 // ---------------------------------------------------------------------------
 
 // featureDescriptions maps feature tags to human-readable descriptions
@@ -1555,9 +1555,9 @@ func stripEnvBlocks(content string, removeTags map[string]bool) string {
 	return collapseBlankLines(out)
 }
 
-// replaceE2EWithSmoke removes all demo-specific e2e spec files and generates a
+// replaceE2EWithSmoke removes demo-specific e2e spec files and generates a
 // minimal smoke test that verifies the home page loads and the health endpoint
-// returns the configured app name (#356).
+// returns the configured app name.
 func replaceE2EWithSmoke(dir, appName string) {
 	e2eDir := filepath.Join(dir, "e2e")
 	entries, err := os.ReadDir(e2eDir)

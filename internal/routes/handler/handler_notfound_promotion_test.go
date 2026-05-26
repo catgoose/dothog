@@ -10,6 +10,7 @@ import (
 
 	"github.com/catgoose/promolog"
 	"github.com/labstack/echo/v4"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/require"
 )
 
@@ -86,9 +87,8 @@ func newEchoWithPromotion(store promolog.Storer) *echo.Echo {
 	return e
 }
 
-// TestHandleNotFound_NonHTMX_PromotesTrace pins down the regression where
-// a direct unmatched-route visit rendered the 404 page but never made it
-// into the promolog error-trace store.
+// TestHandleNotFound_NonHTMX_PromotesTrace verifies that an unmatched
+// non-HTMX route promotes one 404 trace.
 func TestHandleNotFound_NonHTMX_PromotesTrace(t *testing.T) {
 	store := &recordingStore{}
 	e := newEchoWithPromotion(store)
@@ -107,8 +107,8 @@ func TestHandleNotFound_NonHTMX_PromotesTrace(t *testing.T) {
 	require.NotEmpty(t, traces[0].RequestID, "promoted trace should carry the correlation request ID")
 }
 
-// TestHandleNotFound_HTMX_PromotesTrace guards the pre-existing HTMX path:
-// it should still reach the promote step.
+// TestHandleNotFound_HTMX_PromotesTrace verifies that an unmatched HTMX route
+// also promotes one 404 trace.
 func TestHandleNotFound_HTMX_PromotesTrace(t *testing.T) {
 	store := &recordingStore{}
 	e := newEchoWithPromotion(store)
@@ -125,8 +125,31 @@ func TestHandleNotFound_HTMX_PromotesTrace(t *testing.T) {
 	require.Equal(t, "/fakeroute/asdf", traces[0].Route)
 }
 
-// TestHandleNotFound_NonHTMX_RendersBody protects the existing UX: non-HTMX
-// 404 still emits a non-empty HTML body (not just an OOB swap).
+// TestNewHTTPErrorHandler_PromotesOnceWithRequestLogger verifies that central
+// error handling promotes a trace at most once per request, even when Echo's
+// request logger re-enters the global error handler.
+func TestNewHTTPErrorHandler_PromotesOnceWithRequestLogger(t *testing.T) {
+	store := &recordingStore{}
+	e := echo.New()
+	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
+	e.Use(echoMiddleware.RequestLogger())
+	e.HTTPErrorHandler = NewHTTPErrorHandler(store)
+	e.GET("/boom", func(_ echo.Context) error {
+		return echo.NewHTTPError(http.StatusInternalServerError, "boom")
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/boom", http.NoBody)
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusInternalServerError, rec.Code)
+	traces := store.snapshot()
+	require.Len(t, traces, 1,
+		"error handler must promote exactly once even when RequestLogger HandleError: true causes the central handler to fire twice")
+}
+
+// TestHandleNotFound_NonHTMX_RendersBody verifies that non-HTMX 404 responses
+// render a full HTML body instead of an OOB-only swap.
 func TestHandleNotFound_NonHTMX_RendersBody(t *testing.T) {
 	store := &recordingStore{}
 	e := newEchoWithPromotion(store)

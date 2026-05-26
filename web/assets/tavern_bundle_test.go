@@ -9,9 +9,7 @@ import (
 )
 
 // TestTavernBundleContract verifies that the committed tavern.min.js bundle
-// matches the capabilities required by the templates. This catches silent
-// regressions where the JS asset reverts to an older version during branch
-// operations or squash merges.
+// still exposes the capabilities required by the templates.
 func TestTavernBundleContract(t *testing.T) {
 	data, err := os.ReadFile("public/js/vendor/tavern.min.js")
 	if err != nil {
