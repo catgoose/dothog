@@ -26,9 +26,9 @@ func resetLogger() {
 	mu.Unlock()
 }
 
-// captureLogger installs a JSON-backed test logger that writes into buf, then
-// restores the previous package-level logger when the test ends. Use this to
-// assert on log output without depending on the file/stdout sinks Init wires.
+// captureLogger installs a JSON-backed test logger that writes into buf and
+// restores the package-level logger on test cleanup. Use this to assert on
+// log output without depending on the file/stdout sinks Init wires.
 func captureLogger(t *testing.T, buf *bytes.Buffer) {
 	t.Helper()
 	handler := slog.NewJSONHandler(buf, &slog.HandlerOptions{Level: slog.LevelDebug})

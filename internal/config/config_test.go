@@ -9,8 +9,8 @@ import (
 )
 
 // setTestDefaults ensures the required machine-facing env vars are set for
-// non-demo apps. SESSION_SETTINGS_COOKIE_NAME is now strict: tests must
-// supply it explicitly because config no longer derives it from APP_NAME.
+// non-demo apps. SESSION_SETTINGS_COOKIE_NAME must be supplied explicitly;
+// config does not derive it from APP_NAME.
 func setTestDefaults(t *testing.T) {
 	t.Helper()
 	if os.Getenv("APP_NAME") == "" {

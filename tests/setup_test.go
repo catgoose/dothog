@@ -630,9 +630,9 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 
 // TestSetup_FeaturesNoAppData verifies that scaffolds without MSSQL or
 // PostgreSQL strip the chuck-backed app-data seam entirely: the internal
-// `database` feature is no longer implicit, so `internal/dbschema/` is
-// removed and main.go drops its app-data block. Framework SQLite stores
-// (in internal/database) stay wired in regardless.
+// `database` feature is opt-in, so `internal/dbschema/` is removed and
+// main.go drops its app-data block. Framework SQLite stores (in
+// internal/database) stay wired in regardless.
 func TestSetup_FeaturesNoAppData(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
@@ -703,9 +703,9 @@ func TestSetup_FeaturesMSSQL(t *testing.T) {
 		"main.go must reference dbschema.Tables when mssql is selected")
 }
 
-// TestSetup_FeaturesPostgres pins down the postgres-side of the user-facing
-// chuck-backed app-data feature model: selecting postgres must register the
-// chuck postgres driver and leave mssql out.
+// TestSetup_FeaturesPostgres pins the postgres side of the chuck-backed
+// app-data feature: selecting postgres must register the chuck postgres
+// driver and leave mssql out.
 func TestSetup_FeaturesPostgres(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
