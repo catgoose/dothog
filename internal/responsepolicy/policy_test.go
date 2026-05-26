@@ -22,7 +22,7 @@ func newCtx(method, path string) (echo.Context, *httptest.ResponseRecorder) {
 
 // TestServerTiming_HeaderFormatOnCommittedResponse pins the wire shape on a
 // real (committed) response so DevTools / synthetic monitors keep parsing
-// the header. ServerTiming now hooks Response.Before, so it fires when the
+// the header. ServerTiming hooks Response.Before, so it fires when the
 // inner handler writes; nil-return handlers don't trigger a write and so
 // (correctly) don't emit the header.
 func TestServerTiming_HeaderFormatOnCommittedResponse(t *testing.T) {
