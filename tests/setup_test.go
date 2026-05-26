@@ -224,44 +224,8 @@ func findRepoRoot() (string, error) {
 }
 
 func copyDirExcluding(src, dst string, excludeDirs ...string) error {
-	excludeSet := make(map[string]bool)
-	for _, d := range excludeDirs {
-		excludeSet[d] = true
-	}
-	excludeSet["localhost.crt"] = true
-	excludeSet["localhost.key"] = true
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		rel, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-		if rel == "." {
-			return nil
-		}
-		if excludeSet[filepath.Base(path)] {
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		// Skip symlinks — they may point to directories or external paths.
-		linfo, lErr := os.Lstat(path)
-		if lErr == nil && linfo.Mode()&os.ModeSymlink != 0 {
-			return nil
-		}
-		destPath := filepath.Join(dst, rel)
-		if info.IsDir() {
-			return os.MkdirAll(destPath, info.Mode())
-		}
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		return os.WriteFile(destPath, data, info.Mode())
-	})
+	excludes := append(append([]string{}, excludeDirs...), "localhost.crt", "localhost.key")
+	return setup.CopyRepoTo(src, dst, excludes)
 }
 
 // ---------------------------------------------------------------------------

@@ -1018,7 +1018,7 @@ func TestStripEnvBlocks(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// CopyRepoTo — cert exclusion
+// CopyRepoTo — explicit excludes plus .gitignore-aware runtime junk exclusion
 // ---------------------------------------------------------------------------
 
 func TestCopyRepoToExcludesLocalhostCerts(t *testing.T) {
@@ -1026,11 +1026,18 @@ func TestCopyRepoToExcludesLocalhostCerts(t *testing.T) {
 	dest := filepath.Join(t.TempDir(), "out")
 
 	files := map[string]string{
-		"go.mod":         "module example.test\n",
-		"localhost.crt":  "FAKE CERT\n",
-		"localhost.key":  "FAKE KEY\n",
-		"keep/keep.txt":  "keep me\n",
-		"node_modules/x": "junk\n",
+		".gitignore":             "tmp/\n*.log\ndb/*\n!db/seed.db\n!db/gen_seed/\n.env.development\n",
+		"go.mod":                 "module example.test\n",
+		".env.development":       "APP_NAME=Example\n",
+		"localhost.crt":          "FAKE CERT\n",
+		"localhost.key":          "FAKE KEY\n",
+		"keep/keep.txt":          "keep me\n",
+		"keep/runtime.log":       "ignore me\n",
+		"node_modules/x":         "junk\n",
+		"tmp/cache.txt":          "ignore me\n",
+		"db/session_settings.db": "ignore me\n",
+		"db/seed.db":             "seed\n",
+		"db/gen_seed/main.go":    "package main\n",
 	}
 	for rel, body := range files {
 		full := filepath.Join(src, rel)
@@ -1058,6 +1065,23 @@ func TestCopyRepoToExcludesLocalhostCerts(t *testing.T) {
 	gotKeep, err := os.ReadFile(filepath.Join(dest, "keep", "keep.txt"))
 	require.NoError(t, err)
 	require.Equal(t, "keep me\n", string(gotKeep))
+	gotEnv, err := os.ReadFile(filepath.Join(dest, ".env.development"))
+	require.NoError(t, err)
+	require.Equal(t, "APP_NAME=Example\n", string(gotEnv))
+	gotSeed, err := os.ReadFile(filepath.Join(dest, "db", "seed.db"))
+	require.NoError(t, err)
+	require.Equal(t, "seed\n", string(gotSeed))
+	gotGenSeed, err := os.ReadFile(filepath.Join(dest, "db", "gen_seed", "main.go"))
+	require.NoError(t, err)
+	require.Equal(t, "package main\n", string(gotGenSeed))
+
+	// .gitignore-matched local runtime junk must not copy.
+	_, err = os.Stat(filepath.Join(dest, "tmp"))
+	require.True(t, os.IsNotExist(err), "tmp should not be copied: %v", err)
+	_, err = os.Stat(filepath.Join(dest, "keep", "runtime.log"))
+	require.True(t, os.IsNotExist(err), "*.log files should not be copied: %v", err)
+	_, err = os.Stat(filepath.Join(dest, "db", "session_settings.db"))
+	require.True(t, os.IsNotExist(err), "gitignored db runtime files should not be copied: %v", err)
 }
 
 // ---------------------------------------------------------------------------

@@ -61,7 +61,7 @@ import (
 	appenv "catgoose/dothog/internal/env"
 )
 
-//go:embed web/assets/public/css/* web/assets/public/js/* all:web/assets/public/images
+//go:embed all:web/assets/public/css all:web/assets/public/js all:web/assets/public/images
 var staticAssets embed.FS
 
 var staticFS = must(fs.Sub(staticAssets, "web/assets/public"))

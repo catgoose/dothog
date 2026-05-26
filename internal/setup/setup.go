@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -1700,10 +1701,131 @@ func removeEmptyDirs(dir string) error {
 	return nil
 }
 
+type copyIgnoreRule struct {
+	pattern  string
+	negate   bool
+	dirOnly  bool
+	hasSlash bool
+}
+
+// copyKeepPaths are tracked scaffold files that remain intentionally ignored
+// in the template repo (for example the setup-owned .env.development input).
+// CopyRepoTo must preserve them even when no Git metadata is available to
+// prove tracked-ness.
+var copyKeepPaths = map[string]bool{
+	".env.development": true,
+}
+
+func loadCopyIgnoreRules(src string) ([]copyIgnoreRule, error) {
+	data, err := os.ReadFile(filepath.Join(src, ".gitignore"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var rules []copyIgnoreRule
+	for _, raw := range strings.Split(string(data), "\n") {
+		line := strings.TrimSpace(raw)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		negate := false
+		if strings.HasPrefix(line, "!") {
+			negate = true
+			line = strings.TrimSpace(strings.TrimPrefix(line, "!"))
+			if line == "" {
+				continue
+			}
+		}
+		dirOnly := strings.HasSuffix(line, "/")
+		line = strings.TrimSuffix(line, "/")
+		line = strings.TrimPrefix(line, "./")
+		rules = append(rules, copyIgnoreRule{
+			pattern:  filepath.ToSlash(line),
+			negate:   negate,
+			dirOnly:  dirOnly,
+			hasSlash: strings.Contains(line, "/"),
+		})
+	}
+	return rules, nil
+}
+
+func (r copyIgnoreRule) matches(rel string) bool {
+	rel = filepath.ToSlash(rel)
+	if r.hasSlash {
+		if r.dirOnly {
+			return rel == r.pattern || strings.HasPrefix(rel, r.pattern+"/")
+		}
+		if strings.ContainsAny(r.pattern, "*?[") {
+			if ok, err := path.Match(r.pattern, rel); err == nil && ok {
+				return true
+			}
+			if strings.HasSuffix(r.pattern, "/*") {
+				parent := strings.TrimSuffix(r.pattern, "/*")
+				return strings.HasPrefix(rel, parent+"/")
+			}
+			return false
+		}
+		return rel == r.pattern || strings.HasPrefix(rel, r.pattern+"/")
+	}
+	if r.dirOnly {
+		for _, seg := range strings.Split(rel, "/") {
+			if seg == r.pattern {
+				return true
+			}
+		}
+		return false
+	}
+	ok, err := path.Match(r.pattern, path.Base(rel))
+	return err == nil && ok
+}
+
+func gitTrackedPaths(src string) map[string]bool {
+	cmd := exec.Command("git", "-C", src, "ls-files", "-z")
+	out, err := cmd.Output()
+	if err != nil {
+		return nil
+	}
+	tracked := make(map[string]bool)
+	for _, rel := range strings.Split(string(out), "\x00") {
+		rel = strings.TrimSpace(rel)
+		if rel == "" {
+			continue
+		}
+		tracked[filepath.ToSlash(rel)] = true
+	}
+	return tracked
+}
+
+func hasTrackedDescendant(rel string, tracked map[string]bool) bool {
+	if len(tracked) == 0 {
+		return false
+	}
+	prefix := filepath.ToSlash(rel) + "/"
+	for p := range tracked {
+		if strings.HasPrefix(p, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func ignoredByRules(rel string, rules []copyIgnoreRule) bool {
+	ignored := false
+	for _, rule := range rules {
+		if rule.matches(rel) {
+			ignored = !rule.negate
+		}
+	}
+	return ignored
+}
+
 // CopyRepoTo copies directory tree from src to dest, skipping any entry
-// (file or directory) whose basename appears in exclude, and skipping symlinks.
-// Entries may name either directories (e.g. "node_modules") or files
-// (e.g. "localhost.crt").
+// (file or directory) whose basename appears in exclude, plus any untracked
+// runtime/local path matched by the repo's .gitignore. Tracked scaffold files
+// still copy even when they are intentionally ignored in the template repo
+// (for example .env.development). Symlinks are skipped.
 func CopyRepoTo(src, dest string, exclude []string) error {
 	skip := make(map[string]bool, len(exclude))
 	for _, d := range exclude {
@@ -1713,6 +1835,11 @@ func CopyRepoTo(src, dest string, exclude []string) error {
 	if err != nil {
 		return err
 	}
+	rules, err := loadCopyIgnoreRules(srcAbs)
+	if err != nil {
+		return err
+	}
+	tracked := gitTrackedPaths(srcAbs)
 	return filepath.Walk(srcAbs, func(path string, info os.FileInfo, errWalk error) error {
 		if errWalk != nil {
 			return errWalk
@@ -1736,6 +1863,15 @@ func CopyRepoTo(src, dest string, exclude []string) error {
 				return filepath.SkipDir
 			}
 			return nil
+		}
+		relSlash := filepath.ToSlash(rel)
+		if !copyKeepPaths[relSlash] && len(rules) > 0 && ignoredByRules(relSlash, rules) {
+			if tracked == nil || (!tracked[relSlash] && !hasTrackedDescendant(relSlash, tracked)) {
+				if info.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
 		}
 		destPath := filepath.Join(dest, rel)
 		if info.IsDir() {
