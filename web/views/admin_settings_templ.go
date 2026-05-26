@@ -162,7 +162,7 @@ func AdminSettingsPage(data AdminPanelData) templ.Component {
 				}
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></div></div><!-- Debug Controls --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4 space-y-4\"><h2 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/40\">Debug Controls</h2><p class=\"text-xs text-base-content/50\">Persisted to localStorage. Survives page reloads.</p><div class=\"fieldset\"><label class=\"label cursor-pointer justify-start gap-4 py-1\"><input id=\"debug-all\" type=\"checkbox\" class=\"toggle toggle-sm\" onchange=\"window._dbg.toggleAll(this.checked)\"> <span class=\"label-text font-bold text-sm\">Enable All</span></label></div><div class=\"grid grid-cols-1 md:grid-cols-2 gap-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></div></div><!-- Debug Controls --><div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body p-4 space-y-4\"><h2 class=\"text-xs font-semibold uppercase tracking-wider text-base-content/40\">Debug Controls</h2><p class=\"text-xs text-base-content/50\">Persisted to localStorage. Survives page reloads.</p><div class=\"fieldset\"><label class=\"label cursor-pointer justify-start gap-4 py-1\"><input id=\"debug-all\" type=\"checkbox\" class=\"toggle toggle-sm\" data-debug-all> <span class=\"label-text font-bold text-sm\">Enable All</span></label></div><div class=\"grid grid-cols-1 md:grid-cols-2 gap-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -254,10 +254,6 @@ func AdminSettingsPage(data AdminPanelData) templ.Component {
 			}
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</tbody></table></div></div></div></div><!-- SSE connection --><div hx-ext=\"sse\" sse-connect=\"/sse/admin\" hx-swap=\"innerHTML settle:0 transition:false\" tavern-reconnecting-class=\"opacity-50\"><div sse-swap=\"admin-panel\" hx-swap=\"innerHTML settle:0 transition:false\" style=\"display:none\"></div></div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = debugScript().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -498,7 +494,7 @@ func adminSSECounts(counts map[string]int) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(topic)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 212, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 211, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -533,7 +529,7 @@ func adminSSECounts(counts map[string]int) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts[topic]))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 213, Col: 112}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 212, Col: 112}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -581,7 +577,7 @@ func panelStat(label, value string) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 222, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 221, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -594,7 +590,7 @@ func panelStat(label, value string) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 223, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 222, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -636,7 +632,7 @@ func metricCard(label, value string) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 229, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 228, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -649,7 +645,7 @@ func metricCard(label, value string) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 230, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_settings.templ`, Line: 229, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -663,5 +659,6 @@ func metricCard(label, value string) templ.Component {
 	})
 }
 
-// debugToggle and debugScript are defined in admin_debug.templ (shared with base app).
+// debugToggle is defined in admin_debug.templ; the controller lives in
+// web/assets/public/js/app/admin-debug.js so the markup stays CSP-safe.
 var _ = templruntime.GeneratedTemplate

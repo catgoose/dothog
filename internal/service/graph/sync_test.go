@@ -3,12 +3,12 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"os"
+	"path/filepath"
 	"sync/atomic"
 	"testing"
 
-	"catgoose/dothog/internal/database"
-	"catgoose/dothog/internal/domain"
 	"catgoose/dothog/internal/logger"
 )
 
@@ -19,44 +19,45 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func testUsers() []domain.GraphUser {
-	return []domain.GraphUser{
+func testUsers() []User {
+	return []User{
 		{AzureID: "aaa-111", DisplayName: "Alice"},
 		{AzureID: "bbb-222", DisplayName: "Bob"},
 	}
 }
 
-func setupTestCache(t *testing.T) *UserCache {
+func setupTestDirectory(t *testing.T) *Directory {
 	t.Helper()
-	db, err := database.OpenSQLiteInMemory()
+	dbPath := filepath.Join(t.TempDir(), "graph_cache.db")
+	dir, err := OpenDirectory(context.Background(), dbPath)
 	if err != nil {
-		t.Fatalf("open in-memory SQLite: %v", err)
+		t.Fatalf("open Graph directory: %v", err)
 	}
-	t.Cleanup(func() { _ = db.Close() })
-	return NewUserCache(db)
+	t.Cleanup(func() { _ = dir.Close() })
+	return dir
 }
 
-func TestInitAndSyncUserCache_AfterSyncCalled(t *testing.T) {
-	userCache := setupTestCache(t)
+func TestInitAndSyncDirectory_AfterSyncCalled(t *testing.T) {
+	directory := setupTestDirectory(t)
 	users := testUsers()
 
 	var callCount atomic.Int32
-	var receivedUsers []domain.GraphUser
+	var receivedUsers []User
 
-	afterSync := func(_ context.Context, u []domain.GraphUser) {
+	afterSync := func(_ context.Context, u []User) {
 		callCount.Add(1)
 		receivedUsers = u
 	}
 
-	err := InitAndSyncUserCache(
+	err := InitAndSyncDirectory(
 		context.Background(),
-		userCache,
+		directory,
 		3,
-		func() ([]domain.GraphUser, error) { return users, nil },
+		func(context.Context) ([]User, error) { return users, nil },
 		afterSync,
 	)
 	if err != nil {
-		t.Fatalf("InitAndSyncUserCache: %v", err)
+		t.Fatalf("InitAndSyncDirectory: %v", err)
 	}
 
 	if got := callCount.Load(); got != 1 {
@@ -67,24 +68,76 @@ func TestInitAndSyncUserCache_AfterSyncCalled(t *testing.T) {
 	}
 }
 
-func TestInitAndSyncUserCache_NilAfterSync(t *testing.T) {
-	userCache := setupTestCache(t)
-	users := testUsers()
+func TestInitAndSyncDirectory_FetchErrorWithExistingSnapshot_KeepsCacheAndProceeds(t *testing.T) {
+	directory := setupTestDirectory(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
 
-	err := InitAndSyncUserCache(
-		context.Background(),
-		userCache,
+	seed := testUsers()
+	if err := directory.ReplaceUsers(ctx, seed); err != nil {
+		t.Fatalf("seed snapshot: %v", err)
+	}
+
+	fetchErr := errors.New("graph unavailable")
+	err := InitAndSyncDirectory(
+		ctx,
+		directory,
 		3,
-		func() ([]domain.GraphUser, error) { return users, nil },
+		func(context.Context) ([]User, error) { return nil, fetchErr },
 		nil,
 	)
 	if err != nil {
-		t.Fatalf("InitAndSyncUserCache with nil afterSync: %v", err)
+		t.Fatalf("InitAndSyncDirectory must keep startup running on existing snapshot, got: %v", err)
 	}
 
-	count, err := userCache.GetUserCount()
+	count, err := directory.UserCount(ctx)
 	if err != nil {
-		t.Fatalf("GetUserCount: %v", err)
+		t.Fatalf("UserCount: %v", err)
+	}
+	if count != len(seed) {
+		t.Errorf("snapshot wiped after failed fetch: count = %d, want %d", count, len(seed))
+	}
+}
+
+func TestInitAndSyncDirectory_FetchErrorWithNoSnapshot_ReturnsError(t *testing.T) {
+	directory := setupTestDirectory(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	fetchErr := errors.New("graph unavailable")
+	err := InitAndSyncDirectory(
+		ctx,
+		directory,
+		3,
+		func(context.Context) ([]User, error) { return nil, fetchErr },
+		nil,
+	)
+	if err == nil {
+		t.Fatal("InitAndSyncDirectory must error when fetch fails with no usable snapshot")
+	}
+	if !errors.Is(err, fetchErr) {
+		t.Errorf("returned error must wrap fetch error, got: %v", err)
+	}
+}
+
+func TestInitAndSyncDirectory_NilAfterSync(t *testing.T) {
+	directory := setupTestDirectory(t)
+	users := testUsers()
+
+	err := InitAndSyncDirectory(
+		context.Background(),
+		directory,
+		3,
+		func(context.Context) ([]User, error) { return users, nil },
+		nil,
+	)
+	if err != nil {
+		t.Fatalf("InitAndSyncDirectory with nil afterSync: %v", err)
+	}
+
+	count, err := directory.UserCount(context.Background())
+	if err != nil {
+		t.Fatalf("UserCount: %v", err)
 	}
 	if count != len(users) {
 		t.Errorf("user count = %d, want %d", count, len(users))

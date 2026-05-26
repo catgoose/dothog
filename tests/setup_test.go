@@ -23,6 +23,22 @@ import (
 // to avoid OOM/timeout on CI runners with constrained resources.
 var buildSem = make(chan struct{}, 2)
 
+// allFeaturesForDemoBuilds returns AllFeatures minus csp so "all features"
+// integration tests can keep exercising the demo path. csp and demo are
+// mutually exclusive (demo views still ship inline scripts that strict CSP
+// would block); the rejection contract is covered by
+// TestSetup_CSPAndDemo_Rejected.
+func allFeaturesForDemoBuilds() []string {
+	out := make([]string, 0, len(setup.AllFeatures))
+	for _, f := range setup.AllFeatures {
+		if f == setup.FeatureCSP {
+			continue
+		}
+		out = append(out, f)
+	}
+	return out
+}
+
 func TestSetupReplacesAppNameAndModule(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
@@ -36,8 +52,12 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 		AppName:    "Test App",
 		ModulePath: "github.com/example/test-app",
 		BasePort:   "12345",
-		NoCaddy:    true,
-		Force:      true,
+		// session_settings only: keeps the session cookie env line for the
+		// assertion below, strips everything else — including the hidden
+		// Caddy tag that SSE would have implied — so the Caddyfile removal
+		// assertion stays meaningful too.
+		Features: []string{"session_settings"},
+		Force:    true,
 	})
 	require.NoError(t, err)
 
@@ -106,7 +126,7 @@ func TestSetupReplacesAppNameAndModule(t *testing.T) {
 	require.Contains(t, string(loggerBytes), `appLogFile = "test-app.log"`)
 
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
-	require.True(t, os.IsNotExist(err), "Caddyfile should be removed when using --no-caddy")
+	require.True(t, os.IsNotExist(err), "Caddyfile should be removed when no feature pulls Caddy in")
 
 	err = filepath.Walk(dest, func(path string, info os.FileInfo, errWalk error) error {
 		if errWalk != nil {
@@ -152,7 +172,6 @@ func TestSetupUsesRandomPortWhenPOmitted(t *testing.T) {
 		AppName:    "Random Port App",
 		ModulePath: "github.com/example/random-port-app",
 		BasePort:   "",
-		NoCaddy:    true,
 		Force:      true,
 	})
 	require.NoError(t, err)
@@ -184,7 +203,6 @@ func TestSetupUsesRandomPortWhenPOmitted(t *testing.T) {
 	airPath := filepath.Join(dest, ".air", "server.toml")
 	airBytes, err := os.ReadFile(airPath)
 	require.NoError(t, err)
-	require.Contains(t, string(airBytes), templStr)
 	require.NotContains(t, string(airBytes), "{{TEMPL_HTTP_PORT}}")
 }
 
@@ -206,44 +224,8 @@ func findRepoRoot() (string, error) {
 }
 
 func copyDirExcluding(src, dst string, excludeDirs ...string) error {
-	excludeSet := make(map[string]bool)
-	for _, d := range excludeDirs {
-		excludeSet[d] = true
-	}
-	excludeSet["localhost.crt"] = true
-	excludeSet["localhost.key"] = true
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		rel, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-		if rel == "." {
-			return nil
-		}
-		if excludeSet[filepath.Base(path)] {
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		// Skip symlinks — they may point to directories or external paths.
-		linfo, lErr := os.Lstat(path)
-		if lErr == nil && linfo.Mode()&os.ModeSymlink != 0 {
-			return nil
-		}
-		destPath := filepath.Join(dst, rel)
-		if info.IsDir() {
-			return os.MkdirAll(destPath, info.Mode())
-		}
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		return os.WriteFile(destPath, data, info.Mode())
-	})
+	excludes := append(append([]string{}, excludeDirs...), "localhost.crt", "localhost.key")
+	return setup.CopyRepoTo(src, dst, excludes)
 }
 
 // ---------------------------------------------------------------------------
@@ -286,6 +268,13 @@ func assertDirExists(t *testing.T, dir string) {
 	info, err := os.Stat(dir)
 	require.NoError(t, err, "directory should exist: %s", dir)
 	require.True(t, info.IsDir())
+}
+
+func assertFileExists(t *testing.T, path string) {
+	t.Helper()
+	info, err := os.Stat(path)
+	require.NoError(t, err, "file should exist: %s", path)
+	require.False(t, info.IsDir(), "expected file, got directory: %s", path)
 }
 
 func assertDirRemoved(t *testing.T, dir string) {
@@ -356,7 +345,7 @@ func TestSetup_NoBareBinaryInGitignore(t *testing.T) {
 		ModulePath: "github.com/test/gitignore-test-app",
 		BasePort:   "20700",
 		Force:      true,
-		Features:   setup.AllFeatures,
+		Features:   allFeaturesForDemoBuilds(),
 	})
 	require.NoError(t, err)
 
@@ -400,7 +389,7 @@ func TestSetup_MageSetupAndInternalSetupRemovable(t *testing.T) {
 		ModulePath: "github.com/test/mage-clean-app",
 		BasePort:   "20800",
 		Force:      true,
-		Features:   setup.AllFeatures,
+		Features:   allFeaturesForDemoBuilds(),
 	})
 	require.NoError(t, err)
 
@@ -425,14 +414,12 @@ func TestSetup_FeaturesAll(t *testing.T) {
 	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
 	require.NoError(t, err)
 
-	features := make([]string, len(setup.AllFeatures))
-	copy(features, setup.AllFeatures)
+	features := allFeaturesForDemoBuilds()
 
 	err = setup.Run(context.Background(), dest, setup.Options{
 		AppName:    "All Features App",
 		ModulePath: "github.com/test/all-features-app",
 		BasePort:   "20100",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   features,
 	})
@@ -474,7 +461,6 @@ func TestSetup_FeaturesNone(t *testing.T) {
 		AppName:    "No Features App",
 		ModulePath: "github.com/test/no-features-app",
 		BasePort:   "20200",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   []string{},
 	})
@@ -483,7 +469,13 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
-	assertDirExists(t, filepath.Join(dest, "internal", "database")) // database is implicit (always kept)
+	// internal/database stays because framework SQLite helpers (OpenSQLite,
+	// HealthCheck, transaction, dialect, schema lifecycle) are always wired in.
+	assertDirExists(t, filepath.Join(dest, "internal", "database"))
+	// internal/dbschema is the app-data registration seam; with no MSSQL or
+	// PostgreSQL selected the `database` feature is stripped and the package
+	// goes with it.
+	assertDirRemoved(t, filepath.Join(dest, "internal", "dbschema"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "repository"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "domain"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "demo"))
@@ -554,8 +546,15 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	readmeContent := string(readmeBytes)
 	require.Contains(t, readmeContent, "No Features App")
 	require.Contains(t, readmeContent, "## Setup Configuration")
-	// Minimal config should still have implicit features (database, alpine)
-	require.Contains(t, readmeContent, "Database (chuck)")
+	// Minimal config still wires the implicit alpine feature; the implicit
+	// chuck-backed repository layer is intentionally not surfaced in the
+	// generated README (it's an internal implementation concern, not a user
+	// choice — MSSQL/PostgreSQL are the user-facing app-data options).
+	require.Contains(t, readmeContent, "Alpine.js")
+	require.NotContains(t, readmeContent, "App data (chuck)",
+		"database is internal-only; the generated README must not name it as a user-facing feature")
+	require.NotContains(t, readmeContent, "Database (chuck)",
+		"legacy 'Database (chuck)' label must not reappear in derived-app docs")
 
 	// env substitution must survive feature stripping (#regression)
 	envBytes, err := os.ReadFile(filepath.Join(dest, ".env.development"))
@@ -603,7 +602,6 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 		AppName:    "Auth Only App",
 		ModulePath: "github.com/test/auth-only-app",
 		BasePort:   "20300",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   []string{"auth"},
 	})
@@ -611,7 +609,9 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
-	assertDirExists(t, filepath.Join(dest, "internal", "database")) // database is implicit
+	// internal/database stays because framework SQLite helpers are always wired
+	// in; the user-facing `database` feature is gone (MSSQL/PostgreSQL imply it).
+	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
 
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
@@ -621,13 +621,18 @@ func TestSetup_FeaturesAuthOnly(t *testing.T) {
 	configBytes, err := os.ReadFile(configPath)
 	require.NoError(t, err)
 	configContent := string(configBytes)
-	require.True(t,
-		strings.Contains(configContent, "crooner") || strings.Contains(configContent, "SessionMgr"),
-		"config.go should still reference auth-related code (crooner or SessionMgr)",
-	)
+	require.Contains(t, configContent, "OIDCIssuerURL",
+		"config.go must still expose OIDC env-backed fields when auth is selected")
+	require.Contains(t, configContent, "AuthConfigured",
+		"config.go must expose the AuthConfigured helper when auth is selected")
 }
 
-func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
+// TestSetup_FeaturesNoAppData verifies that scaffolds without MSSQL or
+// PostgreSQL strip the chuck-backed app-data seam entirely: the internal
+// `database` feature is no longer implicit, so `internal/dbschema/` is
+// removed and main.go drops its app-data block. Framework SQLite stores
+// (in internal/database) stay wired in regardless.
+func TestSetup_FeaturesNoAppData(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
@@ -636,12 +641,10 @@ func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
 	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
 	require.NoError(t, err)
 
-	// database is implicit — no need to pass it explicitly; MSSQL not selected
 	err = setup.Run(context.Background(), dest, setup.Options{
-		AppName:    "Database Only App",
-		ModulePath: "github.com/test/database-only-app",
+		AppName:    "No AppData App",
+		ModulePath: "github.com/test/no-appdata-app",
 		BasePort:   "20400",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   []string{},
 	})
@@ -651,8 +654,14 @@ func TestSetup_FeaturesDatabaseOnly(t *testing.T) {
 	assertBuildSucceeds(t, dest)
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
+	assertDirRemoved(t, filepath.Join(dest, "internal", "dbschema"))
 
-	// MSSQL files should be removed
+	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
+	require.NoError(t, err)
+	require.NotContains(t, string(mainBytes), "dbschema.Tables",
+		"main.go must not reference dbschema.Tables when no mssql/postgres selected")
+	require.NotContains(t, string(mainBytes), `internal/dbschema`,
+		"main.go must not import internal/dbschema when no mssql/postgres selected")
 }
 
 func TestSetup_FeaturesMSSQL(t *testing.T) {
@@ -664,12 +673,13 @@ func TestSetup_FeaturesMSSQL(t *testing.T) {
 	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
 	require.NoError(t, err)
 
-	// database is implicit; explicitly selecting mssql adds MSSQL support
+	// Selecting mssql implies the internal "database" feature via featureDeps,
+	// which carries the chuck-backed app-data seam (internal/dbschema) into the
+	// derived app.
 	err = setup.Run(context.Background(), dest, setup.Options{
 		AppName:    "MSSQL App",
 		ModulePath: "github.com/test/mssql-app",
 		BasePort:   "20450",
-		NoCaddy:    false,
 		Force:      true,
 		Features:   []string{"mssql"},
 	})
@@ -678,10 +688,57 @@ func TestSetup_FeaturesMSSQL(t *testing.T) {
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
+	assertDirExists(t, filepath.Join(dest, "internal", "dbschema"))
 
+	// Selecting MSSQL must register the chuck MSSQL driver in main.go and
+	// strip the postgres driver registration; the app-data block must remain.
+	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
+	require.NoError(t, err)
+	require.Contains(t, string(mainBytes), `github.com/catgoose/chuck/driver/mssql`,
+		"main.go must register the chuck MSSQL driver when mssql is selected")
+	require.NotContains(t, string(mainBytes), `github.com/catgoose/chuck/driver/postgres`,
+		"main.go must not register the postgres driver when only mssql is selected")
+	require.Contains(t, string(mainBytes), `dbschema.Tables`,
+		"main.go must reference dbschema.Tables when mssql is selected")
 }
 
-func TestSetup_FeaturesSSECaddy(t *testing.T) {
+// TestSetup_FeaturesPostgres pins down the postgres-side of the user-facing
+// chuck-backed app-data feature model: selecting postgres must register the
+// chuck postgres driver and leave mssql out.
+func TestSetup_FeaturesPostgres(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Postgres App",
+		ModulePath: "github.com/test/postgres-app",
+		BasePort:   "20460",
+		Force:      true,
+		Features:   []string{"postgres"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+	assertDirExists(t, filepath.Join(dest, "internal", "database"))
+	assertDirExists(t, filepath.Join(dest, "internal", "dbschema"))
+
+	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
+	require.NoError(t, err)
+	require.Contains(t, string(mainBytes), `github.com/catgoose/chuck/driver/postgres`,
+		"main.go must register the chuck postgres driver when postgres is selected")
+	require.NotContains(t, string(mainBytes), `github.com/catgoose/chuck/driver/mssql`,
+		"main.go must not register the mssql driver when only postgres is selected")
+	require.Contains(t, string(mainBytes), `dbschema.Tables`,
+		"main.go must reference dbschema.Tables when postgres is selected")
+}
+
+func TestSetup_FeaturesSSEPullsCaddy(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
@@ -694,9 +751,8 @@ func TestSetup_FeaturesSSECaddy(t *testing.T) {
 		AppName:    "SSE Caddy App",
 		ModulePath: "github.com/test/sse-caddy-app",
 		BasePort:   "20500",
-		NoCaddy:    false,
 		Force:      true,
-		Features:   []string{"sse", "caddy"},
+		Features:   []string{"sse"},
 	})
 	require.NoError(t, err)
 
@@ -704,13 +760,15 @@ func TestSetup_FeaturesSSECaddy(t *testing.T) {
 	assertBuildSucceeds(t, dest)
 
 	_, err = os.Stat(filepath.Join(dest, "config", "Caddyfile"))
-	require.NoError(t, err, "Caddyfile should exist when caddy is selected")
+	require.NoError(t, err, "Caddyfile should exist when sse is selected")
 	_, err = os.Stat(filepath.Join(dest, "localhost.crt"))
 	require.True(t, os.IsNotExist(err), "Caddy internal CA should not emit localhost.crt during setup: %v", err)
 	_, err = os.Stat(filepath.Join(dest, "localhost.key"))
 	require.True(t, os.IsNotExist(err), "Caddy internal CA should not emit localhost.key during setup: %v", err)
 
-	assertDirExists(t, filepath.Join(dest, "internal", "database")) // database is implicit
+	// internal/database stays because framework SQLite helpers are always wired
+	// in; the user-facing `database` feature is gone (MSSQL/PostgreSQL imply it).
+	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 	assertDirRemoved(t, filepath.Join(dest, "internal", "service", "graph"))
 }
 
@@ -727,9 +785,8 @@ func TestSetup_FeaturesDemo(t *testing.T) {
 		AppName:    "Demo App",
 		ModulePath: "github.com/test/demo-app",
 		BasePort:   "20600",
-		NoCaddy:    false,
 		Force:      true,
-		Features:   []string{"demo", "sse", "caddy"},
+		Features:   []string{"demo", "sse"},
 	})
 	require.NoError(t, err)
 
@@ -759,7 +816,6 @@ func TestSetup_FeaturesDemoWithoutSSE(t *testing.T) {
 		AppName:    "Demo No SSE App",
 		ModulePath: "github.com/test/demo-no-sse-app",
 		BasePort:   "20650",
-		NoCaddy:    true,
 		Force:      true,
 		Features:   []string{"demo"},
 	})
@@ -792,7 +848,6 @@ func TestSetup_SessionSettingsWithoutSSE(t *testing.T) {
 		AppName:    "Session Settings No SSE App",
 		ModulePath: "github.com/test/session-no-sse-app",
 		BasePort:   "20660",
-		NoCaddy:    true,
 		Force:      true,
 		Features:   []string{"session_settings"},
 	})
@@ -811,17 +866,17 @@ func TestSetup_SessionSettingsWithoutSSE(t *testing.T) {
 	require.NotContains(t, routesContent, "ar.initThemeSSE",
 		"routes.go must not reference initThemeSSE when sse is stripped")
 
-	// routes_theme.go must still be present and have the POST /settings/theme
+	// theme.go must still be present and have the POST /settings/theme
 	// registration, with no remaining tavern import (sse bits stripped).
-	themeBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes_theme.go"))
+	themeBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "theme.go"))
 	require.NoError(t, err)
 	themeContent := string(themeBytes)
 	require.Contains(t, themeContent, `POST("/settings/theme"`,
-		"routes_theme.go must keep the POST /settings/theme route when sse is stripped")
+		"theme.go must keep the POST /settings/theme route when sse is stripped")
 	require.NotContains(t, themeContent, "github.com/catgoose/tavern",
-		"routes_theme.go must not import tavern when sse is stripped")
+		"theme.go must not import tavern when sse is stripped")
 	require.NotContains(t, themeContent, "ar.broker",
-		"routes_theme.go must not reference ar.broker when sse is stripped")
+		"theme.go must not reference ar.broker when sse is stripped")
 
 	envBytes, err := os.ReadFile(filepath.Join(dest, ".env.development"))
 	require.NoError(t, err)
@@ -829,9 +884,12 @@ func TestSetup_SessionSettingsWithoutSSE(t *testing.T) {
 		".env.development must include a safe session-settings cookie name when session_settings is enabled")
 }
 
-// TestSetup_PWAWithoutCapacitor verifies that selecting PWA does not pull in
-// Capacitor files (#353). PWA is a web feature; Capacitor is a separate opt-in.
-func TestSetup_PWAWithoutCapacitor(t *testing.T) {
+// TestSetup_NoSessionSettings_StripsThemeAssets pins the ownership rule:
+// when session_settings is not selected, the entire theme-state surface —
+// the /settings page view, theme.go, and both theme JS assets — must be
+// stripped from the derived scaffold so no dead code or dead transport is
+// left ungated.
+func TestSetup_NoSessionSettings_StripsThemeAssets(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
 	require.NoError(t, err)
@@ -841,30 +899,357 @@ func TestSetup_PWAWithoutCapacitor(t *testing.T) {
 	require.NoError(t, err)
 
 	err = setup.Run(context.Background(), dest, setup.Options{
-		AppName:    "PWA Only App",
-		ModulePath: "github.com/test/pwa-only-app",
-		BasePort:   "20900",
+		AppName:    "Bare No Session Settings App",
+		ModulePath: "github.com/test/bare-no-session-settings-app",
+		BasePort:   "20670",
 		Force:      true,
-		Features:   []string{"pwa"},
+		Features:   []string{},
 	})
 	require.NoError(t, err)
 
 	assertNoSetupMarkers(t, dest)
 	assertBuildSucceeds(t, dest)
 
-	// Capacitor files should NOT be present when only PWA is selected
-	for _, f := range []string{"capacitor.config.ts", "tsconfig.json", "Gemfile"} {
-		_, err = os.Stat(filepath.Join(dest, f))
-		require.True(t, os.IsNotExist(err), "%s should not exist with PWA-only setup", f)
+	for _, rel := range []string{
+		filepath.Join("internal", "routes", "theme.go"),
+		filepath.Join("web", "views", "settings_app.templ"),
+		filepath.Join("web", "assets", "public", "js", "app", "theme-controller.js"),
+	} {
+		_, err := os.Stat(filepath.Join(dest, rel))
+		require.True(t, os.IsNotExist(err),
+			"%s must be stripped when session_settings is not selected; got err=%v", rel, err)
 	}
-	assertDirRemoved(t, filepath.Join(dest, "fastlane"))
-	_, err = os.Stat(filepath.Join(dest, ".github", "workflows", "ios.yml"))
-	require.True(t, os.IsNotExist(err), "ios.yml should not exist with PWA-only setup")
-	packageJSON, err := os.ReadFile(filepath.Join(dest, "package.json"))
+
+	routesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes.go"))
 	require.NoError(t, err)
-	require.NotContains(t, string(packageJSON), `"@capacitor/cli"`)
-	require.NotContains(t, string(packageJSON), `"@capacitor/core"`)
-	require.NotContains(t, string(packageJSON), `"@capacitor/ios"`)
+	routes := string(routesBytes)
+	require.NotContains(t, routes, "ar.initThemeRoutes",
+		"routes.go must not reference initThemeRoutes when session_settings is stripped")
+	require.NotContains(t, routes, "AppSettingsPage",
+		"routes.go must not render AppSettingsPage when session_settings is stripped")
+
+	indexBytes, err := os.ReadFile(filepath.Join(dest, "web", "views", "index.templ"))
+	require.NoError(t, err)
+	index := string(indexBytes)
+	require.NotContains(t, index, "theme-controller.js",
+		"index.templ must not include theme-controller.js when session_settings is stripped")
+}
+
+// TestSetup_SSEWithoutSessionSettings_StripsThemeAssets pins the second half
+// of the ownership rule: selecting sse without session_settings must still
+// drop every theme-state asset, since the SSE feed is generic transport and
+// there is no theme picker or persistence to plug it into.
+func TestSetup_SSEWithoutSessionSettings_StripsThemeAssets(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "SSE No Session Settings App",
+		ModulePath: "github.com/test/sse-no-session-settings-app",
+		BasePort:   "20690",
+		Force:      true,
+		Features:   []string{"sse"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	for _, rel := range []string{
+		filepath.Join("internal", "routes", "theme.go"),
+		filepath.Join("web", "views", "settings_app.templ"),
+		filepath.Join("web", "assets", "public", "js", "app", "theme-controller.js"),
+	} {
+		_, err := os.Stat(filepath.Join(dest, rel))
+		require.True(t, os.IsNotExist(err),
+			"%s must be stripped when session_settings is not selected (even with sse); got err=%v", rel, err)
+	}
+
+	routesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes.go"))
+	require.NoError(t, err)
+	routes := string(routesBytes)
+	require.NotContains(t, routes, "ar.initThemeRoutes",
+		"routes.go must not reference initThemeRoutes when session_settings is stripped")
+	require.NotContains(t, routes, "ar.initThemeSSE",
+		"routes.go must not reference initThemeSSE when session_settings is stripped")
+	require.Contains(t, routes, "ar.initSSEBroker()",
+		"routes.go must still construct the SSE broker when sse is selected without session_settings")
+
+	indexBytes, err := os.ReadFile(filepath.Join(dest, "web", "views", "index.templ"))
+	require.NoError(t, err)
+	require.NotContains(t, string(indexBytes), "theme-controller.js",
+		"index.templ must not include theme-controller.js when session_settings is stripped")
+}
+
+// TestSetup_CSPSelected_KeepsCSPHeaderEnv pins the derived-app CSP contract:
+// selecting csp keeps the CSP_HEADER value in .env.development so the
+// config-driven runtime emits the strict policy. routes.go is config-driven
+// in either shape; the contract sits in .env.development.
+func TestSetup_CSPSelected_KeepsCSPHeaderEnv(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "CSP On App",
+		ModulePath: "github.com/test/csp-on-app",
+		BasePort:   "20700",
+		Force:      true,
+		Features:   []string{"csp", "session_settings"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	envBytes, err := os.ReadFile(filepath.Join(dest, ".env.development"))
+	require.NoError(t, err)
+	env := string(envBytes)
+	require.Contains(t, env, "CSP_HEADER=default-src 'self'",
+		".env.development must keep the strict CSP_HEADER value when csp is selected")
+	require.Contains(t, env, "script-src 'self'",
+		".env.development CSP_HEADER must keep script-src 'self' (no unsafe-inline) when csp is selected")
+
+	// routes.go is the runtime consumer; verify it reads the config field.
+	routesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes.go"))
+	require.NoError(t, err)
+	require.Contains(t, string(routesBytes), "cfg.ContentSecurityPolicy",
+		"routes.go must read cfg.ContentSecurityPolicy so CSP is config-driven, not code-gated")
+
+	// Inline JS handlers on scaffold-owned surfaces must be gone so the
+	// strict script-src policy does not break the theme picker.
+	settingsBytes, err := os.ReadFile(filepath.Join(dest, "web", "views", "settings_app.templ"))
+	require.NoError(t, err)
+	settings := string(settingsBytes)
+	require.NotContains(t, settings, "onsubmit=",
+		"settings_app.templ must not retain inline onsubmit handlers under csp")
+	require.NotContains(t, settings, "onchange=",
+		"settings_app.templ must not retain inline onchange handlers under csp")
+	require.NotContains(t, settings, "onclick=",
+		"settings_app.templ must not retain inline onclick handlers under csp")
+
+	errorBytes, err := os.ReadFile(filepath.Join(dest, "web", "components", "core", "error_status.templ"))
+	require.NoError(t, err)
+	require.NotContains(t, string(errorBytes), "onclick=",
+		"error_status.templ must not retain inline onclick handlers under csp")
+}
+
+// TestSetup_NoCSP_OmitsCSPHeaderEnv pins the inverse contract: scaffolds
+// that did not opt into csp strip the CSP_HEADER line so the env-backed
+// AppConfig field stays empty and dorman emits no Content-Security-Policy.
+// routes.go still references cfg.ContentSecurityPolicy in both shapes
+// because the field exists unconditionally on AppConfig.
+func TestSetup_NoCSP_OmitsCSPHeaderEnv(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "No CSP App",
+		ModulePath: "github.com/test/no-csp-app",
+		BasePort:   "20710",
+		Force:      true,
+		Features:   []string{"session_settings"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	envBytes, err := os.ReadFile(filepath.Join(dest, ".env.development"))
+	require.NoError(t, err)
+	env := string(envBytes)
+	require.NotContains(t, env, "CSP_HEADER=",
+		".env.development must not carry a CSP_HEADER value when csp is not selected")
+	require.NotContains(t, env, "default-src",
+		".env.development must not carry the CSP directive string when csp is not selected")
+
+	routesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes.go"))
+	require.NoError(t, err)
+	routes := string(routesBytes)
+	require.Contains(t, routes, "PermissionsPolicy:",
+		"routes.go must keep the always-on dorman security headers regardless of csp")
+}
+
+// TestSetup_CSPAndDemo_Rejected pins the unsupported-combination rule:
+// selecting csp and demo together returns a clear error from setup.Run
+// before any files are mutated. demo views still ship inline scripts and
+// handlers that strict CSP would block, so the combination cannot honestly
+// generate a working derived app.
+func TestSetup_CSPAndDemo_Rejected(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "CSP Demo Conflict App",
+		ModulePath: "github.com/test/csp-demo-conflict",
+		BasePort:   "20740",
+		Force:      true,
+		Features:   []string{"csp", "demo"},
+	})
+	require.Error(t, err, "csp + demo must be rejected up front")
+	require.Contains(t, err.Error(), "csp",
+		"rejection error should name the csp feature")
+	require.Contains(t, err.Error(), "demo",
+		"rejection error should name the demo feature")
+}
+
+// TestSetup_SourceRepoRuntimeOmitsCSP keeps the source-repo runtime
+// contract honest: the bare .env.development in the source tree carries no
+// uncommented CSP_HEADER value, so a developer running the source repo
+// directly never emits a CSP that demo content can't actually satisfy.
+func TestSetup_SourceRepoRuntimeOmitsCSP(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	envBytes, err := os.ReadFile(filepath.Join(repoRoot, ".env.development"))
+	require.NoError(t, err)
+	for _, line := range strings.Split(string(envBytes), "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		require.False(t, strings.HasPrefix(trimmed, "CSP_HEADER="),
+			"source .env.development must not have an active CSP_HEADER line outside the csp setup feature block; got: %s", line)
+	}
+}
+
+// TestSetup_SessionSettings_KeepsAlpineSeamFiles pins the page-scoped Alpine
+// seam: the shared dothog.alpine.register helper and the two page-scoped
+// registration files ship whenever session_settings is selected, while the
+// inline handlers they replace are gone.
+func TestSetup_SessionSettings_KeepsAlpineSeamFiles(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Session Settings Alpine App",
+		ModulePath: "github.com/test/session-alpine-app",
+		BasePort:   "20720",
+		Force:      true,
+		Features:   []string{"session_settings"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	for _, rel := range []string{
+		filepath.Join("web", "assets", "public", "js", "app", "alpine-helper.js"),
+		filepath.Join("web", "assets", "public", "js", "app", "admin-sessions.alpine.js"),
+	} {
+		_, err := os.Stat(filepath.Join(dest, rel))
+		require.NoError(t, err,
+			"%s must ship when session_settings is selected", rel)
+	}
+}
+
+// TestSetup_NoSessionSettings_StripsPageScopedAlpine pins the inverse half
+// of the seam: page-scoped registration files (sessionsSelection) follow the
+// feature they belong to. The shared dothog.alpine.register helper is
+// feature-agnostic and always ships.
+func TestSetup_NoSessionSettings_StripsPageScopedAlpine(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Bare No Alpine App",
+		ModulePath: "github.com/test/bare-no-alpine-app",
+		BasePort:   "20730",
+		Force:      true,
+		Features:   []string{},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	_, err = os.Stat(filepath.Join(dest, "web", "assets", "public", "js", "app", "alpine-helper.js"))
+	require.NoError(t, err, "alpine-helper.js is feature-agnostic and must always ship")
+
+	for _, rel := range []string{
+		filepath.Join("web", "assets", "public", "js", "app", "admin-sessions.alpine.js"),
+	} {
+		_, err := os.Stat(filepath.Join(dest, rel))
+		require.True(t, os.IsNotExist(err),
+			"%s must be stripped when session_settings is not selected; got err=%v", rel, err)
+	}
+}
+
+// TestSetup_GraphWithoutAvatar pins down the regression where Graph runtime
+// initialization lived under avatar markers in main.go. A graph-only scaffold
+// must still bootstrap the Graph client/user cache while stripping avatar-only
+// photo routes and storage.
+func TestSetup_GraphWithoutAvatar(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Graph Only App",
+		ModulePath: "github.com/test/graph-only-app",
+		BasePort:   "20670",
+		Force:      true,
+		Features:   []string{"graph"},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	mainBytes, err := os.ReadFile(filepath.Join(dest, "main.go"))
+	require.NoError(t, err)
+	mainContent := string(mainBytes)
+	require.Contains(t, mainContent, "graph.InitAndSyncDirectory",
+		"graph-only scaffolds must keep Graph directory bootstrap wiring in main.go")
+	require.Contains(t, mainContent, "graph.NewGraphClient",
+		"graph-only scaffolds must keep Graph client initialization in main.go")
+	require.NotContains(t, mainContent, "routes.RegisterAvatarRoutes",
+		"graph-only scaffolds must strip avatar-only route registration")
+	require.NotContains(t, mainContent, "directory.Photos()",
+		"graph-only scaffolds must strip avatar-only photo cache setup")
+	require.NotContains(t, mainContent, "graph.SyncPhotos",
+		"graph-only scaffolds must strip avatar-only photo sync wiring")
+	require.Contains(t, mainContent, "graph.OpenDirectory",
+		"graph-only scaffolds still open the persistent Graph directory for the user cache")
+
+	_, err = os.Stat(filepath.Join(dest, "internal", "routes", "avatar.go"))
+	require.True(t, os.IsNotExist(err), "avatar.go should be removed when avatar is not selected")
+	_, err = os.Stat(filepath.Join(dest, "internal", "service", "graph", "photo_cache.go"))
+	require.True(t, os.IsNotExist(err), "photo_cache.go should be removed when avatar is not selected")
 }
 
 // TestSetup_NoDothogReferences runs setup with all features enabled and verifies
@@ -892,9 +1277,8 @@ func TestSetup_NoDothogReferences(t *testing.T) {
 		AppName:    appName,
 		ModulePath: modulePath,
 		BasePort:   "21000",
-		NoCaddy:    false,
 		Force:      true,
-		Features:   setup.AllFeatures,
+		Features:   allFeaturesForDemoBuilds(),
 	})
 	require.NoError(t, err)
 
@@ -1125,4 +1509,67 @@ func TestSetup_PlatformUnsupportedRejected(t *testing.T) {
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported setup platform")
+}
+
+// TestSetup_ExamplesScaffoldFacing proves the /examples section and all its
+// teaching children (error-scenarios, forms) survive `mage setup` even when
+// no optional features are selected. The route files, view files, and the
+// initExamplesRoutes + child-init wiring all need to be present in the
+// generated scaffold so derived-app authors inherit every teaching surface
+// regardless of the demo feature.
+func TestSetup_ExamplesScaffoldFacing(t *testing.T) {
+	t.Parallel()
+	repoRoot, err := findRepoRoot()
+	require.NoError(t, err)
+
+	dest := setupTempDir(t)
+	err = copyDirExcluding(repoRoot, dest, ".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp")
+	require.NoError(t, err)
+
+	err = setup.Run(context.Background(), dest, setup.Options{
+		AppName:    "Bare Scaffold App",
+		ModulePath: "github.com/test/bare-scaffold-app",
+		BasePort:   "20680",
+		Force:      true,
+		// Empty Features → bare HTMX app; no demo, no session_settings, etc.
+		Features: []string{},
+	})
+	require.NoError(t, err)
+
+	assertNoSetupMarkers(t, dest)
+	assertBuildSucceeds(t, dest)
+
+	// Route + view files must survive bare-feature stripping for the
+	// /examples landing and every teaching child.
+	assertFileExists(t, filepath.Join(dest, "internal", "routes", "examples.go"))
+	assertFileExists(t, filepath.Join(dest, "internal", "routes", "error_scenarios.go"))
+	assertFileExists(t, filepath.Join(dest, "internal", "routes", "forms.go"))
+	assertFileExists(t, filepath.Join(dest, "web", "views", "examples_index.templ"))
+	assertFileExists(t, filepath.Join(dest, "web", "views", "error_scenarios.templ"))
+	assertFileExists(t, filepath.Join(dest, "web", "views", "forms.templ"))
+
+	// The InitRoutes wiring must still call initExamplesRoutes, and
+	// initExamplesRoutes must still chain both children — file-on-disk
+	// isn't enough.
+	routesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes.go"))
+	require.NoError(t, err)
+	require.Contains(t, string(routesBytes), "ar.initExamplesRoutes()",
+		"InitRoutes must still call initExamplesRoutes after demo stripping")
+
+	examplesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "examples.go"))
+	require.NoError(t, err)
+	require.Contains(t, string(examplesBytes), "ar.initErrorScenariosRoutes()",
+		"initExamplesRoutes must still chain initErrorScenariosRoutes")
+	require.Contains(t, string(examplesBytes), "ar.initFormsRoutes()",
+		"initExamplesRoutes must still chain initFormsRoutes")
+
+	// None of the scaffold-facing route files may carry a setup:feature
+	// marker that would have removed them under the empty-features bundle.
+	for _, name := range []string{"examples.go", "error_scenarios.go", "forms.go"} {
+		path := filepath.Join(dest, "internal", "routes", name)
+		body, err := os.ReadFile(path)
+		require.NoError(t, err)
+		require.NotContains(t, string(body), "// setup:feature:",
+			"%s must not carry a setup:feature marker — scaffold-facing teaching surfaces are always-on", name)
+	}
 }

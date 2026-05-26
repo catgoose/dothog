@@ -28,23 +28,15 @@ var featureLabels = map[string]string{
 	setup.FeatureAuth:   "Auth (Crooner)",
 	setup.FeatureGraph:  "Graph API",
 	setup.FeatureAvatar: "Avatar Photos (requires Graph)",
-	// Data
-	setup.FeatureDatabase: "Database (chuck repository layer)",
-	setup.FeatureMSSQL:    "MSSQL dialect",
-	setup.FeaturePostgres: "PostgreSQL dialect",
-	// Real-time
-	setup.FeatureSSE:   "SSE (requires Caddy)",
-	setup.FeatureCaddy: "Caddy HTTPS/H3 front-proxy (adds local TLS)",
-	// Navigation
-	setup.FeatureLinkRelations: "Link Relations (context bars, breadcrumbs, site map)",
-	// Performance & Security
-	setup.FeatureWebStandards: "Web Standards (Server-Timing, Vary, Permissions-Policy, Early Hints)",
-	setup.FeatureBrowserAPIs:  "Browser APIs (sendBeacon, BroadcastChannel)",
-	// Mobile & Offline
+	// App data — the chuck-backed repository layer is hidden behind these
+	// choices; selecting a production engine pulls the layer in via featureDeps.
+	setup.FeatureMSSQL:    "MSSQL (Microsoft SQL Server)",
+	setup.FeaturePostgres: "PostgreSQL",
+	// Real-time — SSE pulls in the (hidden) Caddy HTTPS/H3 front-proxy via
+	// featureDeps. There's no standalone Caddy selection any more.
+	setup.FeatureSSE: "SSE (Server-Sent Events broker, includes Caddy HTTPS/H3 dev proxy)",
+	// Mobile
 	setup.FeatureCapacitor: "Capacitor (mobile wrapper)",
-	setup.FeatureOffline:   "Offline Mode (service worker, write queue)",
-	setup.FeatureSync:      "Sync (offline data synchronization)",
-	setup.FeaturePWA:       "PWA (Progressive Web App — offline + sync + mobile)",
 	// Demo
 	setup.FeatureDemo: "Demo Content",
 }
@@ -57,23 +49,13 @@ var featureLabelOrder = []string{
 	setup.FeatureAuth,
 	setup.FeatureGraph,
 	setup.FeatureAvatar,
-	// Data
-	setup.FeatureDatabase,
+	// App data
 	setup.FeatureMSSQL,
 	setup.FeaturePostgres,
 	// Real-time
 	setup.FeatureSSE,
-	setup.FeatureCaddy,
-	// Navigation
-	setup.FeatureLinkRelations,
-	// Performance & Security
-	setup.FeatureWebStandards,
-	setup.FeatureBrowserAPIs,
-	// Mobile & Offline
+	// Mobile
 	setup.FeatureCapacitor,
-	setup.FeatureOffline,
-	setup.FeatureSync,
-	setup.FeaturePWA,
 	// Demo
 	setup.FeatureDemo,
 }
@@ -88,7 +70,7 @@ func init() {
 //
 //	go tool mage setup
 //	go tool mage setup -n "My App" -m "github.com/you/my-app" -p 12345
-//	go tool mage setup -n "My App" --features auth,database
+//	go tool mage setup -n "My App" --features auth,mssql
 //	go tool mage setup -n "My App" --features none
 func Setup() error {
 	scriptArgs := setupScriptArgsFromCLI()
@@ -97,12 +79,19 @@ func Setup() error {
 		return err
 	}
 	if helpPrinted {
-		return nil
+		// Mage parses every os.Args entry as a target name, so returning nil
+		// here would let Mage fall through and report `--help` as an unknown
+		// target (exit 2). Exit clean after the custom usage prints so
+		// `go tool mage setup --help` behaves like every other CLI's help.
+		os.Exit(0)
 	}
 
 	if hasFlags && parsed != nil {
 		fmt.Println("Running template setup...")
 		if err := maybeInstallCaddyForSetup(".", parsed); err != nil {
+			return err
+		}
+		if err := initializeGitRepo("."); err != nil {
 			return err
 		}
 		if err := setup.Run(context.Background(), ".", *parsed); err != nil {
@@ -166,7 +155,7 @@ func Setup() error {
 		}
 		break
 	}
-	opts, err := runWizard()
+	opts, err := runWizard(absTarget)
 	if err != nil {
 		return err
 	}
@@ -179,11 +168,8 @@ func Setup() error {
 	if err := setup.CopyRepoTo(".", absTarget, []string{".git", ".claude", ".cursor", "bin", "build", "log", "node_modules", "test-results", "tmp", "localhost.crt", "localhost.key"}); err != nil {
 		return fmt.Errorf("copying template: %w", err)
 	}
-	gitInit, _ := huhConfirm("Run git init in the new directory?")
-	if gitInit {
-		cmd := exec.Command("git", "init")
-		cmd.Dir = absTarget
-		_ = cmd.Run()
+	if err := initializeGitRepo(absTarget); err != nil {
+		return err
 	}
 	// Remove setup-only files before running setup so that go mod tidy
 	// does not see the rewritten mage_setup.go import.
@@ -200,16 +186,20 @@ func Setup() error {
 	return nil
 }
 
+// presets describe user-facing preset bundles. The "database" tag is hidden
+// and dependency-driven (MSSQL/PostgreSQL imply it via featureDeps), so it is
+// never listed in a preset directly. Presets that don't select a production
+// engine ship without the chuck-backed app-data layer and run on the
+// framework-internal SQLite stores only.
 var presets = map[string][]string{
-	"internal":                {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureDatabase, setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
-	"microsoft-lite-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards},
-	"public":                  {setup.FeatureSessionSettings, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs},
-	"microsoft-full-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureDatabase, setup.FeatureMSSQL, setup.FeatureSSE, setup.FeatureCaddy, setup.FeatureLinkRelations, setup.FeatureWebStandards, setup.FeatureBrowserAPIs, setup.FeatureOffline, setup.FeatureSync, setup.FeaturePWA},
-	"demo":                    setup.AllFeatures,
-	"minimal":                 {},
+	"internal":           {setup.FeatureAuth, setup.FeatureCSRF, setup.FeatureSessionSettings, setup.FeatureSSE},
+	"microsoft-internal": {setup.FeatureSessionSettings, setup.FeatureCSRF, setup.FeatureAuth, setup.FeatureGraph, setup.FeatureAvatar, setup.FeatureMSSQL, setup.FeatureSSE},
+	"public":             {setup.FeatureSessionSettings, setup.FeatureSSE},
+	"demo":               setup.AllFeatures,
+	"minimal":            {},
 }
 
-func runWizard() (*setup.Options, error) {
+func runWizard(targetDir string) (*setup.Options, error) {
 	var (
 		appName    string
 		modulePath string
@@ -220,24 +210,22 @@ func runWizard() (*setup.Options, error) {
 		preset     string
 		customize  bool
 		// Guided wizard answers
-		dbDialect     string // "sqlite", "mssql", "postgres", "sqlite+mssql", "sqlite+postgres"
+		dbEngine      string // "", "mssql", "postgres" — empty leaves derived app on framework-internal SQLite stores
 		wantSessions  bool
 		wantAuth      bool
 		wantGraph     bool
 		wantAvatar    bool
 		wantSSE       bool
-		wantLinks     bool
-		wantStandards bool
-		wantAPIs      bool
 		wantCapacitor bool
-		wantOffline   bool
-		wantSync      bool
-		wantPWA       bool
 		wantDemo      bool
 	)
 
 	currentModule := goModulePath()
 	defaultPort := fmt.Sprintf("%d", randomBasePort())
+	appNameSuggestion := appNameSuggestionFromTargetDir(targetDir)
+	if appNameSuggestion != "" {
+		appName = appNameSuggestion
+	}
 	needsForce := currentModule != "" && currentModule != templateModulePath
 
 	// ── Step 1: App configuration ──────────────────────────────────
@@ -257,11 +245,7 @@ func runWizard() (*setup.Options, error) {
 			huh.NewInput().
 				Title("Module path").
 				PlaceholderFunc(func() string {
-					name := strings.TrimSpace(appName)
-					if name == "" {
-						return "github.com/you/my-app"
-					}
-					return fmt.Sprintf("github.com/you/%s", binaryNameFromApp(name))
+					return modulePathSuggestion(appName, appNameSuggestion)
 				}, &appName).
 				Value(&modulePath),
 			huh.NewInput().
@@ -286,10 +270,9 @@ func runWizard() (*setup.Options, error) {
 			huh.NewSelect[string]().
 				Title("What are you building?").
 				Options(
-					huh.NewOption("Internal tool — auth, database, sessions, SSE, link relations, web standards", "internal"),
-					huh.NewOption("Microsoft Lite Internal — auth, Graph, avatar, MSSQL, SSE + Caddy, link relations, web standards", "microsoft-lite-internal"),
-					huh.NewOption("Microsoft Full Internal — auth, Graph, MSSQL, SSE, offline + sync + PWA", "microsoft-full-internal"),
-					huh.NewOption("Public site — sessions, link relations, web standards, browser APIs", "public"),
+					huh.NewOption("Internal tool — auth, sessions, SSE", "internal"),
+					huh.NewOption("Microsoft Internal — auth, Graph, avatar, MSSQL app data, SSE", "microsoft-internal"),
+					huh.NewOption("Public site — sessions, SSE", "public"),
 					huh.NewOption("Demo/playground — everything enabled", "demo"),
 					huh.NewOption("Minimal — bare HTMX app", "minimal"),
 					huh.NewOption("Pick from list (flat checklist)", "flat"),
@@ -312,9 +295,6 @@ func runWizard() (*setup.Options, error) {
 			setup.FeatureSessionSettings: true,
 			setup.FeatureCSRF:            true,
 			setup.FeatureSSE:             true,
-			setup.FeatureCaddy:           true,
-			setup.FeatureLinkRelations:   true,
-			setup.FeatureWebStandards:    true,
 		}
 		var featureOptions []huh.Option[string]
 		for _, tag := range featureLabelOrder {
@@ -344,30 +324,26 @@ func runWizard() (*setup.Options, error) {
 		// ── Guided wizard: ask about dependencies first ────────────
 
 		guidedForm := huh.NewForm(
-			// Database
+			// MSSQL / PostgreSQL are the user-facing app-data choices.
+			// Leaving this at "None" leaves the derived app on its
+			// framework-internal SQLite stores; no separate app-data choice
+			// is exposed.
 			huh.NewGroup(
 				huh.NewSelect[string]().
-					Title("Database dialect").
-					Description("SQLite is always included for dev/demo. Pick a production dialect if needed.").
+					Title("MSSQL or PostgreSQL support?").
+					Description("Pick one if you deploy to it. Leave at None otherwise.").
 					Options(
-						huh.NewOption("SQLite only (dev/demo)", "sqlite"),
-						huh.NewOption("SQLite + MSSQL (dev locally, deploy to SQL Server)", "sqlite+mssql"),
-						huh.NewOption("SQLite + PostgreSQL (dev locally, deploy to Postgres)", "sqlite+postgres"),
-						huh.NewOption("MSSQL only", "mssql"),
-						huh.NewOption("PostgreSQL only", "postgres"),
+						huh.NewOption("None", ""),
+						huh.NewOption("MSSQL", "mssql"),
+						huh.NewOption("PostgreSQL", "postgres"),
 					).
-					Value(&dbDialect),
-			).Title("Database"),
+					Value(&dbEngine),
+			).Title("App Data"),
 
-			// Navigation — ask first, auto-includes sessions
-			huh.NewGroup(
-				huh.NewConfirm().Title("Want link relations? (context bars, breadcrumbs, site map)\n  Session settings will be auto-included").Value(&wantLinks),
-			).Title("Navigation"),
-
-			// Sessions — only ask if link relations didn't already include it
+			// Sessions
 			huh.NewGroup(
 				huh.NewConfirm().Title("Need user sessions? (theme persistence, settings)").Value(&wantSessions),
-			).Title("Sessions").WithHideFunc(func() bool { return wantLinks }),
+			).Title("Sessions"),
 
 			// Auth
 			huh.NewGroup(
@@ -384,22 +360,13 @@ func runWizard() (*setup.Options, error) {
 
 			// Real-time
 			huh.NewGroup(
-				huh.NewConfirm().Title("Need real-time updates (SSE)?\n  Caddy HTTPS will be auto-included for HTTP/2").Value(&wantSSE),
+				huh.NewConfirm().Title("Need real-time updates (SSE)?\n  Caddy HTTPS/H3 dev proxy will be auto-included.").Value(&wantSSE),
 			).Title("Real-time"),
 
-			// Performance & Security
-			huh.NewGroup(
-				huh.NewConfirm().Title("Want web standards headers?\n  Server-Timing, Vary, Permissions-Policy, 103 Early Hints").Value(&wantStandards),
-				huh.NewConfirm().Title("Want browser APIs?\n  sendBeacon analytics, BroadcastChannel cross-tab sync\n  SSE will be auto-included").Value(&wantAPIs),
-			).Title("Performance & Security"),
-
-			// Mobile & Offline
+			// Mobile
 			huh.NewGroup(
 				huh.NewConfirm().Title("Need mobile app wrapper (Capacitor)?").Value(&wantCapacitor),
-				huh.NewConfirm().Title("Need offline support? (service worker, write queue)\n  Capacitor will be auto-included").Value(&wantOffline),
-				huh.NewConfirm().Title("Need data sync?\n  Offline will be auto-included").Value(&wantSync),
-				huh.NewConfirm().Title("Want full PWA?\n  Includes offline + sync + capacitor").Value(&wantPWA),
-			).Title("Mobile & Offline"),
+			).Title("Mobile"),
 
 			// Demo
 			huh.NewGroup(
@@ -414,17 +381,15 @@ func runWizard() (*setup.Options, error) {
 			return nil, err
 		}
 
-		// Build features from guided answers
-		switch dbDialect {
+		// Build features from guided answers. "database" is hidden and
+		// dependency-driven, so only the production-engine tag needs to be
+		// appended; ExpandFeatureDeps closes the implication. Empty dbEngine
+		// leaves the app on framework-internal SQLite stores only.
+		switch dbEngine {
 		case "mssql":
-			features = append(features, setup.FeatureDatabase, setup.FeatureMSSQL)
+			features = append(features, setup.FeatureMSSQL)
 		case "postgres":
-			features = append(features, setup.FeatureDatabase, setup.FeaturePostgres)
-		case "sqlite+mssql":
-			features = append(features, setup.FeatureDatabase, setup.FeatureMSSQL)
-		case "sqlite+postgres":
-			features = append(features, setup.FeatureDatabase, setup.FeaturePostgres)
-			// "sqlite" — database is implicit, nothing extra needed
+			features = append(features, setup.FeaturePostgres)
 		}
 		if wantSessions {
 			features = append(features, setup.FeatureSessionSettings)
@@ -439,28 +404,10 @@ func runWizard() (*setup.Options, error) {
 			features = append(features, setup.FeatureAvatar)
 		}
 		if wantSSE {
-			features = append(features, setup.FeatureSSE, setup.FeatureCaddy)
-		}
-		if wantLinks {
-			features = append(features, setup.FeatureLinkRelations, setup.FeatureSessionSettings)
-		}
-		if wantStandards {
-			features = append(features, setup.FeatureWebStandards)
-		}
-		if wantAPIs {
-			features = append(features, setup.FeatureBrowserAPIs, setup.FeatureSSE, setup.FeatureCaddy)
+			features = append(features, setup.FeatureSSE)
 		}
 		if wantCapacitor {
 			features = append(features, setup.FeatureCapacitor)
-		}
-		if wantOffline {
-			features = append(features, setup.FeatureOffline, setup.FeatureCapacitor)
-		}
-		if wantSync {
-			features = append(features, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor)
-		}
-		if wantPWA {
-			features = append(features, setup.FeaturePWA, setup.FeatureSync, setup.FeatureOffline, setup.FeatureCapacitor)
 		}
 		if wantDemo {
 			features = append(features, setup.FeatureDemo)
@@ -552,7 +499,9 @@ func runWizard() (*setup.Options, error) {
 	// ── Final confirmation ─────────────────────────────────────────
 
 	// Enforce feature dependencies
-	features = enforceFeatureDeps(features)
+	// Feature implications (for example Avatar→Graph, MSSQL/Postgres→Database,
+	// SSE→Caddy, Demo→Sessions) are closed by setup.ExpandFeatureDeps later in
+	// setup.Run.
 
 	appName = strings.TrimSpace(appName)
 	resolvedModule := resolveModulePath(appName, modulePath, currentModule)
@@ -611,6 +560,59 @@ func resolveModulePath(appName, modulePathInput, _ string) string {
 	return fmt.Sprintf("github.com/you/%s", binaryNameFromApp(name))
 }
 
+func modulePathSuggestion(appName, appNameSuggestion string) string {
+	name := strings.TrimSpace(appName)
+	if name == "" {
+		name = strings.TrimSpace(appNameSuggestion)
+	}
+	if name == "" {
+		return "github.com/you/my-app"
+	}
+	return fmt.Sprintf("github.com/you/%s", binaryNameFromApp(name))
+}
+
+func appNameSuggestionFromTargetDir(targetDir string) string {
+	targetDir = strings.TrimSpace(targetDir)
+	if targetDir == "" {
+		return ""
+	}
+	cleaned := filepath.Clean(targetDir)
+	base := filepath.Base(cleaned)
+	switch base {
+	case "", ".", string(filepath.Separator):
+		return ""
+	}
+	parts := strings.FieldsFunc(base, func(r rune) bool {
+		switch r {
+		case '-', '_', ' ':
+			return true
+		default:
+			return false
+		}
+	})
+	for i, part := range parts {
+		if part == "" {
+			continue
+		}
+		parts[i] = strings.ToUpper(part[:1]) + part[1:]
+	}
+	return strings.Join(parts, " ")
+}
+
+func initializeGitRepo(dir string) error {
+	cmd := exec.Command("git", "init")
+	cmd.Dir = dir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		msg := strings.TrimSpace(string(output))
+		if msg == "" {
+			return fmt.Errorf("git init in %s: %w", dir, err)
+		}
+		return fmt.Errorf("git init in %s: %w: %s", dir, err, msg)
+	}
+	return nil
+}
+
 func describeFeatures(features []string) string {
 	if len(features) == 0 {
 		return "none (bare HTMX app)"
@@ -619,23 +621,6 @@ func describeFeatures(features []string) string {
 		return "all"
 	}
 	return strings.Join(features, ", ")
-}
-
-// enforceFeatureDeps auto-includes required dependencies.
-func enforceFeatureDeps(features []string) []string {
-	tagSet := make(map[string]bool)
-	for _, f := range features {
-		tagSet[f] = true
-	}
-	if tagSet[setup.FeatureSSE] && !tagSet[setup.FeatureCaddy] {
-		features = append(features, setup.FeatureCaddy)
-		fmt.Println("SSE requires Caddy for proxying; Caddy auto-included.")
-	}
-	if tagSet[setup.FeatureAvatar] && !tagSet[setup.FeatureGraph] {
-		features = append(features, setup.FeatureGraph)
-		fmt.Println("Avatar requires Graph API; Graph auto-included.")
-	}
-	return features
 }
 
 func hasFeature(features []string, tag string) bool {
@@ -652,7 +637,9 @@ func setupUsesCaddy(opts *setup.Options) bool {
 		return false
 	}
 	if opts.Features == nil {
-		return !opts.NoCaddy
+		// nil Features means "the wizard hasn't built a list yet" — treat as
+		// the full feature set, so Caddy installs as long as SSE pulls it in.
+		return hasFeature(setup.ExpandFeatureDeps(setup.AllFeatures), setup.FeatureCaddy)
 	}
 	return hasFeature(setup.ExpandFeatureDeps(opts.Features), setup.FeatureCaddy)
 }
@@ -672,7 +659,7 @@ func maybeInstallCaddyForSetup(projectDir string, opts *setup.Options) error {
 func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPrinted bool, err error) {
 	for _, a := range args {
 		switch a {
-		case "-n", "-m", "-p", "--force", "--no-caddy", "--features", "--platform", "-h", "--help":
+		case "-n", "-m", "-p", "--force", "--features", "--platform", "-h", "--help":
 			hasFlags = true
 			break
 		}
@@ -714,12 +701,6 @@ func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPri
 			break
 		}
 	}
-	for _, a := range args {
-		if a == "--no-caddy" {
-			opts.NoCaddy = true
-			break
-		}
-	}
 	// --features flag
 	for i, a := range args {
 		if a == "--features" && i+1 < len(args) {
@@ -734,16 +715,6 @@ func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPri
 			break
 		}
 	}
-	// --no-caddy is a deprecated alias: if features not explicitly set,
-	// apply it by setting features to all-except-caddy
-	if opts.NoCaddy && opts.Features == nil {
-		opts.Features = make([]string, 0, len(setup.AllFeatures)-1)
-		for _, f := range setup.AllFeatures {
-			if f != setup.FeatureCaddy {
-				opts.Features = append(opts.Features, f)
-			}
-		}
-	}
 	opts.ConfirmFunc = huhConfirm
 	return opts, true, false, nil
 }
@@ -751,14 +722,13 @@ func parseSetupFlags(args []string) (opts *setup.Options, hasFlags bool, helpPri
 // parseFeatureFlag is defined in magefile.go (survives mage_setup.go removal).
 
 func printSetupUsage() {
-	fmt.Println(`Usage: go tool mage setup [-n APP_NAME] [-m MODULE_PATH] [-p BASE_PORT] [--features FEATURES] [--no-caddy] [--platform OS] [--force]
+	fmt.Println(`Usage: go tool mage setup [-n APP_NAME] [-m MODULE_PATH] [-p BASE_PORT] [--features FEATURES] [--platform OS] [--force]
 
   -n APP_NAME        Human-readable app name (e.g. "My App"). Required.
   -m MODULE_PATH     Go module path (e.g. "github.com/you/my-app").
   -p BASE_PORT       5-digit base port < 60000; APP_HTTP_PORT=BASE_PORT, TEMPL_HTTP_PORT=BASE_PORT+1, CADDY_TLS_PORT=BASE_PORT+2.
-  --features LIST    Comma-separated feature tags to keep: auth,graph,avatar,database,sse,caddy,demo,alpine.
-                     "all" = keep everything (default), "none" = bare HTMX app.
-  --no-caddy         Deprecated. Equivalent to omitting caddy from --features.
+  --features LIST    Comma-separated user-selectable tags to keep: auth,graph,avatar,mssql,postgres,sse,demo,session_settings,csrf,capacitor.
+                     "all" = keep everything (default), "none" = bare HTMX app. Hidden tags resolve via featureDeps: MSSQL/PostgreSQL imply database; SSE implies the Caddy HTTPS/H3 dev proxy.
   --platform OS      Target host OS for the derived app's dev tooling: linux or windows. Defaults to the current host's GOOS.
   --force            Allow re-running setup even if module is already customized.`)
 }

@@ -841,9 +841,9 @@ func TestRemoveOrphanedImportLines(t *testing.T) {
 // ImplicitFeatures
 // ---------------------------------------------------------------------------
 
-func TestImplicitFeaturesAlwaysKept(t *testing.T) {
-	// When Features is set but does not include "database",
-	// database should still be kept because it's implicit.
+func TestDatabaseBlocksStrippedWhenNoMSSQLOrPostgres(t *testing.T) {
+	// "database" is no longer implicit: scaffolds without MSSQL or PostgreSQL
+	// strip the app-data marker blocks entirely.
 	content := strings.Join([]string{
 		"before",
 		"// setup:feature:database:start",
@@ -851,10 +851,8 @@ func TestImplicitFeaturesAlwaysKept(t *testing.T) {
 		"// setup:feature:database:end",
 		"after",
 	}, "\n")
-	// Simulate removeOptionalContent logic: build removeTags with implicit features kept
 	removeTags := make(map[string]bool)
 	keep := make(map[string]bool)
-	// User selected no features
 	for _, f := range ImplicitFeatures {
 		keep[f] = true
 	}
@@ -864,7 +862,37 @@ func TestImplicitFeaturesAlwaysKept(t *testing.T) {
 		}
 	}
 	got := stripBlocks(content, removeTags)
-	require.Contains(t, got, "database code", "database blocks should be kept (implicit feature)")
+	require.NotContains(t, got, "database code", "database blocks should be stripped when no mssql/postgres selected")
+	require.Contains(t, got, "before")
+	require.Contains(t, got, "after")
+}
+
+func TestDatabaseBlocksKeptWhenMSSQLSelected(t *testing.T) {
+	// MSSQL implies the internal "database" feature via featureDeps, so
+	// selecting MSSQL must keep the app-data marker blocks intact.
+	content := strings.Join([]string{
+		"before",
+		"// setup:feature:database:start",
+		"database code",
+		"// setup:feature:database:end",
+		"after",
+	}, "\n")
+	expanded := ExpandFeatureDeps([]string{FeatureMSSQL})
+	keep := make(map[string]bool)
+	for _, f := range expanded {
+		keep[f] = true
+	}
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
+	removeTags := make(map[string]bool)
+	for _, f := range AllFeatures {
+		if !keep[f] {
+			removeTags[f] = true
+		}
+	}
+	got := stripBlocks(content, removeTags)
+	require.Contains(t, got, "database code", "database blocks should be kept when mssql is selected")
 	require.Contains(t, got, "before")
 	require.Contains(t, got, "after")
 }
@@ -990,7 +1018,7 @@ func TestStripEnvBlocks(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// CopyRepoTo — cert exclusion
+// CopyRepoTo — explicit excludes plus .gitignore-aware runtime junk exclusion
 // ---------------------------------------------------------------------------
 
 func TestCopyRepoToExcludesLocalhostCerts(t *testing.T) {
@@ -998,11 +1026,18 @@ func TestCopyRepoToExcludesLocalhostCerts(t *testing.T) {
 	dest := filepath.Join(t.TempDir(), "out")
 
 	files := map[string]string{
-		"go.mod":         "module example.test\n",
-		"localhost.crt":  "FAKE CERT\n",
-		"localhost.key":  "FAKE KEY\n",
-		"keep/keep.txt":  "keep me\n",
-		"node_modules/x": "junk\n",
+		".gitignore":             "tmp/\n*.log\ndb/*\n!db/seed.db\n!db/gen_seed/\n.env.development\n",
+		"go.mod":                 "module example.test\n",
+		".env.development":       "APP_NAME=Example\n",
+		"localhost.crt":          "FAKE CERT\n",
+		"localhost.key":          "FAKE KEY\n",
+		"keep/keep.txt":          "keep me\n",
+		"keep/runtime.log":       "ignore me\n",
+		"node_modules/x":         "junk\n",
+		"tmp/cache.txt":          "ignore me\n",
+		"db/session_settings.db": "ignore me\n",
+		"db/seed.db":             "seed\n",
+		"db/gen_seed/main.go":    "package main\n",
 	}
 	for rel, body := range files {
 		full := filepath.Join(src, rel)
@@ -1030,6 +1065,23 @@ func TestCopyRepoToExcludesLocalhostCerts(t *testing.T) {
 	gotKeep, err := os.ReadFile(filepath.Join(dest, "keep", "keep.txt"))
 	require.NoError(t, err)
 	require.Equal(t, "keep me\n", string(gotKeep))
+	gotEnv, err := os.ReadFile(filepath.Join(dest, ".env.development"))
+	require.NoError(t, err)
+	require.Equal(t, "APP_NAME=Example\n", string(gotEnv))
+	gotSeed, err := os.ReadFile(filepath.Join(dest, "db", "seed.db"))
+	require.NoError(t, err)
+	require.Equal(t, "seed\n", string(gotSeed))
+	gotGenSeed, err := os.ReadFile(filepath.Join(dest, "db", "gen_seed", "main.go"))
+	require.NoError(t, err)
+	require.Equal(t, "package main\n", string(gotGenSeed))
+
+	// .gitignore-matched local runtime junk must not copy.
+	_, err = os.Stat(filepath.Join(dest, "tmp"))
+	require.True(t, os.IsNotExist(err), "tmp should not be copied: %v", err)
+	_, err = os.Stat(filepath.Join(dest, "keep", "runtime.log"))
+	require.True(t, os.IsNotExist(err), "*.log files should not be copied: %v", err)
+	_, err = os.Stat(filepath.Join(dest, "db", "session_settings.db"))
+	require.True(t, os.IsNotExist(err), "gitignored db runtime files should not be copied: %v", err)
 }
 
 // ---------------------------------------------------------------------------
@@ -1144,4 +1196,249 @@ func TestBuildQuickStart_PlatformShapesFromSource(t *testing.T) {
 	require.Contains(t, windows, "go build -o asdfasdf.exe .")
 	require.Contains(t, windows, ".\\asdfasdf.exe\n")
 	require.Contains(t, windows, "```powershell")
+}
+
+// ---------------------------------------------------------------------------
+// ExpandFeatureDeps — tag-graph closure semantics
+// ---------------------------------------------------------------------------
+
+func TestExpandFeatureDeps_NoDeps(t *testing.T) {
+	got := ExpandFeatureDeps([]string{FeatureCSRF, FeatureSessionSettings})
+	require.Contains(t, got, FeatureCSRF)
+	require.Contains(t, got, FeatureSessionSettings)
+	require.NotContains(t, got, FeatureDemo)
+	require.NotContains(t, got, FeatureDatabase)
+}
+
+func TestExpandFeatureDeps_AvatarPullsGraph(t *testing.T) {
+	// Avatar imports the Graph package directly; the strip set must keep
+	// Graph or avatar.go can't compile.
+	got := ExpandFeatureDeps([]string{FeatureAvatar})
+	require.Contains(t, got, FeatureAvatar)
+	require.Contains(t, got, FeatureGraph)
+}
+
+func TestExpandFeatureDeps_MSSQLPullsDatabase(t *testing.T) {
+	got := ExpandFeatureDeps([]string{FeatureMSSQL})
+	require.Contains(t, got, FeatureMSSQL)
+	require.Contains(t, got, FeatureDatabase,
+		"MSSQL must imply the (hidden) database scaffolding")
+}
+
+func TestExpandFeatureDeps_PostgresPullsDatabase(t *testing.T) {
+	got := ExpandFeatureDeps([]string{FeaturePostgres})
+	require.Contains(t, got, FeaturePostgres)
+	require.Contains(t, got, FeatureDatabase)
+}
+
+func TestExpandFeatureDeps_DemoPullsSessionSettings(t *testing.T) {
+	got := ExpandFeatureDeps([]string{FeatureDemo})
+	require.Contains(t, got, FeatureDemo)
+	require.Contains(t, got, FeatureSessionSettings,
+		"demo content reads session settings; the dep must close")
+}
+
+func TestExpandFeatureDeps_SSEPullsCaddy(t *testing.T) {
+	// SSE implies the hidden Caddy tag so the dev HTTPS/H3 front-proxy ships
+	// alongside the SSE broker. Caddy is not a standalone selectable feature.
+	got := ExpandFeatureDeps([]string{FeatureSSE})
+	require.Contains(t, got, FeatureSSE)
+	require.Contains(t, got, FeatureCaddy,
+		"SSE must close to Caddy via featureDeps")
+}
+
+func TestExpandFeatureDeps_TransitiveOrderIndependent(t *testing.T) {
+	// Avatar → Graph; passing them in reverse order must still close to the
+	// same set (the closure walks to a fixed point).
+	a := ExpandFeatureDeps([]string{FeatureAvatar, FeatureGraph})
+	b := ExpandFeatureDeps([]string{FeatureGraph, FeatureAvatar})
+	require.ElementsMatch(t, a, b)
+}
+
+func TestExpandFeatureDeps_PreservesAllFeaturesOrdering(t *testing.T) {
+	// The output ordering follows AllFeatures so scaffold-generation code
+	// can rely on deterministic iteration even when callers pass features
+	// in arbitrary order.
+	got := ExpandFeatureDeps([]string{FeatureSSE, FeatureAuth})
+	authIdx := -1
+	sseIdx := -1
+	for i, f := range got {
+		switch f {
+		case FeatureAuth:
+			authIdx = i
+		case FeatureSSE:
+			sseIdx = i
+		}
+	}
+	require.NotEqual(t, -1, authIdx)
+	require.NotEqual(t, -1, sseIdx)
+	require.Less(t, authIdx, sseIdx,
+		"AllFeatures lists auth before sse; ExpandFeatureDeps must preserve that")
+}
+
+// ---------------------------------------------------------------------------
+// Representative-bundle setup-strip verification
+//
+// These tests mirror the wizard presets defined in mage_setup.go and assert
+// that real strip behavior matches the current setup model:
+//   - link_relations is gone (baseline, never a strip tag)
+//   - database is hidden and only ships with MSSQL/PostgreSQL
+//   - Avatar closes to Graph through featureDeps
+//   - SSE pulls the hidden Caddy tag
+// ---------------------------------------------------------------------------
+
+// representativeBundleContent is a synthetic source file with one tagged
+// block per AllFeatures entry. Each block's payload is "<tag>-CODE" so a
+// test can grep for survivors after stripBlocks runs.
+func representativeBundleContent(t *testing.T) string {
+	t.Helper()
+	var lines []string
+	lines = append(lines, "preamble")
+	for _, tag := range AllFeatures {
+		lines = append(lines,
+			"// setup:feature:"+tag+":start",
+			tag+"-CODE",
+			"// setup:feature:"+tag+":end",
+		)
+	}
+	lines = append(lines, "tail")
+	return strings.Join(lines, "\n")
+}
+
+// stripWithBundle expands the bundle's deps + implicits, computes the
+// remove-tag set the way internal/setup uses it, and returns the stripped
+// content for representativeBundleContent.
+func stripWithBundle(t *testing.T, bundle []string) string {
+	t.Helper()
+	expanded := ExpandFeatureDeps(bundle)
+	keep := make(map[string]bool, len(expanded)+len(ImplicitFeatures))
+	for _, f := range expanded {
+		keep[f] = true
+	}
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
+	remove := make(map[string]bool)
+	for _, f := range AllFeatures {
+		if !keep[f] {
+			remove[f] = true
+		}
+	}
+	return stripBlocks(representativeBundleContent(t), remove)
+}
+
+// assertSurvived checks that every tag in survivors has its CODE marker in
+// got, and every tag in stripped does not. Other tags are not asserted.
+func assertBundleSurvival(t *testing.T, got string, survivors, stripped []string) {
+	t.Helper()
+	for _, tag := range survivors {
+		require.Contains(t, got, tag+"-CODE",
+			"bundle should keep %q's code blocks", tag)
+	}
+	for _, tag := range stripped {
+		require.NotContains(t, got, tag+"-CODE",
+			"bundle should strip %q's code blocks", tag)
+	}
+}
+
+func TestRepresentativeBundle_Minimal(t *testing.T) {
+	got := stripWithBundle(t, []string{})
+	// Minimal selects nothing. Every user-facing feature plus the hidden
+	// database tag strips out.
+	assertBundleSurvival(t, got,
+		nil,
+		[]string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL,
+			FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar,
+			FeatureDemo, FeatureSessionSettings, FeatureCapacitor, FeatureCSRF},
+	)
+	require.Contains(t, got, "preamble")
+	require.Contains(t, got, "tail")
+}
+
+func TestRepresentativeBundle_Public(t *testing.T) {
+	// "public" preset from mage_setup.go: sessions + SSE. SSE pulls the
+	// hidden caddy tag in via featureDeps.
+	got := stripWithBundle(t, []string{FeatureSessionSettings, FeatureSSE})
+	assertBundleSurvival(t, got,
+		[]string{FeatureSessionSettings, FeatureSSE, FeatureCaddy},
+		[]string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL,
+			FeaturePostgres, FeatureAvatar, FeatureDemo, FeatureCapacitor, FeatureCSRF},
+	)
+}
+
+func TestRepresentativeBundle_Internal(t *testing.T) {
+	// "internal" preset: auth, CSRF, sessions, SSE. SSE pulls Caddy in via
+	// featureDeps. No MSSQL/Postgres → no database. No avatar → no graph.
+	got := stripWithBundle(t, []string{FeatureAuth, FeatureCSRF,
+		FeatureSessionSettings, FeatureSSE})
+	assertBundleSurvival(t, got,
+		[]string{FeatureAuth, FeatureCSRF, FeatureSessionSettings,
+			FeatureSSE, FeatureCaddy},
+		[]string{FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres,
+			FeatureAvatar, FeatureDemo, FeatureCapacitor},
+	)
+}
+
+func TestRepresentativeBundle_MicrosoftInternal(t *testing.T) {
+	// "microsoft-internal" preset: sessions, CSRF, auth, Graph, avatar, MSSQL,
+	// SSE. Avatar pulls Graph (already explicit), MSSQL pulls the hidden
+	// database tag, SSE pulls the hidden caddy tag.
+	got := stripWithBundle(t, []string{FeatureSessionSettings, FeatureCSRF,
+		FeatureAuth, FeatureGraph, FeatureAvatar, FeatureMSSQL, FeatureSSE})
+	assertBundleSurvival(t, got,
+		[]string{FeatureSessionSettings, FeatureCSRF, FeatureAuth,
+			FeatureGraph, FeatureAvatar, FeatureMSSQL, FeatureDatabase,
+			FeatureSSE, FeatureCaddy},
+		[]string{FeaturePostgres, FeatureDemo, FeatureCapacitor},
+	)
+}
+
+// TestRepresentativeBundle_AvatarPullsGraph guards the Avatar→Graph hard dep
+// against regression at the bundle level: a bundle that names Avatar without
+// Graph must still keep Graph (avatar.go imports the Graph package directly).
+func TestRepresentativeBundle_AvatarPullsGraph(t *testing.T) {
+	got := stripWithBundle(t, []string{FeatureAvatar})
+	assertBundleSurvival(t, got,
+		[]string{FeatureAvatar, FeatureGraph},
+		[]string{FeatureDatabase, FeatureMSSQL, FeaturePostgres,
+			FeatureSSE, FeatureCaddy, FeatureDemo, FeatureSessionSettings,
+			FeatureCapacitor, FeatureCSRF, FeatureAuth},
+	)
+}
+
+// TestRepresentativeBundle_SSEPullsCaddy checks that SSE implies the hidden
+// Caddy tag through featureDeps, so the Caddyfile + install path ship
+// alongside the SSE broker.
+func TestRepresentativeBundle_SSEPullsCaddy(t *testing.T) {
+	got := stripWithBundle(t, []string{FeatureSSE})
+	assertBundleSurvival(t, got,
+		[]string{FeatureSSE, FeatureCaddy},
+		[]string{FeatureDatabase, FeatureMSSQL, FeaturePostgres,
+			FeatureDemo, FeatureSessionSettings,
+			FeatureCapacitor, FeatureCSRF, FeatureAuth,
+			FeatureGraph, FeatureAvatar},
+	)
+}
+
+// TestRepresentativeBundle_CaddyStripsWithoutSSE pairs with SSEPullsCaddy: a
+// bundle that does NOT name SSE strips the hidden Caddy tag too, even if some
+// other unrelated feature is selected.
+func TestRepresentativeBundle_CaddyStripsWithoutSSE(t *testing.T) {
+	got := stripWithBundle(t, []string{FeatureAuth, FeatureCSRF, FeatureSessionSettings})
+	assertBundleSurvival(t, got,
+		[]string{FeatureAuth, FeatureCSRF, FeatureSessionSettings},
+		[]string{FeatureSSE, FeatureCaddy, FeatureDatabase,
+			FeatureMSSQL, FeaturePostgres, FeatureDemo,
+			FeatureCapacitor, FeatureGraph, FeatureAvatar},
+	)
+}
+
+// TestLinkRelationsIsNotAFeatureTag checks that the link-relations registry
+// stays baseline framework behavior instead of returning as a strip tag.
+// AllFeatures must not advertise it.
+func TestLinkRelationsIsNotAFeatureTag(t *testing.T) {
+	for _, tag := range AllFeatures {
+		require.NotEqual(t, "link_relations", tag,
+			"link_relations should remain baseline behavior, not a user-facing feature tag")
+	}
 }

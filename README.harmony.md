@@ -67,7 +67,7 @@ See [PHILOSOPHY.md](PHILOSOPHY.md) for the architectural principles behind the p
 - **Link Relations Registry** -- Resource relationships declared using [IANA link relations](https://www.iana.org/assignments/link-relations/link-relations.xhtml). Three composable primitives: **Ring** (peers link to peers), **Hub** (parent links to children), **Link** (explicit pairwise). One registry drives context bars, breadcrumbs, site map, and `Link` HTTP headers.
 - **Context Navigation** -- Local context bar (immediate siblings), hierarchy breadcrumbs (page ancestry). All server-rendered, all dismissable, all driven by the link registry.
 - **Web Standards Over Libraries** -- Native `<dialog>` for modals, `popover` for dismissable UI, `<details name>` for accordions, `<datalist>` for autocomplete, `inputmode` for mobile keyboards, `enterkeyhint` for mobile enter keys, `content-visibility: auto` for rendering performance, `text-wrap: balance` for typography, `accent-color` for form theming, View Transitions for animated navigation.
-- **Browser APIs** -- `navigator.sendBeacon()` for fire-and-forget analytics, `BroadcastChannel` for cross-tab sync (theme changes propagate to all tabs without server round-trips), `Server-Timing` header for DevTools performance metrics.
+- **Browser APIs** -- `BroadcastChannel` for cross-tab sync (theme changes propagate to all tabs without server round-trips), `Server-Timing` header for DevTools performance metrics.
 - **Inline Relationship Editor** -- Edit the link registry from the browser at `/hypermedia/links`. Add rings, hubs, and pairwise relationships. Context bars, breadcrumbs, and site map update immediately.
 - **Site Map Footer** -- Rendered from the link registry. Hub centers as headings, their spokes as links. The same data that drives the context bar drives the footer.
 - **Breadcrumb Origin Tracking** -- Navigation links carry a `?from=N` bitmask encoding the user's entry point. The server resolves the mask to a breadcrumb trail at render time without sessions, cookies, or client state.
@@ -290,29 +290,6 @@ jobs := NewQueueTable("JobQueue", "Payload")
 | `TypeAutoIncrement()` | `INTEGER PRIMARY KEY AUTOINCREMENT` | `INT PRIMARY KEY IDENTITY(1,1)` |
 | `TypeLiteral(s)` | `s` | `s` |
 
-### Domain Structs
-
-Embeddable structs for domain models:
-
-```go
-type Task struct {
-    ID                 int    `db:"ID"`
-    Title              string `db:"Title"`
-    domain.UUID               // UUID string
-    domain.Status             // Status string
-    domain.SortOrder          // SortOrder int
-    domain.Parent             // ParentID sql.NullInt64
-    domain.Notes              // Notes sql.NullString
-    domain.Expiry             // ExpiresAt sql.NullTime
-    domain.Version            // Version int
-    domain.Archive            // ArchivedAt sql.NullTime
-    domain.Replacement        // ReplacedByID sql.NullInt64
-    domain.Timestamps         // CreatedAt, UpdatedAt time.Time
-    domain.SoftDelete         // DeletedAt sql.NullTime
-    domain.AuditTrail         // CreatedBy, UpdatedBy, DeletedBy sql.NullString
-}
-```
-
 ### Repository Helpers
 
 ```go
@@ -401,30 +378,33 @@ settings := NewConfigTable("Settings", "Key", "Value").
     )
 
 // Run seed data on startup (safe to run repeatedly)
-repoManager.SeedSchema(ctx)
+appSchema.SeedSchema(ctx)
 ```
 
 ### Schema Lifecycle
 
-Four stages for managing schemas at different points in the application lifecycle:
+Four stages for managing schemas at different points in the application lifecycle. In dothog-derived apps the table list comes from `internal/dbschema.Tables()`; the snippet below shows the underlying `schema.NewMaterializer` call directly for clarity:
 
 ```go
-repoManager := repository.NewManager(db, dialect, usersTable, tasksTable, ...)
+appSchema := schema.NewMaterializer(dbx, dialect, dbschema.Tables()...)
 
 // Development: drop and recreate all tables (destructive)
-repoManager.InitSchema(ctx)
+appSchema.InitSchema(ctx)
 
 // Production startup: create missing tables/indexes (additive, non-destructive)
-repoManager.EnsureSchema(ctx)
+appSchema.EnsureSchema(ctx)
 
 // Production startup: insert seed data (idempotent)
-repoManager.SeedSchema(ctx)
+appSchema.SeedSchema(ctx)
 
 // Production health check: validate all registered tables exist with expected columns
-if err := repoManager.ValidateSchema(ctx); err != nil {
+if err := appSchema.ValidateSchema(ctx); err != nil {
     log.Fatal("schema validation failed", "error", err)
 }
 ```
+
+Repositories take `*sqlx.DB` directly (not the manager); use
+`database.WithTransaction(ctx, dbx, fn)` for multi-statement work.
 
 | Method | When | Behavior |
 | --- | --- | --- |
@@ -543,7 +523,7 @@ Map two dimensions -- **where it runs** and **what it manages** -- and six domai
            +------------------+----------------------+----------------------+
 ```
 
-The left column is authority. **Server state** (Go + SQL) is the single source of truth. **Client state** is ephemeral view data the server does not need to know about -- `_hyperscript` handles the common case (local DOM toggles, transitions, one-off bindings) and `Alpine.js` stays in reserve for the rarer cases that need coordinated view state or a browser-API bridge (theme picker, offline indicator). Nothing in the client row pretends to be the server row.
+The left column is authority. **Server state** (Go + SQL) is the single source of truth. **Client state** is ephemeral view data the server does not need to know about -- `_hyperscript` handles the common case (local DOM toggles, transitions, one-off bindings) and `Alpine.js` stays in reserve for the rarer cases that need coordinated view state or a browser-API bridge (theme picker). Nothing in the client row pretends to be the server row.
 
 The handler layer is the thickest: it knows the domain, selects templates, and assembles hypermedia controls. The service layer handles business logic. The repository layer is a thin SQL interface. Each layer does less than the one above it.
 
@@ -676,7 +656,7 @@ harmony/
 │   │   ├── middleware/        # Correlation IDs, error promotion (via promolog)
 │   │   ├── response/         # HTMX OOB response builders
 │   │   ├── hypermedia/       # Navigation, filters, table state
-│   │   └── routes_realtime.go # SSE endpoints and publishers
+│   │   └── realtime.go       # SSE endpoints and publishers
 │   ├── demo/                  # SQLite demo database
 │   ├── ssebroker/             # Topic-based pub/sub for SSE
 │   └── domain/                # Data models
@@ -705,23 +685,25 @@ go tool mage setup
 
 The wizard walks you through:
 
-1. **Copy to new directory** -- Optionally copy the template to a new location and run `git init`
+1. **Target directory** -- Required. Setup always scaffolds into the target rather than mutating the current template checkout; an existing non-empty target can be removed and replaced after a confirmation prompt. Setup optionally runs `git init` there.
 2. **App name** -- Human-readable name (e.g. "My App"), used to derive the binary name
 3. **Module path** -- Go module path (e.g. `github.com/you/my-app`)
 4. **Base port** -- 5-digit port number; Harmony uses `BASE_PORT`, templ proxy uses `BASE_PORT+1`, Caddy uses `BASE_PORT+2`
-5. **Feature selection** -- Multi-select which features to include:
+5. **Preset or guided flow** -- Pick a preset (Internal Tool, MS Lite Internal, MS Full Internal, Public Site, Demo, Minimal), the flat checklist, or the guided questions. Presets can be customised before applying.
+6. **App-data engine (guided mode only)** -- Pick MSSQL, PostgreSQL, or None. The chuck-backed app-data layer is internal-only and ships with the derived app only when MSSQL or PostgreSQL is selected; otherwise scaffolds run on framework-internal SQLite stores alone.
+7. **Feature questions / checklist** -- Either guided follow-up confirms (auth, Graph, avatar, SSE, link relations, web standards, browser APIs, capacitor, demo) or the flat multi-select of the same tags.
 
-| Feature | Description | Default |
-| --- | --- | --- |
-| Auth (Crooner) | Azure AD authentication via Crooner | Selected |
-| Graph API | Microsoft Graph SDK integration | Selected |
-| Avatar Photos | User photo sync from Azure (requires Graph) | Selected |
-| Database (MSSQL) | SQL Server database with SQLx | Selected |
-| SSE | Server-Sent Events real-time updates (requires Caddy) | Selected |
-| Caddy (HTTPS) | Caddy reverse proxy with TLS termination | Selected |
-| Demo Content | SQLite demo tables, hypermedia examples | Unselected |
+| Feature      | Description                                              | Notes                                |
+| ------------ | -------------------------------------------------------- | ------------------------------------ |
+| Auth         | OIDC authentication via Crooner; CSRF auto-included      | Tolerates partial OIDC env (off)     |
+| Graph API    | Microsoft Graph SDK integration                          | Avatar auto-includes Graph           |
+| Avatar       | User photo sync from Graph                               | Requires Graph                       |
+| MSSQL        | Chuck-backed app data with MSSQL support                 | Implies the internal database layer  |
+| PostgreSQL   | Chuck-backed app data with PostgreSQL support            | Implies the internal database layer  |
+| SSE          | Server-Sent Events real-time updates                     | Auto-includes the Caddy HTTPS/H3 dev proxy |
+| Demo         | SQLite demo tables, hypermedia examples                  | Auto-includes session_settings       |
 
-Deselected features have their code, routes, imports, and related files stripped from the project. Dependencies are auto-resolved (SSE includes Caddy, Avatar includes Graph).
+Deselected features have their code, routes, imports, and related files stripped from the derived app. Dependencies are auto-resolved (Avatar includes Graph, MSSQL/PostgreSQL imply the internal app-data layer, SSE pulls in the hidden Caddy dev proxy, Demo includes session_settings). Caddy is no longer a standalone selectable feature — it ships only when SSE is selected.
 
 ### Non-interactive Setup
 
@@ -737,7 +719,7 @@ go tool mage setup -n "My App" --features all
 | `-n APP_NAME` | App name (required) |
 | `-m MODULE` | Go module path |
 | `-p PORT` | 5-digit base port (< 60000) |
-| `--features` | Comma-separated: `auth,graph,avatar,database,sse,caddy,demo`, `all`, or `none` |
+| `--features` | Comma-separated: `auth,graph,avatar,mssql,postgres,sse,demo,session_settings,csrf,capacitor`, `all`, or `none`. Hidden tags resolve via `featureDeps`: `mssql`/`postgres` imply the internal `database` tag (chuck-backed app-data layer); `sse` implies the hidden `caddy` tag (Caddy HTTPS/H3 dev proxy). Scaffolds that select none of those stay on framework-internal SQLite stores with no Caddy. Web-standards response policy (Server-Timing, `Vary: HX-Request`, Permissions-Policy, 103 Early Hints) and the link-relations registry (context bars, breadcrumbs, site map, `Link` headers) are always-on baseline behavior, not feature toggles. |
 | `--force` | Re-run setup on an already customized project |
 
 After setup, review `.env.development` and start the dev server with `go tool mage watch`.
@@ -760,7 +742,7 @@ npm ci
 go tool mage watch
 ```
 
-Harmony's Echo origin runs as plain HTTP in development; TLS only appears when the `caddy` feature is enabled and Caddy fronts the templ proxy. Edit `.env.development` to change settings.
+Harmony's Echo origin runs as plain HTTP in development; TLS only appears when `sse` is selected (which pulls in the hidden `caddy` tag) and Caddy fronts the templ proxy. Edit `.env.development` to change settings.
 
 Access the application at:
 
@@ -769,7 +751,7 @@ Access the application at:
 
 ### HTTPS Development Setup
 
-With the `caddy` feature enabled, local HTTPS uses Caddy's `tls internal`
+With `sse` selected (which pulls in the hidden `caddy` tag), local HTTPS uses Caddy's `tls internal`
 issuer. Setup does not generate `localhost.crt` / `localhost.key` files or
 require `openssl`. On first run, Caddy attempts to install its local CA root
 into your trust store automatically. If the browser still warns, rerun Caddy

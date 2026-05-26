@@ -358,20 +358,7 @@ func standardsBrowserAPIs() templ.Component {
 			templ_7745c5c3_Var15 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-base\">Browser APIs</h2><p class=\"text-sm text-base-content/70 mb-3\">Standard browser APIs used for logging, communication, and offline support.</p><div class=\"space-y-3\"><div class=\"border-l-2 border-primary/30 pl-3\"><h3 class=\"font-semibold text-sm mb-1\">navigator.sendBeacon</h3><p class=\"text-sm text-base-content/70\">Fire-and-forget logging that survives page unloads. Used for analytics and error reporting without blocking navigation.</p></div><div class=\"border-l-2 border-primary/30 pl-3\"><h3 class=\"font-semibold text-sm mb-1\">BroadcastChannel</h3><p class=\"text-sm text-base-content/70\">Cross-tab communication for theme sync. When you change the theme in one tab, all other tabs update immediately via a <code class=\"text-xs bg-base-200 px-1 rounded\">BroadcastChannel</code> message.</p></div><div class=\"border-l-2 border-primary/30 pl-3\"><h3 class=\"font-semibold text-sm mb-1\">Service Worker</h3><p class=\"text-sm text-base-content/70\">Offline caching for PWA support. Static assets and page shells are cached for offline reads. See <a href=\"/platform/settings\" class=\"link link-primary\">Settings</a> ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs("for")
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/hypermedia_standards.templ`, Line: 300, Col: 85}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, " the service worker registration.</p></div><div class=\"border-l-2 border-primary/30 pl-3\"><h3 class=\"font-semibold text-sm mb-1\">Server-Timing + PerformanceObserver</h3><p class=\"text-sm text-base-content/70\"><code class=\"text-xs bg-base-200 px-1 rounded\">Server-Timing</code> headers are read by <code class=\"text-xs bg-base-200 px-1 rounded\">PerformanceObserver</code> to surface server-side timing data in client-side dashboards. Visible in the <a href=\"/realtime/dashboard\" class=\"link link-primary\">Realtime</a> page.</p></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"card bg-base-100 shadow border border-base-300\"><div class=\"card-body\"><h2 class=\"card-title text-base\">Browser APIs</h2><p class=\"text-sm text-base-content/70 mb-3\">Standard browser APIs used for communication and timing.</p><div class=\"space-y-3\"><div class=\"border-l-2 border-primary/30 pl-3\"><h3 class=\"font-semibold text-sm mb-1\">EventSource</h3><p class=\"text-sm text-base-content/70\">Server-owned session sync for theme changes. The picker sends an async POST, then every tab converges through a <code class=\"text-xs bg-base-200 px-1 rounded\">theme-change</code> SSE event.</p></div><div class=\"border-l-2 border-primary/30 pl-3\"><h3 class=\"font-semibold text-sm mb-1\">Server-Timing + PerformanceObserver</h3><p class=\"text-sm text-base-content/70\"><code class=\"text-xs bg-base-200 px-1 rounded\">Server-Timing</code> headers are read by <code class=\"text-xs bg-base-200 px-1 rounded\">PerformanceObserver</code> to surface server-side timing data in client-side dashboards. Visible in the <a href=\"/realtime/dashboard\" class=\"link link-primary\">Realtime</a> page.</p></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

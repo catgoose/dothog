@@ -4,11 +4,13 @@ package logger
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"catgoose/dothog/internal/shared"
@@ -39,30 +41,32 @@ func SetHandlerWrapper(w HandlerWrapper) {
 
 const appLogFile = "dothog.log"
 
-// Init wires a JSON slog logger to log/dothog.log (monthly lumberjack rotation) plus stdout/stderr; idempotent via sync.Once.
+// Init wires a JSON slog logger to stdout/stderr and, outside go test, to
+// log/dothog.log with monthly lumberjack rotation; idempotent via sync.Once.
 func Init() {
 	once.Do(func() {
-		logDir := "log"
-		if err := os.MkdirAll(logDir, 0o755); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to create log directory: %v\n", err)
-		}
-
 		logLevel := getLogLevel()
 
-		logPath := filepath.Join(logDir, appLogFile)
-		rotator := &lumberjack.Logger{
-			Filename:   logPath,
-			MaxSize:    0,    // No size-based rotation (use time-based only)
-			MaxBackups: 12,   // Keep 12 compressed backups
-			MaxAge:     30,   // Rotate monthly (30 days)
-			Compress:   true, // Compress rotated files
+		var logWriter io.Writer = os.Stderr
+		if env.Dev() {
+			logWriter = os.Stdout
 		}
 
-		var logWriter io.Writer
-		if env.Dev() {
-			logWriter = io.MultiWriter(os.Stdout, rotator)
-		} else {
-			logWriter = io.MultiWriter(os.Stderr, rotator)
+		if !runningUnderGoTest() {
+			logDir := "log"
+			if err := os.MkdirAll(logDir, 0o755); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to create log directory: %v\n", err)
+			} else {
+				logPath := filepath.Join(logDir, appLogFile)
+				rotator := &lumberjack.Logger{
+					Filename:   logPath,
+					MaxSize:    0,    // No size-based rotation (use time-based only)
+					MaxBackups: 12,   // Keep 12 compressed backups
+					MaxAge:     30,   // Rotate monthly (30 days)
+					Compress:   true, // Compress rotated files
+				}
+				logWriter = io.MultiWriter(logWriter, rotator)
+			}
 		}
 
 		opts := &slog.HandlerOptions{
@@ -81,10 +85,21 @@ func Init() {
 	})
 }
 
+func runningUnderGoTest() bool {
+	if flag.Lookup("test.v") != nil {
+		return true
+	}
+	base := filepath.Base(os.Args[0])
+	return strings.HasSuffix(base, ".test") || strings.HasSuffix(base, ".test.exe")
+}
+
 // getLogLevel reads LOG_LEVEL; falls back to Debug in dev and Info otherwise.
+// Missing and explicitly-empty values both take the fallback path; the env
+// helper now distinguishes the two, but for log level the resolution is the
+// same either way.
 func getLogLevel() slog.Level {
 	levelStr, err := env.Get("LOG_LEVEL")
-	if err != nil {
+	if err != nil || levelStr == "" {
 		if env.Dev() {
 			return slog.LevelDebug
 		}
@@ -185,37 +200,4 @@ func With(args ...any) *slog.Logger {
 // WithGroup nests all subsequent attributes under a group of the given name.
 func WithGroup(name string) *slog.Logger {
 	return Get().WithGroup(name)
-}
-
-// LogAndReturnError logs at Error and returns fmt.Errorf("%s: %w", message, err).
-func LogAndReturnError(message string, err error) error {
-	Get().Error(message, "error", err)
-	return fmt.Errorf("%s: %w", message, err)
-}
-
-// LogAndReturnErrorf is LogAndReturnError with Printf-style formatting of message.
-func LogAndReturnErrorf(message string, err error, args ...any) error {
-	Get().Error(fmt.Sprintf(message, args...), "error", err)
-	return fmt.Errorf("%s: %w", fmt.Sprintf(message, args...), err)
-}
-
-// LogError records err at Error level with message; use when the caller does
-// not want to wrap and rethrow.
-func LogError(message string, err error) {
-	Get().Error(message, "error", err)
-}
-
-// LogErrorf is LogError with Printf-style formatting of message.
-func LogErrorf(message string, err error, args ...any) {
-	Get().Error(fmt.Sprintf(message, args...), "error", err)
-}
-
-// LogErrorWithFields logs at Error and flattens fields into key/value attribute pairs.
-func LogErrorWithFields(message string, err error, fields map[string]any) {
-	args := make([]any, 0, len(fields)*2+2)
-	args = append(args, "error", err)
-	for k, v := range fields {
-		args = append(args, k, v)
-	}
-	Get().Error(message, args...)
 }

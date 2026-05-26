@@ -24,8 +24,12 @@ func navActiveClass(active bool) string {
 templ NavBar(items []linkwell.NavItem) {
 	<nav
 		class="navbar bg-base-200 shadow-sm"
-		x-data="navBar"
-		x-on:click.window="closeOthers($event)"
+		_="on click from window
+		  for d in <details[open]/> in me
+		    if event.target is not within d
+		      set d.open to false
+		    end
+		  end"
 	>
 		<div class="flex-1">
 			<ul class="menu menu-horizontal">
@@ -41,8 +45,14 @@ templ navMenuItem(item linkwell.NavItem) {
 	if len(item.Children) > 0 {
 		<li>
 			<details
-				x-data="navMenuDropdown"
-				x-on:toggle="closeOtherDropdowns()"
+				_="on toggle
+				  if me.open
+				    for d in <details/> in the closest <ul.menu-horizontal/>
+				      if d is not me
+				        set d.open to false
+				      end
+				    end
+				  end"
 			>
 				<summary class={ navActiveClass(item.Active) }>
 					@heroIcon(item.Icon)

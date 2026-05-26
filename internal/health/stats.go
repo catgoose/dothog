@@ -1,3 +1,5 @@
+// setup:feature:demo
+
 package health
 
 import (
@@ -7,8 +9,10 @@ import (
 	"time"
 )
 
-// SystemStats is the runtime snapshot reported by /health for the demo
+// SystemStats is the runtime snapshot used by the demo admin/realtime
 // dashboards; memory figures are in megabytes, Uptime is a duration string.
+// Lives under the demo feature gate because the only callers are demo route
+// files (admin settings + realtime page).
 type SystemStats struct {
 	Timestamp       string
 	GoVersion       string

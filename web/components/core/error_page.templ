@@ -16,18 +16,14 @@ templ ErrorPageShell(title, theme string) {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<script src={ version.Asset("/public/js/htmx.min.js") }></script>
-			<script src={ version.Asset("/public/js/_hyperscript.min.js") }></script>
+			<script src={ version.Asset("/public/js/vendor/htmx.min.js") }></script>
+			<script src={ version.Asset("/public/js/vendor/_hyperscript.min.js") }></script>
 			<link rel="stylesheet" href={ version.Asset("/public/css/tailwind.css") } type="text/css"/>
 			<link rel="stylesheet" href={ version.Asset("/public/css/daisyui.css") } type="text/css"/>
 			<link rel="icon" href={ version.Asset("/public/images/favicon.svg") } type="image/x-svg+xml"/>
 			<title>{ title }</title>
 			if theme == "" {
-				<script>
-					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-						document.documentElement.dataset.theme = 'dark';
-					}
-				</script>
+				<script src={ version.Asset("/public/js/app/theme-detect.js") }></script>
 			}
 		</head>
 		<body class="min-h-screen bg-base-200 flex items-start justify-center pt-[12vh]">

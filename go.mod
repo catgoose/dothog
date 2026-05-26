@@ -5,13 +5,12 @@ go 1.26.3
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/CAFxX/httpcompression v0.0.9
-	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/a-h/templ v0.3.1001
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/catgoose/crooner v1.4.16
 	github.com/catgoose/dorman v0.1.16
 	github.com/catgoose/linkwell v0.2.30
-	github.com/catgoose/promolog/sqlite v0.0.0-20260409215859-0fc0b83ab989
+	github.com/catgoose/promolog/sqlite v0.0.0-20260523035546-3cc188d4075a
 	github.com/catgoose/tavern v0.4.79
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -26,6 +25,9 @@ require (
 )
 
 require (
+	github.com/denisenkom/go-mssqldb v0.12.3 // indirect
+	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
+	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/lib/pq v1.12.3 // indirect
 	github.com/mattn/go-sqlite3 v1.14.44 // indirect
@@ -48,7 +50,7 @@ require (
 	github.com/bep/godartsass/v2 v2.5.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
 	github.com/catgoose/chuck v0.1.39
-	github.com/catgoose/promolog v0.2.28
+	github.com/catgoose/promolog v0.2.33
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

@@ -820,7 +820,7 @@ We aren't enforcing Alpine.js as a requirement. The interactivity gradient still
 
 This project uses HTMX, `_hyperscript`, and DaisyUI. But the LoB principle is bigger than any one stack. Other projects worth knowing about:
 
-- **[Alpine.js](https://alpinejs.dev/)** — Reactive client-side state via `x-data`, `x-show`, `x-bind`, and `@click`. Uses the [CSP build](https://alpinejs.dev/advanced/csp) (`@alpinejs/csp`) which does not require `unsafe-eval`, and registers all components via `Alpine.data()` in `alpine-components.js`. Complements HTMX rather than replacing it — Alpine handles view state, HTMX handles resource state. Covered in detail [above](#when-client-side-state-is-necessary).
+- **[Alpine.js](https://alpinejs.dev/)** — Reactive client-side state via `x-data`, `x-show`, `x-bind`, and `@click`. Uses the [CSP build](https://alpinejs.dev/advanced/csp) (`@alpinejs/csp`), which does not require `unsafe-eval`, and registers named components via `Alpine.data()` from page-scoped `*.alpine.js` files using the shared `dothog.alpine.register` helper. Complements HTMX rather than replacing it — Alpine handles coordinated view state, HTMX handles resource state. The admin sessions bulk-selection seam is the worked example. Covered in detail [above](#when-client-side-state-is-necessary).
 
 - **[Petite Vue](https://github.com/vuejs/petite-vue)** — A 6KB subset of Vue designed for progressive enhancement. Uses `v-scope` instead of a full Vue app mount. Similar to Alpine in spirit — inline reactive state on DOM elements — but with Vue's template syntax for teams already familiar with it.
 
@@ -1066,7 +1066,7 @@ CSS can do what used to require runtime code:
 The platform ships APIs that replace entire categories of npm packages:
 
 - `navigator.sendBeacon()` — fire-and-forget logging without blocking navigation. Replaces analytics libraries.
-- `BroadcastChannel` — cross-tab sync (theme changes propagate to all tabs). No polling, no extra SSE connections.
+- `EventSource` — server-owned session sync (a theme change persists once, then every tab converges through SSE). No polling, no client-owned state bus.
 - `localStorage` — dismiss state for context bars. Persists across sessions.
 - Service Worker — offline caching for PWA, gated behind production mode.
 

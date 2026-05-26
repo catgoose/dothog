@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"catgoose/dothog/internal/routes/middleware"
 	"github.com/catgoose/promolog"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
@@ -22,7 +21,7 @@ type recordingStore struct {
 	mu        sync.Mutex
 }
 
-func (s *recordingStore) InitSchema() error                           { return nil }
+func (s *recordingStore) EnsureSchema() error                         { return nil }
 func (s *recordingStore) SetOnPromote(fn func(promolog.TraceSummary)) { s.onPromote = fn }
 func (s *recordingStore) PromoteAt(_ context.Context, t promolog.Trace, _ time.Time) error {
 	return s.Promote(context.Background(), t)
@@ -82,7 +81,7 @@ var _ promolog.Storer = (*recordingStore)(nil)
 func newEchoWithPromotion(store promolog.Storer) *echo.Echo {
 	e := echo.New()
 	e.Use(echo.WrapMiddleware(promolog.CorrelationMiddleware))
-	e.HTTPErrorHandler = middleware.NewHTTPErrorHandler(store)
+	e.HTTPErrorHandler = NewHTTPErrorHandler(store)
 	e.RouteNotFound("/*", HandleNotFound)
 	return e
 }

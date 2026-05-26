@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"catgoose/dothog/internal/htmxutil"
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/middleware"
 	"catgoose/dothog/internal/version"
@@ -9,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/catgoose/linkwell"
+	"github.com/catgoose/promolog"
 	"net/http"
 	"strings"
 
@@ -66,7 +68,7 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 		csrfToken = t
 	}
 	// setup:feature:csrf:end
-	var theme string //nolint:gosimple,staticcheck // declared before setup:feature gate
+	var theme string //nolint:staticcheck // split declaration is intentional across the setup:feature gate
 	// setup:feature:session_settings:start
 	theme = session.GetSettings(c.Request()).Theme
 	// setup:feature:session_settings:end
@@ -100,34 +102,41 @@ func getLayoutCtx(c echo.Context) layoutCtx {
 		crumbs[len(crumbs)-1].Label = label
 	}
 
-	// setup:feature:demo:start
+	// Link relations + hubs are scaffold-facing baseline behavior:
+	// LinkRelationsMiddleware always runs, and the registry contains
+	// whatever scaffold and demo seams registered. linkwell.Hubs() returns
+	// an empty slice when nothing is registered — safe to read in any
+	// scaffold shape.
 	links := middleware.GetLinkRelations(c)
 	hubs := linkwell.Hubs()
-	// setup:feature:demo:end
 
 	return layoutCtx{
 		csrfToken: csrfToken,
 		theme:     theme,
 		path:      c.Request().URL.Path,
 		crumbs:    crumbs,
-		// setup:feature:demo:start
-		links: links,
-		hubs:  hubs,
-		// setup:feature:demo:end
+		links:     links,
+		hubs:      hubs,
 	}
 }
 
 // appNavNavConfig returns a NavConfig with icons for use with the AppNavLayout.
-// This is a curated projection of the hub topology declared in routes_links.go,
-// enriched with SVG icon paths. Not all items correspond to hubs (e.g. "/" and
-// "/settings" are standalone), but every hub MUST appear here.
-// TestAppNavCoversHubs enforces alignment between this list and the hub declarations.
+// The minimal scaffold nav is Home + Settings (session_settings) + Admin —
+// the items every generated app gets out of the box. Demo entries
+// (Dashboard, Patterns, Components, Real-time, API, Apps, Platform) live
+// behind setup:feature:demo and disappear cleanly when demo is stripped,
+// leaving a clean starter nav rather than an empty header.
+// TestAppNavCoversHubs enforces alignment between the full list and the
+// hub declarations in links.go.
 func appNavNavConfig() linkwell.NavConfig {
 	return linkwell.NavConfig{
 		AppName: appName,
 		Items: []linkwell.NavItem{
-			// setup:feature:demo:start
+			// Scaffold nav: always-on items derived apps inherit.
 			{Label: "Home", Href: "/", Icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"},
+			{Label: "Examples", Href: "/examples", Icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"},
+			// setup:feature:demo:start
+			// Demo nav: removed cleanly with the demo feature.
 			{Label: "Dashboard", Href: "/dashboard", Icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"},
 			{Label: "Patterns", Href: "/patterns", Icon: "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"},
 			{Label: "Components", Href: "/components", Icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"},
@@ -136,10 +145,12 @@ func appNavNavConfig() linkwell.NavConfig {
 			{Label: "Apps", Href: "/apps", Icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"},
 			{Label: "Platform", Href: "/platform", Icon: "M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"},
 			// setup:feature:demo:end
+			// setup:feature:session_settings:start
 			{Label: "Settings", Href: "/settings", Icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"},
+			// setup:feature:session_settings:end
 			{Label: "Admin", Href: "/admin", Icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"},
 		},
-		MaxVisible: 10,
+		MaxVisible: 11,
 	}
 }
 
@@ -250,7 +261,7 @@ func HandleError(c echo.Context, statusCode int, message string, err error) erro
 	if errors.Is(c.Request().Context().Err(), context.Canceled) {
 		return nil
 	}
-	requestID := middleware.GetRequestID(c)
+	requestID := promolog.GetRequestID(c.Request().Context())
 	logger.WithContext(c.Request().Context()).Error("Request error", "error", err, "status_code", statusCode, "message", message)
 	c.Response().Status = statusCode
 	renderErr := corecomponents.ErrorStatus(statusCode, message, err, c.Request().URL.Path, requestID, true).Render(c.Request().Context(), c.Response())
@@ -274,26 +285,27 @@ func HandleHypermediaError(c echo.Context, statusCode int, message string, err e
 		opts := linkwell.ErrorControlOpts{HomeURL: "/", LoginURL: "/login"}
 		controls = linkwell.ErrorControlsForStatus(statusCode, opts)
 		if statusCode >= 500 {
-			requestID := middleware.GetRequestID(c)
+			requestID := promolog.GetRequestID(c.Request().Context())
 			controls = append(controls, linkwell.ReportIssueButton(linkwell.LabelReportIssue, requestID))
 		}
 	}
-	ec := middleware.HypermediaError(c, statusCode, message, err, controls...)
+	ec := HypermediaError(c, statusCode, message, err, controls...)
 	return linkwell.NewHTTPError(ec)
 }
 
-// HandleNotFound is the e.RouteNotFound target: full-page 404 for direct nav,
-// hypermedia error with back/home/report controls for HTMX. Both branches return a 404
-// so Echo's HTTPErrorHandler runs and the log buffer reaches the error-trace store.
+// HandleNotFound is the e.RouteNotFound target. Both branches return a
+// surface-carrying error so Echo's HTTPErrorHandler owns the actual render
+// (and trace promotion + request-ID stamping run once). HTMX requests resolve
+// to the banner OOB swap; direct-nav requests get the in-chrome page surface
+// with the NotFoundPage's resource navigation grid composed inside the host
+// AppNavLayout via the SurfaceError Body override.
 func HandleNotFound(c echo.Context) error {
-	if c.Request().Header.Get("HX-Request") == "true" {
+	if htmxutil.IsHTMX(c.Request()) {
 		return HandleHypermediaError(c, http.StatusNotFound, "Not Found", nil)
 	}
-	c.Response().Status = http.StatusNotFound
-	if err := RenderBaseLayout(c, views.NotFoundPage(c.Request().URL.Path)); err != nil {
-		return err
-	}
-	return echo.NewHTTPError(http.StatusNotFound, "Not Found")
+	return NewSurfaceError(c, corecomponents.SurfacePage, http.StatusNotFound,
+		"Not Found", "The page you requested does not exist.", nil).
+		WithBody(views.NotFoundPage(c.Request().URL.Path))
 }
 
 // HandleComponent adapts a templ.Component into an echo.HandlerFunc that

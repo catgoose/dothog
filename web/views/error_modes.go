@@ -72,12 +72,13 @@ func ContractDemoPresentations() []corecomponents.ErrorPresentation {
 	}
 }
 
-// ContractFullPagePresentation is the demo's 503 full-page ErrorPresentation with home/report controls.
-func ContractFullPagePresentation(theme string) corecomponents.ErrorPresentation {
-	return corecomponents.NewFullPageError(
+// ContractDocumentPresentation is the demo's 503 document-surface
+// ErrorPresentation with home/report controls.
+func ContractDocumentPresentation(theme string) corecomponents.ErrorPresentation {
+	return corecomponents.NewDocumentError(
 		503, "Service Unavailable",
 		"A downstream dependency is not responding. This page was rendered through the unified error contract.",
-		"/patterns/errors/modes/contract/full-page",
+		"/patterns/errors/modes/contract/document",
 		"req-contract-503",
 		theme,
 		linkwell.GoHomeButton(linkwell.LabelGoHome, "/", ""),

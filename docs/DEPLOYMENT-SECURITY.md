@@ -71,7 +71,7 @@ If deploying without a CDN or edge proxy, here's how to cover common security fe
 | Feature | Without edge proxy | Replacement |
 |---------|-------------------|-------------|
 | HSTS | Not set at edge | Enable in dorman: `dorman.DefaultHSTSConfig()` |
-| CSP (baseline) | No edge fallback | Set in dorman (already done per-app) |
+| CSP (baseline) | No edge fallback | Optional per app: enable the scaffold `csp` feature or set `CSP_HEADER` yourself |
 | Rate limiting | None | Add Go middleware (`golang.org/x/time/rate`) or nginx `limit_req` |
 | Early Hints (edge cache) | No edge replay | App still sends 103s if nginx uses H2 upstream, but no edge caching |
 | ECH | Not available | N/A -- requires a supporting edge proxy |
@@ -85,7 +85,7 @@ When deploying behind a corporate reverse proxy or Azure Application Gateway:
 
 1. **TLS**: Use your corporate wildcard cert on nginx (or let the corporate proxy terminate TLS and proxy HTTP to nginx on port 80)
 2. **HSTS**: Enable in dorman if the corporate proxy doesn't set it
-3. **CSP**: Already set by dorman per-app -- no change needed
+3. **CSP**: Optional. If your app selected the scaffold `csp` feature, the app already emits `Content-Security-Policy`; otherwise set `CSP_HEADER` (or add CSP at the proxy) yourself
 4. **CSRF**: Already handled by dorman -- no change needed
 5. **Rate limiting**: Add nginx `limit_req` zone:
    ```nginx

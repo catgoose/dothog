@@ -1,6 +1,10 @@
 package middleware
 
-import "github.com/labstack/echo/v4"
+import (
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+)
 
 // rawWriterKey is the echo context key used to store the original
 // http.ResponseWriter before the compression middleware wraps it.
@@ -15,5 +19,14 @@ func RawWriterMiddleware() echo.MiddlewareFunc {
 			c.Set(rawWriterKey, c.Response().Writer)
 			return next(c)
 		}
+	}
+}
+
+// RestoreRawWriter swaps c.Response().Writer back to the raw writer saved by
+// RawWriterMiddleware. Call from late hooks (error handlers) that must write
+// after httpcompression has finalised its wrapper.
+func RestoreRawWriter(c echo.Context) {
+	if rw, ok := c.Get(rawWriterKey).(http.ResponseWriter); ok {
+		c.Response().Writer = rw
 	}
 }

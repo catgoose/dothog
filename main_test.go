@@ -23,7 +23,7 @@ func setupAppEcho(t *testing.T) *echo.Echo {
 	t.Setenv("SERVER_LISTEN_PORT", "0")
 	t.Setenv("LOG_LEVEL", "ERROR")
 
-	require.NoError(t, appenv.Init(""))
+	require.NoError(t, appenv.Init())
 	logger.Init()
 	cfg, err := config.GetConfig()
 	require.NoError(t, err)
@@ -38,7 +38,7 @@ func setupAppEcho(t *testing.T) *echo.Echo {
 	require.NoError(t, err)
 	require.NotNil(t, e)
 
-	ar := routes.NewAppRoutes(ctx, e, routes.Repos{})
+	ar := routes.NewAppRoutes(ctx, e, routes.Deps{AppName: cfg.AppName})
 	require.NoError(t, ar.InitRoutes())
 	return e
 }
@@ -51,7 +51,7 @@ func TestApplicationStartup(t *testing.T) {
 	// This tests the startup sequence without actually starting the server
 
 	// Test environment initialization
-	err := appenv.Init("")
+	err := appenv.Init()
 	require.NoError(t, err)
 
 	cfg, err := config.GetConfig()
@@ -72,7 +72,7 @@ func TestApplicationStartup(t *testing.T) {
 	assert.NotNil(t, appCtx)
 
 	// Test routes setup
-	ar := routes.NewAppRoutes(appCtx, e, routes.Repos{})
+	ar := routes.NewAppRoutes(appCtx, e, routes.Deps{AppName: cfg.AppName})
 	assert.NotNil(t, ar)
 
 	err = ar.InitRoutes()
@@ -195,6 +195,22 @@ func TestWorkflow404(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
+// setupAppEcho injects routes.Deps with DemoDB unset, so this exercises
+// the demoDB == nil path. The "Resource not found" string comes from
+// views.NotFoundPage, which only renders when handler.HandleNotFound is the
+// active RouteNotFound — proving the common finalization tail in
+// InitRoutes runs even when demo DB is unavailable.
+func TestWorkflow404_DemoDBNil_RunsCommonFinalization(t *testing.T) {
+	e := setupAppEcho(t)
+	req := httptest.NewRequest(http.MethodGet, "/missing-route", nil)
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Contains(t, rec.Body.String(), "Resource not found",
+		"InitRoutes must register handler.HandleNotFound (via the common tail) even when ar.demoDB is nil")
+}
+
 func TestWorkflow404HTMX(t *testing.T) {
 	e := setupAppEcho(t)
 	req := httptest.NewRequest(http.MethodGet, "/nonexistent", nil)
@@ -241,9 +257,9 @@ func BenchmarkServerStartup(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		cfg, _ := config.GetConfig()
 		_, _ = routes.InitEcho(context.Background(), staticFS, cfg,
-		// setup:feature:session_settings:start
-		nil,
-		// setup:feature:session_settings:end
-		nil)
+			// setup:feature:session_settings:start
+			nil,
+			// setup:feature:session_settings:end
+			nil)
 	}
 }

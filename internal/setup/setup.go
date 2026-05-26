@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -46,38 +47,80 @@ const (
 	FeatureSessionSettings = "session_settings"
 	FeatureAlpine          = "alpine"
 	FeatureCapacitor       = "capacitor"
-	FeatureOffline         = "offline"
-	FeatureSync            = "sync"
 	FeatureCSRF            = "csrf"
-	FeatureLinkRelations   = "link_relations"
-	FeatureWebStandards    = "web_standards"
-	FeatureBrowserAPIs     = "browser_apis"
-	FeaturePWA             = "pwa"
+	FeatureCSP             = "csp"
 )
 
-// AllFeatures is every selectable feature tag; "database" is implied by the base template and not user-selectable.
-var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureOffline, FeatureSync, FeatureCSRF, FeatureLinkRelations, FeatureWebStandards, FeatureBrowserAPIs, FeaturePWA}
+// AllFeatures is the canonical feature tag list used for marker bookkeeping
+// (stripping, README/env tables, dep expansion). "database" is a hidden tag:
+// MSSQL/PostgreSQL imply it via featureDeps so the chuck-backed app-data
+// scaffolding ships with them. Scaffolds that select neither (e.g. "minimal")
+// strip the database tag and run on framework-internal SQLite stores only.
+var AllFeatures = []string{FeatureAuth, FeatureGraph, FeatureDatabase, FeatureMSSQL, FeaturePostgres, FeatureSSE, FeatureCaddy, FeatureAvatar, FeatureDemo, FeatureSessionSettings, FeatureAlpine, FeatureCapacitor, FeatureCSRF, FeatureCSP}
 
 // ImplicitFeatures are always selected and not presented to the user.
-// "database" is implicit because SQLite is the base database engine.
-// "alpine" is implicit because Alpine.js is kept available for coordinated view state
-// and browser-API bridges (theme picker, offline indicator). _hyperscript handles the
-// common local-DOM case and ships with HTMX.
-var ImplicitFeatures = []string{FeatureDatabase, FeatureAlpine}
+// "alpine" is implicit because Alpine.js is kept available for coordinated
+// view state (theme picker, alert listener). _hyperscript handles the common
+// local-DOM case and ships with HTMX.
+// "database" is intentionally NOT implicit: the chuck-backed app-data seam
+// (internal/dbschema) only ships when the user picks MSSQL or PostgreSQL,
+// which imply "database" via featureDeps.
+var ImplicitFeatures = []string{FeatureAlpine}
 
-// featureDeps maps a feature to the features it implies.
-// pwa -> sync -> offline.  capacitor is a separate opt-in for native wrapping.
+// featureDeps maps a feature to the features it implies. Empty entries are
+// omitted — only the real implication relationships appear here.
+//
+// Hard deps (compile-coupled):
+//   - Avatar pulls user photos through Graph, so the package imports break
+//     without Graph code.
+//
+// Hidden-layer deps (selecting one auto-includes a hidden support tag):
+//   - MSSQL/PostgreSQL imply the (hidden) database feature so the chuck-backed
+//     repository layer ships with them.
+//   - SSE implies the (hidden) caddy feature so the dev HTTPS/H3 front-proxy
+//     ships alongside the SSE broker; there is no supported "Caddy without
+//     SSE" setup shape.
+//   - Demo content reads session settings.
 var featureDeps = map[string][]string{
-	FeatureSync:          {FeatureOffline},
-	FeaturePWA:           {FeatureOffline, FeatureSync},
-	FeatureDemo:          {FeatureSessionSettings},
-	FeatureCSRF:          {},
-	FeatureLinkRelations: {},
-	FeatureBrowserAPIs:   {FeatureSSE},
-	FeatureWebStandards:  {},
+	FeatureDemo:     {FeatureSessionSettings},
+	FeatureMSSQL:    {FeatureDatabase},
+	FeaturePostgres: {FeatureDatabase},
+	FeatureAvatar:   {FeatureGraph},
+	FeatureSSE:      {FeatureCaddy},
 }
 
-// ExpandFeatureDeps walks featureDeps to a fixed point; e.g. "sync" pulls in "offline".
+// featureIncompatibilities lists mutually-exclusive feature pairs. Selecting
+// both surfaces in the same scaffold yields a runtime contract setup cannot
+// honestly deliver, so Run rejects the combination up front.
+//
+//   - csp + demo: the strict CSP header (script-src 'self') would break the
+//     demo views, which still ship inline <script> blocks and inline event
+//     handlers. Honest csp coverage of demo surfaces is a separate pass.
+var featureIncompatibilities = [][2]string{
+	{FeatureCSP, FeatureDemo},
+}
+
+// validateFeatureCompatibility rejects mutually-exclusive feature selections
+// before any file mutation. Runs after dep expansion so an implicit demo
+// (e.g. via featureDeps) is caught alongside the explicit one.
+func validateFeatureCompatibility(features []string) error {
+	if len(features) == 0 {
+		return nil
+	}
+	expanded := ExpandFeatureDeps(features)
+	have := make(map[string]bool, len(expanded))
+	for _, f := range expanded {
+		have[f] = true
+	}
+	for _, pair := range featureIncompatibilities {
+		if have[pair[0]] && have[pair[1]] {
+			return fmt.Errorf("features %q and %q cannot be combined: demo views still ship inline scripts and handlers that strict CSP would block; pick one", pair[0], pair[1])
+		}
+	}
+	return nil
+}
+
+// ExpandFeatureDeps walks featureDeps to a fixed point.
 func ExpandFeatureDeps(features []string) []string {
 	have := make(map[string]bool, len(features))
 	for _, f := range features {
@@ -138,7 +181,6 @@ type Options struct {
 	Platform string
 	Features []string
 	Force    bool
-	NoCaddy  bool
 }
 
 // resolvePlatform returns the canonical host platform for the requested value,
@@ -246,6 +288,9 @@ func replaceTemplateNames(dir, binaryName, appName string) error {
 func Run(ctx context.Context, dir string, opts Options) error {
 	if opts.AppName == "" {
 		return fmt.Errorf("APP_NAME is required")
+	}
+	if err := validateFeatureCompatibility(opts.Features); err != nil {
+		return err
 	}
 	binaryName := binaryNameFromApp(opts.AppName)
 
@@ -366,12 +411,6 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		return fmt.Errorf("applying platform adjustments: %w", err)
 	}
 
-	// Legacy --no-caddy flag: remove Caddyfile if requested.
-	// The new Features mechanism handles this too (see removeOptionalContent).
-	if opts.NoCaddy {
-		_ = os.Remove(filepath.Join(dir, "config", "Caddyfile"))
-	}
-
 	// Compose .env.development from the tracked .env.development.
 	// Lines tagged with "# setup:env " are activated (prefix stripped, literal
 	// default removed) and template placeholders are resolved to real ports.
@@ -447,13 +486,9 @@ func Run(ctx context.Context, dir string, opts Options) error {
 		}
 	}
 
-	// Replace {{BINARY_NAME}} placeholder in JS and Go source files so that
-	// derived apps get unique cache names, IndexedDB databases, cookie names,
-	// and BroadcastChannel identifiers.
+	// Replace {{BINARY_NAME}} placeholder in source files so derived apps get
+	// unique cookie names without retaining template placeholder text.
 	for _, f := range []string{
-		filepath.Join("web", "assets", "public", "js", "sw.js"),
-		filepath.Join("web", "assets", "public", "js", "sync.js"),
-		filepath.Join("web", "assets", "public", "js", "broadcast.js"),
 		filepath.Join("internal", "session", "session.go"),
 	} {
 		p := filepath.Join(dir, f)
@@ -563,29 +598,24 @@ const featureBlockEndSuffix = ":end"
 // Feature-aware content removal
 // ---------------------------------------------------------------------------
 
-// removeOptionalContent strips deselected feature content (when opts.Features
-// is non-nil). Demo content is removed unless the "demo" feature is selected.
+// removeOptionalContent strips deselected feature content. Features listed in
+// opts.Features (after dependency expansion) plus the ImplicitFeatures set are
+// kept; every other AllFeatures entry is removed. A nil or empty Features
+// slice is the bare scaffold — every optional feature gets stripped.
 func removeOptionalContent(dir string, opts Options) error {
-	// Build set of features being removed (empty when Features is nil — legacy mode)
+	expanded := ExpandFeatureDeps(opts.Features)
+	keep := make(map[string]bool, len(expanded)+len(ImplicitFeatures))
+	for _, f := range expanded {
+		keep[f] = true
+	}
+	for _, f := range ImplicitFeatures {
+		keep[f] = true
+	}
 	removeTags := make(map[string]bool)
-	if opts.Features != nil {
-		expanded := ExpandFeatureDeps(opts.Features)
-		keep := make(map[string]bool)
-		for _, f := range expanded {
-			keep[f] = true
+	for _, f := range AllFeatures {
+		if !keep[f] {
+			removeTags[f] = true
 		}
-		// Implicit features are always kept
-		for _, f := range ImplicitFeatures {
-			keep[f] = true
-		}
-		for _, f := range AllFeatures {
-			if !keep[f] {
-				removeTags[f] = true
-			}
-		}
-	} else {
-		// Legacy/programmatic usage (Features == nil): remove demo content
-		removeTags[FeatureDemo] = true
 	}
 
 	// Remove dothog-specific documentation that is not relevant to derived apps.
@@ -1185,25 +1215,24 @@ func goPkgName(importPath string) string {
 // featureDescriptions maps feature tags to human-readable descriptions
 // for the generated README.
 var featureDescriptions = map[string]struct{ label, desc string }{
-	FeatureAuth:            {"Auth (Crooner)", "Azure AD / OIDC authentication via crooner"},
-	FeatureGraph:           {"Graph API", "Microsoft Graph API integration for user data"},
-	FeatureAvatar:          {"Avatar Photos", "User profile photo download and caching from Graph"},
-	FeatureDatabase:        {"Database (chuck)", "Repository layer with schema DSL (SQLite base)"},
-	FeatureMSSQL:           {"MSSQL", "Microsoft SQL Server dialect support"},
-	FeaturePostgres:        {"PostgreSQL", "PostgreSQL dialect support"},
-	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration"},
-	FeatureCaddy:           {"Caddy HTTPS/H3 front-proxy", "Optional HTTPS/H3 front-proxy that sits in front of the templ watcher for local dev. Without it, dev runs plain HTTP."},
+	FeatureAuth:   {"Auth (Crooner)", "Azure AD / OIDC authentication via crooner"},
+	FeatureGraph:  {"Graph API", "Microsoft Graph API integration for user data"},
+	FeatureAvatar: {"Avatar Photos", "User profile photo download and caching from Graph"},
+	// FeatureDatabase and FeatureCaddy are intentionally omitted from the
+	// description map. Both are hidden marker-bookkeeping tags:
+	//   - MSSQL/PostgreSQL imply database via featureDeps; scaffolds that
+	//     select neither strip the chuck-backed app-data layer entirely.
+	//   - SSE implies caddy via featureDeps; selecting SSE pulls the dev
+	//     HTTPS/H3 front-proxy in alongside the broker.
+	FeatureMSSQL:           {"MSSQL", "Microsoft SQL Server support (chuck-backed app data)"},
+	FeaturePostgres:        {"PostgreSQL", "PostgreSQL support (chuck-backed app data)"},
+	FeatureSSE:             {"SSE", "Server-Sent Events with HTMX integration. Auto-includes Caddy for HTTPS/H3 in dev."},
 	FeatureDemo:            {"Demo Content", "Demo pages, seed data, and example routes"},
 	FeatureSessionSettings: {"Session Settings", "Per-session theme and layout preferences"},
 	FeatureAlpine:          {"Alpine.js", "Coordinated view state and browser-API bridges"},
 	FeatureCapacitor:       {"Capacitor", "Native mobile wrapper (iOS/Android)"},
-	FeatureOffline:         {"Offline Mode", "Service worker and write queue for offline use"},
-	FeatureSync:            {"Sync", "SQLite data synchronization between client and server"},
 	FeatureCSRF:            {"CSRF Protection", "Token-based CSRF with optional per-request rotation"},
-	FeatureLinkRelations:   {"Link Relations", "Context bars, breadcrumbs, and site map"},
-	FeatureWebStandards:    {"Web Standards", "Server-Timing, Vary, Permissions-Policy, Early Hints"},
-	FeatureBrowserAPIs:     {"Browser APIs", "sendBeacon, BroadcastChannel integration"},
-	FeaturePWA:             {"PWA", "Progressive Web App with offline + sync support"},
+	FeatureCSP:             {"Content Security Policy", "Strict CSP header without unsafe-eval or unsafe-inline on scripts"},
 }
 
 // buildFeatureTable generates a markdown table of enabled features for the README.
@@ -1274,7 +1303,7 @@ This app uses [crooner](https://github.com/catgoose/crooner) for Azure AD / Entr
 - ` + "`AZURE_REDIRECT_URL`" + `, ` + "`AZURE_LOGIN_REDIRECT_URL`" + `, ` + "`AZURE_LOGOUT_REDIRECT_URL`" + ` -- OAuth flow URLs
 - ` + "`SESSION_SECRET`" + ` -- session encryption key
 
-Auth is disabled by default (` + "`CroonerDisabled = true`" + ` in config). Set it to ` + "`false`" + ` to enable.
+Auth stays off until the derived app supplies the complete prerequisite set in the environment: ` + "`OIDC_ISSUER_URL`" + `, ` + "`OIDC_CLIENT_ID`" + `, ` + "`OIDC_CLIENT_SECRET`" + `, ` + "`OIDC_REDIRECT_URL`" + ` and ` + "`SESSION_SECRET`" + `. Partial configs leave auth off without failing startup. Routes consult ` + "`cfg.AuthConfigured()`" + ` to decide whether to bootstrap crooner.
 
 `)
 	}
@@ -1312,19 +1341,6 @@ Caddy sits in front of the templ watcher and provides HTTPS/H3 for local develop
 Capacitor wraps the web app for native iOS/Android deployment. Configuration is in ` + "`capacitor.config.ts`" + `.
 
 `)
-	}
-
-	if keep[FeatureOffline] || keep[FeatureSync] || keep[FeaturePWA] {
-		sb.WriteString(`### Offline & Sync
-
-`)
-		if keep[FeaturePWA] {
-			sb.WriteString("This app is configured as a **Progressive Web App** with offline support and data synchronization.\n\n")
-		} else if keep[FeatureSync] {
-			sb.WriteString("Data synchronization is enabled between client SQLite and server.\n\n")
-		} else {
-			sb.WriteString("Offline mode is enabled with service worker caching and a write queue.\n\n")
-		}
 	}
 
 	return sb.String()
@@ -1445,7 +1461,7 @@ func buildEnvTable(features []string, appName, appHTTPPort string) string {
 	sb.WriteString("| `DATABASE_URL` | Database connection string (database enabled when set) | -- |\n")
 
 	if keep[FeatureSessionSettings] {
-		sb.WriteString("| `SESSION_SETTINGS_COOKIE_NAME` | Cookie name for session-backed theme/layout settings | " + session.DefaultCookieName(appName) + " |\n")
+		sb.WriteString("| `SESSION_SETTINGS_COOKIE_NAME` | Cookie name for session-backed theme/layout settings — required when session_settings is enabled (setup writes a default into `.env.development`) | " + session.DefaultCookieName(appName) + " |\n")
 	}
 
 	// Auth
@@ -1685,19 +1701,145 @@ func removeEmptyDirs(dir string) error {
 	return nil
 }
 
+type copyIgnoreRule struct {
+	pattern  string
+	negate   bool
+	dirOnly  bool
+	hasSlash bool
+}
+
+// copyKeepPaths are tracked scaffold files that remain intentionally ignored
+// in the template repo (for example the setup-owned .env.development input).
+// CopyRepoTo must preserve them even when no Git metadata is available to
+// prove tracked-ness.
+var copyKeepPaths = map[string]bool{
+	".env.development": true,
+}
+
+func loadCopyIgnoreRules(src string) ([]copyIgnoreRule, error) {
+	data, err := os.ReadFile(filepath.Join(src, ".gitignore"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var rules []copyIgnoreRule
+	for _, raw := range strings.Split(string(data), "\n") {
+		line := strings.TrimSpace(raw)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		negate := false
+		if strings.HasPrefix(line, "!") {
+			negate = true
+			line = strings.TrimSpace(strings.TrimPrefix(line, "!"))
+			if line == "" {
+				continue
+			}
+		}
+		dirOnly := strings.HasSuffix(line, "/")
+		line = strings.TrimSuffix(line, "/")
+		line = strings.TrimPrefix(line, "./")
+		rules = append(rules, copyIgnoreRule{
+			pattern:  filepath.ToSlash(line),
+			negate:   negate,
+			dirOnly:  dirOnly,
+			hasSlash: strings.Contains(line, "/"),
+		})
+	}
+	return rules, nil
+}
+
+func (r copyIgnoreRule) matches(rel string) bool {
+	rel = filepath.ToSlash(rel)
+	if r.hasSlash {
+		if r.dirOnly {
+			return rel == r.pattern || strings.HasPrefix(rel, r.pattern+"/")
+		}
+		if strings.ContainsAny(r.pattern, "*?[") {
+			if ok, err := path.Match(r.pattern, rel); err == nil && ok {
+				return true
+			}
+			if strings.HasSuffix(r.pattern, "/*") {
+				parent := strings.TrimSuffix(r.pattern, "/*")
+				return strings.HasPrefix(rel, parent+"/")
+			}
+			return false
+		}
+		return rel == r.pattern || strings.HasPrefix(rel, r.pattern+"/")
+	}
+	if r.dirOnly {
+		for _, seg := range strings.Split(rel, "/") {
+			if seg == r.pattern {
+				return true
+			}
+		}
+		return false
+	}
+	ok, err := path.Match(r.pattern, path.Base(rel))
+	return err == nil && ok
+}
+
+func gitTrackedPaths(src string) map[string]bool {
+	cmd := exec.Command("git", "-C", src, "ls-files", "-z")
+	out, err := cmd.Output()
+	if err != nil {
+		return nil
+	}
+	tracked := make(map[string]bool)
+	for _, rel := range strings.Split(string(out), "\x00") {
+		rel = strings.TrimSpace(rel)
+		if rel == "" {
+			continue
+		}
+		tracked[filepath.ToSlash(rel)] = true
+	}
+	return tracked
+}
+
+func hasTrackedDescendant(rel string, tracked map[string]bool) bool {
+	if len(tracked) == 0 {
+		return false
+	}
+	prefix := filepath.ToSlash(rel) + "/"
+	for p := range tracked {
+		if strings.HasPrefix(p, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func ignoredByRules(rel string, rules []copyIgnoreRule) bool {
+	ignored := false
+	for _, rule := range rules {
+		if rule.matches(rel) {
+			ignored = !rule.negate
+		}
+	}
+	return ignored
+}
+
 // CopyRepoTo copies directory tree from src to dest, skipping any entry
-// (file or directory) whose basename appears in exclude, and skipping symlinks.
-// The legacy parameter name "excludeDirs" is kept for callers; entries may name
-// either directories (e.g. "node_modules") or files (e.g. "localhost.crt").
-func CopyRepoTo(src, dest string, excludeDirs []string) error {
-	exclude := make(map[string]bool)
-	for _, d := range excludeDirs {
-		exclude[d] = true
+// (file or directory) whose basename appears in exclude, plus any untracked
+// runtime/local path matched by the repo's .gitignore. Tracked scaffold files
+// still copy even when they are intentionally ignored in the template repo
+// (for example .env.development). Symlinks are skipped.
+func CopyRepoTo(src, dest string, exclude []string) error {
+	skip := make(map[string]bool, len(exclude))
+	for _, d := range exclude {
+		skip[d] = true
 	}
 	srcAbs, err := filepath.Abs(src)
 	if err != nil {
 		return err
 	}
+	rules, err := loadCopyIgnoreRules(srcAbs)
+	if err != nil {
+		return err
+	}
+	tracked := gitTrackedPaths(srcAbs)
 	return filepath.Walk(srcAbs, func(path string, info os.FileInfo, errWalk error) error {
 		if errWalk != nil {
 			return errWalk
@@ -1716,11 +1858,20 @@ func CopyRepoTo(src, dest string, excludeDirs []string) error {
 		if rel == "." {
 			return os.MkdirAll(dest, info.Mode())
 		}
-		if exclude[filepath.Base(path)] {
+		if skip[filepath.Base(path)] {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}
 			return nil
+		}
+		relSlash := filepath.ToSlash(rel)
+		if !copyKeepPaths[relSlash] && len(rules) > 0 && ignoredByRules(relSlash, rules) {
+			if tracked == nil || (!tracked[relSlash] && !hasTrackedDescendant(relSlash, tracked)) {
+				if info.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
 		}
 		destPath := filepath.Join(dest, rel)
 		if info.IsDir() {

@@ -15,6 +15,22 @@ func (stubProvider) GetByUUID(context.Context, string) (*Settings, error) { retu
 func (stubProvider) Upsert(context.Context, *Settings) error              { return nil }
 func (stubProvider) Touch(context.Context, string) error                  { return nil }
 
+type stubAdmin struct{}
+
+func (stubAdmin) ListAll(context.Context) ([]Settings, error)          { return nil, nil }
+func (stubAdmin) GetByUUID(context.Context, string) (*Settings, error) { return nil, nil }
+func (stubAdmin) UpdateThemeByUUID(context.Context, string, string) (bool, error) {
+	return true, nil
+}
+func (stubAdmin) DeleteByUUID(context.Context, string) error { return nil }
+
+// Compile-time proof that the contracts are split: middleware never sees
+// DeleteByUUID, admin never sees Touch.
+var (
+	_ SettingsProvider = stubProvider{}
+	_ SettingsAdmin    = stubAdmin{}
+)
+
 func TestConfigCookieNameSanitizesAppLabel(t *testing.T) {
 	cfg := Config{CookieName: "My App_session_id"}
 	require.Equal(t, "my_app_session_id", cfg.cookieName())

@@ -36,9 +36,7 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 					<!-- Nav bar (CSS positions: bottom on mobile, top on desktop) -->
 					@appNav(cfg)
 				</div>
-				// setup:feature:demo:start
 			@components.LocalContextBar(links, currentPath)
-			// setup:feature:demo:end
 				if len(crumbs) > 0 {
 					@components.ContextStrip(crumbs)
 				}
@@ -46,9 +44,7 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 				<main class="app-main flex-1 p-4 md:p-6 relative z-0 overflow-clip">
 					@Layout(content)
 				</main>
-				// setup:feature:demo:start
 				@components.SiteMap(hubs)
-				// setup:feature:demo:end
 				<footer class="text-center text-xs text-base-content/60 py-2">
 					{ version }
 				</footer>
@@ -56,9 +52,6 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 				// setup:feature:demo:start
 				<div id="report-email-container"></div>
 				// setup:feature:demo:end
-				// setup:feature:offline:start
-				@components.OfflineIndicator()
-				// setup:feature:offline:end
 			</div>
 		</body>
 	</html>
@@ -66,7 +59,7 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 
 // appNav renders a single nav element that CSS repositions based on screen size.
 templ appNav(cfg linkwell.NavConfig) {
-	<nav class="app-nav" x-data>
+	<nav class="app-nav">
 		<div class="nav-tabs flex items-stretch">
 			<!-- Brand (desktop only, hidden on mobile via CSS) -->
 			if cfg.Brand != nil {

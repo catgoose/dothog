@@ -9,30 +9,59 @@ import (
 	"catgoose/dothog/internal/session"
 )
 
-// AdminSessionsPage displays all session settings rows with live SSE updates.
+// AdminSessionsPage owns the outer x-data="sessionsSelection" container so
+// per-row checkbox state and unsaved theme drafts survive HTMX/SSE table
+// refreshes. The bulk-action bar lives outside the swapped
+// #admin-sessions-table fragment; only the table body is replaced on each
+// refresh.
 templ AdminSessionsPage(sessions []session.Settings) {
 	<style>
 		body:has(#admin-sessions-page) main { view-transition-name: none !important; }
 	</style>
-	<div id="admin-sessions-page" class="p-4 space-y-6 max-w-4xl mx-auto" style="overflow-anchor:none">
+	<div
+		id="admin-sessions-page"
+		class="p-4 space-y-6 max-w-4xl mx-auto"
+		style="overflow-anchor:none"
+		x-data="sessionsSelection"
+		x-on:change="onChange($event)"
+	>
 		<h1 class="text-2xl font-bold">Session Settings</h1>
 		<p class="text-sm text-base-content/60">
 			Each session is identified by a UUID stored in a browser cookie.
-			This lets the server manage per-session settings like theme and layout.
+			This lets the server manage per-session settings like theme.
 			The table below shows all active session settings entries.
 		</p>
-		<div hx-ext="sse" sse-connect="/sse/theme"
-			tavern-reconnecting-class="opacity-50"
-			tavern-gap-action="reload"
+		<div class="flex items-center justify-between gap-2 bg-base-100 border border-base-300 rounded-lg px-3 py-2">
+			<span class="text-sm" x-text="countLabel()"></span>
+			<button
+				type="button"
+				class="btn btn-sm btn-error"
+				x-on:click="batchDelete()"
+				x-bind:disabled="isNoneSelected()"
+			>
+				Delete Selected
+			</button>
+		</div>
+		<!--
+			One global EventSource lives in theme-controller.js and dispatches
+			app:theme-change on every theme-change event. The table refresh
+			hangs off that event instead of opening a second EventSource via
+			htmx-ext-sse for the same /sse/theme endpoint.
+		-->
+		<div id="admin-sessions-table"
+			hx-get="/admin/sessions/table"
+			hx-trigger="app:theme-change from:body"
+			hx-swap="innerHTML"
 		>
-			<div id="admin-sessions-table" hx-get="/admin/sessions/table" hx-trigger="sse:theme-change" hx-swap="innerHTML">
-				@AdminSessionsTable(sessions)
-			</div>
+			@AdminSessionsTable(sessions)
 		</div>
 	</div>
 }
 
 // AdminSessionsTable renders just the sessions table for HTMX fragment swaps.
+// Row checkboxes and theme selects carry data-attributes only — change events
+// bubble up to the outer sessionsSelection Alpine owner, which is what lets
+// selection state and unsaved row-theme drafts survive table replacements.
 templ AdminSessionsTable(sessions []session.Settings) {
 	<div class="card bg-base-100 shadow border border-base-300">
 		<div class="card-body p-4">
@@ -40,26 +69,81 @@ templ AdminSessionsTable(sessions []session.Settings) {
 				<table class="table table-sm table-zebra w-full">
 					<thead>
 						<tr>
+							<th class="w-8">
+								<input
+									type="checkbox"
+									class="checkbox checkbox-sm"
+									data-session-select-all
+									aria-label="Select all sessions"
+								/>
+							</th>
 							<th>ID</th>
 							<th>Session UUID</th>
 							<th>Theme</th>
 							<th>Last Active</th>
+							<th class="text-right">Actions</th>
 						</tr>
 					</thead>
 					<tbody>
 						for _, s := range sessions {
 							<tr>
+								<td>
+									<input
+										type="checkbox"
+										class="checkbox checkbox-sm"
+										data-session-select-uuid={ s.SessionUUID }
+										aria-label={ "Select session " + s.SessionUUID }
+									/>
+								</td>
 								<td class="font-mono text-xs">{ fmt.Sprintf("%d", s.ID) }</td>
 								<td class="font-mono text-xs">{ s.SessionUUID }</td>
 								<td>
-									<span class="badge badge-sm badge-outline">{ s.Theme }</span>
+									<select
+										name="theme"
+										class="select select-sm select-bordered capitalize w-full min-w-36 max-w-40"
+										data-theme-session-uuid={ s.SessionUUID }
+										data-canonical-theme={ s.Theme }
+										aria-label={ "Theme for session " + s.SessionUUID }
+									>
+										for _, cat := range ThemeCategories {
+											<optgroup label={ cat.Label }>
+												for _, theme := range cat.Themes {
+													<option value={ theme } selected?={ theme == s.Theme }>{ theme }</option>
+												}
+											</optgroup>
+										}
+									</select>
 								</td>
 								<td class="text-xs">{ formatAge(s.UpdatedAt) }</td>
+								<td class="text-right">
+									<div class="flex items-center justify-end gap-2">
+										<button
+											type="button"
+											class="btn btn-xs btn-primary"
+											data-session-theme-save={ s.SessionUUID }
+											hidden
+											hx-post={ "/admin/sessions/" + s.SessionUUID + "/theme" }
+											hx-include={ "select[data-theme-session-uuid='" + s.SessionUUID + "']" }
+											hx-target="#admin-sessions-table"
+											hx-swap="innerHTML">
+											Save
+										</button>
+										<button
+											type="button"
+											class="btn btn-xs btn-ghost text-error"
+											hx-delete={ "/admin/sessions/" + s.SessionUUID }
+											hx-target="#admin-sessions-table"
+											hx-swap="innerHTML"
+											hx-confirm="Delete this session row? The browser cookie will be re-issued on next request.">
+											Delete
+										</button>
+									</div>
+								</td>
 							</tr>
 						}
 						if len(sessions) == 0 {
 							<tr>
-								<td colspan="4" class="text-center text-base-content/60 py-4">No sessions found</td>
+								<td colspan="6" class="text-center text-base-content/60 py-4">No sessions found</td>
 							</tr>
 						}
 					</tbody>

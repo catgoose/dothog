@@ -1,8 +1,9 @@
-// setup:feature:database
-
 // Package database provides framework-internal database helpers.
 // App databases should use chuck.OpenURL() directly.
-// OpenSQLite is for framework-internal stores (error traces, session settings).
+// OpenSQLite is for framework-internal stores (error traces, session settings)
+// that are always SQLite regardless of the app's primary database; this file
+// is intentionally not gated by setup:feature:database so always-on stores
+// like the error-trace SQLite remain wired in derived apps.
 package database
 
 import (
@@ -12,8 +13,17 @@ import (
 	"path/filepath"
 	"time"
 
+	dialect "github.com/catgoose/chuck"
 	"github.com/jmoiron/sqlx"
 )
+
+// SQLiteDialect constructs a chuck SQLite dialect for the always-on framework
+// SQLite stores (session settings, error traces, graph user cache). Callers
+// reach for this instead of importing chuck directly so the chuck dialect
+// import stays scoped to the app-data feature in main.go.
+func SQLiteDialect() (dialect.Dialect, error) {
+	return dialect.New(dialect.SQLite)
+}
 
 // OpenSQLite opens a SQLite database at the given path with standard settings.
 // Used for framework-internal stores (error traces, session settings) that are

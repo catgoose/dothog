@@ -100,7 +100,7 @@ func TestDefaultControls_ExplicitControlsOverride(t *testing.T) {
 	c = e.NewContext(c.Request(), c.Response().Writer.(*httptest.ResponseRecorder))
 
 	custom := linkwell.RetryButton("Try Again", linkwell.HxMethodGet, "/retry", "#target")
-	err := HandleHypermediaError(c, 500, "fail", errors.New("test"), custom)
+	err := HandleHypermediaError(c, http.StatusInternalServerError, "fail", errors.New("test"), custom)
 	require.Error(t, err)
 
 	var hhe *linkwell.HTTPError
@@ -144,7 +144,7 @@ func TestHandleError_CanceledContextPreventsRender(t *testing.T) {
 }
 
 // TestAppNavCoversHubs ensures every linkwell hub path declared in
-// routes_links.go has a corresponding entry in the app navigation.
+// links.go has a corresponding entry in the app navigation.
 // When a new hub is added, this test fails as a reminder to add it to
 // appNavNavConfig with an appropriate icon.
 func TestAppNavCoversHubs(t *testing.T) {
@@ -154,7 +154,7 @@ func TestAppNavCoversHubs(t *testing.T) {
 		navPaths[item.Href] = true
 	}
 
-	// Hub paths from routes_links.go. Keep this in sync when adding hubs.
+	// Hub paths from links.go. Keep this in sync when adding hubs.
 	hubPaths := []string{
 		"/apps",
 		"/platform",

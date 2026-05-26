@@ -91,24 +91,50 @@ These are available in the scaffold but only included when the feature is enable
 - Cryptographically random UUID session IDs (crypto/rand)
 - Touch-based refresh (re-validates after 24 hours)
 
-### Offline / PWA (`setup:feature:offline`)
+### Content Security Policy (`setup:feature:csp`)
 
-- Service worker with network-first strategy for HTML
-- Cache-first for immutable static assets
-- Mutation queue (POST/PUT/DELETE stored in IndexedDB when offline)
-- Versioned cache naming for clean updates
+When the `csp` feature is selected, setup writes a strict
+`CSP_HEADER` value into `.env.development`; `AppConfig.ContentSecurityPolicy`
+reads it and `routes.InitEcho` hands it to dorman so every response carries
+the header:
+
+```
+default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'
+```
+
+The policy is intentionally narrow:
+
+- No `unsafe-eval`. Alpine ships via `@alpinejs/csp`, so reactive view state
+  works without runtime expression compilation.
+- No `unsafe-inline` on `script-src`. Scaffold-owned surfaces (theme picker,
+  error-status clipboard, admin sessions selection, admin debug controls,
+  error-page dark-mode fallback) bind events through Alpine components and
+  `_hyperscript` instead of inline `onclick`/`onsubmit` handlers.
+- `style-src` keeps `unsafe-inline` because Tailwind/DaisyUI emit inline
+  style attributes on swapped fragments. The HTML inline-style attribute is
+  controlled by `style-src-attr` in newer browsers and remains low-risk
+  compared to script.
+
+The contract is **config-driven**, not code-gated: routes.go always reads
+`cfg.ContentSecurityPolicy` and emits the header only when non-empty. This
+matters for two runtimes:
+
+- **Source repo** — `.env.development` ships the CSP line commented behind
+  the `# setup:feature:csp` block, so a developer running the unmodified
+  source tree (which still carries demo views with inline scripts) never
+  emits a CSP that demo content can't satisfy.
+- **Derived app, `csp` not selected** — setup strips the entire env block,
+  `CSP_HEADER` is unset, and no header ships.
+
+The `csp` feature is **mutually exclusive with `demo`**. Demo views still
+ship inline `<script>` blocks and inline event handlers; selecting both
+would generate a derived app whose default surfaces immediately violate
+their own CSP. `setup.Run` rejects the combination up front with a clear
+error.
 
 ## Not provided
 
 These are deliberate gaps -- things the scaffold does not implement. Depending on your deployment, you may need to add them.
-
-### Content-Security-Policy header
-
-No CSP header is set by default. The Alpine CSP build means you can set a strict policy without `unsafe-eval`, but you need to configure the header yourself (via dorman or your reverse proxy). A recommended starting point:
-
-```
-script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self';
-```
 
 ### Strict-Transport-Security (HSTS)
 

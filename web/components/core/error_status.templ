@@ -64,9 +64,10 @@ templ errorStatusBody(ec linkwell.ErrorContext) {
 		data-error-json={ errorJSON(ec) }
 	>
 		<button
+			type="button"
 			class="absolute top-1.5 right-1.5 inline-flex items-center p-1 rounded hover:bg-error-content/20 transition-colors"
 			_="on click
-			  call navigator.clipboard.writeText((closest [data-error-json])'s @data-error-json)
+			  call navigator.clipboard.writeText(@data-error-json of closest <[data-error-json]/>)
 			  remove .hidden from the next <.copy-tip/>
 			  wait 1500ms
 			  add .hidden to the next <.copy-tip/>"
@@ -216,7 +217,7 @@ templ inlineErrorActions(controls []linkwell.Control) {
 			if dismiss, ok := inlineDismissControl(controls); ok {
 				<button
 					class="join-item btn btn-sm border-error-content/20 bg-error-content/10 text-error-content hover:bg-error-content/20"
-					_="on click set (closest div[id])'s innerHTML to ''"
+					_="on click empty the closest <div[id]/>"
 				>
 					{ dismiss.Label }
 				</button>
@@ -277,7 +278,7 @@ templ inlineFullXS(ec linkwell.ErrorContext) {
 			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 				<button
 					class="btn btn-xs h-5 min-h-5 text-[0.6rem] border-error/20 bg-error/10 text-error hover:bg-error/20"
-					_="on click set (closest div[id])'s innerHTML to ''"
+					_="on click empty the closest <div[id]/>"
 				>
 					{ dismiss.Label }
 				</button>
@@ -309,7 +310,7 @@ templ inlineFullSM(ec linkwell.ErrorContext) {
 			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 				<button
 					class="btn btn-xs border-error/20 bg-error/10 text-error hover:bg-error/20"
-					_="on click set (closest div[id])'s innerHTML to ''"
+					_="on click empty the closest <div[id]/>"
 				>
 					{ dismiss.Label }
 				</button>
@@ -352,7 +353,7 @@ templ inlineFullMD(ec linkwell.ErrorContext) {
 			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 				<button
 					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
-					_="on click set (closest div[id])'s innerHTML to ''"
+					_="on click empty the closest <div[id]/>"
 				>
 					{ dismiss.Label }
 				</button>
@@ -401,7 +402,7 @@ templ inlineFullLG(ec linkwell.ErrorContext) {
 			if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 				<button
 					class="btn btn-sm border-error/20 bg-error/10 text-error hover:bg-error/20"
-					_="on click set (closest div[id])'s innerHTML to ''"
+					_="on click empty the closest <div[id]/>"
 				>
 					{ dismiss.Label }
 				</button>
@@ -498,7 +499,7 @@ templ inlineFullActions(ec linkwell.ErrorContext, btnSize string) {
 		if dismiss, ok := inlineDismissControl(ec.Controls); ok {
 			<button
 				class={ "btn border-error/20 bg-error/10 text-error hover:bg-error/20", btnSize }
-				_="on click set (closest div[id])'s innerHTML to ''"
+				_="on click empty the closest <div[id]/>"
 			>
 				{ dismiss.Label }
 			</button>
@@ -517,7 +518,8 @@ templ inlineFullActions(ec linkwell.ErrorContext, btnSize string) {
 	</div>
 }
 
-// ErrorStatus is the backward-compatible wrapper. All existing call sites are unchanged.
+// ErrorStatus is the positional-args convenience over ErrorStatusFromContext for
+// callers that don't already have a linkwell.ErrorContext in hand.
 templ ErrorStatus(statusCode int, message string, err error, route string, requestID string, closable bool) {
 	@ErrorStatusFromContext(linkwell.ErrorContext{
 		StatusCode: statusCode,

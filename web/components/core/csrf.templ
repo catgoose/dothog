@@ -8,6 +8,6 @@ import "catgoose/dothog/internal/version"
 templ CsrfMeta(token string) {
 	if token != "" {
 		<meta name="csrf-token" content={ token }/>
-		<script src={ version.Asset("/public/js/csrf-header.js") }></script>
+		<script src={ version.Asset("/public/js/app/csrf-header.js") }></script>
 	}
 }
