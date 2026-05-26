@@ -842,8 +842,8 @@ func TestRemoveOrphanedImportLines(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestDatabaseBlocksStrippedWhenNoMSSQLOrPostgres(t *testing.T) {
-	// "database" is no longer implicit: scaffolds without MSSQL or PostgreSQL
-	// strip the app-data marker blocks entirely.
+	// "database" is opt-in: scaffolds without MSSQL or PostgreSQL strip the
+	// app-data marker blocks entirely.
 	content := strings.Join([]string{
 		"before",
 		"// setup:feature:database:start",
