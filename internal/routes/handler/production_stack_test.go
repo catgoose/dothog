@@ -93,14 +93,10 @@ func TestProductionStack_GzipCompressesSuccessResponse(t *testing.T) {
 	assert.Contains(t, string(body), "Hello, this is a test response")
 }
 
-// TestProductionStack_ErrorHandlerSurvivesCompressedHotPath is the regression
-// guard for the RawWriter + httpcompression + NewHTTPErrorHandler interaction.
-// httpcompression finalizes its writer when the middleware chain unwinds, so
-// the error handler — which runs after — must restore the raw writer (saved
-// by RawWriterMiddleware) before rendering. Without that restore, writing
-// through the closed compression writer panics. The handler returns a generic
-// error so the fallback 500 path runs; Accept-Encoding: gzip forces
-// compression to engage and close on unwind.
+// TestProductionStack_ErrorHandlerSurvivesCompressedHotPath verifies the
+// RawWriter + httpcompression + NewHTTPErrorHandler interaction. The error
+// handler runs after httpcompression has finalized its writer, so it must
+// restore the raw writer before rendering the fallback 500 page.
 func TestProductionStack_ErrorHandlerSurvivesCompressedHotPath(t *testing.T) {
 	e := setupProductionStack(t)
 	e.GET("/boom", func(c echo.Context) error {
@@ -121,9 +117,8 @@ func TestProductionStack_ErrorHandlerSurvivesCompressedHotPath(t *testing.T) {
 	assert.Contains(t, body, "<!doctype html>", "non-HTMX errors render the full page")
 }
 
-// TestProductionStack_ErrorHandlerHTMXOnCompressedHotPath covers the HTMX
-// branch of the error handler over the same compressed hot path so a
-// regression in either render mode fails loudly.
+// TestProductionStack_ErrorHandlerHTMXOnCompressedHotPath verifies the HTMX
+// branch over the same compressed error path.
 func TestProductionStack_ErrorHandlerHTMXOnCompressedHotPath(t *testing.T) {
 	e := setupProductionStack(t)
 	e.GET("/boom", func(c echo.Context) error {
@@ -145,9 +140,7 @@ func TestProductionStack_ErrorHandlerHTMXOnCompressedHotPath(t *testing.T) {
 }
 
 // decodeResponseBody returns the response body as a string, transparently
-// gunzipping when Content-Encoding: gzip is set. Errors in body or invalid
-// gzip framing fail the test, since either points at a real compression-path
-// regression.
+// gunzipping when Content-Encoding: gzip is set.
 func decodeResponseBody(t *testing.T, rec *httptest.ResponseRecorder) string {
 	t.Helper()
 	if rec.Header().Get("Content-Encoding") != "gzip" {

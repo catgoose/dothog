@@ -431,14 +431,14 @@ func TestSetup_FeaturesAll(t *testing.T) {
 	assertDirExists(t, filepath.Join(dest, "internal", "service", "graph"))
 	assertDirExists(t, filepath.Join(dest, "internal", "demo"))
 
-	// e2e smoke test should exist (#356)
+	// A derived app keeps the generated smoke test.
 	_, err = os.Stat(filepath.Join(dest, "e2e", "smoke.spec.ts"))
 	require.NoError(t, err, "smoke.spec.ts should exist after setup")
 	// Demo spec files should be removed
 	_, err = os.Stat(filepath.Join(dest, "e2e", "dashboard.spec.ts"))
 	require.True(t, os.IsNotExist(err), "demo e2e tests should be removed after setup")
 
-	// README should list all features (#360)
+	// The generated README should list the selected features.
 	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
 	require.NoError(t, err)
 	readmeContent := string(readmeBytes)
@@ -486,22 +486,22 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	_, err = os.Stat(filepath.Join(dest, "web", "assets", "public", "js", "htmx.ext.sse.js"))
 	require.True(t, os.IsNotExist(err), "htmx.ext.sse.js should be removed when sse not selected")
 
-	// Dothog-specific docs should be removed (#354)
+	// Dothog-specific top-level docs should be removed.
 	for _, f := range []string{"MANIFESTO.md", "AGENTS.md", "README.harmony.md"} {
 		_, err = os.Stat(filepath.Join(dest, f))
 		require.True(t, os.IsNotExist(err), "%s should be removed during setup", f)
 	}
 
-	// scripts/ directory should be removed (#361)
+	// scripts/ should not ship in the derived app.
 	assertDirRemoved(t, filepath.Join(dest, "scripts"))
 	_, err = os.Stat(filepath.Join(dest, ".github", "workflows", "pipeline.yml"))
 	require.True(t, os.IsNotExist(err), "pipeline.yml should be removed during setup (#367)")
 	assertDirRemoved(t, filepath.Join(dest, ".github", "harmony"))
 
-	// db/gen_seed should be removed when demo not selected (#358)
+	// db/gen_seed is demo-only and should be removed when demo is absent.
 	assertDirRemoved(t, filepath.Join(dest, "db", "gen_seed"))
 
-	// Capacitor files should be removed when capacitor not selected (#353)
+	// Capacitor files should be removed when capacitor is not selected.
 	for _, f := range []string{"capacitor.config.ts", "tsconfig.json", "Gemfile"} {
 		_, err = os.Stat(filepath.Join(dest, f))
 		require.True(t, os.IsNotExist(err), "%s should be removed when capacitor not selected", f)
@@ -516,12 +516,12 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	// Entire docs/ directory should be removed — it's all dothog-specific.
 	assertDirRemoved(t, filepath.Join(dest, "docs"))
 
-	// Setup package and setup tests should be removed (#377)
+	// Setup machinery should not ship in the derived app.
 	assertDirRemoved(t, filepath.Join(dest, "internal", "setup"))
 	_, err = os.Stat(filepath.Join(dest, "tests", "setup_test.go"))
 	require.True(t, os.IsNotExist(err), "tests/setup_test.go should be removed during setup")
 
-	// e2e should contain only smoke test, helpers, and config (#356)
+	// e2e should contain only the smoke test, helpers, and config.
 	e2eEntries, err := os.ReadDir(filepath.Join(dest, "e2e"))
 	require.NoError(t, err)
 	var e2eNames []string
@@ -535,12 +535,12 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	require.NotContains(t, e2eNames, "inventory.spec.ts", "demo e2e tests should be removed")
 	require.NotContains(t, e2eNames, "home.spec.ts", "demo e2e tests should be removed")
 
-	// Smoke test should reference the app's binary name (#356)
+	// The smoke test should reference the app's binary name.
 	smokeBytes, err := os.ReadFile(filepath.Join(dest, "e2e", "smoke.spec.ts"))
 	require.NoError(t, err)
 	require.Contains(t, string(smokeBytes), "no-features-app", "smoke test should use the app binary name")
 
-	// README should contain a feature table (#360)
+	// The README should contain a feature table.
 	readmeBytes, err := os.ReadFile(filepath.Join(dest, "README.md"))
 	require.NoError(t, err)
 	readmeContent := string(readmeBytes)
@@ -556,7 +556,8 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	require.NotContains(t, readmeContent, "Database (chuck)",
 		"legacy 'Database (chuck)' label must not reappear in derived-app docs")
 
-	// env substitution must survive feature stripping (#regression)
+	// Feature stripping must preserve APP_NAME substitution in the copied
+	// environment file.
 	envBytes, err := os.ReadFile(filepath.Join(dest, ".env.development"))
 	require.NoError(t, err)
 	require.Contains(t, string(envBytes), "APP_NAME=No Features App",
@@ -566,8 +567,8 @@ func TestSetup_FeaturesNone(t *testing.T) {
 	require.NotContains(t, string(envBytes), "SESSION_SETTINGS_COOKIE_NAME=",
 		".env.development should omit session-settings cookie config when session_settings is stripped")
 
-	// Non-demo apps must still register GET / so breadcrumbs and not-found
-	// recovery links to Home point at a real route (#regression).
+	// Non-demo apps must still register GET / so breadcrumb and recovery
+	// links to Home point at a real route.
 	routesBytes, err := os.ReadFile(filepath.Join(dest, "internal", "routes", "routes.go"))
 	require.NoError(t, err)
 	require.Contains(t, string(routesBytes), `ar.e.GET("/"`,
@@ -794,15 +795,12 @@ func TestSetup_FeaturesDemo(t *testing.T) {
 	assertBuildSucceeds(t, dest)
 	assertDirExists(t, filepath.Join(dest, "internal", "demo"))
 
-	// db/gen_seed should be kept when demo is selected (#358)
+	// db/gen_seed stays when demo is selected.
 	assertDirExists(t, filepath.Join(dest, "db", "gen_seed"))
 }
 
-// TestSetup_FeaturesDemoWithoutSSE pins down the regression where the demo
-// block in routes.go used `ar.broker` outside of `setup:feature:sse` markers.
-// When sse was stripped but demo was kept, derived apps failed to build
-// with "ar.broker undefined" (#606). This test forces that exact combo and
-// ensures the demo block stays buildable when SSE is absent.
+// TestSetup_FeaturesDemoWithoutSSE verifies that the demo feature remains
+// buildable when SSE is stripped.
 func TestSetup_FeaturesDemoWithoutSSE(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
@@ -830,11 +828,8 @@ func TestSetup_FeaturesDemoWithoutSSE(t *testing.T) {
 	require.True(t, os.IsNotExist(err), "htmx.ext.sse.js should be removed when sse stripped")
 }
 
-// TestSetup_SessionSettingsWithoutSSE pins down the theme-persistence
-// regression: a scaffold that keeps session_settings but omits sse must
-// still register POST /settings/theme so theme changes survive a reload.
-// Before the fix, initThemeRoutes was nested under both session_settings
-// AND sse markers, so stripping sse silently removed the registration.
+// TestSetup_SessionSettingsWithoutSSE verifies that a scaffold with
+// session_settings but without sse still registers POST /settings/theme.
 func TestSetup_SessionSettingsWithoutSSE(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()
@@ -1225,10 +1220,8 @@ func TestSetup_NoSessionSettings_StripsPageScopedAlpine(t *testing.T) {
 	}
 }
 
-// TestSetup_GraphWithoutAvatar pins down the regression where Graph runtime
-// initialization lived under avatar markers in main.go. A graph-only scaffold
-// must still bootstrap the Graph client/user cache while stripping avatar-only
-// photo routes and storage.
+// TestSetup_GraphWithoutAvatar verifies that a graph-only scaffold still
+// initializes Graph runtime while stripping avatar-only routes and storage.
 func TestSetup_GraphWithoutAvatar(t *testing.T) {
 	t.Parallel()
 	repoRoot, err := findRepoRoot()

@@ -225,11 +225,9 @@ func TestInitThemeRoutes_WithBroker_HTMXThemeChangeUsesSendOnlyResponse(t *testi
 	require.Equal(t, "dark", last.Theme)
 }
 
-// TestInitThemeRoutes_PublishScopedToSessionTopic pins the per-session SSE
-// contract: a POST /settings/theme for session A publishes only to A's
-// topic, so a subscriber on session B's topic sees nothing. Prevents the
-// global-broadcast regression where one user's theme change rethemed every
-// connected browser.
+// TestInitThemeRoutes_PublishScopedToSessionTopic verifies the per-session SSE
+// contract: a POST /settings/theme for session A publishes only to A's topic,
+// so a subscriber on session B's topic sees nothing.
 func TestInitThemeRoutes_PublishScopedToSessionTopic(t *testing.T) {
 	store := &fakeSettingsStore{}
 	broker := tavern.NewSSEBroker()

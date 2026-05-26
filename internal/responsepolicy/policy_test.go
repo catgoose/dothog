@@ -79,9 +79,8 @@ func TestPreload_FallbackEmitsLinkHeader(t *testing.T) {
 	assert.ElementsMatch(t, links, got)
 }
 
-// TestInstall_RegistersServerTimingAndVary wires Install onto a fresh Echo
-// and asserts the canonical chain is in effect on a real request, so a
-// reorder/regression in the package surface is caught here.
+// TestInstall_RegistersServerTimingAndVary verifies that Install wires the
+// expected response-policy middleware onto a real request path.
 func TestInstall_RegistersServerTimingAndVary(t *testing.T) {
 	e := echo.New()
 	Install(e, Config{})
@@ -96,11 +95,9 @@ func TestInstall_RegistersServerTimingAndVary(t *testing.T) {
 	assert.Contains(t, rec.Header().Values("Vary"), "HX-Request")
 }
 
-// TestInstall_CSPEmittedWhenConfigured pins the CSP-selected derived-app
-// contract: a non-empty ContentSecurityPolicy lands on every response as the
-// Content-Security-Policy header. dorman's SecurityHeaders middleware owns
-// the actual emission; this test exercises the path through responsepolicy
-// so a regression in either layer is caught here.
+// TestInstall_CSPEmittedWhenConfigured verifies that a configured
+// ContentSecurityPolicy is emitted as the Content-Security-Policy header via
+// the responsepolicy + dorman path.
 func TestInstall_CSPEmittedWhenConfigured(t *testing.T) {
 	e := echo.New()
 	policy := "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"

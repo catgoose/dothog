@@ -6,12 +6,9 @@ import (
 	"testing"
 )
 
-// TestErrorCapabilitiesBundleContract pins the JS-side hook that injects
-// X-Error-Accept-Surfaces / X-Error-Fallback-Surface so the negotiation in
-// internal/routes/handler/error_capabilities.go has a wire counterpart. The
-// server parses these headers and degrades surfaces accordingly; a silent
-// regression in the JS file would break that contract without surfacing in
-// Go tests.
+// TestErrorCapabilitiesBundleContract verifies that the HTMX-side hook still
+// emits the request headers consumed by error-capability negotiation on the
+// server.
 func TestErrorCapabilitiesBundleContract(t *testing.T) {
 	data, err := os.ReadFile("public/js/app/htmx.error-capabilities.js")
 	if err != nil {
