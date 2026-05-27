@@ -1,21 +1,24 @@
 {
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "test:e2e": "npx playwright test --config e2e/playwright.config.ts",
     "test:e2e:headed": "npx playwright test --config e2e/playwright.config.ts --headed",
     "test:e2e:ui": "npx playwright test --config e2e/playwright.config.ts --ui"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.19",
-    "daisyui": "^5.0.0",
+    "daisyui": "^5.5.20",
     "playwright": "^1.50.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.3"
   },
   "dependencies": {
-    "@alpinejs/csp": "^3.15.11",
-    "@capacitor/cli": "^8.3.0",
-    "@capacitor/core": "^8.3.0",
-    "@capacitor/ios": "^8.3.0"
+    "@alpinejs/csp": "^3.15.12",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/ios": "^8.3.4"
   }
 }
