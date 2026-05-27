@@ -37,6 +37,7 @@ func (s *recordingStore) AvailableFilters(_ context.Context, _ promolog.TraceFil
 	return promolog.FilterOptions{}, nil
 }
 func (s *recordingStore) DeleteTrace(_ context.Context, _ string) error                    { return nil }
+func (s *recordingStore) RunCleanup(_ context.Context, _ time.Duration) (int, error)       { return 0, nil }
 func (s *recordingStore) StartCleanup(_ context.Context, _ time.Duration, _ time.Duration) {}
 func (s *recordingStore) CreateRule(_ context.Context, r promolog.FilterRule) (promolog.FilterRule, error) {
 	return r, nil
