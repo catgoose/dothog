@@ -111,7 +111,10 @@ func (d *Directory) InsertOrUpdateUsers(ctx context.Context, users []User) error
 const userSelect = "SELECT AzureId, GivenName, Surname, DisplayName, UserPrincipalName, Mail, JobTitle, OfficeLocation, Department, CompanyName, AccountName"
 
 // SearchUsers ANDs LIKE clauses across GivenName/Surname/DisplayName/AccountName
-// for each term and returns up to limit rows ordered by DisplayName.
+// for each term and returns up to limit rows ordered by DisplayName. The query
+// carries no eligibility predicate on Mail/JobTitle/AzureId/etc.: cache rows
+// are trusted as-is, with eligibility enforced at Graph ingest in
+// FetchAllEnabledUsers.
 func (d *Directory) SearchUsers(ctx context.Context, terms []string, limit int) ([]User, error) {
 	if len(terms) == 0 {
 		return nil, fmt.Errorf("no search terms provided")
@@ -194,10 +197,13 @@ func (d *Directory) UserCount(ctx context.Context) (int, error) {
 // ReplaceUsers upserts the fetched users and deletes any local rows whose
 // AzureId isn't in the fetched set. This is the snapshot-replace path used
 // by full Graph syncs so users disabled/removed in Graph drop out of the
-// local directory rather than living on forever. A successful empty fetch
-// is a valid snapshot — it clears the cache. Degraded fetches show up as a
-// non-nil error from fetchUsersFunc, not as an empty users slice, so the
-// caller can distinguish "Graph said nothing" from "Graph is empty".
+// local directory rather than living on forever. Pruning is snapshot
+// ownership only — rows missing from the latest successful Graph fetch —
+// not field-based eligibility (Mail/JobTitle/etc.); eligibility is enforced
+// upstream in FetchAllEnabledUsers. A successful empty fetch is a valid
+// snapshot — it clears the cache. Degraded fetches show up as a non-nil
+// error from fetchUsersFunc, not as an empty users slice, so the caller
+// can distinguish "Graph said nothing" from "Graph is empty".
 func (d *Directory) ReplaceUsers(ctx context.Context, users []User) error {
 	if len(users) == 0 {
 		// Wipe the table — successful empty snapshot means no Graph users.
