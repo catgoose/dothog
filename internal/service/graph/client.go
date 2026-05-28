@@ -43,7 +43,11 @@ func consistencyLevelHeaders() *abstractions.RequestHeaders {
 	return h
 }
 
-// FetchAllEnabledUsers pages through every accountEnabled=true user (top=999, eventual consistency) and returns a flattened slice.
+// FetchAllEnabledUsers pages through every accountEnabled=true user
+// (top=999, eventual consistency) and returns a flattened slice. The
+// accountEnabled filter is the single eligibility gate — downstream cache
+// reads (SearchUsers, AllUsers, UserByAzureID) trust the resulting rows
+// without re-checking field-level eligibility.
 func (c *Client) FetchAllEnabledUsers(ctx context.Context) ([]User, error) {
 	filter := "accountEnabled eq true"
 	selectCols := []string{"id", "displayName", "userPrincipalName", "mail", "officeLocation", "department", "givenName", "surname", "companyName", "jobTitle"}

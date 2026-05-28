@@ -64,6 +64,47 @@ func TestReplaceUsers_EmptySnapshotClearsCache(t *testing.T) {
 	assert.Equal(t, 0, got, "empty successful snapshot must clear cached users")
 }
 
+// TestSearchUsers_TrustsCacheRowsWithoutFieldEligibility proves SearchUsers
+// carries no SQL-side eligibility predicate on
+// Mail/JobTitle/Department/CompanyName/AzureId. Rows with those fields empty
+// must still match a name-style term, because eligibility is enforced
+// upstream at Graph ingest, not at cache read time.
+func TestSearchUsers_TrustsCacheRowsWithoutFieldEligibility(t *testing.T) {
+	ctx := context.Background()
+	dir := openDirectoryForTest(t)
+
+	users := []User{
+		{
+			AzureID:           "azure-empty-fields",
+			GivenName:         "Ada",
+			Surname:           "Lovelace",
+			DisplayName:       "Ada Lovelace",
+			UserPrincipalName: "ada@example.com",
+			AccountName:       "ada",
+			// Mail, JobTitle, OfficeLocation, Department, CompanyName all empty.
+		},
+		{
+			AzureID:     "azure-mail-only",
+			DisplayName: "Grace Hopper",
+			AccountName: "grace",
+			Mail:        "grace@example.com",
+		},
+	}
+	require.NoError(t, dir.ReplaceUsers(ctx, users))
+
+	got, err := dir.SearchUsers(ctx, []string{"ada"}, 10)
+	require.NoError(t, err)
+	require.Len(t, got, 1, "row with empty Mail/JobTitle/etc. must still match by name term")
+	assert.Equal(t, "azure-empty-fields", got[0].AzureID)
+	assert.Empty(t, got[0].Mail, "cache row is returned as-is; no eligibility filter strips empty Mail")
+	assert.Empty(t, got[0].JobTitle)
+
+	got, err = dir.SearchUsers(ctx, []string{"grace"}, 10)
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, "azure-mail-only", got[0].AzureID)
+}
+
 func TestLastSuccessfulSync_RoundTrips(t *testing.T) {
 	ctx := context.Background()
 	dir := openDirectoryForTest(t)
