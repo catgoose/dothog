@@ -687,9 +687,26 @@ func TestSetup_FeaturesMSSQL(t *testing.T) {
 	require.NoError(t, err)
 
 	assertNoSetupMarkers(t, dest)
-	assertBuildSucceeds(t, dest)
 	assertDirExists(t, filepath.Join(dest, "internal", "database"))
 	assertDirExists(t, filepath.Join(dest, "internal", "dbschema"))
+
+	auditCompilePath := filepath.Join(dest, "internal", "dbschema", "audit_compile_test.go")
+	err = os.WriteFile(auditCompilePath, []byte(`package dbschema
+
+import "github.com/test/mssql-app/internal/database/schema"
+
+var AuditCompileTable = schema.NewTable("AuditCompile").
+	Columns(
+		schema.AutoIncrCol("Id"),
+		schema.Col("Name", schema.TypeString(255)).NotNull(),
+	).
+	WithTimestamps().
+	WithAuditActors(schema.DefaultStringAuditActors()).
+	WithSoftDelete().
+	WithDeleteActor(schema.DefaultStringDeleteActor())
+`), 0o644)
+	require.NoError(t, err)
+	assertBuildSucceeds(t, dest)
 
 	// Selecting MSSQL must register the chuck MSSQL driver in main.go and
 	// strip the postgres driver registration; the app-data block must remain.
