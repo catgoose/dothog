@@ -30,7 +30,6 @@ Browse the auto-generated API documentation for each package in the sidebar.
 |---------|-------------|
 | [config](packages/config.md) | Application configuration management |
 | [logger](packages/logger.md) | Structured logging with slog |
-| [shared](packages/shared.md) | Common utilities and types |
 
 ### Routing
 

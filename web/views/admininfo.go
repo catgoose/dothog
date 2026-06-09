@@ -1,7 +1,6 @@
 // setup:feature:demo
 
-// Package admininfo provides types for admin dashboard pages.
-package admininfo
+package views
 
 // SystemInfo aggregates runtime, GC, and process stats shown on the admin status page.
 type SystemInfo struct {
@@ -31,9 +30,9 @@ type ConfigEntry struct {
 	Value string
 }
 
-// UserPreferences holds per-session user preferences.
-// These are stored in-memory keyed by session cookie; applications should
-// persist them to their own database when needed.
+// UserPreferences holds per-session user preferences. Stored in-memory keyed
+// by session cookie; derived apps should persist them to their own database
+// when needed.
 type UserPreferences struct {
 	DateFormat           string
 	PageSize             int

@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
-	"catgoose/dothog/internal/shared"
 	"catgoose/dothog/web/views"
 	"github.com/catgoose/tavern"
 
@@ -79,7 +79,7 @@ func (f *feedRoutes) handleFeedMore(c echo.Context) error {
 func BroadcastActivity(broker *tavern.SSEBroker, e demo.ActivityEvent) {
 	buf := statsBufPool.Get().(*bytes.Buffer)
 	buf.Reset()
-	if err := views.FeedItemOOB(e).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "broadcast activity"), buf); err != nil {
+	if err := views.FeedItemOOB(e).Render(logger.WithContextIDAndDescription(context.Background(), logger.GenerateContextID(), "broadcast activity"), buf); err != nil {
 		statsBufPool.Put(buf)
 		return
 	}

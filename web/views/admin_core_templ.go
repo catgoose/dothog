@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"catgoose/dothog/internal/admininfo"
 	"catgoose/dothog/internal/version"
 	// setup:feature:demo:end
 )
@@ -21,7 +20,7 @@ import (
 // setup:feature:demo:start
 
 // AdminSystemPage displays runtime system information.
-func AdminSystemPage(info admininfo.SystemInfo) templ.Component {
+func AdminSystemPage(info SystemInfo) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -162,7 +161,7 @@ func systemStat(label, value string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 89, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 88, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -175,7 +174,7 @@ func systemStat(label, value string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 90, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 89, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -219,7 +218,7 @@ func UpdateCheckResult(info version.UpdateInfo, err error) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(err.Error())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 98, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 97, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -237,7 +236,7 @@ func UpdateCheckResult(info version.UpdateInfo, err error) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(info.Latest)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 104, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 103, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -250,7 +249,7 @@ func UpdateCheckResult(info version.UpdateInfo, err error) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(info.Current)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 104, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 103, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -263,7 +262,7 @@ func UpdateCheckResult(info version.UpdateInfo, err error) templ.Component {
 			var templ_7745c5c3_Var9 templ.SafeURL
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(info.ReleaseURL))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 106, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 105, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -281,7 +280,7 @@ func UpdateCheckResult(info version.UpdateInfo, err error) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(info.Current)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 117, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 116, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -297,7 +296,7 @@ func UpdateCheckResult(info version.UpdateInfo, err error) templ.Component {
 }
 
 // AdminConfigPage displays application configuration with secrets masked.
-func AdminConfigPage(entries []admininfo.ConfigEntry) templ.Component {
+func AdminConfigPage(entries []ConfigEntry) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -330,7 +329,7 @@ func AdminConfigPage(entries []admininfo.ConfigEntry) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(e.Key)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 143, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 142, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -348,7 +347,7 @@ func AdminConfigPage(entries []admininfo.ConfigEntry) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(e.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 146, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 145, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -366,7 +365,7 @@ func AdminConfigPage(entries []admininfo.ConfigEntry) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(e.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 148, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 147, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -380,7 +379,7 @@ func AdminConfigPage(entries []admininfo.ConfigEntry) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(e.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 150, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/admin_core.templ`, Line: 149, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {

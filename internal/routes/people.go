@@ -11,9 +11,9 @@ import (
 	"sync/atomic"
 
 	"catgoose/dothog/internal/demo"
+	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/routes/params"
-	"catgoose/dothog/internal/shared"
 	"catgoose/dothog/web/views"
 	"github.com/catgoose/linkwell"
 	"github.com/catgoose/tavern"
@@ -137,7 +137,7 @@ func (p *peopleRoutes) broadcastPersonUpdate(person demo.Person) {
 	topic := fmt.Sprintf("%s-%d", TopicPeopleUpdate, person.ID)
 	buf := statsBufPool.Get().(*bytes.Buffer)
 	buf.Reset()
-	if err := views.PersonProfileCardOOB(person).Render(shared.WithContextIDAndDescription(context.Background(), shared.GenerateContextID(), "broadcast person update"), buf); err != nil {
+	if err := views.PersonProfileCardOOB(person).Render(logger.WithContextIDAndDescription(context.Background(), logger.GenerateContextID(), "broadcast person update"), buf); err != nil {
 		statsBufPool.Put(buf)
 		return
 	}

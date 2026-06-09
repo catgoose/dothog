@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"catgoose/dothog/internal/admininfo"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/web/views"
 
@@ -17,7 +16,7 @@ import (
 
 type prefsEntry struct {
 	touchedAt time.Time
-	prefs     admininfo.UserPreferences
+	prefs     views.UserPreferences
 }
 
 // prefsStore is a simple in-memory store keyed by session UUID with TTL eviction.
@@ -53,7 +52,7 @@ func (ar *AppRoutes) handleUserSettingsSave(c echo.Context) error {
 		pageSize = 20
 	}
 
-	prefs := admininfo.UserPreferences{
+	prefs := views.UserPreferences{
 		PageSize:             pageSize,
 		DateFormat:           c.FormValue("date_format"),
 		CompactTables:        c.FormValue("compact_tables") == "true",
@@ -75,13 +74,13 @@ func (ar *AppRoutes) handleUserSettingsSave(c echo.Context) error {
 	return handler.RenderComponent(c, views.UserSettingsSaved())
 }
 
-func getUserPrefs(c echo.Context) admininfo.UserPreferences {
+func getUserPrefs(c echo.Context) views.UserPreferences {
 	sessionID := session.GetSettings(c.Request()).SessionUUID
 	prefsStore.RLock()
 	entry, ok := prefsStore.m[sessionID]
 	prefsStore.RUnlock()
 	if !ok || time.Since(entry.touchedAt) > prefsTTL {
-		return admininfo.DefaultUserPreferences()
+		return views.DefaultUserPreferences()
 	}
 	return entry.prefs
 }

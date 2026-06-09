@@ -18,7 +18,6 @@ mkdir -p "$DOCS_DIR"
 declare -A PACKAGES=(
   ["internal/config"]="config"
   ["internal/logger"]="logger"
-  ["internal/shared"]="shared"
   ["internal/routes"]="routes"
   ["internal/routes/handler"]="routes-handler"
   ["internal/routes/htmx"]="routes-htmx"
