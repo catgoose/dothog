@@ -10,8 +10,6 @@ import (
 	"sync"
 	"testing"
 
-	"catgoose/dothog/internal/shared"
-
 	"github.com/catgoose/promolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -156,7 +154,7 @@ func TestWithContext_AttachesContextID(t *testing.T) {
 	buf := &bytes.Buffer{}
 	captureLogger(t, buf)
 
-	ctx := context.WithValue(context.Background(), shared.ContextIDKeyValue, "ctx-99")
+	ctx := context.WithValue(context.Background(), ContextIDKeyValue, "ctx-99")
 	WithContext(ctx).Info("hello")
 
 	rec := parseRecord(t, buf)
@@ -167,7 +165,7 @@ func TestWithContext_AttachesContextDescription(t *testing.T) {
 	buf := &bytes.Buffer{}
 	captureLogger(t, buf)
 
-	ctx := context.WithValue(context.Background(), shared.ContextDescriptionKeyValue, "user cache sync")
+	ctx := context.WithValue(context.Background(), ContextDescriptionKeyValue, "user cache sync")
 	WithContext(ctx).Info("hello")
 
 	rec := parseRecord(t, buf)
@@ -180,8 +178,8 @@ func TestWithContext_AttachesAllFields(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, promolog.RequestIDKey, "req-1")
-	ctx = context.WithValue(ctx, shared.ContextIDKeyValue, "ctx-1")
-	ctx = context.WithValue(ctx, shared.ContextDescriptionKeyValue, "boot")
+	ctx = context.WithValue(ctx, ContextIDKeyValue, "ctx-1")
+	ctx = context.WithValue(ctx, ContextDescriptionKeyValue, "boot")
 	WithContext(ctx).Info("hello")
 
 	rec := parseRecord(t, buf)

@@ -9,7 +9,6 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"catgoose/dothog/internal/admininfo"
 	"catgoose/dothog/internal/config"
 	"catgoose/dothog/internal/routes/handler"
 	"catgoose/dothog/internal/version"
@@ -37,7 +36,7 @@ func (ar *AppRoutes) handleSystemInfo(c echo.Context) error {
 		numThread = p.Count()
 	}
 
-	info := admininfo.SystemInfo{
+	info := views.SystemInfo{
 		Version:    version.Version,
 		GoVersion:  runtime.Version(),
 		OS:         runtime.GOOS,
@@ -79,7 +78,7 @@ func (ar *AppRoutes) handleConfigInfo(c echo.Context) error {
 		return handler.HandleHypermediaError(c, http.StatusInternalServerError, "Failed to load config", err)
 	}
 
-	entries := []admininfo.ConfigEntry{
+	entries := []views.ConfigEntry{
 		{Key: "SERVER_LISTEN_PORT", Value: cfg.ServerPort},
 		{Key: "APP_NAME", Value: defaultStr(cfg.AppName, "(not set)")},
 		// setup:feature:database:start
@@ -95,10 +94,10 @@ func (ar *AppRoutes) handleConfigInfo(c echo.Context) error {
 	}
 	// setup:feature:csrf:start
 	if len(cfg.CSRFPerRequestPaths) > 0 {
-		entries = append(entries, admininfo.ConfigEntry{Key: "CSRF_PER_REQUEST_PATHS", Value: fmt.Sprintf("%v", cfg.CSRFPerRequestPaths)})
+		entries = append(entries, views.ConfigEntry{Key: "CSRF_PER_REQUEST_PATHS", Value: fmt.Sprintf("%v", cfg.CSRFPerRequestPaths)})
 	}
 	if len(cfg.CSRFExemptPaths) > 0 {
-		entries = append(entries, admininfo.ConfigEntry{Key: "CSRF_EXEMPT_PATHS", Value: fmt.Sprintf("%v", cfg.CSRFExemptPaths)})
+		entries = append(entries, views.ConfigEntry{Key: "CSRF_EXEMPT_PATHS", Value: fmt.Sprintf("%v", cfg.CSRFExemptPaths)})
 	}
 	// setup:feature:csrf:end
 

@@ -7,10 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"catgoose/dothog/internal/logger"
-	"catgoose/dothog/internal/shared"
-
 	"catgoose/dothog/internal/env"
+	"catgoose/dothog/internal/logger"
 )
 
 // SyncType labels a directory refresh for telemetry; the constant value
@@ -42,7 +40,7 @@ func InitAndSyncDirectory(
 	fetchUsersFunc func(ctx context.Context) ([]User, error),
 	afterSync func(ctx context.Context, users []User),
 ) error {
-	ctx = shared.WithContextIDAndDescription(ctx, shared.GenerateContextID(), "directory init")
+	ctx = logger.WithContextIDAndDescription(ctx, logger.GenerateContextID(), "directory init")
 	log := logger.WithContext(ctx)
 	isDev := env.Dev()
 
@@ -100,7 +98,7 @@ func InitAndSyncDirectory(
 	}
 
 	doSync := func(syncType SyncType) {
-		syncCtx := shared.WithContextIDAndDescription(ctx, shared.GenerateContextID(), string(syncType))
+		syncCtx := logger.WithContextIDAndDescription(ctx, logger.GenerateContextID(), string(syncType))
 		syncLog := logger.WithContext(syncCtx)
 		syncLog.Info("Starting directory refresh", "type", syncType)
 		users, err := fetchUsersFunc(syncCtx)

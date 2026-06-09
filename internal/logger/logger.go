@@ -13,11 +13,10 @@ import (
 	"strings"
 	"sync"
 
-	"catgoose/dothog/internal/shared"
-
 	"github.com/catgoose/promolog"
 
 	"catgoose/dothog/internal/env"
+	"catgoose/dothog/internal/version"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -79,7 +78,7 @@ func Init() {
 		}
 
 		mu.Lock()
-		logger = slog.New(handler).With("runtime_id", shared.RuntimeID)
+		logger = slog.New(handler).With("runtime_id", version.RuntimeID)
 		mu.Unlock()
 		slog.SetDefault(logger)
 	})
@@ -177,11 +176,11 @@ func WithContext(ctx context.Context) *slog.Logger {
 		args = append(args, "request_id", requestID)
 	}
 
-	if contextID := ctx.Value(shared.ContextIDKeyValue); contextID != nil {
+	if contextID := ctx.Value(ContextIDKeyValue); contextID != nil {
 		args = append(args, "context_id", contextID)
 	}
 
-	if contextDescription := ctx.Value(shared.ContextDescriptionKeyValue); contextDescription != nil {
+	if contextDescription := ctx.Value(ContextDescriptionKeyValue); contextDescription != nil {
 		args = append(args, "context_description", contextDescription)
 	}
 

@@ -42,7 +42,6 @@ nav:
   - Packages:
       - config: packages/config.md
       - logger: packages/logger.md
-      - shared: packages/shared.md
       - routes: packages/routes.md
       - routes/handler: packages/routes-handler.md
       - routes/htmx: packages/routes-htmx.md
