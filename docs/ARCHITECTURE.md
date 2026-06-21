@@ -240,7 +240,9 @@ When a user navigates via a link that includes `?from=N`, the bitmask encodes wh
 
 ### Boosted Navigation
 
-`hx-boost` navigation sends full-page requests with the `HX-Boosted` header. Handlers check `htmx.IsBoosted(c.Request())` to decide whether to render a full layout or just a fragment.
+`hx-boost` navigation sends requests with both `HX-Request` and `HX-Boosted` set but wants full-page semantics. A handler that serves the same route as a targeted swap and as a boosted navigation distinguishes them with `htmxutil.IsFragment(c.Request())` — true only for a real partial swap (`HX-Request` without `HX-Boosted`) — and falls back to a full layout otherwise. Handlers that branch only on whether the route was boosted can still check `htmxutil.IsBoosted(c.Request())` directly.
+
+Scoping the boost to a navigation region (`hx-boost` on the nav element) rather than the whole `<body>` is the safer default: nav links swap their target while non-boosted controls keep ordinary semantics, so fewer handlers need the fragment-vs-full-page branch. `IsFragment` is the predicate those handlers use when they do.
 
 ## Session Settings
 
@@ -290,6 +292,22 @@ Server-Sent Events provide real-time updates without polling.
 3. SSE endpoints use `broker.Subscribe(topic)` and stream events.
 4. Mutation handlers call `broker.Publish(topic, html)` to push OOB swap fragments.
 
+### Direct streams vs SSEHandler
+
+Two ways to serve an SSE endpoint:
+
+- `echo.WrapHandler(broker.SSEHandler(topic))` — the broker owns the whole response. Use for a plain "subscribe to one topic and stream it" endpoint (`/sse/activity`, `/sse/observatory`).
+- `streamSSE(c, ch, encode, opts...)` (`internal/routes/sse.go`) — the handler owns subscription and frame encoding; the helper sets `X-Accel-Buffering: no` and a default keepalive heartbeat, then defers to `tavern.StreamSSE`. Use when the handler subscribes with options (scope, glob, multi, resume) or builds the SSE frame itself. A caller-supplied `tavern.WithStreamHeartbeat` overrides the default.
+
+Reach for the helper only when its defaults fit. A handler that fans several channels into one, replays from a snapshot, or assembles its own option slice keeps calling `tavern.StreamSSE` directly so that logic stays at the call site.
+
+### Broadcast vs scoped topics
+
+- **Broadcast** — publish to a global topic; every subscriber receives it. Use for shared state every viewer should see: the activity feed, the pixel canvas, the sensor grid (`broker.Publish(topic, data)`).
+- **Scoped** — derive a per-session/per-entity topic (or `SubscribeScoped(topic, scope)`) so only the connection that owns that scope receives the event: the per-session theme change (`ThemeTopicForSession(uuid)`), per-person profile updates (`TopicPeopleUpdate-<id>`), per-user notifications.
+
+Default to a scoped topic whenever an event targets a single session, user, or record — a broadcast topic the client then filters puts other users' data on the wire.
+
 ### Client Side
 
 ```html
@@ -320,6 +338,7 @@ The behavior has no setup feature toggle — it's the framework baseline. Deploy
 | Function | Purpose |
 |----------|---------|
 | `IsHTMX(r)` / `IsBoosted(r)` | Detect HX-Request and HX-Boosted. |
+| `IsFragment(r)` | Partial-swap request (HX-Request, not boosted). Use to branch fragment vs full layout. |
 | `CurrentURL(r)` / `CurrentRawQuery(r)` | Parse `HX-Current-URL` for filter/state preservation. |
 | `htmxutil.New()` | Start a response builder. |
 | `.ReplaceURL(url)` / `.Refresh()` | `HX-Replace-Url` / `HX-Refresh`. |

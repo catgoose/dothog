@@ -14,7 +14,6 @@ import (
 	// setup:feature:sse:start
 	"fmt"
 	"sync/atomic"
-	"time"
 
 	"github.com/catgoose/tavern"
 	// setup:feature:sse:end
@@ -71,8 +70,8 @@ func (ar *AppRoutes) initThemeRoutes() {
 // initThemeSSE wires /sse/theme to the cookie-backed session's private topic
 // while preserving the public SSE event name "theme-change". The handler
 // derives the session UUID from session middleware, subscribes that
-// connection to ThemeTopicForSession(uuid), and streams via tavern.StreamSSE
-// so the SSE event field stays "theme-change" (using DynamicGroupHandler
+// connection to ThemeTopicForSession(uuid), and streams via the streamSSE
+// helper so the SSE event field stays "theme-change" (using DynamicGroupHandler
 // would leak the private topic name into the event field and break clients
 // that listen for "theme-change"). Only called when the sse feature is
 // enabled and a broker has been built.
@@ -83,18 +82,11 @@ func (ar *AppRoutes) initThemeSSE(broker *tavern.SSEBroker) {
 			return c.NoContent(http.StatusNoContent)
 		}
 
-		c.Response().Header().Set("X-Accel-Buffering", "no")
 		lastID := c.Request().Header.Get("Last-Event-ID")
 		msgs, unsub := broker.SubscribeFromID(ThemeTopicForSession(s.SessionUUID), lastID)
 		defer unsub()
 
-		return tavern.StreamSSE(
-			c.Request().Context(),
-			c.Response(),
-			msgs,
-			func(msg string) string { return msg },
-			tavern.WithStreamHeartbeat(30*time.Second),
-		)
+		return streamSSE(c, msgs, func(msg string) string { return msg })
 	})
 }
 
@@ -130,7 +122,7 @@ func (ar *AppRoutes) handleTheme() echo.HandlerFunc {
 		publishThemeChange(ar.broker, settings.SessionUUID, theme)
 		// setup:feature:sse:end
 
-		if htmxutil.IsHTMX(c.Request()) && !htmxutil.IsBoosted(c.Request()) {
+		if htmxutil.IsFragment(c.Request()) {
 			// setup:feature:sse:start
 			if ar.broker != nil {
 				_ = htmxutil.New().

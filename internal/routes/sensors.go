@@ -67,10 +67,7 @@ func (s *sensorRoutes) handleSSE(c echo.Context) error {
 	)
 	defer unsub()
 
-	return tavern.StreamSSE(
-		c.Request().Context(),
-		c.Response(),
-		msgs,
+	return streamSSE(c, msgs,
 		func(tm tavern.TopicMessage) string {
 			return tavern.NewSSEMessage("sensor-update", tm.Data).String()
 		},

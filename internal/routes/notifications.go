@@ -199,10 +199,7 @@ func (n *notificationRoutes) handleSSE(c echo.Context) error {
 		}
 	}()
 
-	return tavern.StreamSSE(
-		ctx,
-		c.Response(),
-		msgs,
+	return streamSSE(c, msgs,
 		func(msg string) string { return msg },
 		tavern.WithStreamHeartbeat(10*time.Second),
 	)

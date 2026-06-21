@@ -105,7 +105,7 @@ func (d *inventoryRoutes) handleItemRow(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHypermediaError(c, http.StatusNotFound, "Item not found", err)
 	}
-	if !htmxutil.IsHTMX(c.Request()) || htmxutil.IsBoosted(c.Request()) {
+	if !htmxutil.IsFragment(c.Request()) {
 		handler.SetPageLabel(c, item.Name)
 		return handler.RenderBaseLayout(c, views.InventoryDetailPage(item))
 	}

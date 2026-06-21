@@ -21,6 +21,13 @@ func IsHTMX(r *http.Request) bool { return htmx.IsHTMX(r) }
 // served as fragments.
 func IsBoosted(r *http.Request) bool { return htmx.IsBoosted(r) }
 
+// IsFragment reports whether the request wants an HTMX partial swap: an
+// htmx-issued request (HX-Request) that is not a boosted navigation. Boosted
+// requests carry HX-Request too but want full-page semantics, so a handler
+// branching between "render a fragment" and "render a full layout" gates on
+// IsFragment rather than IsHTMX alone. Equivalent to IsHTMX(r) && !IsBoosted(r).
+func IsFragment(r *http.Request) bool { return IsHTMX(r) && !IsBoosted(r) }
+
 // CurrentURL parses the HX-Current-URL header that htmx attaches to every
 // request. Returns nil + false when the header is missing or malformed so the
 // caller can short-circuit without panicking on partial state.

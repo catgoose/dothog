@@ -23,6 +23,29 @@ func TestIsBoosted(t *testing.T) {
 	assert.True(t, IsBoosted(r))
 }
 
+func TestIsFragment(t *testing.T) {
+	t.Run("plain request is not a fragment", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		assert.False(t, IsFragment(r))
+	})
+	t.Run("htmx targeted request is a fragment", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r.Header.Set("HX-Request", "true")
+		assert.True(t, IsFragment(r))
+	})
+	t.Run("boosted navigation is not a fragment", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r.Header.Set("HX-Request", "true")
+		r.Header.Set("HX-Boosted", "true")
+		assert.False(t, IsFragment(r))
+	})
+	t.Run("boosted header without HX-Request is not a fragment", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r.Header.Set("HX-Boosted", "true")
+		assert.False(t, IsFragment(r))
+	})
+}
+
 func TestCurrentURL_ParsesHeader(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 	r.Header.Set("HX-Current-URL", "https://example.com/apps/inventory?search=widget&page=3")
