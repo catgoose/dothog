@@ -3,19 +3,19 @@ module catgoose/dothog
 go 1.26.4
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.0
 	github.com/CAFxX/httpcompression v0.0.9
 	github.com/a-h/templ v0.3.1020
 	github.com/angelofallars/htmx-go v0.5.0
-	github.com/catgoose/crooner v1.4.16
-	github.com/catgoose/dorman v0.1.22
-	github.com/catgoose/linkwell v0.2.36
-	github.com/catgoose/promolog/sqlite v0.0.0-20260523042258-b00746b4e309
-	github.com/catgoose/tavern v0.4.79
+	github.com/catgoose/crooner v1.4.17
+	github.com/catgoose/dorman v0.1.26
+	github.com/catgoose/linkwell v0.2.45
+	github.com/catgoose/promolog/sqlite v0.0.0-20260621023430-c35c2ad64639
+	github.com/catgoose/tavern v0.4.82
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/labstack/echo/v4 v4.15.2
+	github.com/labstack/echo/v4 v4.15.4
 	github.com/magefile/mage v1.17.2
 	github.com/microsoft/kiota-abstractions-go v1.9.4
 	github.com/microsoftgraph/msgraph-sdk-go v1.99.0
@@ -30,15 +30,15 @@ require (
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/lib/pq v1.12.3 // indirect
-	github.com/mattn/go-sqlite3 v1.14.45 // indirect
-	github.com/ncruces/go-sqlite3 v0.34.4 // indirect
-	github.com/ncruces/go-sqlite3-wasm/v2 v2.6.35302 // indirect
+	github.com/mattn/go-sqlite3 v1.14.46 // indirect
+	github.com/ncruces/go-sqlite3 v0.35.1 // indirect
+	github.com/ncruces/go-sqlite3-wasm/v3 v3.1.35302 // indirect
 	github.com/ncruces/julianday v1.0.0 // indirect
 )
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.7.2 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
@@ -49,8 +49,8 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bep/godartsass/v2 v2.5.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
-	github.com/catgoose/chuck v0.1.43
-	github.com/catgoose/promolog v0.2.35
+	github.com/catgoose/chuck v0.1.47
+	github.com/catgoose/promolog v0.2.39
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -82,7 +82,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/labstack/gommon v0.5.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
+	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.23 // indirect
@@ -113,13 +113,13 @@ require (
 	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
-	golang.org/x/crypto v0.52.0 // indirect
+	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect

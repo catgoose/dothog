@@ -1021,6 +1021,26 @@ func TestStripEnvBlocks(t *testing.T) {
 // CopyRepoTo — explicit excludes plus .gitignore-aware runtime junk exclusion
 // ---------------------------------------------------------------------------
 
+// CopyRepoTo must descend the real tree when the source root is a symlink to
+// a repo directory — e.g. a checkout reached through a symlinked path — rather
+// than stopping at the symlink and copying nothing.
+func TestCopyRepoToFollowsSymlinkedSourceRoot(t *testing.T) {
+	realRoot := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(realRoot, "go.mod"), []byte("module example.test\n"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(realRoot, "main.go"), []byte("package main\n"), 0o644))
+
+	linkRoot := filepath.Join(t.TempDir(), "linked-repo")
+	require.NoError(t, os.Symlink(realRoot, linkRoot))
+
+	dest := filepath.Join(t.TempDir(), "out")
+	require.NoError(t, CopyRepoTo(linkRoot, dest, nil))
+
+	gotMod, err := os.ReadFile(filepath.Join(dest, "go.mod"))
+	require.NoError(t, err, "go.mod must be copied when the source root is a symlink")
+	require.Equal(t, "module example.test\n", string(gotMod))
+	require.FileExists(t, filepath.Join(dest, "main.go"))
+}
+
 func TestCopyRepoToExcludesLocalhostCerts(t *testing.T) {
 	src := t.TempDir()
 	dest := filepath.Join(t.TempDir(), "out")

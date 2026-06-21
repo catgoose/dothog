@@ -28,9 +28,9 @@ import (
 type fakeSettingsStore struct {
 	last         *session.Settings
 	rows         map[string]*session.Settings
+	missingUUIDs map[string]bool
 	deleted      []string
 	themeUpdates []themeUpdateCall
-	missingUUIDs map[string]bool
 	mu           sync.Mutex
 	upserts      int
 }

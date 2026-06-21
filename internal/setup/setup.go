@@ -1835,6 +1835,14 @@ func CopyRepoTo(src, dest string, exclude []string) error {
 	if err != nil {
 		return err
 	}
+	// Resolve a symlinked source root (e.g. a checkout reached through a
+	// symlinked path) so filepath.Walk descends the real tree instead of
+	// stopping at the symlink, whose Lstat reports IsDir() false. EvalSymlinks
+	// on a plain directory returns the same path, so normal checkouts are
+	// unaffected; on failure fall back to srcAbs and let Walk surface the error.
+	if resolved, err := filepath.EvalSymlinks(srcAbs); err == nil {
+		srcAbs = resolved
+	}
 	rules, err := loadCopyIgnoreRules(srcAbs)
 	if err != nil {
 		return err
