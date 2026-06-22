@@ -255,6 +255,49 @@ func RenderComponent(c echo.Context, cmp templ.Component) error {
 	return nil
 }
 
+// OOBFragment is one out-of-band region of a HypermediaResponse. TargetID and
+// Swap restate, in code, the DOM id and hx-swap-oob mode ("true", "outerHTML",
+// "beforeend", ...) the component already bakes into its own markup. The
+// builder renders Component verbatim and never rewrites it, so this metadata is
+// declarative: it exists so route tests can assert the response shape and so
+// drift from the component's own attributes is reviewable — it does not drive
+// the swap.
+type OOBFragment struct {
+	Component templ.Component
+	TargetID  string
+	Swap      string
+}
+
+// HypermediaResponse is a multi-region HTMX response: a Main fragment for the
+// request's hx-target plus ordered out-of-band Fragments, composed from named
+// components without a per-endpoint composite template. Set any HX-Trigger
+// headers directly on the response; the builder carries none.
+type HypermediaResponse struct {
+	Main      templ.Component
+	Fragments []OOBFragment
+}
+
+// RenderHypermedia renders Main, then each fragment's component in declared
+// order, sharing RenderComponent's context, writer, and render-error fallback.
+// A nil Main or a fragment with a nil Component is skipped.
+func RenderHypermedia(c echo.Context, r HypermediaResponse) error {
+	ctx := c.Request().Context()
+	if r.Main != nil {
+		if err := r.Main.Render(ctx, c.Response()); err != nil {
+			return HandleError(c, http.StatusInternalServerError, "Failed to render component", err)
+		}
+	}
+	for _, f := range r.Fragments {
+		if f.Component == nil {
+			continue
+		}
+		if err := f.Component.Render(ctx, c.Response()); err != nil {
+			return HandleError(c, http.StatusInternalServerError, "Failed to render component", err)
+		}
+	}
+	return nil
+}
+
 // HandleError logs the error and return Hypermedia response
 func HandleError(c echo.Context, statusCode int, message string, err error) error {
 	// Check if the request context is canceled
