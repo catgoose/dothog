@@ -1,0 +1,97 @@
+package components
+
+// TextResourceLink renders an entity/resource name as an at-rest traversable
+// link: DaisyUI `link` keeps the underline visible without hover. The anchor
+// navigates; button styling never applies here.
+templ TextResourceLink(href, label, testID, extraClass string) {
+	<a
+		href={ templ.URL(href) }
+		if testID != "" {
+			data-testid={ testID }
+		}
+		class={ textLinkClass(extraClass) }
+	>{ label }</a>
+}
+
+// DestinationResourceLink renders navigation to a sibling or destination view
+// as a visible at-rest link, never a `btn` — button styling is reserved for
+// actions.
+templ DestinationResourceLink(href, label, testID, extraClass string) {
+	<a
+		href={ templ.URL(href) }
+		if testID != "" {
+			data-testid={ testID }
+		}
+		class={ destinationLinkClass(extraClass) }
+	>{ label }</a>
+}
+
+// ActionResourceLink renders command-like navigation: anchor semantics, button
+// look. It stays an `<a>`; use only for genuine in-place commands, not ordinary
+// navigation.
+templ ActionResourceLink(href, label, testID, extraClass string) {
+	<a
+		href={ templ.URL(href) }
+		if testID != "" {
+			data-testid={ testID }
+		}
+		class={ "btn", actionLinkVariant(extraClass) }
+	>{ label }</a>
+}
+
+// TileResourceLink renders a framed count/status tile that is clickable at rest
+// and wraps caller-provided children in the anchor.
+templ TileResourceLink(href, testID string) {
+	<a
+		href={ templ.URL(href) }
+		if testID != "" {
+			data-testid={ testID }
+		}
+		class="block rounded border border-base-300 bg-base-200 p-3 transition-colors hover:border-primary/40 hover:bg-base-300"
+	>
+		{ children... }
+	</a>
+}
+
+templ identityAvatar(c IdentityChip, size IdentitySize) {
+	if c.AvatarURL != "" && c.Resolved {
+		<img src={ c.AvatarURL } alt="" class={ "object-cover bg-base-200 shrink-0", identityAvatarClass(size) }/>
+	} else {
+		<div class={ "flex items-center justify-center font-semibold shrink-0", identityAvatarClass(size), c.avatarBgClass(), c.avatarTextClass() }>{ c.glyph() }</div>
+	}
+}
+
+// IdentityDisplay renders a non-navigating identity cell: avatar, primary name,
+// and optional secondary caption, none of it linked.
+templ IdentityDisplay(c IdentityChip, size IdentitySize, showSecondary bool) {
+	<div class="flex items-center gap-2 min-w-0">
+		@identityAvatar(c, size)
+		<div class="min-w-0 leading-tight">
+			<span class={ "block min-w-0 truncate text-base-content/80", identityNameClass(size) }>{ c.DisplayName }</span>
+			if showSecondary && c.Secondary != "" {
+				<span class={ "block truncate text-base-content/50", identitySecondaryClass(size) }>{ c.Secondary }</span>
+			}
+		</div>
+	</div>
+}
+
+// IdentityResourceLink links only the primary name; the avatar and secondary
+// caption sit outside the anchor so secondary text never inherits the link.
+// showSecondary=false drops the caption for dense rows.
+templ IdentityResourceLink(c IdentityChip, href, testID string, size IdentitySize, showSecondary bool) {
+	<div class="flex items-center gap-2 min-w-0">
+		@identityAvatar(c, size)
+		<div class="min-w-0 leading-tight">
+			<a
+				href={ templ.URL(href) }
+				if testID != "" {
+					data-testid={ testID }
+				}
+				class={ "block min-w-0 truncate link", identityNameClass(size) }
+			>{ c.DisplayName }</a>
+			if showSecondary && c.Secondary != "" {
+				<span class={ "block truncate text-base-content/50", identitySecondaryClass(size) }>{ c.Secondary }</span>
+			}
+		</div>
+	</div>
+}
