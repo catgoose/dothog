@@ -411,6 +411,22 @@ Each component renders verbatim and owns its own `id` + `hx-swap-oob` markup (th
 
 This complements self-OOB templ regions rather than replacing them. A single component that emits several `hx-swap-oob` blocks is still the right choice when those regions always update together; reach for `RenderHypermedia` when a handler assembles a varying set of regions from independent components.
 
+## Resource & Identity Affordances
+
+`web/components/core` (imported as `components`) exposes a small shared vocabulary so traversable resources and identity read the same across apps. Two rules hold throughout: an anchor always navigates (button styling never changes that), and secondary identity text renders outside the linked name so it never reads as its own link.
+
+| Use | When |
+|-----|------|
+| plain `<a class="link …">` / DaisyUI `btn` | One-off link or button with no resource semantics. |
+| `TextResourceLink` | Name a single entity/resource; visibly linked at rest. |
+| `DestinationResourceLink` | Navigate to a sibling or destination view; visible link, never button-styled. |
+| `ActionResourceLink` | Rare command-like navigation that should look like a button but stay an `<a>`. |
+| `TileResourceLink` | A framed, clickable count/status tile wrapping caller children. |
+| `IdentityDisplay` | Show an identity (avatar + name + optional caption) with no navigation. |
+| `IdentityResourceLink` | Same as `IdentityDisplay`, but the primary name links; avatar and caption stay outside the anchor. |
+
+Identity primitives take an `IdentityChip` (precomputed `DisplayName`, `Secondary`, `AvatarURL`, `Initials`, `Resolved`, and optional fallback class overrides) and an `IdentitySize` (`IdentitySizeCompact` for dense rows, `IdentitySizeBase` otherwise). The chip is deliberately app-neutral — callers project their own person/user model into it.
+
 ## Adding a New Component
 
 ### 1. Create the component
