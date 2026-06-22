@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
+	"catgoose/dothog/internal/env"
 	"catgoose/dothog/internal/htmxutil"
 	"catgoose/dothog/internal/logger"
 	"catgoose/dothog/internal/routes/middleware"
@@ -27,6 +29,9 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 	}
 
 	requestID := promolog.GetRequestID(c.Request().Context())
+	if traceSuppressed(c) {
+		requestID = ""
+	}
 	log := logger.WithContext(c.Request().Context()).With(
 		"status_code", statusCode,
 		"message", message,
@@ -81,6 +86,9 @@ func handleError(c echo.Context, statusCode int, message string, err error) erro
 func handleErrorWithContext(c echo.Context, ec linkwell.ErrorContext) error {
 	if errors.Is(c.Request().Context().Err(), context.Canceled) {
 		return nil
+	}
+	if traceSuppressed(c) {
+		ec.RequestID = ""
 	}
 
 	log := logger.WithContext(c.Request().Context()).With(
@@ -165,6 +173,9 @@ func renderSurfaceError(c echo.Context, se *SurfaceError) error {
 	if errors.Is(c.Request().Context().Err(), context.Canceled) {
 		return nil
 	}
+	if traceSuppressed(c) {
+		se.EC.RequestID = ""
+	}
 
 	log := logger.WithContext(c.Request().Context()).With(
 		"status_code", se.EC.StatusCode,
@@ -225,10 +236,52 @@ func renderHTMXSurfaceError(c echo.Context, se *SurfaceError) error {
 // re-entry into the central error handler does not duplicate that side effect.
 const errPromotedKey = "_promolog_promoted"
 
+// errTraceSuppressedKey marks a request whose trace was intentionally not
+// promoted. The render path reads it to drop the Request ID reference that
+// would otherwise point at a trace nobody stored.
+const errTraceSuppressedKey = "_promolog_suppressed"
+
+// envIsTest and captureTest4xx are the promotion policy's environment inputs,
+// kept as package vars so suppression tests drive them deterministically
+// without mutating global env state.
+var (
+	envIsTest      = env.Test
+	captureTest4xx = envCaptureTest4xx
+)
+
+// envCaptureTest4xx reports whether ERROR_TRACE_CAPTURE_TEST_4XX opts test-mode
+// 4xx traces back into promotion. Accepts "true" and "1", case-insensitive.
+func envCaptureTest4xx() bool {
+	switch strings.ToLower(strings.TrimSpace(env.GetDefault("ERROR_TRACE_CAPTURE_TEST_4XX", ""))) {
+	case "true", "1":
+		return true
+	}
+	return false
+}
+
+// shouldPromoteTrace decides whether an error trace at statusCode is stored.
+// 5xx always promotes. 4xx promotes everywhere except ENV=test, where expected
+// browser-test 4xx noise is suppressed unless the capture opt-in is set.
+func shouldPromoteTrace(statusCode int, isTest, capture bool) bool {
+	if statusCode >= 500 {
+		return true
+	}
+	if statusCode >= 400 && isTest && !capture {
+		return false
+	}
+	return true
+}
+
+func traceSuppressed(c echo.Context) bool {
+	v, _ := c.Get(errTraceSuppressedKey).(bool)
+	return v
+}
+
 // NewHTTPErrorHandler is the e.HTTPErrorHandler replacement that renders
 // errors through the route-owned surface contract; non-nil reqLogStore
-// promotes the per-request log buffer to the shared store so issue reports
-// can retrieve it. Trace promotion is idempotent per request.
+// promotes the per-request log buffer to the shared store when
+// shouldPromoteTrace allows it, so issue reports can retrieve it. Trace
+// promotion is idempotent per request.
 func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Context) {
 	return func(err error, c echo.Context) {
 		// The httpcompression writer is finalized (closed) by the time the
@@ -250,7 +303,9 @@ func NewHTTPErrorHandler(reqLogStore promolog.Storer) func(err error, c echo.Con
 		}
 
 		alreadyPromoted, _ := c.Get(errPromotedKey).(bool)
-		if reqLogStore != nil && !alreadyPromoted {
+		if !shouldPromoteTrace(statusCode, envIsTest(), captureTest4xx()) {
+			c.Set(errTraceSuppressedKey, true)
+		} else if reqLogStore != nil && !alreadyPromoted {
 			requestID := promolog.GetRequestID(c.Request().Context())
 			if requestID != "" {
 				c.Set(errPromotedKey, true)
