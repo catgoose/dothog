@@ -73,6 +73,9 @@ func GetDefault(key, fallback string) string {
 // Dev reports whether the current mode is "development".
 func Dev() bool { return mode == "development" }
 
+// Test reports whether the current mode is "test".
+func Test() bool { return mode == "test" }
+
 // Name is the canonical mode string ("development", "production", …) after normalisation.
 func Name() string { return mode }
 
