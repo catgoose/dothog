@@ -388,6 +388,29 @@ templ MySettingsPage() {
 
 These are too thin to warrant a reusable component — the HTML is self-explanatory and hiding it behind `Card(title)` or `StackedLayout()` adds indirection without reducing complexity. Write the markup directly.
 
+## Multi-Region OOB Responses
+
+Most HTMX updates are a single fragment swapped into the request's `hx-target` via `handler.RenderComponent`. When one action must also refresh other regions, the standard mechanism is out-of-band swaps: a component bakes its own `id` and `hx-swap-oob` attribute, and the response carries it alongside the main fragment.
+
+`handler.RenderHypermedia` composes such a response from explicit, named regions without a bespoke per-endpoint composite template. It renders `Main` into the `hx-target`, then each `OOBFragment` in declared order:
+
+```go
+func (d *cartRoutes) handleAddToCart(c echo.Context) error {
+    // ...mutate, then reload the regions this action changed...
+    return handler.RenderHypermedia(c, handler.HypermediaResponse{
+        Main: views.CartLineItems(items),
+        Fragments: []handler.OOBFragment{
+            {TargetID: "cart-count", Swap: "true", Component: views.CartCount(n)},
+            {TargetID: "flash", Swap: "outerHTML", Component: views.Flash("Added to cart")},
+        },
+    })
+}
+```
+
+Each component renders verbatim and owns its own `id` + `hx-swap-oob` markup (the standard OOB contract). `TargetID`/`Swap` restate that contract in code so the response shape is reviewable and testable; the builder never parses or rewrites the markup, so the author keeps each declared field and the component's own attribute in sync.
+
+This complements self-OOB templ regions rather than replacing them. A single component that emits several `hx-swap-oob` blocks is still the right choice when those regions always update together; reach for `RenderHypermedia` when a handler assembles a varying set of regions from independent components.
+
 ## Adding a New Component
 
 ### 1. Create the component

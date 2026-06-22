@@ -3,10 +3,13 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
+	"strings"
 	"testing"
 
 	"catgoose/dothog/internal/logger"
@@ -184,4 +187,100 @@ func TestHandleComponent(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Contains(t, rec.Body.String(), "Admin")
 	assert.Contains(t, rec.Body.String(), "<span>content</span>")
+}
+
+func oobDiv(id, swap, body string) templ.Component {
+	return templ.Raw(fmt.Sprintf(`<div id=%q hx-swap-oob=%q>%s</div>`, id, swap, body))
+}
+
+func TestRenderHypermedia_MainThenFragmentsInOrder(t *testing.T) {
+	c, rec := newEchoContext(http.MethodGet, "/", nil)
+	err := RenderHypermedia(c, HypermediaResponse{
+		Main: templ.Raw("<main>main</main>"),
+		Fragments: []OOBFragment{
+			{TargetID: "first", Swap: "true", Component: oobDiv("first", "true", "one")},
+			{TargetID: "second", Swap: "beforeend", Component: oobDiv("second", "beforeend", "two")},
+		},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	body := rec.Body.String()
+	mainAt := strings.Index(body, "<main>main</main>")
+	firstAt := strings.Index(body, `id="first"`)
+	secondAt := strings.Index(body, `id="second"`)
+	require.True(t, mainAt >= 0 && firstAt >= 0 && secondAt >= 0, "all regions render")
+	assert.Less(t, mainAt, firstAt, "main renders before the fragments")
+	assert.Less(t, firstAt, secondAt, "fragments render in declared order")
+}
+
+func TestRenderHypermedia_SkipsNilMainAndNilFragments(t *testing.T) {
+	c, rec := newEchoContext(http.MethodGet, "/", nil)
+	err := RenderHypermedia(c, HypermediaResponse{
+		Main: nil,
+		Fragments: []OOBFragment{
+			{TargetID: "skip", Swap: "true", Component: nil},
+			{TargetID: "kept", Swap: "true", Component: oobDiv("kept", "true", "here")},
+		},
+	})
+	require.NoError(t, err)
+
+	body := rec.Body.String()
+	assert.Contains(t, body, `id="kept"`)
+	assert.NotContains(t, body, `id="skip"`)
+}
+
+func TestRenderHypermedia_RenderErrorReturns500(t *testing.T) {
+	tests := []struct {
+		name string
+		resp HypermediaResponse
+	}{
+		{"bad main", HypermediaResponse{Main: badComponent{}}},
+		{"bad fragment", HypermediaResponse{Fragments: []OOBFragment{
+			{TargetID: "x", Swap: "true", Component: badComponent{}},
+		}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c, rec := newEchoContext(http.MethodGet, "/", nil)
+			err := RenderHypermedia(c, tt.resp)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusInternalServerError, rec.Code)
+			assert.Contains(t, rec.Body.String(), "error-message-content")
+		})
+	}
+}
+
+func oobSwapByID(body string) map[string]string {
+	openTag := regexp.MustCompile(`<[a-zA-Z][^>]*>`)
+	idAttr := regexp.MustCompile(`\bid="([^"]*)"`)
+	swapAttr := regexp.MustCompile(`\bhx-swap-oob="([^"]*)"`)
+	byID := map[string]string{}
+	for _, tag := range openTag.FindAllString(body, -1) {
+		id := idAttr.FindStringSubmatch(tag)
+		swap := swapAttr.FindStringSubmatch(tag)
+		if id != nil && swap != nil {
+			byID[id[1]] = swap[1]
+		}
+	}
+	return byID
+}
+
+func TestRenderHypermedia_DeclaredMetadataMatchesRenderedAttributes(t *testing.T) {
+	frags := []OOBFragment{
+		{TargetID: "cart-count", Swap: "true", Component: oobDiv("cart-count", "true", "3")},
+		{TargetID: "flash", Swap: "outerHTML", Component: oobDiv("flash", "outerHTML", "Saved")},
+	}
+	c, rec := newEchoContext(http.MethodGet, "/", nil)
+	require.NoError(t, RenderHypermedia(c, HypermediaResponse{
+		Main:      templ.Raw("<main></main>"),
+		Fragments: frags,
+	}))
+
+	swapByID := oobSwapByID(rec.Body.String())
+	for _, f := range frags {
+		swap, ok := swapByID[f.TargetID]
+		require.Truef(t, ok, "rendered OOB element with id %q must exist", f.TargetID)
+		assert.Equalf(t, f.Swap, swap, "declared Swap for %q must match the hx-swap-oob on that same element", f.TargetID)
+	}
 }
