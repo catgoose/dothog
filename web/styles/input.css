@@ -89,20 +89,7 @@
     }
   }
 
-  /* Entry animations for HTMX-swapped content */
   @media (prefers-reduced-motion: no-preference) {
-    /* Cards and content blocks fade in when inserted by HTMX */
-    .card, [id*="base-content"] > * {
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    @starting-style {
-      .card, [id*="base-content"] > * {
-        opacity: 0;
-        transform: translateY(4px);
-      }
-    }
-
     /* Popover open/close animations */
     [popover]:popover-open {
       opacity: 1;
@@ -117,6 +104,31 @@
       }
     }
   }
+}
+
+/* Capped content-entry stagger — unlayered so it beats daisyUI's component
+   layer; a section that is a .card would otherwise inherit daisyUI's transition
+   and never stagger. The @layer base reduced-motion reset is !important, so it
+   still wins for reduced-motion users. The page wraps its sections in one outer
+   div inside #base-content, so the subjects are its grandchildren; capped to the
+   first five sections so long data pages don't ripple, and rows sit deeper still
+   so they never animate. */
+@media (prefers-reduced-motion: no-preference) {
+  [id*="base-content"] > * > *:nth-child(-n+5) {
+    transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+  }
+
+  @starting-style {
+    [id*="base-content"] > * > *:nth-child(-n+5) {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  [id*="base-content"] > * > *:nth-child(2) { transition-delay: 0.035s; }
+  [id*="base-content"] > * > *:nth-child(3) { transition-delay: 0.070s; }
+  [id*="base-content"] > * > *:nth-child(4) { transition-delay: 0.105s; }
+  [id*="base-content"] > * > *:nth-child(5) { transition-delay: 0.140s; }
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

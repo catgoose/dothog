@@ -12,7 +12,11 @@ templ AppNavLayout(content templ.Component, cfg linkwell.NavConfig, csrfToken st
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ theme }>
 		@header(csrfToken, devMode, cfg.AppName, []string{"/public/css/app-layout.css"})
-		<body class="min-h-screen bg-base-200">
+		<body
+			class="min-h-screen bg-base-200"
+			hx-history="false"
+			hx-boost="true"
+		>
 			<div class="app-shell">
 				<div
 					id="app-lifeline"
