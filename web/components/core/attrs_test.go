@@ -97,3 +97,27 @@ func TestHxAttrsFromControl_ZeroHxRequest(t *testing.T) {
 	attrs := hxAttrsFromControl(ctrl)
 	require.Equal(t, "Sure?", attrs["hx-confirm"])
 }
+
+func TestDetailsDropdownAttrs_CloseOnly(t *testing.T) {
+	script, ok := DetailsDropdownAttrs("")["_"].(string)
+	require.True(t, ok)
+	require.Contains(t, script, "on click from window")
+	require.Contains(t, script, "event.target is not within me")
+	require.Contains(t, script, "set me.open to false")
+	require.NotContains(t, script, "on toggle")
+}
+
+func TestDetailsDropdownAttrs_WithFocus(t *testing.T) {
+	script, ok := DetailsDropdownAttrs("[data-search]")["_"].(string)
+	require.True(t, ok)
+	require.Contains(t, script, "on click from window")
+	require.Contains(t, script, "on toggle")
+	require.Contains(t, script, `me.querySelector("[data-search]")`)
+	require.Contains(t, script, "call focusTarget.focus()")
+}
+
+func TestDetailsDropdownAttrs_FocusSelectorWithQuotes(t *testing.T) {
+	script, ok := DetailsDropdownAttrs(`[data-label="Bob's menu"]`)["_"].(string)
+	require.True(t, ok)
+	require.Contains(t, script, `me.querySelector("[data-label=\"Bob's menu\"]")`)
+}
