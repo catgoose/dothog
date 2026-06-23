@@ -133,7 +133,10 @@ identifies what kind of file it is:
 Shell behaviors that only react to local DOM events — toast spawning,
 nav dropdown exclusivity, close-on-outside-click — live in `_hyperscript`
 on the element that owns them. Alpine is reserved for coordinated client
-state that spans multiple DOM regions. Feature-local Alpine components
+state that spans multiple DOM regions. A standalone `<details>` dropdown
+(profile menu, action menu) gets close-on-outside and optional autofocus by
+spreading `components.DetailsDropdownAttrs(focusSelector)` onto it — no Alpine
+component needed. Feature-local Alpine components
 ship in their own `*.alpine.js` file and register through
 `dothog.alpine.register(name, factory)` exposed by `alpine-helper.js`, so
 the helper can queue them until `alpine:init` fires. The helper exists for
