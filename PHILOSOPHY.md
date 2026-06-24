@@ -8,6 +8,8 @@
   - [Hypermedia-Driven Architecture](#hypermedia-driven-architecture)
   - [Code-on-Demand](#code-on-demand)
   - [Uniform Interface](#uniform-interface)
+  - [Affordance Is Part of the Contract](#affordance-is-part-of-the-contract)
+    - [Common Affordance Contracts](#common-affordance-contracts)
   - [Self-Descriptive Methods](#self-descriptive-methods)
     - [The Form Method Gap](#the-form-method-gap)
   - [Resource Identification](#resource-identification)
@@ -185,6 +187,49 @@ This isn't a rule. There's no enforcement layer. It's the natural progression of
 Because hypermedia drives the application, navigational chrome like breadcrumbs and action bars should either flow from the parent representation or be derivable from the navigation structure itself. The server already knows where the user is — the route, the resource, the hierarchy. Breadcrumbs are just that hierarchy rendered as links. Action bars are just the available transitions for the current resource state. These aren't independent pieces of UI that each handler assembles from scratch; they're projections of document state. A task's edit page knows it sits under `/tasks/{id}`, which sits under `/tasks` — the breadcrumb trail writes itself. The action bar knows whether the resource is in draft or published state and offers the transitions that make sense. Local modifications — an extra button for a specific workflow, a contextual link that only applies here — are fine, but the baseline should come from the resource's position in the navigation graph, not from per-handler boilerplate.
 
 [Hyrum's Law](https://www.hyrumslaw.com/) applies here with unusual force: *with a sufficient number of users of an API, all observable behaviors of your system will be depended on by somebody.* In a hypermedia architecture, the HTML *is* the API. Every element ID, every CSS class, every `hx-target` selector, every swap mode is an observable behavior. Change `#task-detail` to `#task-content` and every OOB swap targeting it breaks. Rename a DaisyUI class and \_hyperscript selectors that reference it stop working. The explicit contract — Controls, factory functions, semantic classes — exists precisely to manage this. Changes flow through a single point rather than requiring a grep across templates. But outside the explicit contract, the implicit one is larger than you think.
+
+## Affordance Is Part of the Contract
+
+The HTML is the API, so appearance is part of the contract too. A control's semantic element, its behavior, and its styling are three statements about the same thing, and they must agree. When they disagree — a link that looks like a button but mutates state, a button styled as plain text, an underlined word that does nothing — the representation is broken in the same way a wrong `hx-target` is broken. The user reads the affordance and guesses wrong. The rule: **a control should look like what it is, and be built from the element that does what it claims.**
+
+**Buttons are for actions.** Submit, save, delete, retry, dismiss, open a dialog, toggle a local control, fire an HTMX mutation or partial update — anything that *does something* is a `<button>`. A button looks button-like: a stable hit target with a visible boundary or filled surface, distinct hover, focus, active, and disabled states, and a label that names the action ("Save", "Delete" — not "OK").
+
+**Links are for navigation.** Moving to another resource, a document section, a route, a file, an email address, any URL-addressable destination — that is an `<a href>`. Text links are underlined by default. This is a Dothog product standard, not a WCAG mandate: accessibility guidance permits other strong non-color cues, but the project default is the underline because it is the signifier users already know. Reserve the underline for links — don't underline inert text or button labels as decoration, and don't leave an inline link identified by color alone. A link that isn't underlined in running text needs another non-color distinction plus visible focus and hover treatment.
+
+The underline default has honest exceptions: clearly structured navigation regions — tabs, menus, breadcrumbs, context bars, the primary nav — where the layout already announces "this is navigation" and per-item underlines would be noise. The test is whether the region's structure carries the affordance on its own.
+
+**Crossing the two is an exception, not the baseline.** A link styled as a button is allowed when the destination is a prominent route transition in an action area — "Start", "Continue", "View details", a resource action that stays honest as navigation. It must remain an `<a>`: clicking it navigates, middle-click opens a new tab, the address is real. This is exactly the `ControlKindLink` / `ActionResourceLink` case in [docs/COMPONENTS.md](docs/COMPONENTS.md) — the button styling is emphasis, the element is still a link, and an anchor always navigates. Prefer ordinary underlined links for secondary navigation. The reverse — a button styled as a link — is for low-emphasis secondary or tertiary actions whose semantics must stay a button; keep clear focus and affordance so it is still obviously operable.
+
+**HTMX does not erase the distinction.** `hx-get` on an anchor is still navigation or resource-fetching, and reads as a link. Unsafe methods and local UI commands — `hx-post`, `hx-put`, `hx-patch`, `hx-delete`, dismiss, toggle — are button or form controls. The verb decides the element; the styling follows the element.
+
+**Disabled means disabled.** A control that looks inert must actually be unavailable, and an available control must not look inert. Don't dim an enabled button to mean "secondary", and don't style static text to look interactive. The appearance is a promise about behavior; keep the promise.
+
+```html
+<!-- Action: a button that mutates, with real button affordance -->
+<button hx-delete="/tasks/42" hx-target="#task-list" class="btn btn-error">
+  Delete
+</button>
+
+<!-- Navigation: an underlined link to a resource -->
+<a href="/tasks/42" class="link">Quarterly Review</a>
+
+<!-- Exception: prominent navigation styled as a button — still an <a> -->
+<a href="/onboarding/start" class="btn btn-primary">Start</a>
+```
+
+### Common Affordance Contracts
+
+The same agreement — element, behavior, and styling telling one story — governs more than buttons and links. The cases below are where a mismatch is easy to ship and easy to catch in review. The core rule still holds underneath all of them: if a thing acts, it is a button; if it navigates, it is a link.
+
+**Fields and choice controls.** A rectangular editable box invites typing, so reserve that shape for real `<input>` and `<textarea>` fields, give every field a visible `<label>`, and treat placeholder text as a hint — never the label and never the only instruction, because it vanishes on the first keystroke. Use the typed input that matches the data: `type="email"`, `url`, `tel`, `date`, `number`, `search`, `file`, `color`, `range`. The type earns the right mobile keyboard, picker, and built-in validation for free; flattening everything to `type="text"` throws that affordance away. For choices, the control shape teaches the rule — checkboxes are independent yes/no or multi-select, radios are exactly one from a named group, and a switch or toggle is immediate on/off state. Keep the state visible, pair each control with a label, and don't make the user infer the selection rule from icon shape alone. A `<select>` or combobox promises a bounded, known set: use it for choosing, not freeform entry, and reach for a text input with `<datalist>` or autocomplete when typing is the honest action. Selects are clumsy for a handful of options, so a few radios or buttons often beat a dropdown.
+
+**Disclosure, tabs, and overlays.** A caret or chevron promises expandable content: a disclosure or accordion is a button-like trigger — `<details>`/`<summary>` natively — not a navigation link, and its open/closed glyph must track the actual expanded state. Tabs switch panels within one resource; the selected tab, the tab list, and the visible panel must agree, and a tab is not ordinary navigation unless its URL behavior makes that explicit. An overlay, backdrop, or top-layer surface (`<dialog>`, `popover`) promises temporary focused interaction, so it needs an obvious opener, a clear close affordance, sane focus handling, and a known dismissal model. Don't dress ordinary page content as a modal, and don't make a modal behave like a full page navigation.
+
+**Sorting, filtering, and adjustment.** Sortable table headers carry arrows, sort glyphs, and active-column styling that promise data transformation; when the table is a projection of a resource, the sort and filter state should be visible and reflected in the URL or query — the same projection-by-parameter idea as [Resource Identification](#resource-identification). Filter chips that clear on click must look removable. A slider's track and thumb promise continuous or bounded adjustment: show the current value when precision matters, and prefer a number input when exact entry is the real task.
+
+**Status and progress.** `<progress>` promises task completion, `<meter>` promises a bounded measurement, a spinner promises a temporary wait, and a skeleton promises content loading into that same shape — never use motion or loading affordances as static decoration. Badges, tags, and status pills carry metadata or state and must not look clickable when they are inert; if a tag filters or a badge navigates, it has to look and behave like the control or link it actually is. Match an alert's urgency styling to real severity.
+
+**Icons and clickable surfaces.** Icons clarify when paired with a text label; an icon-only control needs a familiar symbol, an accessible name, a visible focus state, and a tooltip where the meaning is not universal — a hover-only label fails touch and keyboard users. When an entire card, tile, row, or avatar is clickable, the whole surface should look selectable and resolve to one destination or action; when only the title or name links, only that text should look linked. This is the line Dothog's resource vocabulary already draws — `TextResourceLink`, `DestinationResourceLink`, `ActionResourceLink`, `TileResourceLink`, and `IdentityResourceLink` in [docs/COMPONENTS.md](docs/COMPONENTS.md) — where an anchor always navigates and secondary identity text stays outside the linked name.
 
 ## Self-Descriptive Methods
 
