@@ -131,7 +131,7 @@ templ ResourceDeletedFragment() {
 		<span>Resource deleted!</span>
 		<button
 			class="btn btn-sm btn-ghost"
-			hx-get="/patterns/controls/resource"
+			hx-post="/patterns/controls/resource/restore"
 			hx-target="#resource-demo"
 		>Undo</button>
 	</div>
@@ -211,7 +211,7 @@ templ ItemsListFragment(items []GalleryItem) {
 			>Create Another</button>
 			<button
 				class="btn btn-sm btn-ghost"
-				hx-get="/patterns/controls/items/reset"
+				hx-post="/patterns/controls/items/reset"
 				hx-target="#items-demo"
 				hx-swap="innerHTML"
 			>Reset</button>
@@ -286,9 +286,9 @@ templ RowViewFragment(item GalleryRowItem) {
 
 templ RowEditFragment(item GalleryRowItem) {
 	<tr id={ fmt.Sprintf("cg-row-%d", item.ID) }>
-		<td><input type="text" name="name" class="input input-sm w-full" value={ item.Name }/></td>
+		<td><input type="text" name="name" class="input input-sm w-full" value={ item.Name } aria-label="Item name"/></td>
 		<td>
-			<select name="category" class="select select-sm">
+			<select name="category" class="select select-sm" aria-label={ "Category for " + item.Name }>
 				<option value="Electronics" selected?={ item.Category == "Electronics" }>Electronics</option>
 				<option value="Clothing" selected?={ item.Category == "Clothing" }>Clothing</option>
 				<option value="Food" selected?={ item.Category == "Food" }>Food</option>
@@ -296,8 +296,8 @@ templ RowEditFragment(item GalleryRowItem) {
 				<option value="Sports" selected?={ item.Category == "Sports" }>Sports</option>
 			</select>
 		</td>
-		<td><input type="number" name="price" step="0.01" class="input input-sm w-24" value={ item.Price }/></td>
-		<td><input type="checkbox" name="active" value="true" class="toggle toggle-sm" checked?={ item.Active }/></td>
+		<td><input type="number" name="price" step="0.01" class="input input-sm w-24" value={ item.Price } aria-label={ "Price for " + item.Name }/></td>
+		<td><input type="checkbox" name="active" value="true" class="toggle toggle-sm" checked?={ item.Active } aria-label={ "Active for " + item.Name }/></td>
 		<td>
 			@components.Controls(linkwell.RowFormActions(linkwell.RowFormActionCfg{
 				SaveURL:      fmt.Sprintf("/patterns/controls/rows/%d", item.ID),

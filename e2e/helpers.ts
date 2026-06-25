@@ -20,5 +20,9 @@ export async function navigateTo(page: Page, path: string) {
 
 /** Reset the demo database via the admin endpoint. */
 export async function resetDB(page: Page) {
-  await page.request.post("/admin/db/reinit");
+  const resp = await page.request.post("/admin/db/reinit");
+  expect(
+    resp.ok(),
+    `DB reset failed: POST /admin/db/reinit returned ${resp.status()}`,
+  ).toBe(true);
 }

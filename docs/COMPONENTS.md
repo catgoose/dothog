@@ -420,7 +420,7 @@ This complements self-OOB templ regions rather than replacing them. A single com
 | plain `<a class="link …">` / DaisyUI `btn` | One-off link or button with no resource semantics. |
 | `TextResourceLink` | Name a single entity/resource; visibly linked at rest. |
 | `DestinationResourceLink` | Navigate to a sibling or destination view; visible link, never button-styled. |
-| `ActionResourceLink` | Rare command-like navigation that should look like a button but stay an `<a>`. |
+| `ActionResourceLink` | Prominent navigation styled like a button; stays an `<a>` and always navigates (e.g. "Start", "View details"). |
 | `TileResourceLink` | A framed, clickable count/status tile wrapping caller children. |
 | `IdentityDisplay` | Show an identity (avatar + name + optional caption) with no navigation. |
 | `IdentityResourceLink` | Same as `IdentityDisplay`, but the primary name links; avatar and caption stay outside the anchor. |

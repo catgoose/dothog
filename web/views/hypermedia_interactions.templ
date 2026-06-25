@@ -103,7 +103,7 @@ templ InteractionsPage(comments []string) {
 					hx-on::after-request="this.reset()"
 					class="flex gap-2 mb-3"
 				>
-					<input type="text" name="comment-text" placeholder="Add a comment…" class="input input-sm flex-1"/>
+					<input type="text" name="comment-text" placeholder="Add a comment…" class="input input-sm flex-1" aria-label="Comment"/>
 					<button type="submit" class="btn btn-sm btn-primary">Post</button>
 				</form>
 				<ul id="comment-list" class="space-y-1">
@@ -155,8 +155,8 @@ templ InteractionsPage(comments []string) {
 				<div class="flex items-center gap-2">
 					<label class="label">
 						<span class="label-text">Price</span>
-						<button popovertarget="price-help" class="text-base-content/40 hover:text-base-content ml-1">
-							<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<button type="button" popovertarget="price-help" aria-label="Price help" class="text-base-content/40 hover:text-base-content ml-1">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
 							</svg>
 						</button>

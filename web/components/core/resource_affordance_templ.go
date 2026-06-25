@@ -206,9 +206,10 @@ func DestinationResourceLink(href, label, testID, extraClass string) templ.Compo
 	})
 }
 
-// ActionResourceLink renders command-like navigation: anchor semantics, button
-// look. It stays an `<a>`; use only for genuine in-place commands, not ordinary
-// navigation.
+// ActionResourceLink renders a prominent route transition styled like a button:
+// button look, anchor semantics. It stays an `<a>` and always navigates — reserve
+// it for emphasized navigation ("Start", "View details"), not in-place commands or
+// unsafe actions, which belong on a <button>.
 func ActionResourceLink(href, label, testID, extraClass string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -242,7 +243,7 @@ func ActionResourceLink(href, label, testID, extraClass string) templ.Component 
 		var templ_7745c5c3_Var15 templ.SafeURL
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(href))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 34, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 35, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -260,7 +261,7 @@ func ActionResourceLink(href, label, testID, extraClass string) templ.Component 
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(testID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 36, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 37, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -291,7 +292,7 @@ func ActionResourceLink(href, label, testID, extraClass string) templ.Component 
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 39, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 40, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -335,7 +336,7 @@ func TileResourceLink(href, testID string) templ.Component {
 		var templ_7745c5c3_Var20 templ.SafeURL
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(href))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 46, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 47, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -353,7 +354,7 @@ func TileResourceLink(href, testID string) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(testID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 48, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 49, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 			if templ_7745c5c3_Err != nil {
@@ -414,7 +415,7 @@ func identityAvatar(c IdentityChip, size IdentitySize) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.AvatarURL)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 58, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 59, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 			if templ_7745c5c3_Err != nil {
@@ -463,7 +464,7 @@ func identityAvatar(c IdentityChip, size IdentitySize) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(c.glyph())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 60, Col: 153}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 61, Col: 153}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -538,7 +539,7 @@ func IdentityDisplay(c IdentityChip, size IdentitySize, showSecondary bool) temp
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(c.DisplayName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 70, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 71, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -574,7 +575,7 @@ func IdentityDisplay(c IdentityChip, size IdentitySize, showSecondary bool) temp
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(c.Secondary)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 72, Col: 101}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 73, Col: 101}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
@@ -641,7 +642,7 @@ func IdentityResourceLink(c IdentityChip, href, testID string, size IdentitySize
 		var templ_7745c5c3_Var38 templ.SafeURL
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(href))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 86, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 87, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
@@ -659,7 +660,7 @@ func IdentityResourceLink(c IdentityChip, href, testID string, size IdentitySize
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(testID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 88, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 89, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 			if templ_7745c5c3_Err != nil {
@@ -690,7 +691,7 @@ func IdentityResourceLink(c IdentityChip, href, testID string, size IdentitySize
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(c.DisplayName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 91, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 92, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -726,7 +727,7 @@ func IdentityResourceLink(c IdentityChip, href, testID string, size IdentitySize
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(c.Secondary)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 93, Col: 101}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/core/resource_affordance.templ`, Line: 94, Col: 101}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {

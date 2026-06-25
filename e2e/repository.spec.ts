@@ -154,8 +154,6 @@ test.describe("Repository Demo Page", () => {
     const deletedCheckbox = page.locator('input[name="deleted"]');
     await deletedCheckbox.check();
     await waitForHtmx(page);
-    await page.waitForTimeout(500);
-    await waitForHtmx(page);
     // Should see a "deleted" badge and a "Restore" button
     const deletedBadge = page.locator('.badge:has-text("deleted")');
     await expect(deletedBadge.first()).toBeVisible();
@@ -174,8 +172,6 @@ test.describe("Repository Demo Page", () => {
     // Enable show archived checkbox
     const archivedCheckbox = page.locator('input[name="archived"]');
     await archivedCheckbox.check();
-    await waitForHtmx(page);
-    await page.waitForTimeout(300);
     await waitForHtmx(page);
     // Should see an "archived" badge and an "Unarchive" button
     const archivedBadge = page.locator('.badge:has-text("archived")');

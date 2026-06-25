@@ -53,7 +53,7 @@ func TestDestinationResourceLink_VisibleLinkNeverButton(t *testing.T) {
 func TestActionResourceLink_ButtonLikeAnchor(t *testing.T) {
 	out := renderComponentString(t, ActionResourceLink("/groups", "View group", "act", "btn-ghost btn-xs"))
 	assert.Contains(t, out, "<a ", "navigation stays an anchor")
-	assert.Contains(t, out, `class="btn btn-ghost btn-xs"`, "command reads as a button-like action link with exactly one size class")
+	assert.Contains(t, out, `class="btn btn-ghost btn-xs"`, "prominent navigation reads as a button-like link with exactly one size class")
 	assert.NotContains(t, out, "btn-sm", "caller-supplied btn-xs must not collide with a hardcoded btn-sm")
 	assert.Contains(t, out, ">View group</a>")
 }

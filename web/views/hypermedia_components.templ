@@ -37,29 +37,62 @@ templ ComponentsPage(data ComponentsPageData) {
 				<p class="text-sm text-base-content/70 mb-3">Each tab button uses <code class="text-xs bg-base-200 px-1 rounded">hx-get</code> to fetch content on demand. Active class managed via HyperScript.</p>
 				<div role="tablist" class="tabs tabs-border">
 					<button
+						id="tab-overview"
 						role="tab"
 						class="tab tab-active"
+						aria-selected="true"
+						aria-controls="tab-panel"
 						hx-get="/components/widgets/tabs/overview"
 						hx-target="#tab-panel"
-						_="on click remove .tab-active from .tab in closest <div[role='tablist']/> then add .tab-active to me"
+						_="on click
+					  for t in <.tab/> in the closest <div[role='tablist']/>
+					    remove .tab-active from t
+					    set the @aria-selected of t to 'false'
+					  end
+					  add .tab-active to me
+					  set the @aria-selected of me to 'true'
+					  set the @aria-labelledby of #tab-panel to my id"
 					>Overview</button>
 					<button
+						id="tab-details"
 						role="tab"
 						class="tab"
+						aria-selected="false"
+						aria-controls="tab-panel"
 						hx-get="/components/widgets/tabs/details"
 						hx-target="#tab-panel"
-						_="on click remove .tab-active from .tab in closest <div[role='tablist']/> then add .tab-active to me"
+						_="on click
+					  for t in <.tab/> in the closest <div[role='tablist']/>
+					    remove .tab-active from t
+					    set the @aria-selected of t to 'false'
+					  end
+					  add .tab-active to me
+					  set the @aria-selected of me to 'true'
+					  set the @aria-labelledby of #tab-panel to my id"
 					>Details</button>
 					<button
+						id="tab-settings"
 						role="tab"
 						class="tab"
+						aria-selected="false"
+						aria-controls="tab-panel"
 						hx-get="/components/widgets/tabs/settings"
 						hx-target="#tab-panel"
-						_="on click remove .tab-active from .tab in closest <div[role='tablist']/> then add .tab-active to me"
+						_="on click
+					  for t in <.tab/> in the closest <div[role='tablist']/>
+					    remove .tab-active from t
+					    set the @aria-selected of t to 'false'
+					  end
+					  add .tab-active to me
+					  set the @aria-selected of me to 'true'
+					  set the @aria-labelledby of #tab-panel to my id"
 					>Settings</button>
 				</div>
 				<div
 					id="tab-panel"
+					role="tabpanel"
+					tabindex="0"
+					aria-labelledby="tab-overview"
 					hx-get="/components/widgets/tabs/overview"
 					hx-trigger="load"
 					hx-swap="innerHTML"

@@ -50,6 +50,7 @@ templ Components2Page(data Components2PageData) {
 				<input
 					type="text"
 					name="q"
+					aria-label="Search languages"
 					placeholder="Search languages…"
 					class="input input-sm w-full max-w-xs"
 					autocomplete="off"
@@ -101,6 +102,7 @@ templ Components2Page(data Components2PageData) {
 					<input
 						type="range"
 						name="range"
+						aria-label="Quantity"
 						min="0"
 						max="100"
 						value={ fmt.Sprintf("%d", data.RangeValue) }
@@ -124,7 +126,7 @@ templ Components2Page(data Components2PageData) {
 					hx-target="#upload-result"
 					class="flex gap-3 items-end flex-wrap"
 				>
-					<input type="file" name="file" class="file-input file-input-sm w-full max-w-xs"/>
+					<input type="file" name="file" class="file-input file-input-sm w-full max-w-xs" aria-label="File to upload"/>
 					<button type="submit" class="btn btn-sm btn-primary">Upload</button>
 				</form>
 				<div id="upload-result" class="mt-2"></div>
@@ -137,22 +139,21 @@ templ Components2Page(data Components2PageData) {
 				<p class="text-sm text-base-content/70 mb-3">Each panel uses <code class="text-xs bg-base-200 px-1 rounded">hx-trigger="click once"</code> to load content only on first expand. Subsequent toggles use cached content.</p>
 				<div class="space-y-2">
 					for _, panel := range data.Panels {
-						<div class="collapse collapse-arrow bg-base-200">
-							<input type="radio" name="accordion-panels"/>
-							<div
+						<details name="accordion-panels" class="collapse collapse-arrow bg-base-200">
+							<summary
 								class="collapse-title font-medium text-sm"
 								hx-get={ fmt.Sprintf("/components/cards/accordion/%d", panel.ID) }
 								hx-trigger="click once"
 								hx-target={ fmt.Sprintf("#accordion-body-%d", panel.ID) }
 							>
 								{ panel.Title }
-							</div>
+							</summary>
 							<div class="collapse-content">
 								<div id={ fmt.Sprintf("accordion-body-%d", panel.ID) } class="text-sm text-base-content/70">
 									<span class="loading loading-dots loading-xs"></span>
 								</div>
 							</div>
-						</div>
+						</details>
 					}
 				</div>
 			</div>

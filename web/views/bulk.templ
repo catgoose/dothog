@@ -68,6 +68,7 @@ templ BulkTableContainer(cols []linkwell.TableCol, body templ.Component, info li
 							<input
 								type="checkbox"
 								class="checkbox checkbox-sm select-all-check"
+								aria-label="Select all rows"
 								_="on change
 								  set checked to my checked
 								  for cb in <.row-check/> in (closest <table/>)
@@ -108,22 +109,19 @@ templ BulkItemsBody(items []demo.Item) {
 
 // BulkItemRow renders a single row with a leading checkbox for bulk selection.
 templ BulkItemRow(item demo.Item) {
-	<tr class="cursor-pointer"
-		_="on click
-		  if event.target's tagName is not 'INPUT'
-		    set cb to the first <.row-check/> in me
-		    set cb's checked to not cb's checked
-		  end"
-	>
+	{{ checkID := fmt.Sprintf("bulk-check-%d", item.ID) }}
+	<tr class="hover:bg-base-200/50">
 		<td>
 			<input
 				type="checkbox"
+				id={ checkID }
 				name="ids"
 				value={ strconv.Itoa(item.ID) }
 				class="row-check checkbox checkbox-sm"
+				aria-label={ fmt.Sprintf("Select %s", item.Name) }
 			/>
 		</td>
-		<td>{ item.Name }</td>
+		<td><label for={ checkID } class="cursor-pointer">{ item.Name }</label></td>
 		<td>{ item.Category }</td>
 		<td>{ fmt.Sprintf("$%.2f", item.Price) }</td>
 		<td>{ strconv.Itoa(item.Stock) }</td>

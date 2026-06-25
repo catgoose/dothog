@@ -87,7 +87,7 @@ templ TavernRecoveryPage(initialSnapshot string) {
 							hx-swap="none"
 							hx-on::after-request="this.querySelector('input[name=value]').value=''"
 						>
-							<input type="text" name="value" placeholder="Update snapshot" class="input input-xs input-bordered flex-1" required/>
+							<input type="text" name="value" placeholder="Update snapshot" class="input input-xs input-bordered flex-1" required aria-label="Snapshot value"/>
 							<button type="submit" class="btn btn-primary btn-xs">Set</button>
 						</form>
 					</div>

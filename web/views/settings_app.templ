@@ -95,6 +95,7 @@ templ ThemePicker(currentTheme string) {
 								class={ "theme-swatch rounded-md overflow-hidden cursor-pointer",
 									templ.KV("ring-2 ring-primary ring-offset-1", theme == currentTheme) }
 								data-theme-value={ theme }
+								aria-label={ "Use " + theme + " theme" }
 								title={ theme }
 							>
 								<div data-theme={ theme } class="flex gap-0.5 p-1 bg-base-100">

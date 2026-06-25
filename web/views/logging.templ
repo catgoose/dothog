@@ -58,25 +58,25 @@ templ LoggingPage() {
 				<div class="flex flex-wrap gap-2">
 					<button
 						class="btn btn-sm btn-error btn-outline"
-						hx-get="/platform/logging/trigger/404"
+						hx-post="/platform/logging/trigger/404"
 						hx-target="#logging-trigger-result"
 						hx-swap="innerHTML"
 					>404 Not Found</button>
 					<button
 						class="btn btn-sm btn-error btn-outline"
-						hx-get="/platform/logging/trigger/400"
+						hx-post="/platform/logging/trigger/400"
 						hx-target="#logging-trigger-result"
 						hx-swap="innerHTML"
 					>400 Bad Request</button>
 					<button
 						class="btn btn-sm btn-error btn-outline"
-						hx-get="/platform/logging/trigger/500"
+						hx-post="/platform/logging/trigger/500"
 						hx-target="#logging-trigger-result"
 						hx-swap="innerHTML"
 					>500 Internal Error</button>
 					<button
 						class="btn btn-sm btn-error btn-outline"
-						hx-get="/platform/logging/trigger/403"
+						hx-post="/platform/logging/trigger/403"
 						hx-target="#logging-trigger-result"
 						hx-swap="innerHTML"
 					>403 Forbidden</button>

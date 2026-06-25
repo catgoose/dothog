@@ -42,15 +42,16 @@ templ VendorList(vendors []demo.Vendor) {
 
 templ VendorListItem(v demo.Vendor) {
 	{{ contactsURL := fmt.Sprintf("/apps/vendors/%d/contacts", v.ID) }}
-	<div
-		class="p-3 rounded cursor-pointer hover:bg-base-200 border border-transparent hover:border-base-300 transition-colors"
+	<button
+		type="button"
+		class="w-full text-left p-3 rounded cursor-pointer hover:bg-base-200 border border-transparent hover:border-base-300 transition-colors"
 		hx-get={ contactsURL }
 		hx-target="#contact-detail"
 		hx-swap="innerHTML"
 	>
 		<div class="font-medium text-sm">{ v.Name }</div>
 		<div class="text-xs text-base-content/50">{ v.Category }</div>
-	</div>
+	</button>
 }
 
 templ VendorContactsDetail(vendor demo.Vendor, contacts []demo.Contact) {

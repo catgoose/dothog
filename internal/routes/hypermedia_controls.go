@@ -84,6 +84,7 @@ func (ar *AppRoutes) initControlsGalleryRoutes() {
 	ar.e.GET(base+"/resource/edit", gs.handleResourceEdit)
 	ar.e.PUT(base+"/resource", gs.handleResourceSave)
 	ar.e.DELETE(base+"/resource", gs.handleResourceDelete)
+	ar.e.POST(base+"/resource/restore", gs.handleResourceRestore)
 
 	// Form demo
 	ar.e.POST(base+"/form", gs.handleFormSubmit)
@@ -91,7 +92,7 @@ func (ar *AppRoutes) initControlsGalleryRoutes() {
 
 	// Empty state / items demo
 	ar.e.POST(base+"/items", gs.handleItemCreate)
-	ar.e.GET(base+"/items/reset", gs.handleItemsReset)
+	ar.e.POST(base+"/items/reset", gs.handleItemsReset)
 
 	// Filter demo
 	ar.e.GET(base+"/filter", gs.handleFilter)
@@ -157,12 +158,13 @@ func (gs *controlsGalleryState) handleDismissReset(c echo.Context) error {
 // ─── Section 3: Resource ────────────────────────────────────────────────────
 
 func (gs *controlsGalleryState) handleResourceView(c echo.Context) error {
-	gs.mu.Lock()
-	if gs.resourceDeleted {
-		gs.resourceDeleted = false
-	}
+	gs.mu.RLock()
+	deleted := gs.resourceDeleted
 	name, desc := gs.resourceName, gs.resourceDesc
-	gs.mu.Unlock()
+	gs.mu.RUnlock()
+	if deleted {
+		return handler.RenderComponent(c, views.ResourceDeletedFragment())
+	}
 	return handler.RenderComponent(c, views.ResourceViewFragment(name, desc))
 }
 
@@ -189,6 +191,14 @@ func (gs *controlsGalleryState) handleResourceDelete(c echo.Context) error {
 	gs.resourceDeleted = true
 	gs.mu.Unlock()
 	return handler.RenderComponent(c, views.ResourceDeletedFragment())
+}
+
+func (gs *controlsGalleryState) handleResourceRestore(c echo.Context) error {
+	gs.mu.Lock()
+	gs.resourceDeleted = false
+	name, desc := gs.resourceName, gs.resourceDesc
+	gs.mu.Unlock()
+	return handler.RenderComponent(c, views.ResourceViewFragment(name, desc))
 }
 
 // ─── Section 4: Form ────────────────────────────────────────────────────────

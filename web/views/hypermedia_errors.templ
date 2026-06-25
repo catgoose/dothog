@@ -24,25 +24,25 @@ templ ErrorsPage() {
 				<div class="flex flex-wrap gap-2">
 					<button
 						class="btn btn-sm btn-error btn-outline"
-						hx-get="/patterns/errors/trigger/404"
+						hx-post="/patterns/errors/trigger/404"
 						hx-target="#errors-banner-result"
 						hx-swap="innerHTML"
 					>Trigger 404</button>
 					<button
 						class="btn btn-sm btn-error btn-outline"
-						hx-get="/patterns/errors/trigger/400"
+						hx-post="/patterns/errors/trigger/400"
 						hx-target="#errors-banner-result"
 						hx-swap="innerHTML"
 					>Trigger 400</button>
 					<button
 						class="btn btn-sm btn-error btn-outline"
-						hx-get="/patterns/errors/trigger/500"
+						hx-post="/patterns/errors/trigger/500"
 						hx-target="#errors-banner-result"
 						hx-swap="innerHTML"
 					>Trigger 500</button>
 					<button
 						class="btn btn-sm btn-error btn-outline"
-						hx-get="/patterns/errors/trigger/403"
+						hx-post="/patterns/errors/trigger/403"
 						hx-target="#errors-banner-result"
 						hx-swap="innerHTML"
 					>Trigger 403</button>
@@ -108,7 +108,7 @@ templ ErrorsPage() {
 				</p>
 				<button
 					class="btn btn-sm btn-secondary btn-outline"
-					hx-get="/patterns/errors/flaky"
+					hx-post="/patterns/errors/flaky"
 					hx-target="#errors-retry-result"
 					hx-swap="innerHTML"
 				>Call Flaky Endpoint</button>
@@ -121,7 +121,7 @@ templ ErrorsPage() {
 			@errorPatternCard("Banner", "OOB swap to #error-status", "Global error banner with dismiss, back, home, and report issue controls.")
 			@errorPatternCard("Inline", "hx-target on form", "Validation errors rendered inline next to the form that caused them.")
 			@errorPatternCard("OOB", "Component + OOB error", "Primary content swaps normally; error appears out-of-band.")
-			@errorPatternCard("Retry", "Control with hx-get", "Failed response includes a retry button that re-issues the request.")
+			@errorPatternCard("Retry", "Control with hx-post", "Failed response includes a retry button that re-issues the request.")
 			@errorPatternCard("Report", "POST /report-issue", "Report Issue button posts to server; HX-Trigger fires a browser alert.")
 			@errorPatternCard("Copy ID", "navigator.clipboard", "Request ID has a copy-to-clipboard icon for easy bug reporting.")
 		</div>
