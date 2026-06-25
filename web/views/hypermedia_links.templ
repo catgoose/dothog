@@ -89,28 +89,28 @@ templ linksEditorForm(routes []string) {
 		class="flex flex-wrap items-end gap-2"
 	>
 		<div class="form-control">
-			<label class="label py-0"><span class="label-text text-xs">Source</span></label>
-			<input name="source" list="link-routes" placeholder="/apps/inventory" required class="input input-bordered input-sm w-44"/>
+			<label class="label py-0" for="link-source"><span class="label-text text-xs">Source</span></label>
+			<input id="link-source" name="source" list="link-routes" placeholder="/apps/inventory" required class="input input-bordered input-sm w-44"/>
 		</div>
 		<div class="form-control">
-			<label class="label py-0"><span class="label-text text-xs">Rel</span></label>
-			<select name="rel" class="select select-bordered select-sm w-32">
+			<label class="label py-0" for="link-rel"><span class="label-text text-xs">Rel</span></label>
+			<select id="link-rel" name="rel" class="select select-bordered select-sm w-32">
 				<option value="related">related</option>
 				<option value="up">up</option>
 				<option value="create-form">create-form</option>
 			</select>
 		</div>
 		<div class="form-control">
-			<label class="label py-0"><span class="label-text text-xs">Target</span></label>
-			<input name="target" list="link-routes" placeholder="/apps/catalog" required class="input input-bordered input-sm w-44"/>
+			<label class="label py-0" for="link-target"><span class="label-text text-xs">Target</span></label>
+			<input id="link-target" name="target" list="link-routes" placeholder="/apps/catalog" required class="input input-bordered input-sm w-44"/>
 		</div>
 		<div class="form-control">
-			<label class="label py-0"><span class="label-text text-xs">Title</span></label>
-			<input name="title" placeholder="Catalog" required class="input input-bordered input-sm w-32"/>
+			<label class="label py-0" for="link-title"><span class="label-text text-xs">Title</span></label>
+			<input id="link-title" name="title" placeholder="Catalog" required class="input input-bordered input-sm w-32"/>
 		</div>
 		<div class="form-control">
-			<label class="label py-0"><span class="label-text text-xs">Group</span></label>
-			<input name="group" placeholder="(optional)" class="input input-bordered input-sm w-28"/>
+			<label class="label py-0" for="link-group"><span class="label-text text-xs">Group</span></label>
+			<input id="link-group" name="group" placeholder="(optional)" class="input input-bordered input-sm w-28"/>
 		</div>
 		<button type="submit" class="btn btn-primary btn-sm">Add</button>
 		<datalist id="link-routes">

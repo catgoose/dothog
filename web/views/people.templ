@@ -37,8 +37,10 @@ templ PeopleTableBody(people []demo.Person, from string) {
 
 templ PersonRow(p demo.Person, from string) {
 	{{ profileURL := linkwell.FromNav(fmt.Sprintf("/apps/people/%d", p.ID), from) }}
-	<tr class="hover:bg-base-200/50 cursor-pointer" hx-get={ profileURL } hx-target="body" hx-push-url="true">
-		<td class="font-medium">{ p.FullName() }</td>
+	<tr class="hover:bg-base-200/50">
+		<td class="font-medium">
+			<a href={ templ.URL(profileURL) } class="link link-hover" hx-get={ profileURL } hx-target="body" hx-push-url="true">{ p.FullName() }</a>
+		</td>
 		<td>{ p.Department }</td>
 		<td>{ p.JobTitle }</td>
 		<td>{ p.City }, { p.State }</td>

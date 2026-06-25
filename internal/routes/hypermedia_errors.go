@@ -27,7 +27,7 @@ func (ar *AppRoutes) initErrorsRoutes() {
 
 	// Banner error triggers — return error via HandleHypermediaError so the
 	// middleware renders into #error-status via OOB swap.
-	ar.e.GET(base+"/trigger/:code", func(c echo.Context) error {
+	ar.e.POST(base+"/trigger/:code", func(c echo.Context) error {
 		ctx := c.Request().Context()
 		log := logger.WithContext(ctx)
 		code := c.Param("code")
@@ -118,7 +118,7 @@ func (ar *AppRoutes) initErrorsRoutes() {
 	})
 
 	// Flaky endpoint — first call fails with retry button, second succeeds.
-	ar.e.GET(base+"/flaky", func(c echo.Context) error {
+	ar.e.POST(base+"/flaky", func(c echo.Context) error {
 		n := atomic.AddInt64(&flakyCount, 1)
 		if n%2 == 1 {
 			requestID := promolog.GetRequestID(c.Request().Context())
@@ -131,7 +131,7 @@ func (ar *AppRoutes) initErrorsRoutes() {
 				RequestID:  requestID,
 				Closable:   true,
 				Controls: []linkwell.Control{
-					linkwell.RetryButton("Retry", linkwell.HxMethodGet,
+					linkwell.RetryButton("Retry", linkwell.HxMethodPost,
 						base+"/flaky", "#errors-retry-result").
 						WithErrorTarget("#errors-retry-result"),
 					linkwell.ReportIssueButton(linkwell.LabelReportIssue, requestID),

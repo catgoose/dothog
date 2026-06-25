@@ -255,6 +255,7 @@ templ calendarAddEventForm(day time.Time) {
 			<input
 				type="text"
 				name="title"
+				aria-label="Event title"
 				placeholder="Event title"
 				class="input input-xs input-bordered w-full"
 				required
@@ -264,11 +265,12 @@ templ calendarAddEventForm(day time.Time) {
 			<input
 				type="text"
 				name="assignee"
+				aria-label="Assignee"
 				placeholder="Assignee (optional)"
 				class="input input-xs input-bordered w-full"
 			/>
 		</div>
-		<select name="category" class="select select-xs select-bordered w-full">
+		<select name="category" class="select select-xs select-bordered w-full" aria-label="Category">
 			for _, cat := range demo.AllCalendarCategories {
 				<option value={ string(cat) }>{ string(cat) }</option>
 			}

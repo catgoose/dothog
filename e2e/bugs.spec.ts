@@ -26,11 +26,9 @@ test.describe("Inventory: silent parse failures", () => {
     }
   });
 
-  test("BUG: server silently defaults invalid price to 0 (bypassing HTML)", async ({
+  test.fixme("invalid price/stock is rejected, not silently coerced to 0", async ({
     request,
   }) => {
-    // BUG: If the HTML type=number is bypassed (API call), server silently
-    // converts invalid price to 0 via strconv.ParseFloat defaulting
     const resp = await request.post("/apps/inventory/items", {
       form: {
         name: "Bug Test Item",
@@ -40,36 +38,9 @@ test.describe("Inventory: silent parse failures", () => {
         active: "true",
       },
     });
-    expect(resp.ok()).toBe(true);
-    // The item was created with price=0 and stock=0 — no validation error
+    expect(resp.status()).toBe(400);
   });
 
-  test("creating item with empty name succeeds (missing validation)", async ({
-    page,
-  }) => {
-    await navigateTo(page, "/apps/inventory");
-    const addBtn = page.locator('button:has-text("+ Add Item")');
-    await addBtn.click();
-    await waitForHtmx(page);
-
-    const nameInput = page.locator('input[name="name"]');
-    if (await nameInput.isVisible()) {
-      await nameInput.fill("");
-      const priceInput = page.locator('input[name="price"]');
-      if (await priceInput.isVisible()) await priceInput.fill("10.00");
-      const stockInput = page.locator('input[name="stock"]');
-      if (await stockInput.isVisible()) await stockInput.fill("5");
-
-      const saveBtn = page.locator(
-        'button[type="submit"], button:has-text("Save"), button:has-text("Create")',
-      ).first();
-      await saveBtn.click();
-      await waitForHtmx(page);
-
-      // BUG: Should reject empty name but it silently accepts it
-      // Check if an item with empty name was created
-    }
-  });
 });
 
 test.describe("Inventory: delete and update edge cases", () => {
@@ -206,44 +177,15 @@ test.describe("People: missing field validation", () => {
     await resetDB(page);
   });
 
-  test("edit person with empty fields succeeds (missing validation)", async ({
-    page,
-  }) => {
-    // Navigate to a person detail page
-    await navigateTo(page, "/apps/people");
-    const personRow = page.locator("tbody tr[hx-get]").first();
-    if (await personRow.isVisible()) {
-      await personRow.click();
-      await waitForHtmx(page);
-
-      // Click edit
-      const editBtn = page.locator('button:has-text("Edit"), a:has-text("Edit")').first();
-      if (await editBtn.isVisible()) {
-        await editBtn.click();
-        await waitForHtmx(page);
-
-        // Clear all fields
-        const firstNameInput = page.locator('input[name="first_name"]');
-        if (await firstNameInput.isVisible()) {
-          await firstNameInput.fill("");
-          const lastNameInput = page.locator('input[name="last_name"]');
-          if (await lastNameInput.isVisible()) await lastNameInput.fill("");
-          const emailInput = page.locator('input[name="email"]');
-          if (await emailInput.isVisible()) await emailInput.fill("not-an-email");
-
-          const saveBtn = page.locator('button:has-text("Save")').first();
-          if (await saveBtn.isVisible()) {
-            await saveBtn.click();
-            await waitForHtmx(page);
-            // BUG: Should reject empty names and invalid email, but accepts them
-            console.log(
-              "BUG FOUND: Person saved with empty first/last name and invalid email format",
-            );
-          }
-        }
-      }
-    }
-  });
+  test.fixme(
+    "updating a person with empty names and invalid email is rejected",
+    async ({ request }) => {
+      const resp = await request.put("/apps/people/1", {
+        form: { first_name: "", last_name: "", email: "not-an-email" },
+      });
+      expect(resp.status()).toBe(400);
+    },
+  );
 });
 
 test.describe("Kanban: edge cases", () => {
@@ -369,37 +311,11 @@ test.describe("Controls Gallery: error recovery flows", () => {
     }
   });
 
-  test("resource delete and re-view recovers automatically", async ({
-    page,
-  }) => {
-    await navigateTo(page, "/patterns/controls");
-
-    // Find resource delete button
-    const deleteBtn = page.locator('[hx-delete*="controls/resource"]').first();
-    if (await deleteBtn.isVisible()) {
-      await deleteBtn.click();
-      await waitForHtmx(page);
-
-      // Re-view the resource (GET resets deleted flag — potential bug)
-      const viewBtn = page.locator('[hx-get*="controls/resource"]').first();
-      if (await viewBtn.isVisible()) {
-        await viewBtn.click();
-        await waitForHtmx(page);
-        // BUG: Resource auto-recovers on view — deleted flag cleared silently
-      }
-    }
-  });
-
-  test("row delete returns success even for non-existent ID", async ({
+  test.fixme("row delete returns 404 for a non-existent ID", async ({
     request,
   }) => {
-    // API-level test: delete non-existent row
     const resp = await request.delete("/patterns/controls/rows/99999");
-    // BUG: Returns 200 even though row 99999 doesn't exist
-    expect(resp.status()).toBe(200);
-    console.log(
-      "BUG FOUND: DELETE /controls/rows/99999 returns 200 (should be 404)",
-    );
+    expect(resp.status()).toBe(404);
   });
 
   test("stale data version mismatch triggers 412", async ({ page }) => {
@@ -449,19 +365,13 @@ test.describe("CRUD: edge cases", () => {
     expect(resp.status()).toBe(400);
   });
 
-  test("create item with empty name defaults to 'New Item'", async ({
+  test.fixme("create item with empty name is rejected", async ({
     request,
   }) => {
     const resp = await request.post("/patterns/crud/items", {
       form: { name: "", notes: "" },
     });
-    expect(resp.ok()).toBe(true);
-    const body = await resp.text();
-    // BUG: Empty name silently defaults to "New Item" instead of validation error
-    expect(body).toContain("New Item");
-    console.log(
-      'BUG FOUND: Empty name defaults to "New Item" — should be validated',
-    );
+    expect(resp.status()).toBe(400);
   });
 
   test("toggle item status flips between active and inactive", async ({
@@ -506,8 +416,7 @@ test.describe("Components: chat and timeline edge cases", () => {
       await waitForHtmx(page);
 
       const msgsAfter = await chatWindow.locator(".chat").count();
-      // BUG: Empty message should show an error or be prevented client-side
-      // Instead server returns 204 (no content) — message count shouldn't change
+      // Empty message yields 204 (no content); no chat bubble is appended.
       expect(msgsAfter).toBe(msgsBefore);
     }
   });
@@ -583,24 +492,18 @@ test.describe("Components: chat and timeline edge cases", () => {
 });
 
 test.describe("Components2: carousel and cascading", () => {
-  test("carousel boundary: index beyond range is clamped", async ({
+  test.fixme("carousel index beyond range returns 400", async ({
     request,
   }) => {
     const resp = await request.get("/components/cards/carousel/999");
-    // BUG: Returns 200 with clamped content instead of 400/404
-    expect(resp.ok()).toBe(true);
-    console.log(
-      "BUG FOUND: Carousel index 999 silently clamped instead of error",
-    );
+    expect(resp.status()).toBe(400);
   });
 
-  test("BUG: carousel accepts negative index (should be 400)", async ({
+  test.fixme("carousel negative index returns 400", async ({
     request,
   }) => {
     const resp = await request.get("/components/cards/carousel/-1");
-    // BUG: Returns 200 with clamped content instead of 400
-    // Negative index is silently clamped to 0
-    expect(resp.status()).toBe(200);
+    expect(resp.status()).toBe(400);
   });
 
   test("cascading select with invalid country", async ({ request }) => {
@@ -610,32 +513,29 @@ test.describe("Components2: carousel and cascading", () => {
     expect(resp.status()).toBe(400);
   });
 
-  test("BUG: dropdown search creates duplicate #dropdown-results elements", async ({
-    page,
-  }) => {
+  test("dropdown search returns matching results", async ({ page }) => {
     await navigateTo(page, "/components/cards");
     await waitForHtmx(page);
-
     const searchInput = page.locator('input[name="q"]').first();
-    if (await searchInput.isVisible()) {
-      await searchInput.fill("Python");
-      await page.waitForTimeout(400);
-      await waitForHtmx(page);
-
-      // BUG: HTMX swap creates a second #dropdown-results element
-      // instead of replacing the content of the existing one
-      const resultCount = await page.locator("#dropdown-results").count();
-      // Documenting the bug: should be 1, but may be 2
-      if (resultCount > 1) {
-        console.log(
-          `BUG FOUND: ${resultCount} elements with id="dropdown-results" — duplicate IDs in DOM`,
-        );
-      }
-      // Use .first() to work around the duplicate
-      const text = await page.locator("#dropdown-results").first().textContent();
-      expect(text?.toLowerCase()).toContain("python");
-    }
+    await expect(searchInput).toBeVisible();
+    await searchInput.fill("Python");
+    await expect(
+      page.locator("#dropdown-results").first(),
+    ).toContainText(/python/i);
   });
+
+  test.fixme(
+    "dropdown search keeps a single #dropdown-results element",
+    async ({ page }) => {
+      await navigateTo(page, "/components/cards");
+      await waitForHtmx(page);
+      await page.locator('input[name="q"]').first().fill("Python");
+      await expect(
+        page.locator("#dropdown-results").first(),
+      ).toContainText(/python/i);
+      expect(await page.locator("#dropdown-results").count()).toBe(1);
+    },
+  );
 
   test("file upload without file returns 400", async ({ request }) => {
     const resp = await request.post("/components/cards/upload");
@@ -691,18 +591,12 @@ test.describe("Components3: soft delete edge cases", () => {
     }
   });
 
-  test("BUG: feed pagination out-of-bounds returns 200 instead of 204", async ({
+  test.fixme("feed pagination out-of-bounds returns 204", async ({
     request,
   }) => {
-    // Reset state by visiting the page
     await request.get("/components/advanced");
-
-    const resp = await request.get(
-      "/components/advanced/feed?page=9999",
-    );
-    // BUG: Returns 200 instead of expected 204 for out-of-bounds page
-    // The server returns an empty response with 200 status
-    expect(resp.status()).toBe(200);
+    const resp = await request.get("/components/advanced/feed?page=9999");
+    expect(resp.status()).toBe(204);
   });
 });
 
@@ -756,26 +650,16 @@ test.describe("Admin: database reset", () => {
     expect(body).toContain("inventory-table-container");
   });
 
-  test("admin endpoint is publicly accessible (no auth)", async ({
-    request,
-  }) => {
+  // Open admin access may be intentional for the demo; whether these endpoints
+  // should require authentication is an unresolved product decision.
+  test.fixme("admin page requires authentication", async ({ request }) => {
     const resp = await request.get("/admin");
-    // BUG: Admin page has no authentication — anyone can access it
-    expect(resp.ok()).toBe(true);
-    console.log(
-      "BUG FOUND: Admin page (/admin) is publicly accessible with no authentication",
-    );
+    expect(resp.status()).toBeGreaterThanOrEqual(401);
   });
 
-  test("db reinit endpoint is publicly accessible (no auth)", async ({
-    request,
-  }) => {
+  test.fixme("db reinit requires authentication", async ({ request }) => {
     const resp = await request.post("/admin/db/reinit");
-    // BUG: Can wipe database without any authentication
-    expect(resp.ok()).toBe(true);
-    console.log(
-      "BUG FOUND: POST /admin/db/reinit is publicly accessible — anyone can wipe the database",
-    );
+    expect(resp.status()).toBeGreaterThanOrEqual(401);
   });
 });
 

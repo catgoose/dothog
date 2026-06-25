@@ -45,7 +45,6 @@ test.describe("Error Patterns Page", () => {
     await expect(banner).toContainText("Something went wrong");
     await expect(banner).toContainText("Resource not found");
     await expect(banner).toContainText("404");
-    await expect(banner).toContainText("Request ID");
 
     // Banner controls: Close (right) — Report Issue only for 5xx errors
     await expect(
@@ -155,7 +154,8 @@ test.describe("Error Patterns Page", () => {
 
   test("error banner shows request ID with copy button", async ({ page }) => {
     await navigateTo(page, "/patterns/errors");
-    await page.locator('button:has-text("Trigger 404")').click();
+    // 5xx keeps its request ID; expected test-mode 4xx traces are suppressed.
+    await page.locator('button:has-text("Trigger 500")').click();
     await waitForHtmx(page);
 
     const banner = page.locator("#error-status");

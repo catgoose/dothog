@@ -107,20 +107,20 @@ templ settingsField(f demo.SettingField) {
 			}
 		default:
 			<div class="fieldset max-w-sm">
-				<label class="label py-1">
+				<label class="label py-1" for={ f.Key }>
 					<span class="label-text text-sm font-medium">{ f.Label }</span>
 				</label>
 				switch f.Kind {
 					case "text":
-						<input type="text" name={ f.Key } class="input input-sm w-full" value={ f.Value }/>
+						<input type="text" id={ f.Key } name={ f.Key } class="input input-sm w-full" value={ f.Value }/>
 					case "select":
-						<select name={ f.Key } class="select select-sm w-full">
+						<select id={ f.Key } name={ f.Key } class="select select-sm w-full">
 							for _, opt := range f.Options {
 								<option value={ opt } selected?={ f.Value == opt }>{ opt }</option>
 							}
 						</select>
 					case "textarea":
-						<textarea name={ f.Key } class="textarea w-full" rows="3">{ f.Value }</textarea>
+						<textarea id={ f.Key } name={ f.Key } class="textarea w-full" rows="3">{ f.Value }</textarea>
 				}
 			</div>
 	}

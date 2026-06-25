@@ -387,18 +387,19 @@ templ calLabAddEventForm(day time.Time) {
 			<input
 				type="text"
 				name="title"
+				aria-label="Event title"
 				placeholder="Event title"
 				class="input input-xs input-bordered w-full"
 				required
 			/>
 		</div>
 		<div class="grid grid-cols-2 gap-1">
-			<select name="category" class="select select-sm select-bordered w-full">
+			<select name="category" class="select select-sm select-bordered w-full" aria-label="Category">
 				for _, cat := range demo.AllCalendarCategories {
 					<option value={ string(cat) }>{ string(cat) }</option>
 				}
 			</select>
-			<select name="assignee" class="select select-sm select-bordered w-full">
+			<select name="assignee" class="select select-sm select-bordered w-full" aria-label="Assignee">
 				<option value="">unassigned</option>
 				for _, a := range []string{"Jordan", "Maria", "Sam", "Pat", "ops-team"} {
 					<option value={ a }>{ a }</option>

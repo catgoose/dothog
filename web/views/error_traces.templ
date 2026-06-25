@@ -62,7 +62,7 @@ templ ErrorTracesBody(traces []promolog.TraceSummary) {
 	for _, t := range traces {
 		<tbody class="trace-group">
 			@ErrorTraceRow(t)
-			<tr class="detail-row hidden"></tr>
+			<tr id={ fmt.Sprintf("trace-detail-%s", t.RequestID) } class="detail-row hidden"></tr>
 		</tbody>
 	}
 }
@@ -70,25 +70,33 @@ templ ErrorTracesBody(traces []promolog.TraceSummary) {
 // ErrorTraceRow renders a single summary row with an expand chevron.
 templ ErrorTraceRow(t promolog.TraceSummary) {
 	{{ detailURL := fmt.Sprintf("/admin/error-traces/%s", t.RequestID) }}
-	<tr
-		class="hover cursor-pointer select-none"
-		hx-get={ detailURL }
-		hx-target="next tr.detail-row"
-		hx-swap="innerHTML"
-		hx-trigger="expand"
-		_="on click
-		  set tb to the closest <tbody/>
-		  toggle .rotate-90 on the first <svg.chevron/> in me
-		  toggle .hidden on the next <tr.detail-row/>
-		  if not (tb matches '.loaded')
-		    add .loaded to tb
-		    call htmx.trigger(me, 'expand')
-		  end"
-	>
+	{{ detailID := fmt.Sprintf("trace-detail-%s", t.RequestID) }}
+	<tr class="hover">
 		<td class="px-1">
-			<svg class="chevron w-4 h-4 text-base-content/40 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
-			</svg>
+			<button
+				type="button"
+				class="trace-toggle btn btn-ghost btn-xs px-1"
+				aria-expanded="false"
+				aria-controls={ detailID }
+				aria-label="Toggle trace details"
+				hx-get={ detailURL }
+				hx-target={ "#" + detailID }
+				hx-swap="innerHTML"
+				hx-trigger="expand"
+				_="on click
+				  set tb to the closest <tbody/>
+				  toggle .rotate-90 on the first <svg.chevron/> in me
+				  toggle .hidden on the next <tr.detail-row/>
+				  if my @aria-expanded is 'true' set my @aria-expanded to 'false' otherwise set my @aria-expanded to 'true' end
+				  if not (tb matches '.loaded')
+				    add .loaded to tb
+				    call htmx.trigger(me, 'expand')
+				  end"
+			>
+				<svg class="chevron w-4 h-4 text-base-content/40 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" focusable="false">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
+				</svg>
+			</button>
 		</td>
 		<td class="text-xs font-mono whitespace-nowrap">{ t.CreatedAt.Format("2006-01-02 15:04:05") }</td>
 		<td>
@@ -142,7 +150,8 @@ templ ErrorTraceDetailContent(trace *promolog.Trace) {
 						_="on click
 						  set tb to the closest <tbody/>
 						  add .hidden to the first <tr.detail-row/> in tb
-						  remove .rotate-90 from the first <svg.chevron/> in tb"
+						  remove .rotate-90 from the first <svg.chevron/> in tb
+						  set the @aria-expanded of the first <.trace-toggle/> in tb to 'false'"
 					>
 						Close
 					</button>
@@ -192,40 +201,43 @@ templ ErrorTraceDetailContent(trace *promolog.Trace) {
 				<div>
 					<span class="font-medium text-sm text-base-content/60">Log Entries ({ strconv.Itoa(len(trace.Entries)) })</span>
 					<div class="mt-1 space-y-1">
-						for _, entry := range trace.Entries {
+						for i, entry := range trace.Entries {
 							{{ pairs := sortedAttrs(entry.Attrs) }}
+							{{ attrsID := fmt.Sprintf("trace-%s-attrs-%d", trace.RequestID, i) }}
 							<div
 								class={ "rounded-lg border p-2", templ.KV("border-error/30 bg-error/5", entry.Level == "ERROR"), templ.KV("border-warning/30 bg-warning/5", entry.Level == "WARN"), templ.KV("border-base-300 bg-base-200", entry.Level != "ERROR" && entry.Level != "WARN") }
 							>
-								<div
-									class="flex items-center gap-2 cursor-pointer select-none"
-									if len(pairs) > 0 {
+								if len(pairs) > 0 {
+									<button
+										type="button"
+										class="flex items-center gap-2 w-full text-left cursor-pointer select-none"
+										aria-expanded="false"
+										aria-controls={ attrsID }
 										_="on click
 										  toggle .rotate-90 on the first <svg.chevron/> in me
-										  toggle .hidden on the next .log-attrs"
-									}
-								>
-									if len(pairs) > 0 {
-										<svg class="chevron w-3 h-3 text-base-content/40 transition-transform shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+										  toggle .hidden on the next .log-attrs
+										  if my @aria-expanded is 'true' set my @aria-expanded to 'false' otherwise set my @aria-expanded to 'true' end"
+									>
+										<svg class="chevron w-3 h-3 text-base-content/40 transition-transform shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" focusable="false">
 											<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
 										</svg>
-									} else {
-										<div class="w-3"></div>
-									}
-									@logLevelBadge(entry.Level)
-									<span class="text-xs">{ entry.Message }</span>
-									if len(pairs) > 0 {
+										@logLevelBadge(entry.Level)
+										<span class="text-xs">{ entry.Message }</span>
 										<span class="text-xs text-base-content/30 ml-auto">{ strconv.Itoa(len(pairs)) } attrs</span>
-									}
-								</div>
-								if len(pairs) > 0 {
-									<div class="log-attrs hidden mt-2 ml-5 pl-3 border-l-2 border-base-300">
+									</button>
+									<div id={ attrsID } class="log-attrs hidden mt-2 ml-5 pl-3 border-l-2 border-base-300">
 										<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5">
 											for _, pair := range pairs {
 												<span class="text-xs font-mono text-base-content/50">{ pair[0] }</span>
 												<span class="text-xs font-mono break-all">{ pair[1] }</span>
 											}
 										</div>
+									</div>
+								} else {
+									<div class="flex items-center gap-2">
+										<div class="w-3"></div>
+										@logLevelBadge(entry.Level)
+										<span class="text-xs">{ entry.Message }</span>
 									</div>
 								}
 							</div>

@@ -96,7 +96,7 @@ templ FilterField(field linkwell.FilterField, bar linkwell.FilterBar) {
 templ searchFilterField(field linkwell.FilterField, bar linkwell.FilterBar) {
 	<label class="fieldset w-full max-w-xs">
 		if field.Label != "" {
-			<label class="label">{ field.Label }</label>
+			<span class="label">{ field.Label }</span>
 		}
 		<input
 			type="search"
@@ -118,7 +118,7 @@ templ searchFilterField(field linkwell.FilterField, bar linkwell.FilterBar) {
 templ selectFilterField(field linkwell.FilterField, bar linkwell.FilterBar) {
 	<label class="fieldset w-full max-w-xs" data-filter={ field.Name }>
 		if field.Label != "" {
-			<label class="label">{ field.Label }</label>
+			<span class="label">{ field.Label }</span>
 		}
 		@selectFilterOptions(field, bar)
 	</label>
@@ -144,7 +144,7 @@ templ FilterGroupOOB(group linkwell.FilterGroup) {
 	for _, field := range group.SelectFields() {
 		<div hx-swap-oob={ "innerHTML:[data-filter='" + field.Name + "']" }>
 			if field.Label != "" {
-				<label class="label">{ field.Label }</label>
+				<span class="label">{ field.Label }</span>
 			}
 			@selectFilterOptions(field, group.Bar)
 		</div>
@@ -155,7 +155,7 @@ templ FilterGroupOOB(group linkwell.FilterGroup) {
 templ rangeFilterField(field linkwell.FilterField, bar linkwell.FilterBar) {
 	<label class="fieldset w-full max-w-xs">
 		if field.Label != "" {
-			<label class="label">{ field.Label }</label>
+			<span class="label">{ field.Label }</span>
 		}
 		<input
 			type="range"
@@ -195,7 +195,7 @@ templ checkboxFilterField(field linkwell.FilterField, bar linkwell.FilterBar) {
 templ dateFilterField(field linkwell.FilterField, bar linkwell.FilterBar) {
 	<label class="fieldset w-full max-w-xs">
 		if field.Label != "" {
-			<label class="label">{ field.Label }</label>
+			<span class="label">{ field.Label }</span>
 		}
 		<input
 			type="date"

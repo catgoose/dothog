@@ -275,9 +275,9 @@ templ hotZoneControls(settings demo.HotZoneSettings, paused bool) {
 					<span class="label-text-alt text-xs font-mono" id="hz-interval-val">{ fmt.Sprintf("%dms", settings.UpdateIntervalMS) }</span>
 				</label>
 				<div class="flex items-center gap-1">
-					<button class="btn btn-xs btn-ghost font-mono px-1" onclick="hzNudgeInterval(-25)">-</button>
+					<button type="button" class="btn btn-xs btn-ghost font-mono px-1" onclick="hzNudgeInterval(-25)" aria-label="Decrease update interval">-</button>
 					<input id="hz-interval-slider" type="range" min="25" max="5000" step="1" value={ fmt.Sprintf("%d", settings.UpdateIntervalMS) } class="range range-xs range-primary flex-1" name="update_interval" hx-post="/realtime/tavern/hotzones/controls" hx-trigger="change" hx-swap="none" hx-include="closest .card-body" oninput="document.getElementById('hz-interval-val').textContent=this.value+'ms'"/>
-					<button class="btn btn-xs btn-ghost font-mono px-1" onclick="hzNudgeInterval(25)">+</button>
+					<button type="button" class="btn btn-xs btn-ghost font-mono px-1" onclick="hzNudgeInterval(25)" aria-label="Increase update interval">+</button>
 				</div>
 			</div>
 

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { navigateTo, waitForHtmx, resetDB } from "./helpers";
+import { navigateTo, resetDB } from "./helpers";
 
 test.describe("Bulk Operations Page", () => {
   test.beforeEach(async ({ page }) => {

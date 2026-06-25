@@ -29,7 +29,7 @@ templ ErrorModesPage() {
 				<div class="flex flex-wrap gap-2">
 					<button
 						class="btn btn-sm btn-error btn-outline"
-						hx-get="/patterns/errors/trigger/500"
+						hx-post="/patterns/errors/trigger/500"
 						hx-target="#errors-modes-banner-result"
 						hx-swap="innerHTML"
 					>Trigger 500 Banner</button>

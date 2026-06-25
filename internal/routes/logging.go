@@ -37,7 +37,7 @@ func (ar *AppRoutes) initLoggingRoutes(broker *tavern.SSEBroker) {
 	ar.e.GET(loggingBase, handler.HandleComponent(views.LoggingPage()))
 
 	// Error trigger endpoints — generate real errors with contextual slog entries.
-	ar.e.GET(loggingBase+"/trigger/:code", func(c echo.Context) error {
+	ar.e.POST(loggingBase+"/trigger/:code", func(c echo.Context) error {
 		ctx := c.Request().Context()
 		log := logger.WithContext(ctx)
 		code := c.Param("code")

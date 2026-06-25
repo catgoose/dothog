@@ -26,9 +26,10 @@ templ DestinationResourceLink(href, label, testID, extraClass string) {
 	>{ label }</a>
 }
 
-// ActionResourceLink renders command-like navigation: anchor semantics, button
-// look. It stays an `<a>`; use only for genuine in-place commands, not ordinary
-// navigation.
+// ActionResourceLink renders a prominent route transition styled like a button:
+// button look, anchor semantics. It stays an `<a>` and always navigates — reserve
+// it for emphasized navigation ("Start", "View details"), not in-place commands or
+// unsafe actions, which belong on a <button>.
 templ ActionResourceLink(href, label, testID, extraClass string) {
 	<a
 		href={ templ.URL(href) }

@@ -112,7 +112,7 @@ templ intervalSliderInner(cfg IntervalSliderCfg) {
 		data-target-key={ cfg.TargetKey }
 		data-target-value={ cfg.TargetValue }>
 		<div class="flex items-center gap-1">
-		<input type="range" class="range range-xs flex-1"
+		<input type="range" aria-label="Update interval" class="range range-xs flex-1"
 			min={ scaleAttr(cfg.Scale, "min") }
 			max={ scaleAttr(cfg.Scale, "max") }
 			step={ scaleAttr(cfg.Scale, "step") }
@@ -125,6 +125,7 @@ templ intervalSliderInner(cfg IntervalSliderCfg) {
 		<button type="button"
 			class="badge badge-outline badge-sm font-mono cursor-pointer hover:badge-primary transition-colors"
 			title="Click to cycle unit (right-click for reverse)"
+			aria-label="Cycle interval unit"
 			_="on click call window._ivUp(the closest .iv-wrap to me)
 			   on contextmenu halt the event then call window._ivDown(the closest .iv-wrap to me)">
 			{ cfg.Scale }

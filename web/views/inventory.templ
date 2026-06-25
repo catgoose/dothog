@@ -151,8 +151,10 @@ templ InventoryDetailPage(item demo.Item) {
 templ InventoryEditRow(item demo.Item, isNew bool, saveURL, cancelURL string) {
 	{{ var rowID string }}
 	{{ var controls []linkwell.Control }}
+	{{ itemLabel := item.Name }}
 	if isNew {
 		{{ rowID = "new-item-row" }}
+		{{ itemLabel = "new item" }}
 		{{ controls = linkwell.NewRowFormActions(linkwell.RowFormActionCfg{
 			SaveURL:      saveURL,
 			CancelURL:    cancelURL,
@@ -171,23 +173,23 @@ templ InventoryEditRow(item demo.Item, isNew bool, saveURL, cancelURL string) {
 	{{ formID := rowID + "-form" }}
 	<tr id={ rowID }>
 		<td>
-			<input type="text" name="name" form={ formID } class="input input-sm w-full" value={ item.Name }/>
+			<input type="text" name="name" form={ formID } class="input input-sm w-full" value={ item.Name } aria-label="Item name"/>
 		</td>
 		<td>
-			<select name="category" form={ formID } class="select select-sm">
+			<select name="category" form={ formID } class="select select-sm" aria-label={ "Category for " + itemLabel }>
 				for _, cat := range []string{"Electronics", "Clothing", "Food", "Books", "Sports"} {
 					<option value={ cat } selected?={ item.Category == cat }>{ cat }</option>
 				}
 			</select>
 		</td>
 		<td>
-			<input type="number" name="price" form={ formID } step="0.01" class="input input-sm w-24" value={ fmt.Sprintf("%.2f", item.Price) } inputmode="decimal"/>
+			<input type="number" name="price" form={ formID } step="0.01" class="input input-sm w-24" value={ fmt.Sprintf("%.2f", item.Price) } inputmode="decimal" aria-label={ "Price for " + itemLabel }/>
 		</td>
 		<td>
-			<input type="number" name="stock" form={ formID } class="input input-sm w-20" value={ strconv.Itoa(item.Stock) } inputmode="numeric"/>
+			<input type="number" name="stock" form={ formID } class="input input-sm w-20" value={ strconv.Itoa(item.Stock) } inputmode="numeric" aria-label={ "Stock for " + itemLabel }/>
 		</td>
 		<td>
-			<input type="checkbox" name="active" form={ formID } value="true" class="toggle toggle-sm" checked?={ item.Active }/>
+			<input type="checkbox" name="active" form={ formID } value="true" class="toggle toggle-sm" checked?={ item.Active } aria-label={ "Active for " + itemLabel }/>
 		</td>
 		<td>
 			@components.Controls(controls)

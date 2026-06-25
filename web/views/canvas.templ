@@ -26,6 +26,7 @@ templ CanvasPage(startColor string) {
 								templ.KV("border-base-content ring-2 ring-base-content/30 scale-110", c == startColor),
 								templ.KV("border-base-content/20", c != startColor) }
 							style={ fmt.Sprintf("background:%s", c) }
+							aria-label={ fmt.Sprintf("Select color %s", c) }
 							data-color={ c }
 							onclick="selectColor(this.dataset.color, this)"
 						></button>
